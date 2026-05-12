@@ -1,0 +1,649 @@
+<?php
+require_once $_SERVER['DOCUMENT_ROOT'] . '/includes/config.php';
+
+if (!is_authenticated() || (!is_admin() && !is_teacher())) {
+    header('Location: /index.php');
+    exit;
+}
+?>
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Evaluaciones - <?= APP_NAME ?></title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
+    <link rel="stylesheet" href="/assets/css/app.css">
+</head>
+<body>
+    <?php require_once $_SERVER['DOCUMENT_ROOT'] . '/includes/navbar.php'; ?>
+    <div class="d-flex content-wrapper">
+        <?php require_once $_SERVER['DOCUMENT_ROOT'] . '/includes/sidebar.php'; ?>
+        <div class="main-content flex-grow-1">
+            <div class="container-xl mt-5 mb-5">
+                <div class="d-flex align-items-center justify-content-between mb-4">
+                    <div>
+                        <h1 class="mb-1">Evaluaciones</h1>
+                        <p class="text-muted mb-0">Rubricas unicas por semestre, con comentarios opcionales</p>
+                    </div>
+                    <div class="d-flex gap-2">
+                        <button class="btn btn-outline-primary" onclick="openRubricModal()">
+                            <i class="bi bi-list-check"></i> Gestionar Rubrica
+                        </button>
+                        <button class="btn btn-outline-primary" onclick="openRoomsModal()">
+                            <i class="bi bi-door-open"></i> Salas
+                        </button>
+                        <button class="btn btn-primary" onclick="openEvaluationModal()">
+                            <i class="bi bi-plus-circle"></i> Nueva Evaluacion
+                        </button>
+                    </div>
+                </div>
+
+                <div id="alertContainer"></div>
+
+                <div class="row g-3 mb-4">
+                    <div class="col-md-8">
+                        <label class="form-label" for="projectFilter">Proyecto</label>
+                        <select class="form-select" id="projectFilter" onchange="loadEvaluations()">
+                            <option value="">Todos los proyectos</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="card border-0 shadow-sm">
+                    <div class="card-body p-0">
+                        <div class="table-responsive">
+                            <table class="table table-hover mb-0 align-middle">
+                                <thead>
+                                    <tr>
+                                        <th>Proyecto</th>
+                                        <th>Semestre</th>
+                                        <th>Etapa</th>
+                                        <th>Sala</th>
+                                        <th>Fecha</th>
+                                        <th>Resultado</th>
+                                        <th>Promedio global</th>
+                                        <th>Acciones</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="evaluationsTable">
+                                    <tr><td colspan="8" class="text-center py-4"><div class="spinner-border" role="status"></div></td></tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal fade" id="evaluationModal" tabindex="-1">
+        <div class="modal-dialog">
+            <form class="modal-content" id="evaluationForm">
+                <div class="modal-header">
+                    <h5 class="modal-title">Nueva Evaluacion</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label class="form-label" for="evaluation_room_id">Sala configurada</label>
+                        <select class="form-select" id="evaluation_room_id" onchange="applyRoomToEvaluationForm()">
+                            <option value="">Sin sala configurada</option>
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label" for="project_id">Proyecto</label>
+                        <select class="form-select" id="project_id" required></select>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label" for="semestre">Semestre</label>
+                            <select class="form-select" id="semestre" required>
+                                <option value="5">5 - Propuesta</option>
+                                <option value="6">6 - Avance</option>
+                                <option value="7">7 - Avance</option>
+                                <option value="8">8 - Titulacion</option>
+                            </select>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label" for="sala">Sala</label>
+                            <input type="text" class="form-control" id="sala" placeholder="Sala 1">
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label" for="fecha_exposicion">Fecha de exposicion</label>
+                        <input type="datetime-local" class="form-control" id="fecha_exposicion">
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="submit" class="btn btn-primary">Crear</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <div class="modal fade" id="rubricModal" tabindex="-1">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Gestionar Rubrica por Semestre</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="row g-3 align-items-end mb-3">
+                        <div class="col-md-3">
+                            <label class="form-label" for="rubricSemester">Semestre</label>
+                            <select class="form-select" id="rubricSemester" onchange="loadRubricCriteria()">
+                                <option value="5">5</option>
+                                <option value="6">6</option>
+                                <option value="7">7</option>
+                                <option value="8">8</option>
+                            </select>
+                        </div>
+                        <div class="col-md-7">
+                            <label class="form-label" for="newCriterionText">Nueva pregunta</label>
+                            <input type="text" class="form-control" id="newCriterionText" maxlength="255">
+                        </div>
+                        <div class="col-md-2">
+                            <button type="button" class="btn btn-primary w-100" onclick="addCriterion()">
+                                <i class="bi bi-plus-circle"></i>
+                            </button>
+                        </div>
+                    </div>
+                    <div id="rubricCriteriaList"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal fade" id="scoreModal" tabindex="-1">
+        <div class="modal-dialog modal-lg">
+            <form class="modal-content" id="scoreForm">
+                <div class="modal-header">
+                    <h5 class="modal-title">Rubrica de Evaluacion</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <input type="hidden" id="scoreEvaluationId">
+                    <div id="scoreFields"></div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="submit" class="btn btn-primary">Guardar Rubrica</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <div class="modal fade" id="roomsModal" tabindex="-1">
+        <div class="modal-dialog modal-xl">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title"><i class="bi bi-door-open"></i> Salas de Evaluacion</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="row g-3">
+                        <div class="col-lg-5">
+                            <div class="border rounded p-3">
+                                <input type="hidden" id="roomId">
+                                <div class="row g-3">
+                                    <div class="col-md-6"><label class="form-label">Sala</label><input class="form-control" id="roomName" placeholder="Sala 1"></div>
+                                    <div class="col-md-6"><label class="form-label">Salon</label><input class="form-control" id="roomClassroom" placeholder="Salon/Laboratorio"></div>
+                                    <div class="col-md-4"><label class="form-label">Semestre</label><select class="form-select" id="roomSemester" onchange="loadRoomProjects()"><option value="5">5</option><option value="6">6</option><option value="7">7</option><option value="8">8</option></select></div>
+                                    <div class="col-md-8"><label class="form-label">Fecha</label><input type="datetime-local" class="form-control" id="roomDate"></div>
+                                    <div class="col-md-4"><label class="form-label">Min. docentes</label><input type="number" class="form-control" id="teacherMinutes" min="1" max="240" value="15"></div>
+                                    <div class="col-md-4"><label class="form-label">Min. proyecto</label><input type="number" class="form-control" id="presentationMinutes" min="1" max="240" value="20"></div>
+                                    <div class="col-md-4"><label class="form-label">Oportunidades</label><input type="number" class="form-control" id="maxAttempts" min="1" max="10" value="1"></div>
+                                    <div class="col-12"><label class="form-label">Docentes</label><div class="border rounded p-2" id="roomTeachers" style="max-height: 160px; overflow:auto;"></div></div>
+                                    <div class="col-12"><label class="form-label">Proyectos</label><div class="border rounded p-2" id="roomProjects" style="max-height: 220px; overflow:auto;"></div></div>
+                                </div>
+                                <div class="d-flex justify-content-end gap-2 mt-3">
+                                    <button class="btn btn-outline-secondary" onclick="resetRoomForm()">Limpiar</button>
+                                    <button class="btn btn-primary" onclick="saveRoom()"><i class="bi bi-save"></i> Guardar sala</button>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-lg-7" id="roomsList"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal fade" id="breakdownModal" tabindex="-1">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Desglose por Docente</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body" id="breakdownContent"></div>
+            </div>
+        </div>
+    </div>
+
+    <?php require_once $_SERVER['DOCUMENT_ROOT'] . '/includes/footer.php'; ?>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+    <script>const API_BASE_URL = 'http://127.0.0.1:8000/api';</script>
+    <script src="/assets/js/auth.js"></script>
+    <script src="/assets/js/api.js"></script>
+    <script src="/assets/js/app.js"></script>
+    <script>
+        let projects = [];
+        let roomProjects = [];
+        let teachers = [];
+        let rooms = [];
+        let evaluations = [];
+        let criteria = [];
+        let criteriaBySemester = {};
+        let levels = [];
+        let evaluationModal;
+        let rubricModal;
+        let scoreModal;
+        let breakdownModal;
+        let roomsModal;
+
+        function escapeHtml(value) {
+            return String(value ?? '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#039;');
+        }
+
+        function stageLabel(stage) {
+            return { propuesta: 'Propuesta', avance: 'Avance', titulacion: 'Titulacion' }[stage] || stage;
+        }
+
+        function groupCriteria() {
+            criteriaBySemester = criteria.reduce((groups, criterion) => {
+                if (!groups[criterion.semestre]) groups[criterion.semestre] = [];
+                groups[criterion.semestre].push(criterion);
+                return groups;
+            }, {});
+        }
+
+        async function refreshCriteria() {
+            const criteriaResponse = await api.get('/evaluations/criteria');
+            criteria = criteriaResponse.criteria || [];
+            levels = criteriaResponse.levels || levels;
+            groupCriteria();
+        }
+
+        async function loadInitialData() {
+            const [projectsResponse] = await Promise.all([
+                api.get('/evaluations/projects'),
+                refreshCriteria()
+            ]);
+            projects = projectsResponse || [];
+            const usersResponse = await api.get('/users', { perfil_id: 2, status: 'active', per_page: 100 });
+            teachers = usersResponse.data || [];
+            await loadRooms();
+
+            const projectFilter = document.getElementById('projectFilter');
+            const projectSelect = document.getElementById('project_id');
+            projectFilter.innerHTML = '<option value="">Todos los proyectos</option>';
+            projectSelect.innerHTML = '<option value="">Selecciona un proyecto</option>';
+            projects.forEach(project => {
+                const option = `<option value="${project.id}">${escapeHtml(project.title)}</option>`;
+                projectFilter.innerHTML += option;
+                projectSelect.innerHTML += option;
+            });
+            renderRoomOptions();
+        }
+
+        function renderRoomOptions() {
+            document.getElementById('evaluation_room_id').innerHTML = '<option value="">Sin sala configurada</option>' + rooms.map(room => `<option value="${room.id}">${escapeHtml(room.nombre)} · ${escapeHtml(room.salon || 'Sin salon')} · ${room.semestre}</option>`).join('');
+        }
+
+        async function loadEvaluations() {
+            const projectId = document.getElementById('projectFilter').value;
+            const params = projectId ? { project_id: projectId } : {};
+            const response = await api.get('/evaluations', params);
+            evaluations = response.data || [];
+            const tbody = document.getElementById('evaluationsTable');
+            tbody.innerHTML = '';
+
+            if (evaluations.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="8" class="text-center text-muted py-4">No hay evaluaciones</td></tr>';
+                return;
+            }
+
+            evaluations.forEach(evaluation => {
+                tbody.innerHTML += `
+                    <tr>
+                        <td>${escapeHtml(evaluation.project?.title || 'N/A')}</td>
+                        <td>${evaluation.semestre}</td>
+                        <td>${stageLabel(evaluation.etapa)}</td>
+                        <td>${escapeHtml(evaluation.sala || '-')}</td>
+                        <td>${evaluation.fecha_exposicion ? new Date(evaluation.fecha_exposicion).toLocaleString('es-MX') : '-'}</td>
+                        <td><span class="badge bg-secondary">${escapeHtml(evaluation.resultado)}</span></td>
+                        <td>
+                            <button class="btn btn-sm btn-outline-primary" onclick="showBreakdown(${evaluation.id})">
+                                ${evaluation.global_average}% · ${evaluation.evaluators_count} docentes
+                            </button>
+                        </td>
+                        <td>
+                            <div class="btn-group btn-group-sm">
+                                <button class="btn btn-outline-success" onclick="openScoreModal(${evaluation.id})" title="Evaluar"><i class="bi bi-clipboard-check"></i></button>
+                                <button class="btn btn-outline-danger" onclick="deleteEvaluation(${evaluation.id})" title="Eliminar"><i class="bi bi-trash"></i></button>
+                            </div>
+                        </td>
+                    </tr>`;
+            });
+        }
+
+        function openEvaluationModal() {
+            document.getElementById('evaluationForm').reset();
+            evaluationModal.show();
+        }
+
+        function applyRoomToEvaluationForm() {
+            const room = rooms.find(item => String(item.id) === document.getElementById('evaluation_room_id').value);
+            if (!room) return;
+            document.getElementById('semestre').value = room.semestre;
+            document.getElementById('sala').value = room.nombre;
+            document.getElementById('fecha_exposicion').value = room.fecha_evaluacion ? room.fecha_evaluacion.slice(0, 16) : '';
+            document.getElementById('project_id').innerHTML = '<option value="">Selecciona un proyecto</option>' + (room.projects || []).map(project => `<option value="${project.id}">${escapeHtml(project.title)}</option>`).join('');
+        }
+
+        document.getElementById('evaluationForm').addEventListener('submit', async (event) => {
+            event.preventDefault();
+            const data = {
+                project_id: document.getElementById('project_id').value,
+                evaluation_room_id: document.getElementById('evaluation_room_id').value || null,
+                semestre: document.getElementById('semestre').value,
+                sala: document.getElementById('sala').value.trim() || null,
+                fecha_exposicion: document.getElementById('fecha_exposicion').value || null,
+                estado: 'programada',
+                resultado: 'pendiente'
+            };
+            try {
+                await api.post('/evaluations', data);
+                evaluationModal.hide();
+                showAlert('#alertContainer', 'success', 'Evaluacion creada correctamente');
+                loadEvaluations();
+            } catch (error) {
+                showAlert('#alertContainer', 'danger', error.message || 'Error creando evaluacion');
+            }
+        });
+
+        function openRubricModal() {
+            document.getElementById('rubricSemester').value = '5';
+            loadRubricCriteria();
+            rubricModal.show();
+        }
+
+        async function loadRooms() {
+            rooms = await api.get('/evaluations/rooms');
+        }
+
+        async function openRoomsModal() {
+            await loadRooms();
+            renderRooms();
+            renderRoomTeachers();
+            await loadRoomProjects();
+            roomsModal.show();
+        }
+
+        function renderRoomTeachers(selected = []) {
+            const selectedIds = selected.map(String);
+            document.getElementById('roomTeachers').innerHTML = teachers.map(teacher => `
+                <div class="form-check">
+                    <input class="form-check-input room-teacher" type="checkbox" value="${escapeHtml(teacher.id)}" id="roomTeacher${escapeHtml(teacher.id)}" ${selectedIds.includes(String(teacher.id)) ? 'checked' : ''}>
+                    <label class="form-check-label" for="roomTeacher${escapeHtml(teacher.id)}">${escapeHtml(teacher.nombres)} ${escapeHtml(teacher.apa || '')}</label>
+                </div>`).join('') || '<p class="text-muted mb-0">No hay docentes activos.</p>';
+        }
+
+        async function loadRoomProjects(selected = []) {
+            const semester = document.getElementById('roomSemester').value;
+            roomProjects = await api.get('/evaluations/projects', { semestre: semester });
+            const selectedIds = selected.map(Number);
+            document.getElementById('roomProjects').innerHTML = roomProjects.map(project => `
+                <div class="form-check">
+                    <input class="form-check-input room-project" type="checkbox" value="${project.id}" id="roomProject${project.id}" ${selectedIds.includes(Number(project.id)) ? 'checked' : ''}>
+                    <label class="form-check-label" for="roomProject${project.id}">${escapeHtml(project.title)} <span class="text-muted small">${escapeHtml(project.authors || '')}</span></label>
+                </div>`).join('') || '<p class="text-muted mb-0">No hay proyectos para este semestre.</p>';
+        }
+
+        function renderRooms() {
+            document.getElementById('roomsList').innerHTML = rooms.map(room => `
+                <div class="border rounded p-3 mb-3">
+                    <div class="d-flex justify-content-between gap-2">
+                        <div>
+                            <h6 class="mb-1">${escapeHtml(room.nombre)} <span class="badge bg-secondary">${room.semestre}</span></h6>
+                            <div class="small text-muted">${escapeHtml(room.salon || 'Sin salon')} · ${room.fecha_evaluacion ? new Date(room.fecha_evaluacion).toLocaleString('es-MX') : 'Sin fecha'}</div>
+                            <div class="small mt-1">Docentes: ${(room.teachers || []).map(t => escapeHtml(t.nombres)).join(', ') || '-'}</div>
+                            <div class="small">Proyectos: ${(room.projects || []).length}</div>
+                            <div class="small">Exposicion: ${room.project_presentation_minutes} min · Evaluacion docente: ${room.teacher_evaluation_minutes} min · Oportunidades: ${room.max_attempts}</div>
+                        </div>
+                        <div class="btn-group btn-group-sm align-self-start">
+                            <button class="btn btn-outline-primary" onclick="editRoom(${room.id})"><i class="bi bi-pencil"></i></button>
+                            <button class="btn btn-outline-danger" onclick="deleteRoom(${room.id})"><i class="bi bi-trash"></i></button>
+                        </div>
+                    </div>
+                </div>`).join('') || '<p class="text-muted">No hay salas creadas.</p>';
+        }
+
+        async function editRoom(id) {
+            const room = rooms.find(item => Number(item.id) === Number(id));
+            if (!room) return;
+            document.getElementById('roomId').value = room.id;
+            document.getElementById('roomName').value = room.nombre || '';
+            document.getElementById('roomClassroom').value = room.salon || '';
+            document.getElementById('roomSemester').value = room.semestre;
+            document.getElementById('roomDate').value = room.fecha_evaluacion ? room.fecha_evaluacion.slice(0, 16) : '';
+            document.getElementById('teacherMinutes').value = room.teacher_evaluation_minutes || 15;
+            document.getElementById('presentationMinutes').value = room.project_presentation_minutes || 20;
+            document.getElementById('maxAttempts').value = room.max_attempts || 1;
+            renderRoomTeachers((room.teachers || []).map(t => t.id));
+            await loadRoomProjects((room.projects || []).map(p => p.id));
+        }
+
+        function resetRoomForm() {
+            ['roomId', 'roomName', 'roomClassroom', 'roomDate'].forEach(id => document.getElementById(id).value = '');
+            document.getElementById('teacherMinutes').value = 15;
+            document.getElementById('presentationMinutes').value = 20;
+            document.getElementById('maxAttempts').value = 1;
+            renderRoomTeachers();
+            loadRoomProjects();
+        }
+
+        async function saveRoom() {
+            const id = document.getElementById('roomId').value;
+            const payload = {
+                nombre: document.getElementById('roomName').value.trim(),
+                salon: document.getElementById('roomClassroom').value.trim() || null,
+                semestre: document.getElementById('roomSemester').value,
+                fecha_evaluacion: document.getElementById('roomDate').value,
+                teacher_evaluation_minutes: Number(document.getElementById('teacherMinutes').value),
+                project_presentation_minutes: Number(document.getElementById('presentationMinutes').value),
+                max_attempts: Number(document.getElementById('maxAttempts').value),
+                teacher_ids: [...document.querySelectorAll('.room-teacher:checked')].map(input => input.value),
+                project_ids: [...document.querySelectorAll('.room-project:checked')].map(input => Number(input.value))
+            };
+            try {
+                if (id) await api.put(`/evaluations/rooms/${id}`, payload);
+                else await api.post('/evaluations/rooms', payload);
+                await loadRooms();
+                renderRooms();
+                renderRoomOptions();
+                resetRoomForm();
+                loadEvaluations();
+                swalToast('success', 'Sala guardada');
+            } catch (error) {
+                showAlert('#alertContainer', 'danger', error.message || 'Error guardando sala');
+            }
+        }
+
+        async function deleteRoom(id) {
+            if (!await confirmAction({ title: 'Desactivar sala', text: 'La sala dejara de aparecer para nuevas evaluaciones.', confirmButtonText: 'Si, desactivar' })) return;
+            await api.delete(`/evaluations/rooms/${id}`);
+            await loadRooms();
+            renderRooms();
+            renderRoomOptions();
+        }
+
+        async function loadRubricCriteria() {
+            await refreshCriteria();
+            const semester = document.getElementById('rubricSemester').value;
+            const list = document.getElementById('rubricCriteriaList');
+            const semesterCriteria = criteriaBySemester[semester] || [];
+
+            if (semesterCriteria.length === 0) {
+                list.innerHTML = '<p class="text-muted mb-0">No hay preguntas para este semestre.</p>';
+                return;
+            }
+
+            list.innerHTML = semesterCriteria.map(criterion => `
+                <div class="border rounded p-3 mb-2" data-rubric-id="${criterion.id}">
+                    <div class="row g-2 align-items-center">
+                        <div class="col-md-2">
+                            <input type="number" class="form-control criterion-order" value="${criterion.orden || 0}" min="0">
+                        </div>
+                        <div class="col-md-8">
+                            <input type="text" class="form-control criterion-question" value="${escapeHtml(criterion.label)}" maxlength="255">
+                        </div>
+                        <div class="col-md-2 d-flex gap-1">
+                            <button type="button" class="btn btn-sm btn-outline-primary" onclick="updateCriterion(${criterion.id})" title="Guardar"><i class="bi bi-save"></i></button>
+                            <button type="button" class="btn btn-sm btn-outline-danger" onclick="deleteCriterion(${criterion.id})" title="Desactivar"><i class="bi bi-trash"></i></button>
+                        </div>
+                    </div>
+                </div>`).join('');
+        }
+
+        async function addCriterion() {
+            const semester = document.getElementById('rubricSemester').value;
+            const text = document.getElementById('newCriterionText').value.trim();
+            if (!text) return;
+            await api.post('/evaluations/rubric-criteria', {
+                semestre: semester,
+                pregunta: text,
+                orden: (criteriaBySemester[semester]?.length || 0) + 1
+            });
+            document.getElementById('newCriterionText').value = '';
+            loadRubricCriteria();
+        }
+
+        async function updateCriterion(id) {
+            const row = document.querySelector(`[data-rubric-id="${id}"]`);
+            await api.put(`/evaluations/rubric-criteria/${id}`, {
+                pregunta: row.querySelector('.criterion-question').value.trim(),
+                orden: row.querySelector('.criterion-order').value || 0
+            });
+            loadRubricCriteria();
+        }
+
+        async function deleteCriterion(id) {
+            if (!await confirmAction({ title: 'Desactivar pregunta', text: '¿Desactivar esta pregunta de la rubrica?', confirmButtonText: 'Si, desactivar' })) return;
+            await api.delete(`/evaluations/rubric-criteria/${id}`);
+            loadRubricCriteria();
+        }
+
+        function openScoreModal(evaluationId) {
+            document.getElementById('scoreEvaluationId').value = evaluationId;
+            const evaluation = evaluations.find(item => item.id === evaluationId);
+            if (evaluation?.current_teacher_has_scores && Number(evaluation.current_teacher_attempts) >= Number(evaluation.max_attempts)) {
+                showAlert('#alertContainer', 'danger', `Ya alcanzaste el limite de ${evaluation.max_attempts} oportunidad(es) para esta evaluacion.`);
+                return;
+            }
+            const semesterCriteria = criteriaBySemester[evaluation?.semestre] || [];
+            const container = document.getElementById('scoreFields');
+            container.innerHTML = '';
+
+            if (semesterCriteria.length === 0) {
+                container.innerHTML = '<p class="text-muted mb-0">Este semestre no tiene preguntas de rubrica configuradas.</p>';
+                scoreModal.show();
+                return;
+            }
+
+            semesterCriteria.forEach(criterion => {
+                container.innerHTML += `
+                    <div class="border rounded p-3 mb-3" data-criterion="${criterion.key}">
+                        <label class="form-label fw-semibold">${escapeHtml(criterion.label)}</label>
+                        <select class="form-select mb-2 criterion-level" required>
+                            ${levels.map(level => `<option value="${level}">${level}</option>`).join('')}
+                        </select>
+                        <textarea class="form-control criterion-comment" rows="2" placeholder="Comentario opcional, no afecta el puntaje"></textarea>
+                    </div>`;
+            });
+            scoreModal.show();
+        }
+
+        document.getElementById('scoreForm').addEventListener('submit', async (event) => {
+            event.preventDefault();
+            const evaluationId = document.getElementById('scoreEvaluationId').value;
+            const scores = [...document.querySelectorAll('[data-criterion]')].map(row => ({
+                criterio: row.dataset.criterion,
+                nivel: row.querySelector('.criterion-level').value,
+                comentario: row.querySelector('.criterion-comment').value.trim() || null
+            }));
+            try {
+                const evaluation = evaluations.find(item => String(item.id) === String(evaluationId));
+                let confirm_update = false;
+                if (evaluation?.current_teacher_has_scores) {
+                    confirm_update = await confirmAction({
+                        title: 'Modificar evaluacion existente',
+                        text: `Ya evaluaste este proyecto. Si continuas, se modificara tu evaluacion actual. Oportunidades usadas: ${evaluation.current_teacher_attempts}/${evaluation.max_attempts}.`,
+                        confirmButtonText: 'Si, modificar'
+                    });
+                    if (!confirm_update) return;
+                }
+                await api.post(`/evaluations/${evaluationId}/score`, { scores, confirm_update });
+                scoreModal.hide();
+                showAlert('#alertContainer', 'success', 'Rubrica guardada correctamente');
+                loadEvaluations();
+            } catch (error) {
+                showAlert('#alertContainer', 'danger', error.message || 'Error guardando rubrica');
+            }
+        });
+
+        function showBreakdown(evaluationId) {
+            const evaluation = evaluations.find(item => item.id === evaluationId);
+            const container = document.getElementById('breakdownContent');
+            if (!evaluation || evaluation.teacher_breakdown.length === 0) {
+                container.innerHTML = '<p class="text-muted mb-0">Aun no hay evaluaciones registradas por docentes.</p>';
+                breakdownModal.show();
+                return;
+            }
+            container.innerHTML = evaluation.teacher_breakdown.map(teacher => `
+                <div class="border rounded p-3 mb-3">
+                    <div class="d-flex justify-content-between align-items-center mb-2">
+                        <h6 class="mb-0">${escapeHtml(teacher.teacher_name)}</h6>
+                        <span class="badge bg-primary">${teacher.average}%</span>
+                    </div>
+                    <div class="table-responsive">
+                        <table class="table table-sm mb-0">
+                            <tbody>
+                                ${teacher.scores.map(score => `
+                                    <tr>
+                                        <td>${escapeHtml(score.criterio_label)}</td>
+                                        <td><span class="badge bg-secondary">${escapeHtml(score.nivel)}</span></td>
+                                        <td>${escapeHtml(score.comentario || '-')}</td>
+                                    </tr>`).join('')}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>`).join('');
+            breakdownModal.show();
+        }
+
+        async function deleteEvaluation(id) {
+            if (!await confirmAction({ title: 'Eliminar evaluacion', text: '¿Eliminar esta evaluacion?', confirmButtonText: 'Si, eliminar' })) return;
+            await api.delete(`/evaluations/${id}`);
+            showAlert('#alertContainer', 'success', 'Evaluacion eliminada');
+            loadEvaluations();
+        }
+
+        document.addEventListener('DOMContentLoaded', async () => {
+            evaluationModal = new bootstrap.Modal(document.getElementById('evaluationModal'));
+            rubricModal = new bootstrap.Modal(document.getElementById('rubricModal'));
+            scoreModal = new bootstrap.Modal(document.getElementById('scoreModal'));
+            breakdownModal = new bootstrap.Modal(document.getElementById('breakdownModal'));
+            roomsModal = new bootstrap.Modal(document.getElementById('roomsModal'));
+            await loadInitialData();
+            loadEvaluations();
+        });
+    </script>
+</body>
+</html>
