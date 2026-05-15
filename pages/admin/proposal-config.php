@@ -97,7 +97,7 @@ if (!is_authenticated() || !is_admin()) { header('Location: /index.php'); exit; 
 </div>
 <?php require_once $_SERVER['DOCUMENT_ROOT'] . '/includes/footer.php'; ?>
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-<script>const API_BASE_URL = 'http://127.0.0.1:8000/api';</script>
+<script>const API_BASE_URL = 'https://swapi-production-8341.up.railway.app/api';</script>
 <script src="/assets/js/auth.js"></script>
 <script src="/assets/js/api.js"></script>
 <script>

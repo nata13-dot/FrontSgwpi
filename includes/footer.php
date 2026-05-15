@@ -1,7 +1,7 @@
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 <script>
 window.SGPI_SETTINGS = window.SGPI_SETTINGS || {};
-window.SGPI_API_BASE_URL = '<?= API_BASE_URL ?>';
+window.SGPI_API_BASE_URL = 'https://swapi-production-8341.up.railway.app/api';
 
 async function loadPublicSettings() {
     try {
@@ -41,10 +41,12 @@ function applySystemSettings(settings) {
             notice.id = 'globalSystemNotice';
             notice.className = 'global-system-notice';
             notice.innerHTML = `<i class="bi bi-megaphone"></i><span>${String(settings.global_notice).replace(/[&<>'"]/g, char => ({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'}[char]))}</span>`;
-            document.body.prepend(notice);
+            placeGlobalSystemNotice(notice);
         } else if (existing) {
             existing.querySelector('span').textContent = settings.global_notice;
+            placeGlobalSystemNotice(existing);
         }
+        syncGlobalNoticeOffset();
     } else if (existing) {
         existing.remove();
     }
@@ -52,6 +54,28 @@ function applySystemSettings(settings) {
     startIdleLogoutTimer(Number(settings.session_timeout_minutes || 30));
     queueSystemNoticeToasts(settings.system_notices || []);
 }
+
+function placeGlobalSystemNotice(notice) {
+    const navbar = document.querySelector('.navbar');
+    if (navbar && navbar.parentNode) {
+        navbar.insertAdjacentElement('beforebegin', notice);
+        return;
+    }
+    document.body.prepend(notice);
+}
+
+function syncGlobalNoticeOffset() {
+    const notice = document.getElementById('globalSystemNotice');
+    const navbar = document.querySelector('.navbar');
+    const height = notice ? notice.offsetHeight : 0;
+    document.documentElement.style.setProperty('--sgpi-global-notice-height', `${height}px`);
+    if (navbar) {
+        navbar.classList.toggle('has-global-system-notice', Boolean(notice));
+    }
+}
+
+window.addEventListener('resize', syncGlobalNoticeOffset, { passive: true });
+window.addEventListener('orientationchange', syncGlobalNoticeOffset, { passive: true });
 
 let idleLogoutTimer = null;
 function startIdleLogoutTimer(minutes) {
