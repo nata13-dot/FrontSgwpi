@@ -13,6 +13,7 @@ if (!is_authenticated() || !is_admin()) {
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Dashboard Admin - <?= APP_NAME ?></title>
+    <?php require_once $_SERVER['DOCUMENT_ROOT'] . '/includes/visual-preferences.php'; ?>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
     <link rel="stylesheet" href="/assets/css/app.css">
@@ -21,22 +22,25 @@ if (!is_authenticated() || !is_admin()) {
     <?php require_once $_SERVER['DOCUMENT_ROOT'] . '/includes/navbar.php'; ?>
     
     <!-- Page Header -->
-    <div class="hero-gradient">
-        <div class="container-xl">
-            <div class="d-flex align-items-center justify-content-between">
-                <div>
-                    <div style="display: flex; align-items: center; gap: 15px; margin-bottom: 10px;">
-                        <img src="/assets/img/ITSSMT/ITSSMT.png" alt="ITSSMT" style="height: 50px;">
-                        <h1 style="font-size: 2.5rem; color: white;">Panel de Administrador</h1>
-                    </div>
-                    <p class="mb-0 opacity-75"><strong>Bienvenido, <?= htmlspecialchars($current_user['nombres']) ?></strong> | Gestión integral del sistema</p>
-                </div>
+    <div style="background: url('/assets/img/ITSSMT/Fondo.jpg'); background-size: cover; background-position: center; padding: 80px 0; position: relative;">
+        <div class="overlay"></div>
+        <div class="container-xl" style="position: relative; z-index: 1;">
+            <!-- Logo y Título -->
+            <div class="d-flex align-items-center gap-3 mb-2">
+                <img src="/assets/img/ITSSMT/ITSSMT.png" alt="ITSSMT" style="height: 50px;">
+                <h1 class="display-4 fw-bold text-white mb-0">Panel de Administrador</h1>
             </div>
             
-            <nav aria-label="breadcrumb" class="mt-3">
-                <ol class="breadcrumb" style="background: rgba(255,255,255,0.1); border-radius: 5px; padding: 10px 15px; margin: 0;">
-                    <li class="breadcrumb-item"><a href="/index.php" style="color: white;">Inicio</a></li>
-                    <li class="breadcrumb-item active opacity-75" style="color: white;">Panel Administrativo</li>
+            <!-- Subtítulo -->
+            <p class="text-white opacity-90 mb-3" style="font-size: 1.1rem;">
+                <strong>Bienvenido, <?= htmlspecialchars($current_user['nombres']) ?></strong> | Gestión integral del sistema
+            </p>
+            
+            <!-- Breadcrumb -->
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb" style="background: rgba(255,255,255,0.15); border-radius: 5px; padding: 8px 12px; margin: 0;">
+                    <li class="breadcrumb-item"><a href="/index.php" class="text-white text-decoration-none">Inicio</a></li>
+                    <li class="breadcrumb-item active text-white opacity-75">Panel Administrativo</li>
                 </ol>
             </nav>
         </div>
@@ -185,7 +189,7 @@ if (!is_authenticated() || !is_admin()) {
                 if (response.recent_projects && response.recent_projects.length > 0) {
                     response.recent_projects.forEach(project => {
                         const item = `
-                            <a href="/pages/admin/project-edit.php?id=${project.id}" class="list-group-item list-group-item-action px-4 py-3">
+                            <a href="/pages/admin/projects.php?edit=${project.id}" class="list-group-item list-group-item-action px-4 py-3">
                                 <h6 class="mb-1">${project.title}</h6>
                                 <small class="text-muted">
                                     <i class="bi bi-person"></i> ${project.creator?.nombres || 'N/A'} | 

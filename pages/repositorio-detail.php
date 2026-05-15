@@ -5,6 +5,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Detalles del Repositorio - <?= APP_NAME ?></title>
+    <?php require_once $_SERVER['DOCUMENT_ROOT'] . '/includes/visual-preferences.php'; ?>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
     <link rel="stylesheet" href="/assets/css/app.css">
@@ -37,11 +38,17 @@
     
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/mammoth@1.8.0/mammoth.browser.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/epubjs@0.3.93/dist/epub.min.js"></script>
     <script>const API_BASE_URL = 'http://127.0.0.1:8000/api';</script>
     <script src="/assets/js/auth.js"></script>
     <script src="/assets/js/api.js"></script>
 
     <script>
+        function esc(value) {
+            return String(value ?? '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#039;');
+        }
+
         async function loadDocumento() {
             const params = new URLSearchParams(window.location.search);
             const docId = params.get('id');
@@ -52,32 +59,34 @@
             }
 
             try {
-                const response = await api.get(`/repositorio/${docId}`);
-                const doc = response.data;
+                const doc = await api.get(`/repositorio/${docId}`);
+                const downloadUrl = `${API_BASE_URL}/repositorio/${encodeURIComponent(doc.id)}/download`;
+                const viewUrl = `${API_BASE_URL}/repositorio/${encodeURIComponent(doc.id)}/view`;
+                const fileType = String(doc.archivo_tipo || '').toLowerCase();
 
                 const html = `
-                    <div class="row">
-                        <div class="col-lg-8">
-                            <div class="card border-0 shadow-sm mb-4">
-                                <div class="card-body">
-                                    <h2 class="mb-3">${doc.nombre}</h2>
-                                    <p class="text-muted lead">${doc.descripcion || ''}</p>
-                                    
-                                    <div class="mb-4">
-                                        <h6>Información</h6>
-                                        <ul class="list-unstyled">
-                                            <li><strong>Proyecto:</strong> ${doc.project?.title || 'N/A'}</li>
-                                            <li><strong>Fecha:</strong> ${new Date(doc.created_at).toLocaleDateString()}</li>
-                                            <li><strong>Creado por:</strong> ${doc.creator?.nombres || 'N/A'}</li>
-                                        </ul>
-                                    </div>
+                    <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-4">
+                        <div>
+                            <h1 class="mb-1">${esc(doc.nombre)}</h1>
+                            <p class="text-muted mb-0">${esc(doc.descripcion || '')}</p>
+                        </div>
+                        <a href="${downloadUrl}" class="btn btn-primary">
+                            <i class="bi bi-download"></i> Descargar documento
+                        </a>
+                    </div>
 
-                                    <div class="mb-4">
-                                        <h6>Etiquetas</h6>
-                                        <div>
-                                            ${doc.tags ? doc.tags.map(tag => 
-                                                `<span class="badge" style="background-color: ${tag.color}">${tag.nombre}</span>`
-                                            ).join('') : '<span class="text-muted">Sin etiquetas</span>'}
+                    <div class="row g-4">
+                        <div class="col-lg-8">
+                            <div class="card border-0 shadow-sm mb-4 repository-reader-card">
+                                <div class="card-header d-flex flex-wrap justify-content-between align-items-center gap-2">
+                                    <h6 class="mb-0"><i class="bi bi-book"></i> Vista previa</h6>
+                                    <span class="badge bg-light text-primary">${esc(fileType.toUpperCase() || 'DOCUMENTO')}</span>
+                                </div>
+                                <div class="card-body">
+                                    <div id="documentReader" class="repository-reader">
+                                        <div class="text-center py-5">
+                                            <div class="spinner-custom"></div>
+                                            <p class="mt-2 text-muted">Preparando vista previa...</p>
                                         </div>
                                     </div>
                                 </div>
@@ -90,9 +99,18 @@
                                     <h6 class="mb-0"><i class="bi bi-info-circle"></i> Detalles</h6>
                                 </div>
                                 <div class="card-body">
-                                    <button class="btn btn-primary w-100 mb-2">
-                                        <i class="bi bi-download"></i> Descargar
-                                    </button>
+                                    <ul class="list-unstyled small mb-4">
+                                        <li class="mb-2"><strong>Autores:</strong><br>${esc(doc.autores || 'No especificados')}</li>
+                                        <li class="mb-2"><strong>Tipo:</strong><br>${esc((doc.archivo_tipo || 'documento').toUpperCase())}</li>
+                                        <li class="mb-2"><strong>Fecha:</strong><br>${new Date(doc.created_at).toLocaleDateString()}</li>
+                                        <li class="mb-2"><strong>Subido por:</strong><br>${esc(doc.uploader?.nombres || 'N/A')}</li>
+                                    </ul>
+                                    <h6>Etiquetas</h6>
+                                    <div class="mb-4">
+                                        ${doc.tags && doc.tags.length ? doc.tags.map(tag =>
+                                            `<span class="badge me-1 mb-1" style="background-color: ${esc(tag.color)}">${esc(tag.nombre)}</span>`
+                                        ).join('') : '<span class="text-muted">Sin etiquetas</span>'}
+                                    </div>
                                     <a href="/pages/repositorio.php" class="btn btn-secondary w-100">
                                         <i class="bi bi-arrow-left"></i> Volver
                                     </a>
@@ -103,10 +121,65 @@
                 `;
 
                 document.getElementById('detailsContainer').innerHTML = html;
+                renderDocumentPreview(fileType, viewUrl, downloadUrl);
             } catch (error) {
                 console.error('Error:', error);
                 document.getElementById('detailsContainer').innerHTML = '<p class="text-danger">Error al cargar el documento</p>';
             }
+        }
+
+        async function renderDocumentPreview(fileType, viewUrl, downloadUrl) {
+            const reader = document.getElementById('documentReader');
+            if (!reader) return;
+
+            if (fileType === 'pdf') {
+                reader.innerHTML = `<iframe src="${viewUrl}" class="repository-reader-frame" title="Vista previa PDF"></iframe>`;
+                return;
+            }
+
+            if (fileType === 'docx') {
+                try {
+                    const response = await fetch(viewUrl);
+                    const buffer = await response.arrayBuffer();
+                    const result = await mammoth.convertToHtml({ arrayBuffer: buffer });
+                    reader.innerHTML = `<article class="repository-word-preview">${result.value || '<p class="text-muted">El documento no contiene texto visible.</p>'}</article>`;
+                } catch (error) {
+                    reader.innerHTML = previewFallback(downloadUrl, 'No fue posible leer este archivo Word en el navegador.');
+                }
+                return;
+            }
+
+            if (fileType === 'epub') {
+                reader.innerHTML = `
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <button type="button" class="btn btn-outline-secondary btn-sm" id="epubPrev"><i class="bi bi-chevron-left"></i> Anterior</button>
+                        <button type="button" class="btn btn-outline-secondary btn-sm" id="epubNext">Siguiente <i class="bi bi-chevron-right"></i></button>
+                    </div>
+                    <div id="epubViewer" class="repository-epub-viewer"></div>
+                `;
+                try {
+                    const book = ePub(viewUrl);
+                    const rendition = book.renderTo('epubViewer', { width: '100%', height: 620, spread: 'none' });
+                    rendition.display();
+                    document.getElementById('epubPrev').onclick = () => rendition.prev();
+                    document.getElementById('epubNext').onclick = () => rendition.next();
+                } catch (error) {
+                    reader.innerHTML = previewFallback(downloadUrl, 'No fue posible abrir este EPUB en el navegador.');
+                }
+                return;
+            }
+
+            reader.innerHTML = previewFallback(downloadUrl, 'La vista previa para archivos .doc antiguos no está disponible en el navegador.');
+        }
+
+        function previewFallback(downloadUrl, message) {
+            return `
+                <div class="text-center py-5">
+                    <i class="bi bi-file-earmark-text text-muted" style="font-size: 3rem;"></i>
+                    <p class="mt-3 text-muted">${esc(message)}</p>
+                    <a href="${downloadUrl}" class="btn btn-primary"><i class="bi bi-download"></i> Descargar para leer</a>
+                </div>
+            `;
         }
 
         document.addEventListener('DOMContentLoaded', loadDocumento);

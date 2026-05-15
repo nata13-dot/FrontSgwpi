@@ -28,6 +28,7 @@ $section = isset($_GET['section']) ? $_GET['section'] : '';
         <a href="/pages/admin/asignaturas.php" class="sidebar-item <?= $current_page == 'asignaturas.php' ? 'active' : '' ?>"><i class="bi bi-book"></i><span>Asignaturas</span></a>
         <a href="/pages/admin/competencias.php" class="sidebar-item <?= $current_page == 'competencias.php' ? 'active' : '' ?>"><i class="bi bi-star"></i><span>Competencias</span></a>
         <a href="/pages/admin/document-tags.php" class="sidebar-item <?= $current_page == 'document-tags.php' ? 'active' : '' ?>"><i class="bi bi-tags"></i><span>Etiquetas</span></a>
+        <a href="/pages/admin/notices.php" class="sidebar-item <?= $current_page == 'notices.php' ? 'active' : '' ?>"><i class="bi bi-megaphone"></i><span>Avisos</span></a>
         <a href="/pages/admin/settings.php" class="sidebar-item <?= $current_page == 'settings.php' ? 'active' : '' ?>"><i class="bi bi-sliders"></i><span>Ajustes</span></a>
         <a href="/pages/profile.php" class="sidebar-item <?= $current_page == 'profile.php' ? 'active' : '' ?>"><i class="bi bi-person-circle"></i><span>Mi Perfil</span></a>
     <?php elseif (is_teacher()): ?>

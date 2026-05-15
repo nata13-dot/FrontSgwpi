@@ -12,6 +12,7 @@ if (!is_authenticated() || !is_admin()) {
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Gestion de Competencias - <?= APP_NAME ?></title>
+    <?php require_once $_SERVER['DOCUMENT_ROOT'] . '/includes/visual-preferences.php'; ?>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
     <link rel="stylesheet" href="/assets/css/app.css">
@@ -39,12 +40,13 @@ if (!is_authenticated() || !is_admin()) {
                                         <th>Asignatura</th>
                                         <th>Fecha Inicio</th>
                                         <th>Fecha Fin</th>
+                                        <th>Entregables</th>
                                         <th>Estado</th>
                                         <th>Acciones</th>
                                     </tr>
                                 </thead>
                                 <tbody id="competenciasTable">
-                                    <tr><td colspan="6" class="text-center py-4"><div class="spinner-border" role="status"></div></td></tr>
+                                    <tr><td colspan="7" class="text-center py-4"><div class="spinner-border" role="status"></div></td></tr>
                                 </tbody>
                             </table>
                         </div>
@@ -140,7 +142,7 @@ if (!is_authenticated() || !is_admin()) {
                 tbody.innerHTML = '';
 
                 if (competencias.length === 0) {
-                    tbody.innerHTML = '<tr><td colspan="6" class="text-center text-muted py-4">No hay competencias</td></tr>';
+                    tbody.innerHTML = '<tr><td colspan="7" class="text-center text-muted py-4">No hay competencias</td></tr>';
                     return;
                 }
 
@@ -151,9 +153,11 @@ if (!is_authenticated() || !is_admin()) {
                             <td>${escapeHtml(competencia.asignatura?.nombre || '-')}</td>
                             <td><small>${competencia.fecha_inicio ? new Date(competencia.fecha_inicio).toLocaleDateString('es-MX') : '-'}</small></td>
                             <td><small>${competencia.fecha_fin ? new Date(competencia.fecha_fin).toLocaleDateString('es-MX') : '-'}</small></td>
+                            <td><span class="badge bg-primary">${Number(competencia.deliverables_count || 0)}</span></td>
                             <td>${getEstado(competencia.fecha_inicio, competencia.fecha_fin)}</td>
                             <td>
                                 <div class="btn-group btn-group-sm">
+                                    <a class="btn btn-outline-info" href="/pages/admin/deliverables.php?competencia_id=${competencia.id}" title="Ver entregables"><i class="bi bi-file-earmark"></i></a>
                                     <button class="btn btn-outline-primary" onclick="openCompetenciaModal(${competencia.id})" title="Editar"><i class="bi bi-pencil"></i></button>
                                     <button class="btn btn-outline-danger" onclick="deleteCompetencia(${competencia.id})" title="Eliminar"><i class="bi bi-trash"></i></button>
                                 </div>

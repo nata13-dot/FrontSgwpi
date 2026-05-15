@@ -12,6 +12,7 @@ if (!is_authenticated() || !is_admin()) {
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Gestion de Asignaturas - <?= APP_NAME ?></title>
+    <?php require_once $_SERVER['DOCUMENT_ROOT'] . '/includes/visual-preferences.php'; ?>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
     <link rel="stylesheet" href="/assets/css/app.css">
@@ -42,16 +43,31 @@ if (!is_authenticated() || !is_admin()) {
                                     <tr>
                                         <th>Clave</th>
                                         <th>Nombre</th>
+                                        <th>Competencias</th>
                                         <th>Descripcion</th>
                                         <th>Acciones</th>
                                     </tr>
                                 </thead>
                                 <tbody id="asignaturasTable">
-                                    <tr><td colspan="4" class="text-center py-4"><div class="spinner-custom"></div></td></tr>
+                                    <tr><td colspan="5" class="text-center py-4"><div class="spinner-custom"></div></td></tr>
                                 </tbody>
                             </table>
                         </div>
                     </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal fade" id="structureModal" tabindex="-1">
+        <div class="modal-dialog modal-xl">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="structureTitle">Estructura de asignatura</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body" id="structureBody">
+                    <div class="text-center py-4"><div class="spinner-border" role="status"></div></div>
                 </div>
             </div>
         </div>
@@ -148,6 +164,7 @@ if (!is_authenticated() || !is_admin()) {
     <script>
         let asignaturas = [];
         let asignaturaModal;
+        let structureModal;
 
         function escapeHtml(value) {
             return String(value ?? '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#039;');
@@ -161,7 +178,7 @@ if (!is_authenticated() || !is_admin()) {
                 tbody.innerHTML = '';
 
                 if (asignaturas.length === 0) {
-                    tbody.innerHTML = '<tr><td colspan="4" class="text-center text-muted py-4">No hay asignaturas</td></tr>';
+                    tbody.innerHTML = '<tr><td colspan="5" class="text-center text-muted py-4">No hay asignaturas</td></tr>';
                     return;
                 }
 
@@ -170,9 +187,11 @@ if (!is_authenticated() || !is_admin()) {
                         <tr>
                             <td><strong>${escapeHtml(asignatura.clave || '-')}</strong></td>
                             <td>${escapeHtml(asignatura.nombre)}</td>
+                            <td><span class="badge bg-primary">${Number(asignatura.competencias_count || 0)}</span></td>
                             <td><small>${escapeHtml(asignatura.descripcion || '-')}</small></td>
                             <td>
                                 <div class="btn-group btn-group-sm">
+                                    <button class="btn btn-outline-info" onclick="viewAsignaturaStructure(${asignatura.id})" title="Ver competencias y entregables"><i class="bi bi-diagram-3"></i></button>
                                     <button class="btn btn-outline-primary" onclick="openAsignaturaModal(${asignatura.id})" title="Editar"><i class="bi bi-pencil"></i></button>
                                     <button class="btn btn-outline-danger" onclick="deleteAsignatura(${asignatura.id})" title="Eliminar"><i class="bi bi-trash"></i></button>
                                 </div>
@@ -344,8 +363,47 @@ if (!is_authenticated() || !is_admin()) {
             }
         }
 
+        async function viewAsignaturaStructure(id) {
+            document.getElementById('structureTitle').textContent = 'Estructura de asignatura';
+            document.getElementById('structureBody').innerHTML = '<div class="text-center py-4"><div class="spinner-border" role="status"></div></div>';
+            structureModal.show();
+
+            try {
+                const asignatura = await api.get(`/asignaturas/${id}`);
+                document.getElementById('structureTitle').textContent = asignatura.nombre || 'Estructura de asignatura';
+                const competencias = asignatura.competencias || [];
+                if (!competencias.length) {
+                    document.getElementById('structureBody').innerHTML = '<p class="text-muted mb-0">Esta asignatura aun no tiene competencias asignadas.</p>';
+                    return;
+                }
+
+                document.getElementById('structureBody').innerHTML = competencias.map(competencia => `
+                    <div class="border rounded p-3 mb-3">
+                        <div class="d-flex flex-wrap justify-content-between gap-2">
+                            <div>
+                                <strong>${escapeHtml(competencia.nombre)}</strong>
+                                <div class="small text-muted">
+                                    ${escapeHtml(competencia.fecha_inicio || 'Sin inicio')} - ${escapeHtml(competencia.fecha_fin || 'Sin fin')}
+                                </div>
+                            </div>
+                            <a class="btn btn-sm btn-outline-primary" href="/pages/admin/deliverables.php?competencia_id=${competencia.id}">
+                                <i class="bi bi-file-earmark"></i> Entregables
+                            </a>
+                        </div>
+                        <div class="mt-3">
+                            ${(competencia.deliverables || []).length
+                                ? `<ul class="mb-0">${competencia.deliverables.map(item => `<li>${escapeHtml(item.nombre)} <span class="badge bg-secondary">${escapeHtml(item.estado || 'pendiente')}</span></li>`).join('')}</ul>`
+                                : '<span class="text-muted small">Sin entregables registrados.</span>'}
+                        </div>
+                    </div>`).join('');
+            } catch (error) {
+                document.getElementById('structureBody').innerHTML = '<p class="text-danger mb-0">Error cargando la estructura.</p>';
+            }
+        }
+
         document.addEventListener('DOMContentLoaded', () => {
             asignaturaModal = new bootstrap.Modal(document.getElementById('asignaturaModal'));
+            structureModal = new bootstrap.Modal(document.getElementById('structureModal'));
             loadAsignaturas();
         });
     </script>

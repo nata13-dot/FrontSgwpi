@@ -12,6 +12,7 @@ if (!is_authenticated() || !is_admin()) {
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Crear Usuario - <?= APP_NAME ?></title>
+    <?php require_once $_SERVER['DOCUMENT_ROOT'] . '/includes/visual-preferences.php'; ?>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
     <link rel="stylesheet" href="/assets/css/app.css">
@@ -30,7 +31,7 @@ if (!is_authenticated() || !is_admin()) {
                     <div class="card-body">
                         <div id="alertBox"></div>
 
-                        <form id="userForm">
+                        <form id="userForm" class="needs-validation" novalidate>
                             <div class="row">
                                 <div class="col-md-6 mb-3 student-group-field d-none">
                                     <label for="semestre" class="form-label">Semestre</label>
@@ -54,10 +55,17 @@ if (!is_authenticated() || !is_admin()) {
                                 <div class="col-md-4 mb-3">
                                     <label for="id" class="form-label">Matrícula/Nómina</label>
                                     <input type="text" class="form-control" id="id" name="id" required>
+                                    <div class="invalid-feedback">La matricula o nomina es obligatoria.</div>
                                 </div>
                                 <div class="col-md-4 mb-3">
                                     <label for="email" class="form-label">Email</label>
                                     <input type="email" class="form-control" id="email" name="email" required>
+                                    <div class="invalid-feedback">Ingresa un correo valido.</div>
+                                </div>
+                                <div class="col-md-4 mb-3">
+                                    <label for="telefonos" class="form-label">Telefono</label>
+                                    <input type="tel" class="form-control" id="telefonos" name="telefonos" maxlength="200" required>
+                                    <div class="invalid-feedback">Ingresa un telefono.</div>
                                 </div>
                                 <div class="col-md-4 mb-3">
                                     <label for="perfil_id" class="form-label">Perfil</label>
@@ -67,6 +75,7 @@ if (!is_authenticated() || !is_admin()) {
                                         <option value="2">Docente</option>
                                         <option value="3">Estudiante</option>
                                     </select>
+                                    <div class="invalid-feedback">Selecciona un perfil.</div>
                                 </div>
                             </div>
 
@@ -74,6 +83,7 @@ if (!is_authenticated() || !is_admin()) {
                                 <div class="col-md-4 mb-3">
                                     <label for="nombres" class="form-label">Nombres</label>
                                     <input type="text" class="form-control" id="nombres" name="nombres" required>
+                                    <div class="invalid-feedback">El nombre es obligatorio.</div>
                                 </div>
                                 <div class="col-md-4 mb-3">
                                     <label for="apa" class="form-label">Apellido Paterno</label>
@@ -86,13 +96,24 @@ if (!is_authenticated() || !is_admin()) {
                             </div>
 
                             <div class="row">
+                                <div class="col-12 mb-3">
+                                    <label for="direccion" class="form-label">Direccion</label>
+                                    <input type="text" class="form-control" id="direccion" name="direccion" minlength="10" pattern="(?=.*\d)[A-Za-zÁÉÍÓÚÜÑáéíóúüñ0-9\s#.,\-\/]+" placeholder="Calle, numero, colonia, municipio">
+                                    <div class="form-text">Debe incluir calle y numero. Ej. Av. Reforma 123, Col. Centro.</div>
+                                    <div class="invalid-feedback">Ingresa un domicilio valido con al menos un numero.</div>
+                                </div>
+                            </div>
+
+                            <div class="row">
                                 <div class="col-md-6 mb-3">
                                     <label for="password" class="form-label">Contraseña</label>
                                     <input type="password" class="form-control" id="password" name="password" required>
+                                    <div class="invalid-feedback">La contraseña es obligatoria.</div>
                                 </div>
                                 <div class="col-md-6 mb-3">
                                     <label for="password_confirmation" class="form-label">Confirmar Contraseña</label>
                                     <input type="password" class="form-control" id="password_confirmation" name="password_confirmation" required>
+                                    <div class="invalid-feedback">Confirma la contraseña.</div>
                                 </div>
                             </div>
 
@@ -125,6 +146,12 @@ if (!is_authenticated() || !is_admin()) {
 
         form.addEventListener('submit', async (e) => {
             e.preventDefault();
+            form.classList.add('was-validated');
+            if (!form.checkValidity()) return;
+            if (document.getElementById('password').value !== document.getElementById('password_confirmation').value) {
+                swalToast('danger', 'La nueva contraseña y su confirmacion no coinciden');
+                return;
+            }
 
             const formData = {
                 id: document.getElementById('id').value,
@@ -135,6 +162,8 @@ if (!is_authenticated() || !is_admin()) {
                 nombres: document.getElementById('nombres').value,
                 apa: document.getElementById('apa').value,
                 ama: document.getElementById('ama').value,
+                direccion: document.getElementById('direccion').value.trim() || null,
+                telefonos: document.getElementById('telefonos').value.trim(),
                 password: document.getElementById('password').value,
                 password_confirmation: document.getElementById('password_confirmation').value
             };

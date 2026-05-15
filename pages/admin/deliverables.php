@@ -12,6 +12,7 @@ if (!is_authenticated()) {
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Gestion de Entregables - <?= APP_NAME ?></title>
+    <?php require_once $_SERVER['DOCUMENT_ROOT'] . '/includes/visual-preferences.php'; ?>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
     <link rel="stylesheet" href="/assets/css/app.css">
@@ -29,10 +30,18 @@ if (!is_authenticated()) {
         <div class="main-content flex-grow-1">
             <div class="container-xl mt-5 mb-5">
                 <div class="d-flex align-items-center justify-content-between mb-4">
-                    <h1 class="mb-0">Gestion de Entregables</h1>
-                    <button class="btn btn-primary" onclick="openDeliverableModal()">
-                        <i class="bi bi-plus-circle"></i> Nuevo Entregable
-                    </button>
+                    <div>
+                        <h1 class="mb-0">Gestion de Entregables</h1>
+                        <div id="activeFilter" class="small text-muted mt-1"></div>
+                    </div>
+                    <div class="d-flex gap-2">
+                        <a class="btn btn-outline-primary" href="/pages/admin/deliverables.php" id="clearFilterBtn" style="display:none">
+                            <i class="bi bi-x-circle"></i> Quitar filtro
+                        </a>
+                        <button class="btn btn-primary" onclick="openDeliverableModal()">
+                            <i class="bi bi-plus-circle"></i> Nuevo Entregable
+                        </button>
+                    </div>
                 </div>
                 <div id="alertContainer"></div>
                 <div class="card border-0 shadow-sm">
@@ -73,12 +82,13 @@ if (!is_authenticated()) {
                     <div class="row">
                         <div class="col-md-6 mb-3">
                             <label for="project_id" class="form-label">Proyecto</label>
-                            <select class="form-select" id="project_id" required></select>
+                            <select class="form-select" id="project_id"></select>
+                            <div class="form-text">Opcional. El alcance principal se toma desde la competencia y su materia.</div>
                         </div>
                         <div class="col-md-6 mb-3">
                             <label for="competencia_id" class="form-label">Competencia</label>
-                            <select class="form-select" id="competencia_id">
-                                <option value="">Sin competencia</option>
+                            <select class="form-select" id="competencia_id" required>
+                                <option value="">Selecciona una competencia</option>
                             </select>
                         </div>
                     </div>
@@ -185,6 +195,8 @@ if (!is_authenticated()) {
         let modalCalificar;
         let modalSubirArchivo;
         let currentDeliverableId = null;
+        const urlParams = new URLSearchParams(window.location.search);
+        const competenciaFilter = urlParams.get('competencia_id');
 
         function escapeHtml(value) {
             return String(value ?? '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#039;');
@@ -203,13 +215,26 @@ if (!is_authenticated()) {
             projects.forEach(project => projectSelect.innerHTML += `<option value="${project.id}">${escapeHtml(project.title)}</option>`);
 
             const competenciaSelect = document.getElementById('competencia_id');
-            competenciaSelect.innerHTML = '<option value="">Sin competencia</option>';
-            competencias.forEach(competencia => competenciaSelect.innerHTML += `<option value="${competencia.id}">${escapeHtml(competencia.nombre)}</option>`);
+            competenciaSelect.innerHTML = '<option value="">Selecciona una competencia</option>';
+            competencias.forEach(competencia => {
+                const subject = competencia.asignatura?.nombre ? ` - ${competencia.asignatura.nombre}` : '';
+                competenciaSelect.innerHTML += `<option value="${competencia.id}">${escapeHtml(competencia.nombre + subject)}</option>`;
+            });
+
+            if (competenciaFilter) {
+                const competencia = competencias.find(item => Number(item.id) === Number(competenciaFilter));
+                document.getElementById('activeFilter').innerHTML = competencia
+                    ? `Mostrando entregables de la competencia <strong>${escapeHtml(competencia.nombre)}</strong>`
+                    : 'Mostrando entregables filtrados por competencia';
+                document.getElementById('clearFilterBtn').style.display = '';
+            }
         }
 
         async function loadDeliverables(page = 1) {
             try {
-                const response = await api.get('/deliverables', { page });
+                const params = { page };
+                if (competenciaFilter) params.competencia_id = competenciaFilter;
+                const response = await api.get('/deliverables', params);
                 deliverables = response.data || [];
                 const tbody = document.getElementById('deliverablesTable');
                 tbody.innerHTML = '';
@@ -267,6 +292,7 @@ if (!is_authenticated()) {
             document.getElementById('deliverableModalTitle').textContent = id ? 'Editar Entregable' : 'Nuevo Entregable';
             document.getElementById('estado').value = 'pendiente';
             document.getElementById('tipo_documento').value = 'documento';
+            if (competenciaFilter) document.getElementById('competencia_id').value = competenciaFilter;
 
             if (id) {
                 const deliverable = deliverables.find(item => item.id === id);
@@ -286,7 +312,7 @@ if (!is_authenticated()) {
             event.preventDefault();
             const id = document.getElementById('deliverableId').value;
             const data = {
-                project_id: document.getElementById('project_id').value,
+                project_id: document.getElementById('project_id').value || null,
                 competencia_id: document.getElementById('competencia_id').value || null,
                 nombre: document.getElementById('nombre').value.trim(),
                 descripcion: document.getElementById('descripcion').value.trim() || null,

@@ -90,7 +90,7 @@ class ApiClient {
 
             if (!response.ok) {
                 const validationMessage = result.errors ? Object.values(result.errors).flat().join(' ') : '';
-                throw new Error(result.message || result.error || validationMessage || 'Error en la solicitud');
+                throw new Error(this.translateError(result.message || result.error || validationMessage || 'Error en la solicitud'));
             }
 
             return result;
@@ -98,6 +98,33 @@ class ApiClient {
             console.error('Error en la solicitud:', error);
             throw error;
         }
+    }
+
+    translateError(message) {
+        const replacements = {
+            'The semestre field must be an integer.': 'El semestre debe ser un numero valido.',
+            'The grupo field must be a string.': 'El grupo debe ser un texto valido.',
+            'The current password field must be a string.': 'La contraseña actual debe ser texto valido.',
+            'The password field confirmation does not match.': 'La confirmacion de contraseña no coincide.',
+            'The password field must be at least 6 characters.': 'La contraseña debe tener al menos 6 caracteres.',
+            'The direccion field format is invalid.': 'La direccion debe incluir un domicilio valido, con numero y caracteres permitidos.',
+            'The direccion field must be at least 10 characters.': 'La direccion debe tener al menos 10 caracteres.',
+            'The nombre field is required.': 'El nombre es obligatorio.',
+            'The fecha evaluacion field is required.': 'La fecha de evaluacion es obligatoria.',
+            'The teacher ids field must be an array.': 'Selecciona docentes validos.',
+            'The project ids field must be an array.': 'Selecciona proyectos validos.'
+        };
+
+        let translated = String(message || '');
+        Object.entries(replacements).forEach(([from, to]) => {
+            translated = translated.replaceAll(from, to);
+        });
+        translated = translated.replaceAll('The ', 'El campo ')
+            .replaceAll(' field is required.', ' es obligatorio.')
+            .replaceAll(' field must be an integer.', ' debe ser un numero valido.')
+            .replaceAll(' field must be a string.', ' debe ser texto valido.')
+            .replaceAll(' field format is invalid.', ' tiene un formato invalido.');
+        return translated;
     }
 }
 

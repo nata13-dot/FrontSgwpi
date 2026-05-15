@@ -13,6 +13,7 @@ if (!is_authenticated() || !is_teacher()) {
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Dashboard Docente - <?= APP_NAME ?></title>
+    <?php require_once $_SERVER['DOCUMENT_ROOT'] . '/includes/visual-preferences.php'; ?>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
     <link rel="stylesheet" href="/assets/css/app.css">
@@ -25,10 +26,27 @@ if (!is_authenticated() || !is_teacher()) {
         
         <div class="main-content flex-grow-1">
             <!-- Hero -->
-            <div class="hero-gradient">
-                <div class="container-xl">
-                    <h1 class="display-4 fw-bold mb-3">Panel del Docente</h1>
-                    <p class="lead">Bienvenido, <?= htmlspecialchars($current_user['nombres']) ?></p>
+            <div style="background: url('/assets/img/ITSSMT/fondo.jpg'); background-size: cover; background-position: center; padding: 80px 0; position: relative;">
+                <div class="overlay"></div>
+                <div class="container-xl" style="position: relative; z-index: 1;">
+                    <!-- Logo y Título -->
+                    <div class="d-flex align-items-center gap-3 mb-2">
+                        <img src="/assets/img/ITSSMT/ITSSMT.png" alt="ITSSMT" style="height: 50px;">
+                        <h1 class="display-4 fw-bold text-white mb-0">Panel del Docente</h1>
+                    </div>
+                    
+                    <!-- Subtítulo -->
+                    <p class="text-white opacity-90 mb-3" style="font-size: 1.1rem;">
+                        <strong>Bienvenido, <?= htmlspecialchars($current_user['nombres']) ?></strong> | Gestión de cursos y evaluaciones
+                    </p>
+                    
+                    <!-- Breadcrumb -->
+                    <nav aria-label="breadcrumb">
+                        <ol class="breadcrumb" style="background: rgba(255,255,255,0.15); border-radius: 5px; padding: 8px 12px; margin: 0;">
+                            <li class="breadcrumb-item"><a href="/index.php" class="text-white text-decoration-none">Inicio</a></li>
+                            <li class="breadcrumb-item active text-white opacity-75">Panel Docente</li>
+                        </ol>
+                    </nav>
                 </div>
             </div>
 

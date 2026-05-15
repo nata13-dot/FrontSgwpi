@@ -12,6 +12,7 @@ if (!is_authenticated() || (!is_admin() && !is_teacher())) {
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Evaluaciones - <?= APP_NAME ?></title>
+    <?php require_once $_SERVER['DOCUMENT_ROOT'] . '/includes/visual-preferences.php'; ?>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
     <link rel="stylesheet" href="/assets/css/app.css">
@@ -33,9 +34,6 @@ if (!is_authenticated() || (!is_admin() && !is_teacher())) {
                         </button>
                         <button class="btn btn-outline-primary" onclick="openRoomsModal()">
                             <i class="bi bi-door-open"></i> Salas
-                        </button>
-                        <button class="btn btn-primary" onclick="openEvaluationModal()">
-                            <i class="bi bi-plus-circle"></i> Nueva Evaluacion
                         </button>
                     </div>
                 </div>
@@ -168,6 +166,15 @@ if (!is_authenticated() || (!is_admin() && !is_teacher())) {
                 <div class="modal-body">
                     <input type="hidden" id="scoreEvaluationId">
                     <div id="scoreFields"></div>
+                    <div class="border rounded p-3 mt-3 d-none" id="titulationAptBox">
+                        <label class="form-label fw-semibold">¿El proyecto es apto para titulacion?</label>
+                        <select class="form-select" id="apto_titulacion">
+                            <option value="">Sin respuesta</option>
+                            <option value="1">Si</option>
+                            <option value="0">No</option>
+                        </select>
+                        <div class="form-text">Esta respuesta no afecta el puntaje general.</div>
+                    </div>
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
@@ -190,15 +197,16 @@ if (!is_authenticated() || (!is_admin() && !is_teacher())) {
                             <div class="border rounded p-3">
                                 <input type="hidden" id="roomId">
                                 <div class="row g-3">
-                                    <div class="col-md-6"><label class="form-label">Sala</label><input class="form-control" id="roomName" placeholder="Sala 1"></div>
-                                    <div class="col-md-6"><label class="form-label">Salon</label><input class="form-control" id="roomClassroom" placeholder="Salon/Laboratorio"></div>
+                                    <div class="col-md-6"><label class="form-label">Sala</label><input class="form-control" id="roomName" placeholder="Sala 1" required><div class="invalid-feedback">Nombre obligatorio y no repetido.</div></div>
+                                    <div class="col-md-6"><label class="form-label">Salon</label><input class="form-control" id="roomClassroom" placeholder="Salon/Laboratorio" required></div>
                                     <div class="col-md-4"><label class="form-label">Semestre</label><select class="form-select" id="roomSemester" onchange="loadRoomProjects()"><option value="5">5</option><option value="6">6</option><option value="7">7</option><option value="8">8</option></select></div>
-                                    <div class="col-md-8"><label class="form-label">Fecha</label><input type="datetime-local" class="form-control" id="roomDate"></div>
+                                    <div class="col-md-8"><label class="form-label">Fecha</label><input type="datetime-local" class="form-control" id="roomDate" required onchange="updateRoomAvailability()"><div class="form-text">Debe ser posterior a la fecha y hora actual.</div></div>
                                     <div class="col-md-4"><label class="form-label">Min. docentes</label><input type="number" class="form-control" id="teacherMinutes" min="1" max="240" value="15"></div>
                                     <div class="col-md-4"><label class="form-label">Min. proyecto</label><input type="number" class="form-control" id="presentationMinutes" min="1" max="240" value="20"></div>
                                     <div class="col-md-4"><label class="form-label">Oportunidades</label><input type="number" class="form-control" id="maxAttempts" min="1" max="10" value="1"></div>
                                     <div class="col-12"><label class="form-label">Docentes</label><div class="border rounded p-2" id="roomTeachers" style="max-height: 160px; overflow:auto;"></div></div>
                                     <div class="col-12"><label class="form-label">Proyectos</label><div class="border rounded p-2" id="roomProjects" style="max-height: 220px; overflow:auto;"></div></div>
+                                    <div class="col-12"><div class="small text-muted" id="roomAvailabilityHint"></div></div>
                                 </div>
                                 <div class="d-flex justify-content-end gap-2 mt-3">
                                     <button class="btn btn-outline-secondary" onclick="resetRoomForm()">Limpiar</button>
@@ -249,6 +257,15 @@ if (!is_authenticated() || (!is_admin() && !is_teacher())) {
 
         function escapeHtml(value) {
             return String(value ?? '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#039;');
+        }
+
+        function fullName(user) {
+            return [user?.nombres, user?.apa, user?.ama].filter(Boolean).join(' ') || user?.id || '';
+        }
+
+        function projectActiveAuthors(project) {
+            const students = Array.isArray(project?.students) ? project.students : [];
+            return students.map(student => fullName(student)).filter(Boolean).join(', ');
         }
 
         function stageLabel(stage) {
@@ -386,24 +403,76 @@ if (!is_authenticated() || (!is_admin() && !is_teacher())) {
             roomsModal.show();
         }
 
+        function normalizedRoomDate(value) {
+            return value ? String(value).slice(0, 10) : '';
+        }
+
+        function conflictingRoomsForCurrentForm() {
+            const currentRoomId = document.getElementById('roomId').value;
+            const selectedDate = normalizedRoomDate(document.getElementById('roomDate').value);
+            if (!selectedDate) return [];
+
+            return rooms.filter(room => {
+                const isSameRecord = currentRoomId && String(room.id) === String(currentRoomId);
+                return !isSameRecord && normalizedRoomDate(room.fecha_evaluacion) === selectedDate;
+            });
+        }
+
+        function busyRoomIds() {
+            const conflicts = conflictingRoomsForCurrentForm();
+            return {
+                teachers: new Set(conflicts.flatMap(room => (room.teachers || []).map(teacher => String(teacher.id)))),
+                projects: new Set(conflicts.flatMap(room => (room.projects || []).map(project => Number(project.id)))),
+                rooms: conflicts
+            };
+        }
+
+        async function updateRoomAvailability() {
+            const selectedTeachers = [...document.querySelectorAll('.room-teacher:checked')].map(input => input.value);
+            const selectedProjects = [...document.querySelectorAll('.room-project:checked')].map(input => Number(input.value));
+            renderRoomTeachers(selectedTeachers);
+            await loadRoomProjects(selectedProjects);
+        }
+
         function renderRoomTeachers(selected = []) {
             const selectedIds = selected.map(String);
-            document.getElementById('roomTeachers').innerHTML = teachers.map(teacher => `
+            const busy = busyRoomIds();
+            const availableTeachers = teachers.filter(teacher => !busy.teachers.has(String(teacher.id)));
+            document.getElementById('roomTeachers').innerHTML = availableTeachers.map(teacher => `
                 <div class="form-check">
                     <input class="form-check-input room-teacher" type="checkbox" value="${escapeHtml(teacher.id)}" id="roomTeacher${escapeHtml(teacher.id)}" ${selectedIds.includes(String(teacher.id)) ? 'checked' : ''}>
                     <label class="form-check-label" for="roomTeacher${escapeHtml(teacher.id)}">${escapeHtml(teacher.nombres)} ${escapeHtml(teacher.apa || '')}</label>
-                </div>`).join('') || '<p class="text-muted mb-0">No hay docentes activos.</p>';
+                </div>`).join('') || '<p class="text-muted mb-0">No hay docentes disponibles para esta fecha y hora.</p>';
+            renderAvailabilityHint(busy);
         }
 
         async function loadRoomProjects(selected = []) {
             const semester = document.getElementById('roomSemester').value;
             roomProjects = await api.get('/evaluations/projects', { semestre: semester });
             const selectedIds = selected.map(Number);
-            document.getElementById('roomProjects').innerHTML = roomProjects.map(project => `
+            const busy = busyRoomIds();
+            const availableProjects = roomProjects.filter(project => !busy.projects.has(Number(project.id)));
+            document.getElementById('roomProjects').innerHTML = availableProjects.map(project => `
                 <div class="form-check">
                     <input class="form-check-input room-project" type="checkbox" value="${project.id}" id="roomProject${project.id}" ${selectedIds.includes(Number(project.id)) ? 'checked' : ''}>
-                    <label class="form-check-label" for="roomProject${project.id}">${escapeHtml(project.title)} <span class="text-muted small">${escapeHtml(project.authors || '')}</span></label>
-                </div>`).join('') || '<p class="text-muted mb-0">No hay proyectos para este semestre.</p>';
+                    <label class="form-check-label" for="roomProject${project.id}">${escapeHtml(project.title)} <span class="text-muted small">${escapeHtml(projectActiveAuthors(project))}</span></label>
+                </div>`).join('') || '<p class="text-muted mb-0">No hay proyectos disponibles para esta fecha, hora y semestre.</p>';
+            renderAvailabilityHint(busy);
+        }
+
+        function renderAvailabilityHint(busy = busyRoomIds()) {
+            const hint = document.getElementById('roomAvailabilityHint');
+            if (!hint) return;
+            if (!document.getElementById('roomDate').value) {
+                hint.textContent = 'Selecciona una fecha para filtrar docentes y proyectos ya ocupados ese dia.';
+                return;
+            }
+            if (!busy.rooms.length) {
+                hint.textContent = 'No hay conflictos para la fecha seleccionada.';
+                return;
+            }
+            const names = busy.rooms.map(room => room.nombre).join(', ');
+            hint.innerHTML = `<span class="text-warning"><i class="bi bi-exclamation-triangle"></i> Se ocultaron ${busy.teachers.size} docente(s) y ${busy.projects.size} proyecto(s) ya asignados en: ${escapeHtml(names)}.</span>`;
         }
 
         function renderRooms() {
@@ -451,6 +520,8 @@ if (!is_authenticated() || (!is_admin() && !is_teacher())) {
 
         async function saveRoom() {
             const id = document.getElementById('roomId').value;
+            const teacherIds = [...document.querySelectorAll('.room-teacher:checked')].map(input => input.value);
+            const projectIds = [...document.querySelectorAll('.room-project:checked')].map(input => Number(input.value));
             const payload = {
                 nombre: document.getElementById('roomName').value.trim(),
                 salon: document.getElementById('roomClassroom').value.trim() || null,
@@ -459,9 +530,26 @@ if (!is_authenticated() || (!is_admin() && !is_teacher())) {
                 teacher_evaluation_minutes: Number(document.getElementById('teacherMinutes').value),
                 project_presentation_minutes: Number(document.getElementById('presentationMinutes').value),
                 max_attempts: Number(document.getElementById('maxAttempts').value),
-                teacher_ids: [...document.querySelectorAll('.room-teacher:checked')].map(input => input.value),
-                project_ids: [...document.querySelectorAll('.room-project:checked')].map(input => Number(input.value))
+                teacher_ids: teacherIds,
+                project_ids: projectIds
             };
+            if (!payload.nombre || !payload.fecha_evaluacion) {
+                showAlert('#alertContainer', 'danger', 'Indica el nombre de la sala y la fecha de evaluacion.');
+                return;
+            }
+            if (new Date(payload.fecha_evaluacion) <= new Date()) {
+                showAlert('#alertContainer', 'danger', 'La fecha de la sala debe ser posterior al momento actual.');
+                return;
+            }
+            const repeated = rooms.find(room => String(room.id) !== String(id) && String(room.nombre || '').toLowerCase() === payload.nombre.toLowerCase());
+            if (repeated) {
+                showAlert('#alertContainer', 'danger', 'Ya existe una sala activa con ese nombre.');
+                return;
+            }
+            if (!teacherIds.length || !projectIds.length) {
+                showAlert('#alertContainer', 'danger', 'Selecciona al menos un docente y un proyecto para la sala.');
+                return;
+            }
             try {
                 if (id) await api.put(`/evaluations/rooms/${id}`, payload);
                 else await api.post('/evaluations/rooms', payload);
@@ -543,6 +631,8 @@ if (!is_authenticated() || (!is_admin() && !is_teacher())) {
         function openScoreModal(evaluationId) {
             document.getElementById('scoreEvaluationId').value = evaluationId;
             const evaluation = evaluations.find(item => item.id === evaluationId);
+            document.getElementById('titulationAptBox').classList.toggle('d-none', Number(evaluation?.semestre) !== 8);
+            document.getElementById('apto_titulacion').value = evaluation?.apto_titulacion === true ? '1' : (evaluation?.apto_titulacion === false ? '0' : '');
             if (evaluation?.current_teacher_has_scores && Number(evaluation.current_teacher_attempts) >= Number(evaluation.max_attempts)) {
                 showAlert('#alertContainer', 'danger', `Ya alcanzaste el limite de ${evaluation.max_attempts} oportunidad(es) para esta evaluacion.`);
                 return;
@@ -589,7 +679,10 @@ if (!is_authenticated() || (!is_admin() && !is_teacher())) {
                     });
                     if (!confirm_update) return;
                 }
-                await api.post(`/evaluations/${evaluationId}/score`, { scores, confirm_update });
+                const payload = { scores, confirm_update };
+                const aptValue = document.getElementById('apto_titulacion').value;
+                if (aptValue !== '') payload.apto_titulacion = aptValue === '1';
+                await api.post(`/evaluations/${evaluationId}/score`, payload);
                 scoreModal.hide();
                 showAlert('#alertContainer', 'success', 'Rubrica guardada correctamente');
                 loadEvaluations();
@@ -641,6 +734,7 @@ if (!is_authenticated() || (!is_admin() && !is_teacher())) {
             scoreModal = new bootstrap.Modal(document.getElementById('scoreModal'));
             breakdownModal = new bootstrap.Modal(document.getElementById('breakdownModal'));
             roomsModal = new bootstrap.Modal(document.getElementById('roomsModal'));
+            document.getElementById('roomDate')?.addEventListener('input', updateRoomAvailability);
             await loadInitialData();
             loadEvaluations();
         });

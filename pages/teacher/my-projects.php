@@ -13,6 +13,7 @@ if (!is_authenticated() || !is_teacher()) {
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Mis Proyectos - <?= APP_NAME ?></title>
+    <?php require_once $_SERVER['DOCUMENT_ROOT'] . '/includes/visual-preferences.php'; ?>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
     <link rel="stylesheet" href="/assets/css/app.css">
@@ -59,6 +60,19 @@ if (!is_authenticated() || !is_teacher()) {
     <script src="/assets/js/app.js"></script>
 
     <script>
+        function escapeHtml(value) {
+            return String(value ?? '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#039;');
+        }
+
+        function fullName(user) {
+            return [user?.nombres, user?.apa, user?.ama].filter(Boolean).join(' ') || user?.id || '';
+        }
+
+        function projectActiveAuthors(project) {
+            const students = Array.isArray(project?.students) ? project.students : [];
+            return students.map(student => fullName(student)).filter(Boolean).join(', ');
+        }
+
         async function loadProjects() {
             try {
                 const response = await api.get('/my-projects');
@@ -84,16 +98,17 @@ if (!is_authenticated() || !is_teacher()) {
                         `;
                     }
 
+                    const activeAuthors = projectActiveAuthors(project);
                     const card = `
                         <div class="col-lg-6 col-md-12">
                             <div class="card h-100 card-proyecto border-0 shadow-sm">
                                 <div class="card-body">
                                     <div class="d-flex justify-content-between align-items-start mb-3">
-                                        <h5 class="card-title mb-0">${project.title}</h5>
+                                        <h5 class="card-title mb-0">${escapeHtml(project.title)}</h5>
                                         <span class="badge bg-primary">${project.year || '-'}</span>
                                     </div>
                                     
-                                    <p class="card-text text-muted mb-3">${project.descripcion || 'Sin descripción'}</p>
+                                    <p class="card-text text-muted mb-3">${escapeHtml(project.descripcion || project.description || 'Sin descripcion')}</p>
                                     
                                     <div class="mb-3 pb-3 border-bottom">
                                         <small class="text-muted d-block mb-2">
@@ -104,10 +119,10 @@ if (!is_authenticated() || !is_teacher()) {
                                         </small>
                                     </div>
 
-                                    ${project.authors ? `
+                                    ${activeAuthors ? `
                                         <div class="mb-3">
                                             <strong class="d-block mb-2 small">Autores:</strong>
-                                            <small>${project.authors}</small>
+                                            <small>${escapeHtml(activeAuthors)}</small>
                                         </div>
                                     ` : ''}
 

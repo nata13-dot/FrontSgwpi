@@ -12,6 +12,7 @@ if (!is_authenticated() || !is_admin()) {
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Crear Proyecto - <?= APP_NAME ?></title>
+    <?php require_once $_SERVER['DOCUMENT_ROOT'] . '/includes/visual-preferences.php'; ?>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
     <link rel="stylesheet" href="/assets/css/app.css">
@@ -33,25 +34,30 @@ if (!is_authenticated() || !is_admin()) {
                             </div>
                             <div class="mb-3">
                                 <label for="descripcion" class="form-label">Descripcion</label>
-                                <textarea class="form-control" id="descripcion" name="descripcion" rows="4"></textarea>
+                                <textarea class="form-control" id="descripcion" name="descripcion" rows="4" required></textarea>
                             </div>                            <div class="border rounded p-3 mb-4">
                                 <h5 class="mb-3">Empresa beneficiada</h5>
                                 <div class="row">
                                     <div class="col-md-6 mb-3">
                                         <label for="company_name" class="form-label">Nombre de la empresa o negocio</label>
-                                        <input type="text" class="form-control" id="company_name" maxlength="255">
+                                        <input type="text" class="form-control" id="company_name" maxlength="255" required>
+                                    </div>
+                                    <div class="col-md-6 mb-3">
+                                        <label for="company_giro" class="form-label">Giro</label>
+                                        <input type="text" class="form-control" id="company_giro" maxlength="255" required>
                                     </div>
                                     <div class="col-md-6 mb-3">
                                         <label for="company_contact_name" class="form-label">Persona a cargo</label>
-                                        <input type="text" class="form-control" id="company_contact_name" maxlength="255">
+                                        <input type="text" class="form-control" id="company_contact_name" maxlength="255" required>
                                     </div>
                                     <div class="col-md-6 mb-3">
                                         <label for="company_contact_position" class="form-label">Puesto de la persona a cargo</label>
-                                        <input type="text" class="form-control" id="company_contact_position" maxlength="255">
+                                        <input type="text" class="form-control" id="company_contact_position" maxlength="255" required>
                                     </div>
                                     <div class="col-md-6 mb-3">
                                         <label for="company_address" class="form-label">Direccion de la empresa o negocio</label>
-                                        <textarea class="form-control" id="company_address" rows="2" maxlength="1000"></textarea>
+                                        <textarea class="form-control" id="company_address" rows="2" maxlength="1000" required></textarea>
+                                        <div class="form-text">Separa calle, numero, colonia y municipio con comas (,).</div>
                                     </div>
                                 </div>
                             </div>
@@ -68,11 +74,11 @@ if (!is_authenticated() || !is_admin()) {
                                 </div>
                                 <div class="col-md-4 mb-3">
                                     <label for="year" class="form-label">Año</label>
-                                    <input type="number" class="form-control" id="year" name="year" min="2000" max="2100">
+                                    <input type="number" class="form-control" id="year" name="year" min="2000" max="2100" required>
                                 </div>
                                 <div class="col-md-4 mb-3">
                                     <label for="subject_group_id" class="form-label">Grupo / carga de asignaturas</label>
-                                    <select class="form-select" id="subject_group_id" name="subject_group_id">
+                                    <select class="form-select" id="subject_group_id" name="subject_group_id" required>
                                         <option value="">Selecciona primero un semestre</option>
                                     </select>
                                 </div>
@@ -121,7 +127,7 @@ if (!is_authenticated() || !is_admin()) {
 
         async function loadStudents() {
             const [usersResponse, projectsResponse] = await Promise.all([
-                api.get('/users', { perfil_id: 3, status: 'active', per_page: 100 }),
+                api.get('/users', { perfil_id: 3, status: 'active', compact: 1, per_page: 100 }),
                 api.get('/projects', { per_page: 100 })
             ]);
 
@@ -133,8 +139,14 @@ if (!is_authenticated() || !is_admin()) {
                 });
             });
 
+            renderStudentOptions();
+        }
+
+        function renderStudentOptions() {
+            const selectedIds = selectedStudents.map(student => String(student.id));
             document.getElementById('studentSearch').innerHTML = '<option value="">Selecciona un estudiante disponible</option>' + students
                 .filter(student => !assignedStudentProject[String(student.id)])
+                .filter(student => !selectedIds.includes(String(student.id)))
                 .map(student => `<option value="${escapeHtml(student.id)}">${escapeHtml(student.id)} - ${escapeHtml(fullName(student))}</option>`)
                 .join('');
         }
@@ -171,6 +183,7 @@ if (!is_authenticated() || !is_admin()) {
             if (!selectedStudents.some(item => String(item.id) === String(student.id))) {
                 selectedStudents.push(student);
                 renderSelectedStudents();
+                renderStudentOptions();
             }
             input.value = '';
         }
@@ -178,6 +191,7 @@ if (!is_authenticated() || !is_admin()) {
         function removeStudent(studentId) {
             selectedStudents = selectedStudents.filter(student => String(student.id) !== String(studentId));
             renderSelectedStudents();
+            renderStudentOptions();
         }
 
         async function loadSubjectGroups() {
@@ -199,6 +213,10 @@ if (!is_authenticated() || !is_admin()) {
 
         form.addEventListener('submit', async (e) => {
             e.preventDefault();
+            if (!selectedStudents.length) {
+                showAlert('#alertBox', 'danger', 'Selecciona al menos un estudiante sin proyecto asignado.');
+                return;
+            }
             const formData = {
                 title: document.getElementById('title').value,
                 descripcion: document.getElementById('descripcion').value,
@@ -206,6 +224,7 @@ if (!is_authenticated() || !is_admin()) {
                 subject_group_id: document.getElementById('subject_group_id').value || null,
                 year: document.getElementById('year').value ? parseInt(document.getElementById('year').value) : null,
                 company_name: document.getElementById('company_name').value.trim() || null,
+                company_giro: document.getElementById('company_giro').value.trim() || null,
                 company_contact_name: document.getElementById('company_contact_name').value.trim() || null,
                 company_contact_position: document.getElementById('company_contact_position').value.trim() || null,
                 company_address: document.getElementById('company_address').value.trim() || null,

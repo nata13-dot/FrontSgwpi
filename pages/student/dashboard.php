@@ -13,6 +13,7 @@ if (!is_authenticated() || !is_student()) {
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Dashboard Estudiante - <?= APP_NAME ?></title>
+    <?php require_once $_SERVER['DOCUMENT_ROOT'] . '/includes/visual-preferences.php'; ?>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
     <link rel="stylesheet" href="/assets/css/app.css">
@@ -25,10 +26,27 @@ if (!is_authenticated() || !is_student()) {
         
         <div class="main-content flex-grow-1">
             <!-- Hero -->
-            <div class="hero-gradient">
-                <div class="container-xl">
-                    <h1 class="display-4 fw-bold mb-3">Panel del Estudiante</h1>
-                    <p class="lead">Bienvenido, <?= htmlspecialchars($current_user['nombres']) ?></p>
+            <div style="background: url('/assets/img/ITSSMT/fondo.jpg'); background-size: cover; background-position: center; padding: 80px 0; position: relative;">
+                <div class="overlay"></div>
+                <div class="container-xl" style="position: relative; z-index: 1;">
+                    <!-- Logo y Título -->
+                    <div class="d-flex align-items-center gap-3 mb-2">
+                        <img src="/assets/img/ITSSMT/ITSSMT.png" alt="ITSSMT" style="height: 50px;">
+                        <h1 class="display-4 fw-bold text-white mb-0">Panel del Estudiante</h1>
+                    </div>
+                    
+                    <!-- Subtítulo -->
+                    <p class="text-white opacity-90 mb-3" style="font-size: 1.1rem;">
+                        <strong>Bienvenido, <?= htmlspecialchars($current_user['nombres']) ?></strong> | Gestión de proyectos y entregas
+                    </p>
+                    
+                    <!-- Breadcrumb -->
+                    <nav aria-label="breadcrumb">
+                        <ol class="breadcrumb" style="background: rgba(255,255,255,0.15); border-radius: 5px; padding: 8px 12px; margin: 0;">
+                            <li class="breadcrumb-item"><a href="/index.php" class="text-white text-decoration-none">Inicio</a></li>
+                            <li class="breadcrumb-item active text-white opacity-75">Panel Estudiante</li>
+                        </ol>
+                    </nav>
                 </div>
             </div>
 
@@ -130,6 +148,19 @@ if (!is_authenticated() || !is_student()) {
     <script src="/assets/js/api.js"></script>
 
     <script>
+        function escapeHtml(value) {
+            return String(value ?? '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#039;');
+        }
+
+        function fullName(user) {
+            return [user?.nombres, user?.apa, user?.ama].filter(Boolean).join(' ') || user?.id || '';
+        }
+
+        function projectActiveAdvisors(project) {
+            const advisors = Array.isArray(project?.advisors) ? project.advisors : [];
+            return advisors.map(advisor => fullName(advisor)).filter(Boolean).join(', ') || 'Sin asesores activos';
+        }
+
         async function loadDashboard() {
             try {
                 await checkInitialProfile();
@@ -147,9 +178,9 @@ if (!is_authenticated() || !is_student()) {
                     response.recent_projects.forEach(project => {
                         const item = `
                             <a href="/pages/admin/projects.php?id=${project.id}" class="list-group-item list-group-item-action">
-                                <h6 class="mb-1">${project.title}</h6>
+                                <h6 class="mb-1">${escapeHtml(project.title)}</h6>
                                 <small class="text-muted">
-                                    <i class="bi bi-person"></i> Docente: ${project.teacher?.nombres || 'N/A'}
+                                    <i class="bi bi-person"></i> Docente: ${escapeHtml(projectActiveAdvisors(project))}
                                 </small>
                             </a>
                         `;

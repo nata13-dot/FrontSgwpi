@@ -13,6 +13,7 @@ if (!is_authenticated() || !is_student()) {
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Mis Entregables - <?= APP_NAME ?></title>
+    <?php require_once $_SERVER['DOCUMENT_ROOT'] . '/includes/visual-preferences.php'; ?>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
     <link rel="stylesheet" href="/assets/css/app.css">
@@ -96,6 +97,19 @@ if (!is_authenticated() || !is_student()) {
     <script>
         let currentDeliverableId = null;
 
+        function escapeHtml(value) {
+            return String(value ?? '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#039;');
+        }
+
+        function fullName(user) {
+            return [user?.nombres, user?.apa, user?.ama].filter(Boolean).join(' ') || user?.id || '';
+        }
+
+        function gradedByName(deliverable) {
+            const grader = deliverable.calificadoPor || deliverable.calificado_por;
+            return grader && typeof grader === 'object' ? fullName(grader) : 'Sistema';
+        }
+
         async function loadDeliverables() {
             try {
                 const response = await api.get('/my-deliverables');
@@ -141,7 +155,7 @@ if (!is_authenticated() || !is_student()) {
                         infoCalificacion = `
                             <small class="text-muted d-block mt-2">
                                 <i class="bi bi-check-circle text-success"></i> 
-                                Calificado el ${fecha.toLocaleDateString()} por ${deliverable.calificado_por || 'Sistema'}
+                                Calificado el ${fecha.toLocaleDateString()} por ${escapeHtml(gradedByName(deliverable))}
                             </small>
                         `;
                     }
@@ -151,15 +165,15 @@ if (!is_authenticated() || !is_student()) {
                             <div class="card h-100 card-entregable border-0 shadow-sm">
                                 <div class="card-body">
                                     <div class="d-flex justify-content-between align-items-start mb-3">
-                                        <h5 class="card-title mb-0">${deliverable.nombre}</h5>
+                                        <h5 class="card-title mb-0">${escapeHtml(deliverable.nombre)}</h5>
                                         <span class="badge bg-${statusBadge}">${statusText}</span>
                                     </div>
                                     
-                                    <p class="card-text text-muted mb-3">${deliverable.descripcion || 'Sin descripción'}</p>
+                                    <p class="card-text text-muted mb-3">${escapeHtml(deliverable.descripcion || 'Sin descripcion')}</p>
                                     
                                     <div class="mb-3 pb-3 border-bottom">
                                         <small class="text-muted d-block mb-2">
-                                            <i class="bi bi-folder"></i> ${deliverable.project?.title || 'N/A'}
+                                            <i class="bi bi-folder"></i> ${escapeHtml(deliverable.project?.title || 'N/A')}
                                         </small>
                                         <small class="text-muted d-block">
                                             <i class="bi bi-calendar"></i> 

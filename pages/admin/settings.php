@@ -12,6 +12,7 @@ if (!is_authenticated() || !is_admin()) {
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Ajustes Generales - <?= APP_NAME ?></title>
+    <?php require_once $_SERVER['DOCUMENT_ROOT'] . '/includes/visual-preferences.php'; ?>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
     <link rel="stylesheet" href="/assets/css/app.css">
@@ -97,6 +98,13 @@ if (!is_authenticated() || !is_admin()) {
                                         <input class="form-check-input" type="checkbox" role="switch" id="proposal_registration_enabled">
                                         <label class="form-check-label" for="proposal_registration_enabled">Activar registro de propuestas</label>
                                     </div>
+                                </div>
+                                <div class="col-12">
+                                    <div class="form-check form-switch mb-1">
+                                        <input class="form-check-input" type="checkbox" role="switch" id="grayscale_mode" onchange="previewGrayscaleMode()">
+                                        <label class="form-check-label" for="grayscale_mode">Mostrar el sistema en escala de grises</label>
+                                    </div>
+                                    <div class="form-text">Aplica un filtro institucional sin color a todas las pantallas del sistema.</div>
                                 </div>
                             </div>
                         </div>
@@ -184,6 +192,10 @@ function esc(value) {
     return String(value ?? '').replace(/[&<>'"]/g, char => ({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'}[char]));
 }
 
+function previewGrayscaleMode() {
+    document.documentElement.classList.toggle('grayscale-mode', document.getElementById('grayscale_mode').checked);
+}
+
 async function loadSettings() {
     try {
         const settings = await api.get('/settings');
@@ -191,6 +203,8 @@ async function loadSettings() {
             document.getElementById(id).value = settings[id] ?? '';
         });
         document.getElementById('proposal_registration_enabled').checked = Boolean(settings.proposal_registration_enabled);
+        document.getElementById('grayscale_mode').checked = Boolean(settings.grayscale_mode);
+        previewGrayscaleMode();
         document.querySelectorAll('.allowed-file-type').forEach(input => {
             input.checked = (settings.allowed_file_types || []).includes(input.value);
         });
@@ -211,7 +225,8 @@ document.getElementById('settingsForm').addEventListener('submit', async event =
         allowed_file_types: allowed,
         max_project_members: Number(document.getElementById('max_project_members').value),
         global_notice: document.getElementById('global_notice').value.trim(),
-        proposal_registration_enabled: document.getElementById('proposal_registration_enabled').checked
+        proposal_registration_enabled: document.getElementById('proposal_registration_enabled').checked,
+        grayscale_mode: document.getElementById('grayscale_mode').checked
     };
 
     if (!allowed.length) {

@@ -2,6 +2,12 @@
 require_once $_SERVER['DOCUMENT_ROOT'] . '/includes/config.php';
 $current_page = basename($_SERVER['PHP_SELF']);
 $home_url = is_authenticated() ? dashboard_url() : '/index.php';
+$management_pages = [
+    'users.php', 'advisors.php', 'projects.php', 'project-create.php', 'project-edit.php',
+    'proposal-config.php', 'deliverables.php', 'evaluations.php', 'asignaturas.php',
+    'competencias.php', 'document-tags.php', 'notices.php', 'settings.php', 'my-projects.php',
+    'proposal-review.php', 'proposal-register.php', 'my-deliverables.php', 'repositorio.php'
+];
 ?>
 
 <nav class="navbar navbar-expand-lg navbar-dark sticky-top">
@@ -33,15 +39,66 @@ $home_url = is_authenticated() ? dashboard_url() : '/index.php';
                 
                 <?php if (is_authenticated()): ?>
                     <?php if (is_admin()): ?>
-                        <li class="nav-item">
-                            <a href="/pages/admin/users.php" class="nav-link">
-                                <i class="bi bi-people"></i> Usuarios
+                        <li class="nav-item dropdown">
+                            <a class="nav-link dropdown-toggle <?= in_array($current_page, $management_pages) ? 'active' : '' ?>" href="#" id="managementMenu" role="button" data-bs-toggle="dropdown">
+                                <i class="bi bi-grid-3x3-gap"></i> Gestiones
                             </a>
+                            <div class="dropdown-menu dropdown-menu-end management-menu" aria-labelledby="managementMenu">
+                                <div class="management-menu-grid">
+                                    <div>
+                                        <h6 class="dropdown-header">Personas</h6>
+                                        <a class="dropdown-item <?= $current_page == 'users.php' ? 'active' : '' ?>" href="/pages/admin/users.php"><i class="bi bi-people"></i> Usuarios</a>
+                                        <a class="dropdown-item <?= $current_page == 'advisors.php' ? 'active' : '' ?>" href="/pages/admin/advisors.php"><i class="bi bi-person-check"></i> Asesores</a>
+                                    </div>
+                                    <div>
+                                        <h6 class="dropdown-header">Proyectos</h6>
+                                        <a class="dropdown-item <?= in_array($current_page, ['projects.php', 'project-create.php', 'project-edit.php']) ? 'active' : '' ?>" href="/pages/admin/projects.php"><i class="bi bi-diagram-3"></i> Proyectos</a>
+                                        <a class="dropdown-item <?= $current_page == 'proposal-config.php' ? 'active' : '' ?>" href="/pages/admin/proposal-config.php"><i class="bi bi-calendar-check"></i> Propuestas</a>
+                                        <a class="dropdown-item <?= $current_page == 'deliverables.php' ? 'active' : '' ?>" href="/pages/admin/deliverables.php"><i class="bi bi-file-earmark"></i> Entregables</a>
+                                        <a class="dropdown-item <?= $current_page == 'evaluations.php' ? 'active' : '' ?>" href="/pages/admin/evaluations.php"><i class="bi bi-clipboard-check"></i> Evaluaciones</a>
+                                    </div>
+                                    <div>
+                                        <h6 class="dropdown-header">Académico</h6>
+                                        <a class="dropdown-item <?= $current_page == 'asignaturas.php' ? 'active' : '' ?>" href="/pages/admin/asignaturas.php"><i class="bi bi-book"></i> Asignaturas y grupos</a>
+                                        <a class="dropdown-item <?= $current_page == 'competencias.php' ? 'active' : '' ?>" href="/pages/admin/competencias.php"><i class="bi bi-star"></i> Competencias</a>
+                                    </div>
+                                    <div>
+                                        <h6 class="dropdown-header">Sistema</h6>
+                                        <a class="dropdown-item <?= $current_page == 'document-tags.php' ? 'active' : '' ?>" href="/pages/admin/document-tags.php"><i class="bi bi-tags"></i> Etiquetas</a>
+                                        <a class="dropdown-item <?= $current_page == 'notices.php' ? 'active' : '' ?>" href="/pages/admin/notices.php"><i class="bi bi-megaphone"></i> Avisos</a>
+                                        <a class="dropdown-item <?= $current_page == 'settings.php' ? 'active' : '' ?>" href="/pages/admin/settings.php"><i class="bi bi-sliders"></i> Ajustes</a>
+                                        <a class="dropdown-item <?= $current_page == 'repositorio.php' ? 'active' : '' ?>" href="/pages/repositorio.php"><i class="bi bi-archive"></i> Repositorio</a>
+                                    </div>
+                                </div>
+                            </div>
                         </li>
-                        <li class="nav-item">
-                            <a href="/pages/admin/document-tags.php" class="nav-link">
-                                <i class="bi bi-tags"></i> Etiquetas
+                    <?php elseif (is_teacher()): ?>
+                        <li class="nav-item dropdown">
+                            <a class="nav-link dropdown-toggle <?= in_array($current_page, $management_pages) ? 'active' : '' ?>" href="#" id="managementMenu" role="button" data-bs-toggle="dropdown">
+                                <i class="bi bi-grid-3x3-gap"></i> Gestiones
                             </a>
+                            <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="managementMenu">
+                                <li><h6 class="dropdown-header">Docente</h6></li>
+                                <li><a class="dropdown-item <?= $current_page == 'my-projects.php' ? 'active' : '' ?>" href="/pages/teacher/my-projects.php"><i class="bi bi-folder2"></i> Mis proyectos</a></li>
+                                <li><a class="dropdown-item <?= $current_page == 'proposal-review.php' ? 'active' : '' ?>" href="/pages/teacher/proposal-review.php"><i class="bi bi-check2-square"></i> Revisar propuestas</a></li>
+                                <li><a class="dropdown-item <?= $current_page == 'evaluations.php' ? 'active' : '' ?>" href="/pages/admin/evaluations.php"><i class="bi bi-clipboard-check"></i> Evaluaciones</a></li>
+                                <li><a class="dropdown-item <?= $current_page == 'my-deliverables.php' ? 'active' : '' ?>" href="/pages/teacher/my-deliverables.php"><i class="bi bi-file-earmark"></i> Entregables</a></li>
+                                <li><hr class="dropdown-divider"></li>
+                                <li><a class="dropdown-item <?= $current_page == 'repositorio.php' ? 'active' : '' ?>" href="/pages/repositorio.php"><i class="bi bi-archive"></i> Repositorio</a></li>
+                            </ul>
+                        </li>
+                    <?php elseif (is_student()): ?>
+                        <li class="nav-item dropdown">
+                            <a class="nav-link dropdown-toggle <?= in_array($current_page, $management_pages) ? 'active' : '' ?>" href="#" id="managementMenu" role="button" data-bs-toggle="dropdown">
+                                <i class="bi bi-grid-3x3-gap"></i> Gestiones
+                            </a>
+                            <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="managementMenu">
+                                <li><h6 class="dropdown-header">Estudiante</h6></li>
+                                <li><a class="dropdown-item <?= $current_page == 'proposal-register.php' ? 'active' : '' ?>" href="/pages/student/proposal-register.php"><i class="bi bi-pencil-square"></i> Registrar proyecto</a></li>
+                                <li><a class="dropdown-item <?= $current_page == 'my-deliverables.php' ? 'active' : '' ?>" href="/pages/student/my-deliverables.php"><i class="bi bi-file-earmark"></i> Mis entregables</a></li>
+                                <li><hr class="dropdown-divider"></li>
+                                <li><a class="dropdown-item <?= $current_page == 'repositorio.php' ? 'active' : '' ?>" href="/pages/repositorio.php"><i class="bi bi-archive"></i> Repositorio</a></li>
+                            </ul>
                         </li>
                     <?php endif; ?>
                     
@@ -87,6 +144,7 @@ document.addEventListener('DOMContentLoaded', () => {
         toggle.addEventListener('click', () => {
             const nextTheme = document.documentElement.dataset.theme === 'dark' ? 'light' : 'dark';
             document.documentElement.dataset.theme = nextTheme;
+            document.documentElement.style.colorScheme = nextTheme;
             localStorage.setItem('sgpi-theme', nextTheme);
             setLabel();
         });

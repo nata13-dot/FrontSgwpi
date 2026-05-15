@@ -18,6 +18,7 @@ if (!$userId) {
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Editar Usuario - <?= APP_NAME ?></title>
+    <?php require_once $_SERVER['DOCUMENT_ROOT'] . '/includes/visual-preferences.php'; ?>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
     <link rel="stylesheet" href="/assets/css/app.css">
@@ -36,7 +37,16 @@ if (!$userId) {
                     <div class="card-body">
                         <div id="alertBox"></div>
 
-                        <form id="userForm">
+                        <form id="userForm" class="needs-validation" novalidate>
+                            <div class="row">
+                                <div class="col-12 mb-3">
+                                    <label for="direccion" class="form-label">Direccion</label>
+                                    <input type="text" class="form-control" id="direccion" name="direccion" minlength="10" pattern="(?=.*\d)[A-Za-zÁÉÍÓÚÜÑáéíóúüñ0-9\s#.,\-\/]+" placeholder="Calle, numero, colonia, municipio">
+                                    <div class="form-text">Debe incluir calle y numero. Ej. Av. Reforma 123, Col. Centro.</div>
+                                    <div class="invalid-feedback">Ingresa un domicilio valido con al menos un numero.</div>
+                                </div>
+                            </div>
+
                             <div class="row">
                                 <div class="col-md-6 mb-3 student-group-field d-none">
                                     <label for="semestre" class="form-label">Semestre</label>
@@ -66,8 +76,12 @@ if (!$userId) {
                                     <input type="email" class="form-control" id="email" name="email" required>
                                 </div>
                                 <div class="col-md-4 mb-3">
+                                    <label for="telefonos" class="form-label">Telefono</label>
+                                    <input type="tel" class="form-control" id="telefonos" name="telefonos" maxlength="200" required>
+                                </div>
+                                <div class="col-md-4 mb-3">
                                     <label for="perfil_id" class="form-label">Perfil</label>
-                                    <select class="form-select" id="perfil_id" name="perfil_id" required>
+                                    <select class="form-select" id="perfil_id" name="perfil_id" required disabled>
                                         <option value="1">Administrador</option>
                                         <option value="2">Docente</option>
                                         <option value="3">Estudiante</option>
@@ -151,6 +165,8 @@ if (!$userId) {
                 document.getElementById('nombres').value = user.nombres || '';
                 document.getElementById('apa').value = user.apa || '';
                 document.getElementById('ama').value = user.ama || '';
+                document.getElementById('telefonos').value = user.telefonos || '';
+                document.getElementById('direccion').value = user.direccion || '';
                 document.getElementById('semestre').value = user.semestre || '';
                 await loadGroupsForSemester(user.grupo || '');
                 toggleStudentFields();
@@ -176,6 +192,8 @@ if (!$userId) {
 
         form.addEventListener('submit', async (e) => {
             e.preventDefault();
+            form.classList.add('was-validated');
+            if (!form.checkValidity()) return;
 
             const formData = {
                 email: document.getElementById('email').value,
@@ -186,6 +204,8 @@ if (!$userId) {
                 nombres: document.getElementById('nombres').value,
                 apa: document.getElementById('apa').value,
                 ama: document.getElementById('ama').value
+                ,direccion: document.getElementById('direccion').value.trim() || null,
+                telefonos: document.getElementById('telefonos').value.trim()
             };
 
             const changesProtectedAdmin = loadedUser && Number(loadedUser.perfil_id) === 1
@@ -203,6 +223,10 @@ if (!$userId) {
 
             // Incluir contraseña solo si está llena
             if (document.getElementById('password').value) {
+                if (document.getElementById('password').value !== document.getElementById('password_confirmation').value) {
+                    swalToast('danger', 'La nueva contraseña y su confirmacion no coinciden');
+                    return;
+                }
                 formData.password = document.getElementById('password').value;
                 formData.password_confirmation = document.getElementById('password_confirmation').value;
             }
