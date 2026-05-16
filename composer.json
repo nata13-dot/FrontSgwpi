@@ -3,7 +3,7 @@
   "description": "Frontend PHP para el Sistema de Gestion de Proyectos Integradores.",
   "type": "project",
   "require": {
-    "php": ">=7.4"
+    "php": "8.3.*"
   },
   "scripts": {
     "start": "php -S 0.0.0.0:${PORT:-8080} -t ."
