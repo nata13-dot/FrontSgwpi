@@ -1,7 +1,7 @@
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 <script>
 window.SGPI_SETTINGS = window.SGPI_SETTINGS || {};
-window.SGPI_API_BASE_URL = 'https://apiswgpi-production-0e59.up.railway.app/api';
+window.SGPI_API_BASE_URL = '<?= API_BASE_URL ?>';
 
 async function loadPublicSettings() {
     try {

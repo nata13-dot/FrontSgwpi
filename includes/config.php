@@ -5,8 +5,11 @@ header('Pragma: no-cache');
 header('Expires: 0');
 
 define('APP_NAME', 'Sistema de Gestión de Proyectos Integradores');
-define('API_BASE_URL', 'https://apiswgpi-production-0e59.up.railway.app/api');
-define('FRONTEND_URL', 'http://localhost:3000');
+$configuredApiUrl = getenv('API_BASE_URL') ?: 'https://apiswgpi-production-0e59.up.railway.app/api';
+$configuredApiUrl = rtrim($configuredApiUrl, '/');
+define('API_BASE_URL', $configuredApiUrl);
+define('API_ORIGIN_URL', preg_replace('#/api$#', '', API_BASE_URL));
+define('FRONTEND_URL', getenv('FRONTEND_URL') ?: '');
 
 // Iniciar sesión
 session_start();
@@ -50,7 +53,7 @@ function dashboard_url() {
 function profile_photo_url($user = null) {
     $user = $user ?? ($_SESSION['user'] ?? null);
     $path = $user['photo_path'] ?? null;
-    return $path ? 'https://apiswgpi-production-0e59.up.railway.app/storage/' . ltrim($path, '/') : '/assets/img/ITSSMT/ISC.png';
+    return $path ? API_ORIGIN_URL . '/storage/' . ltrim($path, '/') : '/assets/img/ITSSMT/ISC.png';
 }
 
 /**

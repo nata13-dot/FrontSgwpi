@@ -173,8 +173,10 @@ async function logout() {
     localStorage.removeItem('auth_token');
     localStorage.removeItem('user');
 
-    if (token && typeof API_BASE_URL !== 'undefined') {
-        fetch(`${API_BASE_URL}/auth/logout`, {
+    const apiBaseUrl = typeof API_BASE_URL !== 'undefined' ? API_BASE_URL : window.SGPI_API_BASE_URL;
+
+    if (token && apiBaseUrl) {
+        fetch(`${apiBaseUrl}/auth/logout`, {
             method: 'POST',
             headers: { 'Authorization': `Bearer ${token}` }
         }).catch(() => {}).finally(() => {
