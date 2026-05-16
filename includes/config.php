@@ -5,7 +5,7 @@ header('Pragma: no-cache');
 header('Expires: 0');
 
 define('APP_NAME', 'Sistema de Gestión de Proyectos Integradores');
-define('API_BASE_URL', 'https://swapi-production-8341.up.railway.app/api');
+define('API_BASE_URL', 'https://apiswgpi-production-0e59.up.railway.app/api');
 define('FRONTEND_URL', 'http://localhost:3000');
 
 // Iniciar sesión
@@ -50,7 +50,7 @@ function dashboard_url() {
 function profile_photo_url($user = null) {
     $user = $user ?? ($_SESSION['user'] ?? null);
     $path = $user['photo_path'] ?? null;
-    return $path ? 'https://swapi-production-8341.up.railway.app/storage/' . ltrim($path, '/') : '/assets/img/ITSSMT/ISC.png';
+    return $path ? 'https://apiswgpi-production-0e59.up.railway.app/storage/' . ltrim($path, '/') : '/assets/img/ITSSMT/ISC.png';
 }
 
 /**

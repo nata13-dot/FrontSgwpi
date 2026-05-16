@@ -70,7 +70,7 @@
                         <h5>Información</h5>
                     </div>
                     <div class="card-body">
-                        <p><strong>URL API:</strong> <code id="apiUrl">https://swapi-production-8341.up.railway.app/api</code></p>
+                        <p><strong>URL API:</strong> <code id="apiUrl">https://apiswgpi-production-0e59.up.railway.app/api</code></p>
                         <p><strong>Token:</strong> <code id="tokenStatus">No definido</code></p>
                         <p><strong>Usuario:</strong> <code id="userStatus">No definido</code></p>
                     </div>
@@ -94,7 +94,7 @@
 
     <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
     <script>
-        const API_BASE_URL = 'https://swapi-production-8341.up.railway.app/api';
+        const API_BASE_URL = 'https://apiswgpi-production-0e59.up.railway.app/api';
         const logBox = document.getElementById('logBox');
 
         function addLog(message, type = 'info') {

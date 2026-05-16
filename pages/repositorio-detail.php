@@ -40,7 +40,7 @@
     <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/mammoth@1.8.0/mammoth.browser.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/epubjs@0.3.93/dist/epub.min.js"></script>
-    <script>const API_BASE_URL = 'https://swapi-production-8341.up.railway.app/api';</script>
+    <script>const API_BASE_URL = 'https://apiswgpi-production-0e59.up.railway.app/api';</script>
     <script src="/assets/js/auth.js"></script>
     <script src="/assets/js/api.js"></script>
 
