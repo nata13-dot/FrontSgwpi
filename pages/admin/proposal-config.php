@@ -83,6 +83,29 @@ if (!is_authenticated() || !is_admin()) { header('Location: /index.php'); exit; 
                 </div>
             </div>
 
+            <div class="card border-0 shadow-sm mb-4">
+                <div class="card-header bg-light d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0"><i class="bi bi-person-plus"></i> Alumnos extra para revision</h5>
+                    <span class="badge bg-secondary" id="exceptionCounter">0 excepciones</span>
+                </div>
+                <div class="card-body">
+                    <div class="row g-3 align-items-end">
+                        <div class="col-lg-3"><label class="form-label">Materia</label><select class="form-select" id="exceptionSubject"></select></div>
+                        <div class="col-lg-3"><label class="form-label">Docente revisor</label><select class="form-select" id="exceptionTeacher"></select></div>
+                        <div class="col-lg-3"><label class="form-label">Buscar alumno</label><input class="form-control" id="studentSearch" placeholder="Control, nombre o apellido" oninput="searchStudentsForException()"></div>
+                        <div class="col-lg-3"><label class="form-label">Alumno</label><select class="form-select" id="exceptionStudent"></select></div>
+                        <div class="col-lg-9"><input class="form-control" id="exceptionNotes" placeholder="Motivo o nota opcional"></div>
+                        <div class="col-lg-3 d-grid"><button class="btn btn-primary" onclick="addException()"><i class="bi bi-plus-circle"></i> Agregar excepcion</button></div>
+                    </div>
+                    <div class="table-responsive mt-3">
+                        <table class="table table-sm align-middle mb-0">
+                            <thead><tr><th>Materia</th><th>Docente</th><th>Alumno</th><th>Grupo alumno</th><th>Nota</th><th class="text-end">Acciones</th></tr></thead>
+                            <tbody id="exceptionsTable"></tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
             <div class="card border-0 shadow-sm">
                 <div class="card-header bg-light d-flex justify-content-between align-items-center">
                     <h5 class="mb-0"><i class="bi bi-calendar-range"></i> Ventanas de registro por grupo</h5>
@@ -101,7 +124,7 @@ if (!is_authenticated() || !is_admin()) { header('Location: /index.php'); exit; 
 <script src="/assets/js/auth.js"></script>
 <script src="/assets/js/api.js"></script>
 <script>
-let config = { subject_groups: [], teachers: [], asignaturas: [] };
+let config = { subject_groups: [], teachers: [], asignaturas: [], exceptions: [] };
 const esc = value => String(value ?? '').replace(/[&<>'"]/g, char => ({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'}[char]));
 
 async function loadConfig() {
@@ -109,6 +132,7 @@ async function loadConfig() {
     renderSubjectOptions();
     renderResponsibleTable();
     renderWindows();
+    renderExceptions();
 }
 
 function renderSubjectOptions() {
@@ -118,6 +142,8 @@ function renderSubjectOptions() {
         <option value="${subject.id}">${esc(subject.clave ? subject.clave + ' - ' : '')}${esc(subject.nombre)}</option>
     `).join('');
     if (current) select.value = current;
+    document.getElementById('exceptionSubject').innerHTML = select.innerHTML;
+    document.getElementById('exceptionTeacher').innerHTML = '<option value="">Selecciona docente</option>' + teacherOptions();
 }
 
 function teacherOptions() {
@@ -237,6 +263,58 @@ function renderWindows() {
             </div>
         `;
     }).join('');
+}
+
+let exceptionSearchTimer = null;
+function searchStudentsForException() {
+    clearTimeout(exceptionSearchTimer);
+    exceptionSearchTimer = setTimeout(async () => {
+        const term = document.getElementById('studentSearch').value.trim();
+        if (term.length < 2) return;
+        const students = await api.get('/proposal/students/search', { q: term });
+        document.getElementById('exceptionStudent').innerHTML = '<option value="">Selecciona alumno</option>' + students.map(student => `
+            <option value="${esc(student.id)}">${esc(student.id)} - ${esc(student.nombres)} ${esc(student.apa || '')} (${esc(student.semestre || '-')}${esc(student.grupo || '')})</option>
+        `).join('');
+    }, 350);
+}
+
+function renderExceptions() {
+    const rows = config.exceptions || [];
+    document.getElementById('exceptionCounter').textContent = `${rows.length} excepcion${rows.length === 1 ? '' : 'es'}`;
+    document.getElementById('exceptionsTable').innerHTML = rows.map(item => `
+        <tr>
+            <td>${esc(item.asignatura?.nombre || '-')}</td>
+            <td>${esc(item.teacher?.nombres || '')} ${esc(item.teacher?.apa || '')}</td>
+            <td>${esc(item.student?.id || '')} - ${esc(item.student?.nombres || '')} ${esc(item.student?.apa || '')}</td>
+            <td>${esc(item.student?.semestre || '-')} ${esc(item.student?.grupo || '')}</td>
+            <td>${esc(item.notes || '-')}</td>
+            <td class="text-end"><button class="btn btn-sm btn-outline-danger" onclick="deleteException(${item.id})"><i class="bi bi-trash"></i></button></td>
+        </tr>
+    `).join('') || '<tr><td colspan="6" class="text-center text-muted py-3">Sin alumnos extra configurados.</td></tr>';
+}
+
+async function addException() {
+    const payload = {
+        asignatura_id: document.getElementById('exceptionSubject').value,
+        teacher_id: document.getElementById('exceptionTeacher').value,
+        student_id: document.getElementById('exceptionStudent').value,
+        notes: document.getElementById('exceptionNotes').value.trim() || null
+    };
+    if (!payload.asignatura_id || !payload.teacher_id || !payload.student_id) {
+        Swal.fire('Faltan datos', 'Selecciona materia, docente y alumno.', 'warning');
+        return;
+    }
+    await api.post('/proposal/exceptions', payload);
+    document.getElementById('exceptionNotes').value = '';
+    swalToast('Excepcion agregada', 'success');
+    loadConfig();
+}
+
+async function deleteException(id) {
+    if (!await confirmAction({ title: 'Quitar excepcion' })) return;
+    await api.delete(`/proposal/exceptions/${id}`);
+    swalToast('Excepcion removida', 'success');
+    loadConfig();
 }
 
 async function assignTeacher(groupId) {

@@ -44,6 +44,20 @@ if (!is_authenticated()) {
                     </div>
                 </div>
                 <div id="alertContainer"></div>
+                <div class="row g-3 mb-3">
+                    <div class="col-md-6">
+                        <label class="form-label">Materia</label>
+                        <select class="form-select" id="subjectFilter" onchange="onSubjectFilterChange()">
+                            <option value="">Todas las materias</option>
+                        </select>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label">Competencia</label>
+                        <select class="form-select" id="competenceFilter" onchange="loadDeliverables()">
+                            <option value="">Todas las competencias</option>
+                        </select>
+                    </div>
+                </div>
                 <div class="card border-0 shadow-sm">
                     <div class="card-body p-0">
                         <div class="table-responsive">
@@ -191,6 +205,7 @@ if (!is_authenticated()) {
         let deliverables = [];
         let projects = [];
         let competencias = [];
+        let asignaturas = [];
         let deliverableModal;
         let modalCalificar;
         let modalSubirArchivo;
@@ -209,6 +224,12 @@ if (!is_authenticated()) {
             ]);
             projects = projectsResponse.data || [];
             competencias = competenciasResponse.data || [];
+            asignaturas = [...new Map(competencias.filter(item => item.asignatura).map(item => [item.asignatura.id, item.asignatura])).values()];
+
+            document.getElementById('subjectFilter').innerHTML = '<option value="">Todas las materias</option>' + asignaturas.map(subject => `
+                <option value="${subject.id}">${escapeHtml(subject.nombre)}</option>
+            `).join('');
+            renderCompetenceFilter();
 
             const projectSelect = document.getElementById('project_id');
             projectSelect.innerHTML = '<option value="">Selecciona un proyecto</option>';
@@ -230,9 +251,27 @@ if (!is_authenticated()) {
             }
         }
 
+        function renderCompetenceFilter() {
+            const subjectId = document.getElementById('subjectFilter').value;
+            const filtered = subjectId ? competencias.filter(item => Number(item.asignatura_id) === Number(subjectId)) : competencias;
+            document.getElementById('competenceFilter').innerHTML = '<option value="">Todas las competencias</option>' + filtered.map(competencia => `
+                <option value="${competencia.id}">${escapeHtml(competencia.nombre)}</option>
+            `).join('');
+        }
+
+        function onSubjectFilterChange() {
+            document.getElementById('competenceFilter').value = '';
+            renderCompetenceFilter();
+            loadDeliverables();
+        }
+
         async function loadDeliverables(page = 1) {
             try {
                 const params = { page };
+                const subjectId = document.getElementById('subjectFilter').value;
+                const competenceId = document.getElementById('competenceFilter').value;
+                if (subjectId) params.asignatura_id = subjectId;
+                if (competenceId) params.competencia_id = competenceId;
                 if (competenciaFilter) params.competencia_id = competenciaFilter;
                 const response = await api.get('/deliverables', params);
                 deliverables = response.data || [];

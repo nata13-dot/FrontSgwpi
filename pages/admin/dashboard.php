@@ -22,7 +22,7 @@ if (!is_authenticated() || !is_admin()) {
     <?php require_once $_SERVER['DOCUMENT_ROOT'] . '/includes/navbar.php'; ?>
     
     <!-- Page Header -->
-    <div style="background: url('/assets/img/ITSSMT/Fondo.jpg'); background-size: cover; background-position: center; padding: 80px 0; position: relative;">
+    <div style="background: url('/assets/img/ITSSMT/Sistema2.jpeg'); background-size: cover; background-position: center; padding: 80px 0; position: relative;">
         <div class="overlay"></div>
         <div class="container-xl" style="position: relative; z-index: 1;">
             <!-- Logo y Título -->

@@ -166,6 +166,10 @@ if (!is_authenticated() || (!is_admin() && !is_teacher())) {
                 <div class="modal-body">
                     <input type="hidden" id="scoreEvaluationId">
                     <div id="scoreFields"></div>
+                    <div class="border rounded p-3 mt-3">
+                        <label class="form-label fw-semibold" for="generalEvaluationComment">Comentarios o puntos de mejora</label>
+                        <textarea class="form-control" id="generalEvaluationComment" rows="3" placeholder="Comentario final visible en el desglose"></textarea>
+                    </div>
                     <div class="border rounded p-3 mt-3 d-none" id="titulationAptBox">
                         <label class="form-label fw-semibold">¿El proyecto es apto para titulacion?</label>
                         <select class="form-select" id="apto_titulacion">
@@ -205,6 +209,7 @@ if (!is_authenticated() || (!is_admin() && !is_teacher())) {
                                     <div class="col-md-4"><label class="form-label">Min. proyecto</label><input type="number" class="form-control" id="presentationMinutes" min="1" max="240" value="20"></div>
                                     <div class="col-md-4"><label class="form-label">Oportunidades</label><input type="number" class="form-control" id="maxAttempts" min="1" max="10" value="1"></div>
                                     <div class="col-12"><label class="form-label">Docentes</label><div class="border rounded p-2" id="roomTeachers" style="max-height: 160px; overflow:auto;"></div></div>
+                                    <div class="col-12"><label class="form-label">Responsable de sala</label><select class="form-select" id="responsibleTeacher"><option value="">Selecciona primero docentes</option></select></div>
                                     <div class="col-12"><label class="form-label">Proyectos</label><div class="border rounded p-2" id="roomProjects" style="max-height: 220px; overflow:auto;"></div></div>
                                     <div class="col-12"><div class="small text-muted" id="roomAvailabilityHint"></div></div>
                                 </div>
@@ -313,6 +318,20 @@ if (!is_authenticated() || (!is_admin() && !is_teacher())) {
             document.getElementById('evaluation_room_id').innerHTML = '<option value="">Sin sala configurada</option>' + rooms.map(room => `<option value="${room.id}">${escapeHtml(room.nombre)} · ${escapeHtml(room.salon || 'Sin salon')} · ${room.semestre}</option>`).join('');
         }
 
+        function normalizeRoomName(value) {
+            const clean = String(value || '').trim();
+            if (/^sala\s+\d+/i.test(clean)) return clean;
+            const number = clean.match(/\d+/)?.[0] || (rooms.length + 1);
+            return `Sala ${number}`;
+        }
+
+        function normalizeClassroom(value) {
+            const clean = String(value || '').trim().toUpperCase();
+            if (/^EB\d+/.test(clean)) return clean;
+            const number = clean.match(/\d+/)?.[0] || '';
+            return number ? `EB${number}` : clean;
+        }
+
         async function loadEvaluations() {
             const projectId = document.getElementById('projectFilter').value;
             const params = projectId ? { project_id: projectId } : {};
@@ -326,23 +345,42 @@ if (!is_authenticated() || (!is_admin() && !is_teacher())) {
                 return;
             }
 
+            let lastRoomKey = null;
             evaluations.forEach(evaluation => {
+                const roomKey = evaluation.room?.id || 'sin-sala';
+                if (roomKey !== lastRoomKey) {
+                    lastRoomKey = roomKey;
+                    const room = evaluation.room;
+                    tbody.innerHTML += `
+                        <tr class="table-light">
+                            <td colspan="8">
+                                <div class="d-flex flex-wrap justify-content-between align-items-center gap-2">
+                                    <strong>${escapeHtml(room?.nombre || 'Sin sala')}</strong>
+                                    <span class="text-muted small">${escapeHtml(room?.salon || '-')} · Responsable: ${escapeHtml(fullName(room?.responsible_teacher) || '-')}</span>
+                                </div>
+                            </td>
+                        </tr>`;
+                }
+                const averageColor = evaluation.global_average_color || 'secondary';
+                const disabled = evaluation.can_score_now ? '' : 'disabled';
+                const statusClass = { activo: 'bg-primary', evaluado: 'bg-success', pendiente: 'bg-secondary' }[evaluation.sequence_status] || 'bg-secondary';
                 tbody.innerHTML += `
                     <tr>
-                        <td>${escapeHtml(evaluation.project?.title || 'N/A')}</td>
+                        <td><span class="badge ${statusClass} me-1">#${evaluation.presentation_order || '-'}</span>${escapeHtml(evaluation.project?.title || 'N/A')}</td>
                         <td>${evaluation.semestre}</td>
                         <td>${stageLabel(evaluation.etapa)}</td>
                         <td>${escapeHtml(evaluation.sala || '-')}</td>
                         <td>${evaluation.fecha_exposicion ? new Date(evaluation.fecha_exposicion).toLocaleString('es-MX') : '-'}</td>
                         <td><span class="badge bg-secondary">${escapeHtml(evaluation.resultado)}</span></td>
                         <td>
-                            <button class="btn btn-sm btn-outline-primary" onclick="showBreakdown(${evaluation.id})">
+                            <button class="btn btn-sm btn-outline-${averageColor}" onclick="showBreakdown(${evaluation.id})">
                                 ${evaluation.global_average}% · ${evaluation.evaluators_count} docentes
                             </button>
                         </td>
                         <td>
                             <div class="btn-group btn-group-sm">
-                                <button class="btn btn-outline-success" onclick="openScoreModal(${evaluation.id})" title="Evaluar"><i class="bi bi-clipboard-check"></i></button>
+                                <button class="btn btn-outline-success" onclick="openScoreModal(${evaluation.id})" title="Evaluar" ${disabled}><i class="bi bi-clipboard-check"></i></button>
+                                ${evaluation.is_room_responsible ? `<button class="btn btn-outline-primary" onclick="askAdvanceRoom(${evaluation.evaluation_room_id})" title="Finalizar y continuar"><i class="bi bi-skip-forward"></i></button>` : ''}
                                 <button class="btn btn-outline-danger" onclick="deleteEvaluation(${evaluation.id})" title="Eliminar"><i class="bi bi-trash"></i></button>
                             </div>
                         </td>
@@ -440,22 +478,34 @@ if (!is_authenticated() || (!is_admin() && !is_teacher())) {
             const availableTeachers = teachers.filter(teacher => !busy.teachers.has(String(teacher.id)));
             document.getElementById('roomTeachers').innerHTML = availableTeachers.map(teacher => `
                 <div class="form-check">
-                    <input class="form-check-input room-teacher" type="checkbox" value="${escapeHtml(teacher.id)}" id="roomTeacher${escapeHtml(teacher.id)}" ${selectedIds.includes(String(teacher.id)) ? 'checked' : ''}>
+                    <input class="form-check-input room-teacher" type="checkbox" value="${escapeHtml(teacher.id)}" id="roomTeacher${escapeHtml(teacher.id)}" ${selectedIds.includes(String(teacher.id)) ? 'checked' : ''} onchange="refreshResponsibleTeacherOptions()">
                     <label class="form-check-label" for="roomTeacher${escapeHtml(teacher.id)}">${escapeHtml(teacher.nombres)} ${escapeHtml(teacher.apa || '')}</label>
                 </div>`).join('') || '<p class="text-muted mb-0">No hay docentes disponibles para esta fecha y hora.</p>';
+            refreshResponsibleTeacherOptions();
             renderAvailabilityHint(busy);
         }
 
-        async function loadRoomProjects(selected = []) {
+        function refreshResponsibleTeacherOptions(selected = null) {
+            const current = selected ?? document.getElementById('responsibleTeacher')?.value ?? '';
+            const checked = [...document.querySelectorAll('.room-teacher:checked')].map(input => String(input.value));
+            const available = teachers.filter(teacher => checked.includes(String(teacher.id)));
+            document.getElementById('responsibleTeacher').innerHTML = '<option value="">Sin responsable</option>' + available.map(teacher => `
+                <option value="${escapeHtml(teacher.id)}">${escapeHtml(fullName(teacher))}</option>
+            `).join('');
+            if (current) document.getElementById('responsibleTeacher').value = current;
+        }
+
+        async function loadRoomProjects(selected = [], orderMap = {}) {
             const semester = document.getElementById('roomSemester').value;
             roomProjects = await api.get('/evaluations/projects', { semestre: semester });
             const selectedIds = selected.map(Number);
             const busy = busyRoomIds();
             const availableProjects = roomProjects.filter(project => !busy.projects.has(Number(project.id)));
             document.getElementById('roomProjects').innerHTML = availableProjects.map(project => `
-                <div class="form-check">
-                    <input class="form-check-input room-project" type="checkbox" value="${project.id}" id="roomProject${project.id}" ${selectedIds.includes(Number(project.id)) ? 'checked' : ''}>
-                    <label class="form-check-label" for="roomProject${project.id}">${escapeHtml(project.title)} <span class="text-muted small">${escapeHtml(projectActiveAuthors(project))}</span></label>
+                <div class="d-flex align-items-start gap-2 mb-2">
+                    <input class="form-check-input room-project mt-2" type="checkbox" value="${project.id}" id="roomProject${project.id}" ${selectedIds.includes(Number(project.id)) ? 'checked' : ''}>
+                    <input class="form-control form-control-sm room-project-order" data-project-id="${project.id}" type="number" min="1" value="${orderMap[project.id] || selectedIds.indexOf(Number(project.id)) + 1 || ''}" style="width:76px" title="Orden">
+                    <label class="form-check-label flex-grow-1" for="roomProject${project.id}">${escapeHtml(project.title)} <span class="text-muted small">${escapeHtml(projectActiveAuthors(project))}</span></label>
                 </div>`).join('') || '<p class="text-muted mb-0">No hay proyectos disponibles para esta fecha, hora y semestre.</p>';
             renderAvailabilityHint(busy);
         }
@@ -483,11 +533,15 @@ if (!is_authenticated() || (!is_admin() && !is_teacher())) {
                             <h6 class="mb-1">${escapeHtml(room.nombre)} <span class="badge bg-secondary">${room.semestre}</span></h6>
                             <div class="small text-muted">${escapeHtml(room.salon || 'Sin salon')} · ${room.fecha_evaluacion ? new Date(room.fecha_evaluacion).toLocaleString('es-MX') : 'Sin fecha'}</div>
                             <div class="small mt-1">Docentes: ${(room.teachers || []).map(t => escapeHtml(t.nombres)).join(', ') || '-'}</div>
-                            <div class="small">Proyectos: ${(room.projects || []).length}</div>
+                            <div class="small">Responsable: ${escapeHtml(fullName(room.responsible_teacher) || '-')}</div>
+                            <div class="small">Proyectos: ${(room.projects || []).length} ${room.sequence_locked ? '<span class="badge bg-primary">Orden bloqueado</span>' : ''} ${room.completed_at ? '<span class="badge bg-success">Sala finalizada</span>' : ''}</div>
+                            <ol class="small mb-1 mt-1">${(room.projects || []).map(project => `<li>${escapeHtml(project.title)} <span class="badge bg-light text-dark">${escapeHtml(project.sequence_status || 'pendiente')}</span></li>`).join('')}</ol>
                             <div class="small">Exposicion: ${room.project_presentation_minutes} min · Evaluacion docente: ${room.teacher_evaluation_minutes} min · Oportunidades: ${room.max_attempts}</div>
                         </div>
                         <div class="btn-group btn-group-sm align-self-start">
                             <button class="btn btn-outline-primary" onclick="editRoom(${room.id})"><i class="bi bi-pencil"></i></button>
+                            <button class="btn btn-outline-success" onclick="lockRoomSequence(${room.id})" title="Bloquear orden"><i class="bi bi-lock"></i></button>
+                            ${room.completed_at ? `<button class="btn btn-outline-secondary" onclick="exportRoom(${room.id})" title="Exportar CSV"><i class="bi bi-file-earmark-spreadsheet"></i></button>` : ''}
                             <button class="btn btn-outline-danger" onclick="deleteRoom(${room.id})"><i class="bi bi-trash"></i></button>
                         </div>
                     </div>
@@ -506,11 +560,14 @@ if (!is_authenticated() || (!is_admin() && !is_teacher())) {
             document.getElementById('presentationMinutes').value = room.project_presentation_minutes || 20;
             document.getElementById('maxAttempts').value = room.max_attempts || 1;
             renderRoomTeachers((room.teachers || []).map(t => t.id));
-            await loadRoomProjects((room.projects || []).map(p => p.id));
+            refreshResponsibleTeacherOptions(room.responsible_teacher_id || '');
+            const orderMap = Object.fromEntries((room.projects || []).map(p => [p.id, p.presentation_order || 0]));
+            await loadRoomProjects((room.projects || []).map(p => p.id), orderMap);
         }
 
         function resetRoomForm() {
             ['roomId', 'roomName', 'roomClassroom', 'roomDate'].forEach(id => document.getElementById(id).value = '');
+            document.getElementById('responsibleTeacher').innerHTML = '<option value="">Selecciona primero docentes</option>';
             document.getElementById('teacherMinutes').value = 15;
             document.getElementById('presentationMinutes').value = 20;
             document.getElementById('maxAttempts').value = 1;
@@ -522,16 +579,24 @@ if (!is_authenticated() || (!is_admin() && !is_teacher())) {
             const id = document.getElementById('roomId').value;
             const teacherIds = [...document.querySelectorAll('.room-teacher:checked')].map(input => input.value);
             const projectIds = [...document.querySelectorAll('.room-project:checked')].map(input => Number(input.value));
+            const projectOrder = {};
+            document.querySelectorAll('.room-project-order').forEach(input => {
+                if (projectIds.includes(Number(input.dataset.projectId))) {
+                    projectOrder[input.dataset.projectId] = Number(input.value || 0);
+                }
+            });
             const payload = {
-                nombre: document.getElementById('roomName').value.trim(),
-                salon: document.getElementById('roomClassroom').value.trim() || null,
+                nombre: normalizeRoomName(document.getElementById('roomName').value),
+                salon: normalizeClassroom(document.getElementById('roomClassroom').value) || null,
                 semestre: document.getElementById('roomSemester').value,
+                responsible_teacher_id: document.getElementById('responsibleTeacher').value || null,
                 fecha_evaluacion: document.getElementById('roomDate').value,
                 teacher_evaluation_minutes: Number(document.getElementById('teacherMinutes').value),
                 project_presentation_minutes: Number(document.getElementById('presentationMinutes').value),
                 max_attempts: Number(document.getElementById('maxAttempts').value),
                 teacher_ids: teacherIds,
-                project_ids: projectIds
+                project_ids: projectIds,
+                project_order: projectOrder
             };
             if (!payload.nombre || !payload.fecha_evaluacion) {
                 showAlert('#alertContainer', 'danger', 'Indica el nombre de la sala y la fecha de evaluacion.');
@@ -570,6 +635,47 @@ if (!is_authenticated() || (!is_admin() && !is_teacher())) {
             await loadRooms();
             renderRooms();
             renderRoomOptions();
+        }
+
+        async function lockRoomSequence(id) {
+            if (!await confirmAction({ title: 'Bloquear orden de paso', text: 'Despues de bloquear, solo el proyecto en turno podra evaluarse.', confirmButtonText: 'Si, bloquear' })) return;
+            await api.post(`/evaluations/rooms/${id}/lock-sequence`, {});
+            await loadRooms();
+            renderRooms();
+            loadEvaluations();
+        }
+
+        async function askAdvanceRoom(id) {
+            const result = await Swal.fire({
+                title: 'La evaluacion del proyecto actual ha finalizado?',
+                text: 'Continuamos con el siguiente proyecto?',
+                icon: 'question',
+                showCancelButton: true,
+                confirmButtonText: 'Si',
+                cancelButtonText: 'No'
+            });
+            if (!result.isConfirmed) return;
+            await api.post(`/evaluations/rooms/${id}/advance`, { continue_next: true });
+            await loadRooms();
+            renderRooms();
+            loadEvaluations();
+        }
+
+        async function exportRoom(id) {
+            const response = await fetch(`${API_BASE_URL}/evaluations/rooms/${id}/export`, {
+                headers: { Authorization: `Bearer ${auth.getToken()}` }
+            });
+            if (!response.ok) {
+                showAlert('#alertContainer', 'danger', 'No se pudo generar el Excel/CSV de la sala.');
+                return;
+            }
+            const blob = await response.blob();
+            const url = URL.createObjectURL(blob);
+            const link = document.createElement('a');
+            link.href = url;
+            link.download = `evaluaciones_sala_${id}.csv`;
+            link.click();
+            URL.revokeObjectURL(url);
         }
 
         async function loadRubricCriteria() {
@@ -631,6 +737,11 @@ if (!is_authenticated() || (!is_admin() && !is_teacher())) {
         function openScoreModal(evaluationId) {
             document.getElementById('scoreEvaluationId').value = evaluationId;
             const evaluation = evaluations.find(item => item.id === evaluationId);
+            if (evaluation && !evaluation.can_score_now) {
+                showAlert('#alertContainer', 'warning', 'Este proyecto aun no esta liberado para evaluacion dentro de la sala.');
+                return;
+            }
+            document.getElementById('generalEvaluationComment').value = '';
             document.getElementById('titulationAptBox').classList.toggle('d-none', Number(evaluation?.semestre) !== 8);
             document.getElementById('apto_titulacion').value = evaluation?.apto_titulacion === true ? '1' : (evaluation?.apto_titulacion === false ? '0' : '');
             if (evaluation?.current_teacher_has_scores && Number(evaluation.current_teacher_attempts) >= Number(evaluation.max_attempts)) {
@@ -679,7 +790,7 @@ if (!is_authenticated() || (!is_admin() && !is_teacher())) {
                     });
                     if (!confirm_update) return;
                 }
-                const payload = { scores, confirm_update };
+                const payload = { scores, confirm_update, general_comment: document.getElementById('generalEvaluationComment').value.trim() || null };
                 const aptValue = document.getElementById('apto_titulacion').value;
                 if (aptValue !== '') payload.apto_titulacion = aptValue === '1';
                 await api.post(`/evaluations/${evaluationId}/score`, payload);
@@ -694,17 +805,16 @@ if (!is_authenticated() || (!is_admin() && !is_teacher())) {
         function showBreakdown(evaluationId) {
             const evaluation = evaluations.find(item => item.id === evaluationId);
             const container = document.getElementById('breakdownContent');
-            if (!evaluation || evaluation.teacher_breakdown.length === 0) {
-                container.innerHTML = '<p class="text-muted mb-0">Aun no hay evaluaciones registradas por docentes.</p>';
-                breakdownModal.show();
-                return;
-            }
-            container.innerHTML = evaluation.teacher_breakdown.map(teacher => `
+            if (!evaluation) return;
+            const teacherBlocks = evaluation.teacher_breakdown.length === 0
+                ? '<p class="text-muted mb-0">Aun no hay evaluaciones registradas por docentes.</p>'
+                : evaluation.teacher_breakdown.map(teacher => `
                 <div class="border rounded p-3 mb-3">
                     <div class="d-flex justify-content-between align-items-center mb-2">
                         <h6 class="mb-0">${escapeHtml(teacher.teacher_name)}</h6>
                         <span class="badge bg-primary">${teacher.average}%</span>
                     </div>
+                    ${teacher.general_comment ? `<div class="alert alert-light border py-2">${escapeHtml(teacher.general_comment)}</div>` : ''}
                     <div class="table-responsive">
                         <table class="table table-sm mb-0">
                             <tbody>
@@ -718,7 +828,26 @@ if (!is_authenticated() || (!is_admin() && !is_teacher())) {
                         </table>
                     </div>
                 </div>`).join('');
+            const feedbackBox = `
+                <div class="border rounded p-3">
+                    <h6>Retroalimentacion del responsable de sala</h6>
+                    <p class="text-muted small">${escapeHtml(evaluation.room_feedback || 'Sin retroalimentacion registrada.')}</p>
+                    ${evaluation.is_room_responsible ? `
+                        <textarea class="form-control mb-2" id="roomFeedbackText" rows="3">${escapeHtml(evaluation.room_feedback || '')}</textarea>
+                        <button class="btn btn-sm btn-primary" onclick="saveRoomFeedback(${evaluation.id})"><i class="bi bi-save"></i> Guardar retroalimentacion</button>
+                    ` : ''}
+                </div>`;
+            container.innerHTML = teacherBlocks + feedbackBox;
             breakdownModal.show();
+        }
+
+        async function saveRoomFeedback(evaluationId) {
+            await api.post(`/evaluations/${evaluationId}/feedback`, {
+                room_feedback: document.getElementById('roomFeedbackText').value.trim()
+            });
+            breakdownModal.hide();
+            showAlert('#alertContainer', 'success', 'Retroalimentacion guardada');
+            loadEvaluations();
         }
 
         async function deleteEvaluation(id) {
