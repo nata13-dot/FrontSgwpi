@@ -137,6 +137,22 @@
                 return;
             }
 
+            if (['jpg', 'jpeg', 'png'].includes(fileType)) {
+                reader.innerHTML = `<img src="${viewUrl}" class="img-fluid rounded" alt="Vista previa de imagen">`;
+                return;
+            }
+
+            if (fileType === 'txt') {
+                try {
+                    const response = await fetch(viewUrl);
+                    const text = await response.text();
+                    reader.innerHTML = `<pre class="repository-text-preview">${esc(text)}</pre>`;
+                } catch (error) {
+                    reader.innerHTML = previewFallback(downloadUrl, 'No fue posible leer este archivo de texto en el navegador.');
+                }
+                return;
+            }
+
             if (fileType === 'docx') {
                 try {
                     const response = await fetch(viewUrl);
@@ -169,7 +185,7 @@
                 return;
             }
 
-            reader.innerHTML = previewFallback(downloadUrl, 'La vista previa para archivos .doc antiguos no está disponible en el navegador.');
+            reader.innerHTML = previewFallback(downloadUrl, 'La vista previa para este tipo de archivo no está disponible en el navegador.');
         }
 
         function previewFallback(downloadUrl, message) {

@@ -26,7 +26,7 @@ if (!is_authenticated() || !is_teacher()) {
         
         <div class="main-content flex-grow-1">
             <!-- Hero -->
-            <div style="background: url('/assets/img/ITSSMT/fondo.jpg'); background-size: cover; background-position: center; padding: 80px 0; position: relative;">
+            <div style="background: url('/assets/img/ITSSMT/Sistema2.jpeg'); background-size: cover; background-position: center; padding: 80px 0; position: relative;">
                 <div class="overlay"></div>
                 <div class="container-xl" style="position: relative; z-index: 1;">
                     <!-- Logo y Título -->

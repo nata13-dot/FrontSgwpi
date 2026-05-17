@@ -92,8 +92,8 @@
                             </div>
                             <div class="col-md-6">
                                 <label class="form-label" for="repoArchivo">Archivo</label>
-                                <input type="file" class="form-control" id="repoArchivo" name="archivo" accept=".pdf,.doc,.docx,.epub" required>
-                                <div class="form-text">Permitidos: PDF, Word (.doc/.docx) y EPUB.</div>
+                                <input type="file" class="form-control" id="repoArchivo" name="archivo" accept=".pdf,.doc,.docx,.xls,.xlsx,.zip,.txt,.jpg,.jpeg,.png,.epub" required>
+                                <div class="form-text">Permitidos: PDF, Word, Excel, ZIP, TXT, imagenes JPG/PNG y EPUB.</div>
                             </div>
                             <div class="col-12">
                                 <label class="form-label">Etiquetas</label>
@@ -215,10 +215,10 @@
                 showAlert('#repositoryUploadAlert', 'danger', 'Ningun campo del documento puede quedar vacio.');
                 return;
             }
-            const allowedExtensions = ['pdf', 'doc', 'docx', 'epub'];
+            const allowedExtensions = ['pdf', 'doc', 'docx', 'xls', 'xlsx', 'zip', 'txt', 'jpg', 'jpeg', 'png', 'epub'];
             const extension = file?.name.split('.').pop().toLowerCase();
             if (!file || !allowedExtensions.includes(extension)) {
-                showAlert('#repositoryUploadAlert', 'danger', 'Selecciona un archivo PDF, Word o EPUB.');
+                showAlert('#repositoryUploadAlert', 'danger', 'Selecciona un archivo permitido: PDF, Word, Excel, ZIP, TXT, JPG, PNG o EPUB.');
                 return;
             }
 
