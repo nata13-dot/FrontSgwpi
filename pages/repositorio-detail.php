@@ -39,7 +39,6 @@
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/mammoth@1.8.0/mammoth.browser.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/epubjs@0.3.93/dist/epub.min.js"></script>
     <script>const API_BASE_URL = '<?= API_BASE_URL ?>';</script>
     <script src="/assets/js/auth.js"></script>
     <script src="/assets/js/api.js"></script>
@@ -166,22 +165,7 @@
             }
 
             if (fileType === 'epub') {
-                reader.innerHTML = `
-                    <div class="d-flex justify-content-between align-items-center mb-3">
-                        <button type="button" class="btn btn-outline-secondary btn-sm" id="epubPrev"><i class="bi bi-chevron-left"></i> Anterior</button>
-                        <button type="button" class="btn btn-outline-secondary btn-sm" id="epubNext">Siguiente <i class="bi bi-chevron-right"></i></button>
-                    </div>
-                    <div id="epubViewer" class="repository-epub-viewer"></div>
-                `;
-                try {
-                    const book = ePub(viewUrl);
-                    const rendition = book.renderTo('epubViewer', { width: '100%', height: 620, spread: 'none' });
-                    rendition.display();
-                    document.getElementById('epubPrev').onclick = () => rendition.prev();
-                    document.getElementById('epubNext').onclick = () => rendition.next();
-                } catch (error) {
-                    reader.innerHTML = previewFallback(downloadUrl, 'No fue posible abrir este EPUB en el navegador.');
-                }
+                reader.innerHTML = previewFallback(downloadUrl, 'La vista previa EPUB no está disponible en el navegador.');
                 return;
             }
 
