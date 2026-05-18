@@ -71,8 +71,9 @@
         <div class="modal-dialog modal-lg">
             <div class="modal-content">
                 <form id="repositoryUploadForm" onsubmit="submitRepositoryDocument(event)">
+                    <input type="hidden" id="repoDocumentId" name="document_id">
                     <div class="modal-header">
-                        <h5 class="modal-title"><i class="bi bi-cloud-arrow-up"></i> Agregar documento al repositorio</h5>
+                        <h5 class="modal-title" id="repositoryModalTitle"><i class="bi bi-cloud-arrow-up"></i> Agregar documento al repositorio</h5>
                         <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                     </div>
                     <div class="modal-body">
@@ -93,7 +94,7 @@
                             <div class="col-md-6">
                                 <label class="form-label" for="repoArchivo">Archivo</label>
                                 <input type="file" class="form-control" id="repoArchivo" name="archivo" accept=".pdf,.doc,.docx,.xls,.xlsx,.zip,.txt,.jpg,.jpeg,.png,.epub" required>
-                                <div class="form-text">Permitidos: PDF, Word, Excel, ZIP, TXT, imagenes JPG/PNG y EPUB.</div>
+                                <div class="form-text" id="repoArchivoHelp">Permitidos: PDF, Word, Excel, ZIP, TXT, imagenes JPG/PNG y EPUB.</div>
                             </div>
                             <div class="col-12">
                                 <label class="form-label">Etiquetas</label>
@@ -119,6 +120,7 @@
     <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
     <script>
         const API_BASE_URL = '<?= API_BASE_URL ?>';
+        const CAN_MANAGE_REPOSITORY = <?= (is_authenticated() && is_admin()) ? 'true' : 'false' ?>;
         let currentPage = 1;
         let filters = {
             buscar: '',
@@ -146,6 +148,16 @@
                 }
 
                 response.data.forEach(doc => {
+                    const adminActions = CAN_MANAGE_REPOSITORY ? `
+                        <div class="d-flex gap-2 mt-2">
+                            <button type="button" class="btn btn-sm btn-outline-secondary flex-fill" onclick="openRepositoryEditModal(${Number(doc.id)})">
+                                <i class="bi bi-pencil-square"></i> Editar
+                            </button>
+                            <button type="button" class="btn btn-sm btn-outline-danger flex-fill" onclick="deleteRepositoryDocument(${Number(doc.id)})">
+                                <i class="bi bi-trash"></i> Eliminar
+                            </button>
+                        </div>
+                    ` : '';
                     const card = `
                         <div class="col-lg-4 col-md-6">
                             <div class="card h-100">
@@ -168,6 +180,7 @@
                                     <a href="/pages/repositorio-detail.php?id=${doc.id}" class="btn btn-sm btn-primary w-100">
                                         <i class="bi bi-eye"></i> Ver Detalles
                                     </a>
+                                    ${adminActions}
                                 </div>
                             </div>
                         </div>
@@ -181,16 +194,17 @@
             }
         }
 
-        async function loadRepositoryAdminData() {
+        async function loadRepositoryAdminData(selectedTagIds = []) {
             if (!document.getElementById('repositoryUploadModal')) return;
             const tagsResponse = await api.get('/document-tags', { per_page: 100 });
 
             const tagsBox = document.getElementById('repoTags');
             const tags = tagsResponse.data || [];
+            const selected = selectedTagIds.map(id => String(id));
             tagsBox.innerHTML = tags.length
                 ? tags.map(tag => `
                     <label class="form-check form-check-inline border rounded px-2 py-1">
-                        <input class="form-check-input repo-tag" type="checkbox" value="${escapeHtml(tag.id)}">
+                        <input class="form-check-input repo-tag" type="checkbox" value="${escapeHtml(tag.id)}" ${selected.includes(String(tag.id)) ? 'checked' : ''}>
                         <span class="form-check-label">${escapeHtml(tag.nombre)}</span>
                     </label>
                 `).join('')
@@ -203,13 +217,45 @@
             }
             document.getElementById('repositoryUploadForm').reset();
             document.getElementById('repositoryUploadAlert').innerHTML = '';
+            document.getElementById('repoDocumentId').value = '';
+            document.getElementById('repositoryModalTitle').innerHTML = '<i class="bi bi-cloud-arrow-up"></i> Agregar documento al repositorio';
+            document.getElementById('repoArchivo').required = true;
+            document.getElementById('repoArchivoHelp').textContent = 'Permitidos: PDF, Word, Excel, ZIP, TXT, imagenes JPG/PNG y EPUB.';
+            document.getElementById('repoUploadBtn').innerHTML = '<i class="bi bi-cloud-arrow-up"></i> Subir documento';
             document.querySelectorAll('.repo-tag').forEach(input => input.checked = false);
             await loadRepositoryAdminData();
             repositoryUploadModal.show();
         }
 
+        async function openRepositoryEditModal(documentId) {
+            if (!CAN_MANAGE_REPOSITORY) return;
+            if (!repositoryUploadModal) {
+                repositoryUploadModal = new bootstrap.Modal(document.getElementById('repositoryUploadModal'));
+            }
+
+            document.getElementById('repositoryUploadForm').reset();
+            document.getElementById('repositoryUploadAlert').innerHTML = '';
+            document.getElementById('repositoryModalTitle').innerHTML = '<i class="bi bi-pencil-square"></i> Editar documento del repositorio';
+            document.getElementById('repoArchivo').required = false;
+            document.getElementById('repoArchivoHelp').textContent = 'Opcional: selecciona un archivo solo si deseas reemplazar el actual.';
+            document.getElementById('repoUploadBtn').innerHTML = '<i class="bi bi-save"></i> Guardar cambios';
+
+            try {
+                const doc = await api.get(`/repositorio/${documentId}`);
+                document.getElementById('repoDocumentId').value = doc.id;
+                document.getElementById('repoNombre').value = doc.nombre || '';
+                document.getElementById('repoDescripcion').value = doc.descripcion || '';
+                document.getElementById('repoAutores').value = doc.autores || '';
+                await loadRepositoryAdminData((doc.tags || []).map(tag => tag.id));
+                repositoryUploadModal.show();
+            } catch (error) {
+                swalToast('error', error.message || 'No fue posible cargar el documento');
+            }
+        }
+
         async function submitRepositoryDocument(event) {
             event.preventDefault();
+            const documentId = document.getElementById('repoDocumentId').value;
             const file = document.getElementById('repoArchivo').files[0];
             if (!document.getElementById('repoNombre').value.trim() || !document.getElementById('repoDescripcion').value.trim() || !document.getElementById('repoAutores').value.trim()) {
                 showAlert('#repositoryUploadAlert', 'danger', 'Ningun campo del documento puede quedar vacio.');
@@ -217,28 +263,61 @@
             }
             const allowedExtensions = ['pdf', 'doc', 'docx', 'xls', 'xlsx', 'zip', 'txt', 'jpg', 'jpeg', 'png', 'epub'];
             const extension = file?.name.split('.').pop().toLowerCase();
-            if (!file || !allowedExtensions.includes(extension)) {
+            if (!documentId && !file) {
+                showAlert('#repositoryUploadAlert', 'danger', 'Selecciona un archivo para subir.');
+                return;
+            }
+            if (file && !allowedExtensions.includes(extension)) {
                 showAlert('#repositoryUploadAlert', 'danger', 'Selecciona un archivo permitido: PDF, Word, Excel, ZIP, TXT, JPG, PNG o EPUB.');
                 return;
             }
 
             const formData = new FormData(event.target);
+            formData.delete('document_id');
+            if (!file) {
+                formData.delete('archivo');
+            }
             document.querySelectorAll('.repo-tag:checked').forEach(input => formData.append('tag_ids[]', input.value));
 
             const button = document.getElementById('repoUploadBtn');
             const originalText = button.innerHTML;
             button.disabled = true;
-            button.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span> Subiendo...';
+            button.innerHTML = `<span class="spinner-border spinner-border-sm me-1"></span> ${documentId ? 'Guardando...' : 'Subiendo...'}`;
             try {
-                await api.post('/repositorio', formData);
+                await api.post(documentId ? `/repositorio/${documentId}` : '/repositorio', formData);
                 repositoryUploadModal.hide();
-                swalToast('success', 'Documento agregado al repositorio');
-                await loadDocumentos(1);
+                swalToast('success', documentId ? 'Documento actualizado' : 'Documento agregado al repositorio');
+                await loadDocumentos(currentPage);
             } catch (error) {
-                showAlert('#repositoryUploadAlert', 'danger', error.message || 'Error subiendo el documento');
+                showAlert('#repositoryUploadAlert', 'danger', error.message || 'Error guardando el documento');
             } finally {
                 button.disabled = false;
                 button.innerHTML = originalText;
+            }
+        }
+
+        async function deleteRepositoryDocument(documentId) {
+            if (!CAN_MANAGE_REPOSITORY) return;
+            const confirmed = window.Swal
+                ? await Swal.fire({
+                    title: 'Eliminar documento',
+                    text: 'Esta accion quitara el documento del repositorio.',
+                    icon: 'warning',
+                    showCancelButton: true,
+                    confirmButtonText: 'Eliminar',
+                    cancelButtonText: 'Cancelar',
+                    confirmButtonColor: '#dc3545'
+                }).then(result => result.isConfirmed)
+                : window.confirm('Eliminar este documento del repositorio?');
+
+            if (!confirmed) return;
+
+            try {
+                await api.delete(`/repositorio/${documentId}`);
+                swalToast('success', 'Documento eliminado');
+                await loadDocumentos(currentPage);
+            } catch (error) {
+                swalToast('error', error.message || 'No fue posible eliminar el documento');
             }
         }
 

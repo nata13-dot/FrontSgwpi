@@ -29,8 +29,11 @@ if (!is_authenticated() || !is_admin()) {
                         <p class="text-muted mb-0" id="statusDescription">Mostrando perfiles activos</p>
                     </div>
                     <div class="d-flex gap-2">
-                        <button type="button" class="btn btn-outline-primary" onclick="downloadBlankUsersCsv()">
-                            <i class="bi bi-filetype-csv"></i> CSV blanco
+                        <button type="button" class="btn btn-outline-primary" onclick="downloadUsersExcelTemplate()">
+                            <i class="bi bi-file-earmark-spreadsheet"></i> Plantilla Excel
+                        </button>
+                        <button type="button" class="btn btn-outline-success" onclick="openUsersImportModal()">
+                            <i class="bi bi-upload"></i> Cargar Excel
                         </button>
                         <button type="button" class="btn btn-primary" onclick="openUserModal()">
                             <i class="bi bi-plus-circle"></i> Nuevo Usuario
@@ -100,6 +103,27 @@ if (!is_authenticated() || !is_admin()) {
                 </div>
                 <nav id="paginationContainer" class="mt-4"></nav>
             </div>
+        </div>
+    </div>
+
+    <div class="modal fade" id="usersImportModal" tabindex="-1">
+        <div class="modal-dialog">
+            <form class="modal-content" id="usersImportForm" onsubmit="importUsersExcel(event)">
+                <div class="modal-header">
+                    <h5 class="modal-title"><i class="bi bi-upload"></i> Cargar usuarios desde Excel</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div id="usersImportAlert"></div>
+                    <label class="form-label" for="usersImportFile">Archivo de plantilla</label>
+                    <input type="file" class="form-control" id="usersImportFile" accept=".xls,.xlsx,.csv" required>
+                    <div class="form-text">Usa la plantilla descargada desde el sistema para conservar los encabezados.</div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="submit" class="btn btn-success" id="usersImportBtn"><i class="bi bi-upload"></i> Importar</button>
+                </div>
+            </form>
         </div>
     </div>
 
@@ -284,6 +308,7 @@ if (!is_authenticated() || !is_admin()) {
         let controlGroups = [];
         let groupControlModal;
         let groupFormModal;
+        let usersImportModal;
         let userFormModal;
         let editingGroupId = null;
         let loadedModalUser = null;
@@ -814,9 +839,9 @@ if (!is_authenticated() || !is_admin()) {
             await toggleUserStatus(userId, password);
         }
 
-        function downloadBlankUsersCsv() {
+        function downloadUsersExcelTemplate() {
             const token = localStorage.getItem('auth_token');
-            fetch(`${API_BASE_URL}/users-template.csv`, {
+            fetch(`${API_BASE_URL}/users-template.xls`, {
                 headers: { Authorization: `Bearer ${token}` }
             })
                 .then(response => response.blob())
@@ -824,11 +849,54 @@ if (!is_authenticated() || !is_admin()) {
                     const url = URL.createObjectURL(blob);
                     const link = document.createElement('a');
                     link.href = url;
-                    link.download = 'plantilla_usuarios.csv';
+                    link.download = 'plantilla_usuarios.xls';
                     link.click();
                     URL.revokeObjectURL(url);
                 })
-                .catch(() => showError('No se pudo generar la plantilla CSV'));
+                .catch(() => showError('No se pudo generar la plantilla Excel'));
+        }
+
+        function openUsersImportModal() {
+            if (!usersImportModal) usersImportModal = new bootstrap.Modal(document.getElementById('usersImportModal'));
+            document.getElementById('usersImportForm').reset();
+            document.getElementById('usersImportAlert').innerHTML = '';
+            usersImportModal.show();
+        }
+
+        async function importUsersExcel(event) {
+            event.preventDefault();
+            const file = document.getElementById('usersImportFile').files[0];
+            if (!file) return;
+
+            const formData = new FormData();
+            formData.append('archivo', file);
+            const button = document.getElementById('usersImportBtn');
+            const originalText = button.innerHTML;
+            button.disabled = true;
+            button.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span> Importando...';
+
+            try {
+                const result = await api.post('/users/import-excel', formData);
+                renderImportResult('#usersImportAlert', result);
+                await loadUsers(1);
+            } catch (error) {
+                document.getElementById('usersImportAlert').innerHTML = `<div class="alert alert-danger">${escapeHtml(error.message || 'No se pudo importar el archivo')}</div>`;
+            } finally {
+                button.disabled = false;
+                button.innerHTML = originalText;
+            }
+        }
+
+        function renderImportResult(target, result) {
+            const errors = result.errors || [];
+            const details = errors.length
+                ? `<hr><div class="small">${errors.slice(0, 10).map(item => `<div><strong>Fila ${escapeHtml(item.fila)}:</strong> ${escapeHtml((item.errores || []).join(' | '))}</div>`).join('')}${errors.length > 10 ? '<div>...</div>' : ''}</div>`
+                : '';
+            document.querySelector(target).innerHTML = `
+                <div class="alert ${errors.length ? 'alert-warning' : 'alert-success'}">
+                    Registros creados: <strong>${Number(result.created || 0)}</strong>. Errores: <strong>${errors.length}</strong>.
+                    ${details}
+                </div>`;
         }
 
         function showError(message) {

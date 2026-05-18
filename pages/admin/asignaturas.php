@@ -26,7 +26,7 @@ if (!is_authenticated() || !is_admin()) {
                 <div class="d-flex align-items-center justify-content-between mb-4">
                     <h1 class="mb-0">Gestion de Asignaturas</h1>
                     <div class="d-flex gap-2">
-                        <button class="btn btn-outline-primary" onclick="openGroupsModal()">
+                        <button class="btn btn-outline-primary" id="cargas" onclick="openGroupsModal()">
                             <i class="bi bi-collection"></i> Gestionar Cargas
                         </button>
                         <button class="btn btn-primary" onclick="openAsignaturaModal()">
@@ -45,7 +45,7 @@ if (!is_authenticated() || !is_admin()) {
                                         <th>Nombre</th>
                                         <th>Competencias</th>
                                         <th>Descripcion</th>
-                                        <th>Acciones</th>
+                                        <th>Gestion</th>
                                     </tr>
                                 </thead>
                                 <tbody id="asignaturasTable">
@@ -68,6 +68,59 @@ if (!is_authenticated() || !is_admin()) {
                 </div>
                 <div class="modal-body" id="structureBody">
                     <div class="text-center py-4"><div class="spinner-border" role="status"></div></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal fade" id="competenciasModal" tabindex="-1">
+        <div class="modal-dialog modal-xl">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <div>
+                        <h5 class="modal-title mb-0" id="competenciasTitle">Competencias de asignatura</h5>
+                        <small class="text-muted">Administra las competencias individuales de esta asignatura.</small>
+                    </div>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div id="competenciasAlert"></div>
+                    <form id="competenciaForm" class="border rounded p-3 mb-3">
+                        <input type="hidden" id="competenciaId">
+                        <div class="row g-3 align-items-end">
+                            <div class="col-md-5">
+                                <label for="competenciaNombre" class="form-label">Competencia</label>
+                                <input type="text" class="form-control" id="competenciaNombre" required>
+                            </div>
+                            <div class="col-md-3">
+                                <label for="competenciaInicio" class="form-label">Fecha inicio</label>
+                                <input type="date" class="form-control" id="competenciaInicio">
+                            </div>
+                            <div class="col-md-3">
+                                <label for="competenciaFin" class="form-label">Fecha fin</label>
+                                <input type="date" class="form-control" id="competenciaFin">
+                            </div>
+                            <div class="col-md-1 d-grid">
+                                <button type="submit" class="btn btn-primary" title="Guardar competencia"><i class="bi bi-save"></i></button>
+                            </div>
+                        </div>
+                    </form>
+                    <div class="table-responsive">
+                        <table class="table table-hover align-middle mb-0">
+                            <thead>
+                                <tr>
+                                    <th>Competencia</th>
+                                    <th>Periodo</th>
+                                    <th>Entregables</th>
+                                    <th>Estado</th>
+                                    <th>Acciones</th>
+                                </tr>
+                            </thead>
+                            <tbody id="competenciasTable">
+                                <tr><td colspan="5" class="text-center py-4"><div class="spinner-border" role="status"></div></td></tr>
+                            </tbody>
+                        </table>
+                    </div>
                 </div>
             </div>
         </div>
@@ -163,11 +216,30 @@ if (!is_authenticated() || !is_admin()) {
     <script src="/assets/js/app.js"></script>
     <script>
         let asignaturas = [];
+        let competencias = [];
+        let subjectGroups = [];
         let asignaturaModal;
         let structureModal;
+        let competenciasModal;
+        let groupsModal;
+        let currentAsignatura = null;
 
         function escapeHtml(value) {
             return String(value ?? '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#039;');
+        }
+
+        function toDateInput(value) {
+            return value ? String(value).substring(0, 10) : '';
+        }
+
+        function getEstado(fechaInicio, fechaFin) {
+            if (!fechaInicio || !fechaFin) return '<span class="text-muted small">Sin rango</span>';
+            const now = new Date();
+            const inicio = new Date(fechaInicio);
+            const fin = new Date(fechaFin);
+            if (now >= inicio && now <= fin) return '<span class="badge bg-success">En rango</span>';
+            if (now > fin) return '<span class="badge bg-danger">Vencida</span>';
+            return '<span class="badge bg-warning text-dark">Proxima</span>';
         }
 
         async function loadAsignaturas(page = 1) {
@@ -190,10 +262,11 @@ if (!is_authenticated() || !is_admin()) {
                             <td><span class="badge bg-primary">${Number(asignatura.competencias_count || 0)}</span></td>
                             <td><small>${escapeHtml(asignatura.descripcion || '-')}</small></td>
                             <td>
-                                <div class="btn-group btn-group-sm">
-                                    <button class="btn btn-outline-info" onclick="viewAsignaturaStructure(${asignatura.id})" title="Ver competencias y entregables"><i class="bi bi-diagram-3"></i></button>
-                                    <button class="btn btn-outline-primary" onclick="openAsignaturaModal(${asignatura.id})" title="Editar"><i class="bi bi-pencil"></i></button>
-                                    <button class="btn btn-outline-danger" onclick="deleteAsignatura(${asignatura.id})" title="Eliminar"><i class="bi bi-trash"></i></button>
+                                <div class="btn-group btn-group-sm" role="group">
+                                    <button class="btn btn-outline-primary" onclick="openCompetenciasModal(${asignatura.id})" title="Gestionar competencias"><i class="bi bi-star"></i></button>
+                                    <button class="btn btn-outline-info" onclick="viewAsignaturaStructure(${asignatura.id})" title="Ver estructura"><i class="bi bi-diagram-3"></i></button>
+                                    <button class="btn btn-outline-secondary" onclick="openAsignaturaModal(${asignatura.id})" title="Editar asignatura"><i class="bi bi-pencil"></i></button>
+                                    <button class="btn btn-outline-danger" onclick="deleteAsignatura(${asignatura.id})" title="Eliminar asignatura"><i class="bi bi-trash"></i></button>
                                 </div>
                             </td>
                         </tr>`;
@@ -237,6 +310,95 @@ if (!is_authenticated() || !is_admin()) {
                 showAlert('#alertContainer', 'danger', error.message || 'Error guardando asignatura');
             }
         });
+
+        async function openCompetenciasModal(asignaturaId) {
+            currentAsignatura = asignaturas.find(item => Number(item.id) === Number(asignaturaId)) || await api.get(`/asignaturas/${asignaturaId}`);
+            document.getElementById('competenciasTitle').textContent = `Competencias - ${currentAsignatura.nombre}`;
+            resetCompetenciaForm();
+            competenciasModal.show();
+            await loadCompetenciasByAsignatura();
+        }
+
+        async function loadCompetenciasByAsignatura() {
+            const tbody = document.getElementById('competenciasTable');
+            tbody.innerHTML = '<tr><td colspan="5" class="text-center py-4"><div class="spinner-border" role="status"></div></td></tr>';
+
+            try {
+                const response = await api.get('/competencias', { asignatura_id: currentAsignatura.id, per_page: 100 });
+                competencias = response.data || [];
+                if (!competencias.length) {
+                    tbody.innerHTML = '<tr><td colspan="5" class="text-center text-muted py-4">Esta asignatura no tiene competencias registradas.</td></tr>';
+                    return;
+                }
+
+                tbody.innerHTML = competencias.map(competencia => `
+                    <tr>
+                        <td><strong>${escapeHtml(competencia.nombre)}</strong></td>
+                        <td><small>${escapeHtml(toDateInput(competencia.fecha_inicio) || 'Sin inicio')} - ${escapeHtml(toDateInput(competencia.fecha_fin) || 'Sin fin')}</small></td>
+                        <td><span class="badge bg-primary">${Number(competencia.deliverables_count || 0)}</span></td>
+                        <td>${getEstado(competencia.fecha_inicio, competencia.fecha_fin)}</td>
+                        <td>
+                            <div class="btn-group btn-group-sm">
+                                <a class="btn btn-outline-info" href="/pages/admin/deliverables.php?competencia_id=${competencia.id}" title="Gestionar entregables"><i class="bi bi-file-earmark"></i></a>
+                                <button class="btn btn-outline-secondary" onclick="editCompetencia(${competencia.id})" title="Editar"><i class="bi bi-pencil"></i></button>
+                                <button class="btn btn-outline-danger" onclick="deleteCompetencia(${competencia.id})" title="Eliminar"><i class="bi bi-trash"></i></button>
+                            </div>
+                        </td>
+                    </tr>
+                `).join('');
+            } catch (error) {
+                tbody.innerHTML = '<tr><td colspan="5" class="text-danger text-center py-4">Error cargando competencias.</td></tr>';
+            }
+        }
+
+        function resetCompetenciaForm() {
+            document.getElementById('competenciaForm').reset();
+            document.getElementById('competenciaId').value = '';
+            document.getElementById('competenciasAlert').innerHTML = '';
+        }
+
+        function editCompetencia(id) {
+            const competencia = competencias.find(item => Number(item.id) === Number(id));
+            if (!competencia) return;
+            document.getElementById('competenciaId').value = competencia.id;
+            document.getElementById('competenciaNombre').value = competencia.nombre || '';
+            document.getElementById('competenciaInicio').value = toDateInput(competencia.fecha_inicio);
+            document.getElementById('competenciaFin').value = toDateInput(competencia.fecha_fin);
+        }
+
+        document.getElementById('competenciaForm').addEventListener('submit', async event => {
+            event.preventDefault();
+            const id = document.getElementById('competenciaId').value;
+            const data = {
+                nombre: document.getElementById('competenciaNombre').value.trim(),
+                asignatura_id: currentAsignatura.id,
+                fecha_inicio: document.getElementById('competenciaInicio').value || null,
+                fecha_fin: document.getElementById('competenciaFin').value || null
+            };
+
+            try {
+                if (id) await api.put(`/competencias/${id}`, data);
+                else await api.post('/competencias', data);
+                swalToast('success', 'Competencia guardada');
+                resetCompetenciaForm();
+                await loadCompetenciasByAsignatura();
+                await loadAsignaturas();
+            } catch (error) {
+                showAlert('#competenciasAlert', 'danger', error.message || 'Error guardando competencia');
+            }
+        });
+
+        async function deleteCompetencia(id) {
+            if (!await confirmAction({ title: 'Eliminar competencia', text: '¿Eliminar esta competencia?', confirmButtonText: 'Si, eliminar' })) return;
+            try {
+                await api.delete(`/competencias/${id}`);
+                swalToast('success', 'Competencia eliminada');
+                await loadCompetenciasByAsignatura();
+                await loadAsignaturas();
+            } catch (error) {
+                showAlert('#competenciasAlert', 'danger', error.message || 'Error eliminando competencia');
+            }
+        }
 
 
         function renderSubjectCheckboxes(selectedIds = []) {
@@ -404,6 +566,8 @@ if (!is_authenticated() || !is_admin()) {
         document.addEventListener('DOMContentLoaded', () => {
             asignaturaModal = new bootstrap.Modal(document.getElementById('asignaturaModal'));
             structureModal = new bootstrap.Modal(document.getElementById('structureModal'));
+            competenciasModal = new bootstrap.Modal(document.getElementById('competenciasModal'));
+            groupsModal = new bootstrap.Modal(document.getElementById('groupsModal'));
             loadAsignaturas();
         });
     </script>

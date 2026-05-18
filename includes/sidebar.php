@@ -25,8 +25,11 @@ $section = isset($_GET['section']) ? $_GET['section'] : '';
             <a href="/pages/admin/deliverables.php" class="sidebar-item sidebar-subitem <?= $current_page == 'deliverables.php' ? 'active' : '' ?>"><i class="bi bi-file-earmark"></i><span>Entregables</span></a>
             <a href="/pages/admin/evaluations.php" class="sidebar-item sidebar-subitem <?= $current_page == 'evaluations.php' ? 'active' : '' ?>"><i class="bi bi-clipboard-check"></i><span>Evaluaciones</span></a>
         </details>
-        <a href="/pages/admin/asignaturas.php" class="sidebar-item <?= $current_page == 'asignaturas.php' ? 'active' : '' ?>"><i class="bi bi-book"></i><span>Asignaturas</span></a>
-        <a href="/pages/admin/competencias.php" class="sidebar-item <?= $current_page == 'competencias.php' ? 'active' : '' ?>"><i class="bi bi-star"></i><span>Competencias</span></a>
+        <details class="sidebar-group" <?= in_array($current_page, ['asignaturas.php']) ? 'open' : '' ?>>
+            <summary><i class="bi bi-book"></i><span>Académico</span><i class="bi bi-chevron-down ms-auto"></i></summary>
+            <a href="/pages/admin/asignaturas.php" class="sidebar-item sidebar-subitem <?= $current_page == 'asignaturas.php' ? 'active' : '' ?>"><i class="bi bi-journal-bookmark"></i><span>Asignaturas</span></a>
+            <a href="/pages/admin/asignaturas.php#competencias" class="sidebar-item sidebar-subitem"><i class="bi bi-star"></i><span>Competencias</span></a>
+        </details>
         <a href="/pages/admin/document-tags.php" class="sidebar-item <?= $current_page == 'document-tags.php' ? 'active' : '' ?>"><i class="bi bi-tags"></i><span>Etiquetas</span></a>
         <a href="/pages/admin/notices.php" class="sidebar-item <?= $current_page == 'notices.php' ? 'active' : '' ?>"><i class="bi bi-megaphone"></i><span>Avisos</span></a>
         <a href="/pages/admin/settings.php" class="sidebar-item <?= $current_page == 'settings.php' ? 'active' : '' ?>"><i class="bi bi-sliders"></i><span>Ajustes</span></a>

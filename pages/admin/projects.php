@@ -27,9 +27,17 @@ if (!is_authenticated()) {
                 <div class="d-flex align-items-center justify-content-between mb-4">
                     <div><h1 class="mb-1">Gestion de Proyectos</h1><span class="badge bg-primary"><i class="bi bi-table"></i> Vista resumida de proyectos</span></div>
                     <?php if (is_admin()): ?>
-                    <button type="button" class="btn btn-primary" onclick="openProjectModal()">
-                        <i class="bi bi-plus-circle"></i> Nuevo Proyecto
-                    </button>
+                    <div class="d-flex flex-wrap gap-2">
+                        <button type="button" class="btn btn-outline-primary" onclick="downloadProjectsExcelTemplate()">
+                            <i class="bi bi-file-earmark-spreadsheet"></i> Plantilla Excel
+                        </button>
+                        <button type="button" class="btn btn-outline-success" onclick="openProjectsImportModal()">
+                            <i class="bi bi-upload"></i> Cargar Excel
+                        </button>
+                        <button type="button" class="btn btn-primary" onclick="openProjectModal()">
+                            <i class="bi bi-plus-circle"></i> Nuevo Proyecto
+                        </button>
+                    </div>
                     <?php endif; ?>
                 </div>
 
@@ -74,6 +82,27 @@ if (!is_authenticated()) {
     </div>
 
     <?php if (is_admin()): ?>
+    <div class="modal fade" id="projectsImportModal" tabindex="-1">
+        <div class="modal-dialog">
+            <form class="modal-content" id="projectsImportForm" onsubmit="importProjectsExcel(event)">
+                <div class="modal-header">
+                    <h5 class="modal-title"><i class="bi bi-upload"></i> Cargar proyectos desde Excel</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div id="projectsImportAlert"></div>
+                    <label class="form-label" for="projectsImportFile">Archivo de plantilla</label>
+                    <input type="file" class="form-control" id="projectsImportFile" accept=".xls,.xlsx,.csv" required>
+                    <div class="form-text">En <strong>student_ids</strong> separa las matriculas con coma, punto y coma o barra vertical.</div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="submit" class="btn btn-success" id="projectsImportBtn"><i class="bi bi-upload"></i> Importar</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
     <div class="modal fade" id="projectFormModal" tabindex="-1">
         <div class="modal-dialog modal-xl">
             <div class="modal-content">
@@ -198,6 +227,7 @@ if (!is_authenticated()) {
         let projectStudents = [];
         let projectSelectedStudents = [];
         let assignedStudentProject = {};
+        let projectsImportModal;
 
         function escapeHtml(value) {
             return String(value ?? '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#039;');
@@ -518,6 +548,66 @@ if (!is_authenticated()) {
                 showAlert('#alertContainer', 'success', 'Proyecto eliminado');
                 loadProjects();
             }).catch(error => showAlert('#alertContainer', 'danger', 'Error: ' + error.message));
+        }
+
+        function downloadProjectsExcelTemplate() {
+            const token = localStorage.getItem('auth_token');
+            fetch(`${API_BASE_URL}/projects-template.xls`, {
+                headers: { Authorization: `Bearer ${token}` }
+            })
+                .then(response => response.blob())
+                .then(blob => {
+                    const url = URL.createObjectURL(blob);
+                    const link = document.createElement('a');
+                    link.href = url;
+                    link.download = 'plantilla_proyectos.xls';
+                    link.click();
+                    URL.revokeObjectURL(url);
+                })
+                .catch(() => showAlert('#alertContainer', 'danger', 'No se pudo generar la plantilla Excel'));
+        }
+
+        function openProjectsImportModal() {
+            if (!projectsImportModal) projectsImportModal = new bootstrap.Modal(document.getElementById('projectsImportModal'));
+            document.getElementById('projectsImportForm').reset();
+            document.getElementById('projectsImportAlert').innerHTML = '';
+            projectsImportModal.show();
+        }
+
+        async function importProjectsExcel(event) {
+            event.preventDefault();
+            const file = document.getElementById('projectsImportFile').files[0];
+            if (!file) return;
+
+            const formData = new FormData();
+            formData.append('archivo', file);
+            const button = document.getElementById('projectsImportBtn');
+            const originalText = button.innerHTML;
+            button.disabled = true;
+            button.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span> Importando...';
+
+            try {
+                const result = await api.post('/projects/import-excel', formData);
+                renderImportResult('#projectsImportAlert', result);
+                await loadProjects(1);
+            } catch (error) {
+                document.getElementById('projectsImportAlert').innerHTML = `<div class="alert alert-danger">${escapeHtml(error.message || 'No se pudo importar el archivo')}</div>`;
+            } finally {
+                button.disabled = false;
+                button.innerHTML = originalText;
+            }
+        }
+
+        function renderImportResult(target, result) {
+            const errors = result.errors || [];
+            const details = errors.length
+                ? `<hr><div class="small">${errors.slice(0, 10).map(item => `<div><strong>Fila ${escapeHtml(item.fila)}:</strong> ${escapeHtml((item.errores || []).join(' | '))}</div>`).join('')}${errors.length > 10 ? '<div>...</div>' : ''}</div>`
+                : '';
+            document.querySelector(target).innerHTML = `
+                <div class="alert ${errors.length ? 'alert-warning' : 'alert-success'}">
+                    Registros creados: <strong>${Number(result.created || 0)}</strong>. Errores: <strong>${errors.length}</strong>.
+                    ${details}
+                </div>`;
         }
 
         document.addEventListener('DOMContentLoaded', async () => {
