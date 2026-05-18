@@ -80,7 +80,9 @@ $management_pages = [
                                 <li><h6 class="dropdown-header">Docente</h6></li>
                                 <li><a class="dropdown-item <?= $current_page == 'my-projects.php' ? 'active' : '' ?>" href="/pages/teacher/my-projects.php"><i class="bi bi-folder2"></i> Mis proyectos</a></li>
                                 <li><a class="dropdown-item <?= $current_page == 'proposal-review.php' ? 'active' : '' ?>" href="/pages/teacher/proposal-review.php"><i class="bi bi-check2-square"></i> Revisar propuestas</a></li>
-                                <li><a class="dropdown-item <?= $current_page == 'evaluations.php' ? 'active' : '' ?>" href="/pages/admin/evaluations.php"><i class="bi bi-clipboard-check"></i> Evaluaciones</a></li>
+                                <?php if (is_evaluation_manager()): ?>
+                                    <li><a class="dropdown-item <?= $current_page == 'evaluations.php' ? 'active' : '' ?>" href="/pages/admin/evaluations.php"><i class="bi bi-clipboard-check"></i> Evaluaciones</a></li>
+                                <?php endif; ?>
                                 <li><a class="dropdown-item <?= $current_page == 'my-deliverables.php' ? 'active' : '' ?>" href="/pages/teacher/my-deliverables.php"><i class="bi bi-file-earmark"></i> Entregables</a></li>
                                 <li><hr class="dropdown-divider"></li>
                                 <li><a class="dropdown-item <?= $current_page == 'repositorio.php' ? 'active' : '' ?>" href="/pages/repositorio.php"><i class="bi bi-archive"></i> Repositorio</a></li>

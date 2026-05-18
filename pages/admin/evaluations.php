@@ -1,7 +1,7 @@
 <?php
 require_once $_SERVER['DOCUMENT_ROOT'] . '/includes/config.php';
 
-if (!is_authenticated() || (!is_admin() && !is_teacher())) {
+if (!is_authenticated() || (!is_admin() && !is_evaluation_manager())) {
     header('Location: /index.php');
     exit;
 }
@@ -29,6 +29,11 @@ if (!is_authenticated() || (!is_admin() && !is_teacher())) {
                         <p class="text-muted mb-0">Rubricas unicas por semestre, con comentarios opcionales</p>
                     </div>
                     <div class="d-flex gap-2">
+                        <?php if (is_admin()): ?>
+                        <button class="btn btn-outline-primary" onclick="openEvaluationManagersModal()">
+                            <i class="bi bi-person-gear"></i> Responsable de evaluaciones
+                        </button>
+                        <?php endif; ?>
                         <button class="btn btn-outline-primary" onclick="openRubricModal()">
                             <i class="bi bi-list-check"></i> Gestionar Rubrica
                         </button>
@@ -226,6 +231,28 @@ if (!is_authenticated() || (!is_admin() && !is_teacher())) {
         </div>
     </div>
 
+    <?php if (is_admin()): ?>
+    <div class="modal fade" id="evaluationManagersModal" tabindex="-1">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title"><i class="bi bi-person-gear"></i> Responsable de evaluaciones</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div id="evaluationManagersAlert"></div>
+                    <p class="text-muted small">Selecciona uno o mas docentes para que tengan disponible la gestion completa de evaluaciones en su perfil.</p>
+                    <div class="border rounded p-2" id="evaluationManagersList" style="max-height: 360px; overflow:auto;"></div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="button" class="btn btn-primary" id="saveEvaluationManagersBtn" onclick="saveEvaluationManagers()"><i class="bi bi-save"></i> Guardar responsables</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    <?php endif; ?>
+
     <div class="modal fade" id="breakdownModal" tabindex="-1">
         <div class="modal-dialog modal-lg">
             <div class="modal-content">
@@ -246,6 +273,9 @@ if (!is_authenticated() || (!is_admin() && !is_teacher())) {
     <script src="/assets/js/api.js"></script>
     <script src="/assets/js/app.js"></script>
     <script>
+        const IS_ADMIN = <?= is_admin() ? 'true' : 'false' ?>;
+    </script>
+    <script>
         let projects = [];
         let roomProjects = [];
         let teachers = [];
@@ -259,6 +289,8 @@ if (!is_authenticated() || (!is_admin() && !is_teacher())) {
         let scoreModal;
         let breakdownModal;
         let roomsModal;
+        let evaluationManagersModal;
+        let evaluationManagerIds = [];
 
         function escapeHtml(value) {
             return String(value ?? '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#039;');
@@ -312,6 +344,57 @@ if (!is_authenticated() || (!is_admin() && !is_teacher())) {
                 projectSelect.innerHTML += option;
             });
             renderRoomOptions();
+        }
+
+        async function openEvaluationManagersModal() {
+            if (!IS_ADMIN) return;
+            if (!evaluationManagersModal) evaluationManagersModal = new bootstrap.Modal(document.getElementById('evaluationManagersModal'));
+            document.getElementById('evaluationManagersAlert').innerHTML = '';
+            document.getElementById('evaluationManagersList').innerHTML = '<div class="text-center py-3"><div class="spinner-border" role="status"></div></div>';
+            evaluationManagersModal.show();
+
+            try {
+                const response = await api.get('/evaluation-managers');
+                evaluationManagerIds = (response.manager_ids || []).map(String);
+                const availableTeachers = response.teachers || teachers;
+                const orderedTeachers = [...availableTeachers].sort((a, b) => {
+                    const aSelected = evaluationManagerIds.includes(String(a.id)) ? 0 : 1;
+                    const bSelected = evaluationManagerIds.includes(String(b.id)) ? 0 : 1;
+                    if (aSelected !== bSelected) return aSelected - bSelected;
+                    return fullName(a).localeCompare(fullName(b), 'es', { sensitivity: 'base' });
+                });
+                document.getElementById('evaluationManagersList').innerHTML = orderedTeachers.map(teacher => `
+                    <div class="form-check border-bottom py-2">
+                        <input class="form-check-input evaluation-manager-check" type="checkbox" value="${escapeHtml(teacher.id)}" id="evaluationManager${escapeHtml(teacher.id)}" ${evaluationManagerIds.includes(String(teacher.id)) ? 'checked' : ''}>
+                        <label class="form-check-label" for="evaluationManager${escapeHtml(teacher.id)}">
+                            <strong>${escapeHtml(fullName(teacher))}</strong>
+                            <span class="text-muted small d-block">${escapeHtml(teacher.id)}${teacher.email ? ' · ' + escapeHtml(teacher.email) : ''}</span>
+                        </label>
+                    </div>
+                `).join('') || '<p class="text-muted mb-0">No hay docentes activos.</p>';
+            } catch (error) {
+                document.getElementById('evaluationManagersAlert').innerHTML = `<div class="alert alert-danger">${escapeHtml(error.message || 'Error cargando responsables')}</div>`;
+                document.getElementById('evaluationManagersList').innerHTML = '';
+            }
+        }
+
+        async function saveEvaluationManagers() {
+            const teacherIds = [...document.querySelectorAll('.evaluation-manager-check:checked')].map(input => input.value);
+            const button = document.getElementById('saveEvaluationManagersBtn');
+            const originalText = button.innerHTML;
+            button.disabled = true;
+            button.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span> Guardando...';
+
+            try {
+                const response = await api.put('/evaluation-managers', { teacher_ids: teacherIds });
+                evaluationManagerIds = (response.manager_ids || []).map(String);
+                document.getElementById('evaluationManagersAlert').innerHTML = '<div class="alert alert-success">Responsables actualizados. Los docentes veran la opcion al volver a iniciar sesion.</div>';
+            } catch (error) {
+                document.getElementById('evaluationManagersAlert').innerHTML = `<div class="alert alert-danger">${escapeHtml(error.message || 'Error guardando responsables')}</div>`;
+            } finally {
+                button.disabled = false;
+                button.innerHTML = originalText;
+            }
         }
 
         function renderRoomOptions() {
@@ -380,7 +463,7 @@ if (!is_authenticated() || (!is_admin() && !is_teacher())) {
                         <td>
                             <div class="btn-group btn-group-sm">
                                 <button class="btn btn-outline-success" onclick="openScoreModal(${evaluation.id})" title="Evaluar" ${disabled}><i class="bi bi-clipboard-check"></i></button>
-                                ${evaluation.is_room_responsible ? `<button class="btn btn-outline-primary" onclick="askAdvanceRoom(${evaluation.evaluation_room_id})" title="Finalizar y continuar"><i class="bi bi-skip-forward"></i></button>` : ''}
+                                ${(evaluation.can_manage_evaluations || evaluation.is_room_responsible) ? `<button class="btn btn-outline-primary" onclick="askAdvanceRoom(${evaluation.evaluation_room_id})" title="Finalizar y continuar"><i class="bi bi-skip-forward"></i></button>` : ''}
                                 <button class="btn btn-outline-danger" onclick="deleteEvaluation(${evaluation.id})" title="Eliminar"><i class="bi bi-trash"></i></button>
                             </div>
                         </td>
@@ -830,9 +913,9 @@ if (!is_authenticated() || (!is_admin() && !is_teacher())) {
                 </div>`).join('');
             const feedbackBox = `
                 <div class="border rounded p-3">
-                    <h6>Retroalimentacion del responsable de sala</h6>
+                    <h6>Retroalimentacion de evaluacion</h6>
                     <p class="text-muted small">${escapeHtml(evaluation.room_feedback || 'Sin retroalimentacion registrada.')}</p>
-                    ${evaluation.is_room_responsible ? `
+                    ${(evaluation.can_manage_evaluations || evaluation.is_room_responsible) ? `
                         <textarea class="form-control mb-2" id="roomFeedbackText" rows="3">${escapeHtml(evaluation.room_feedback || '')}</textarea>
                         <button class="btn btn-sm btn-primary" onclick="saveRoomFeedback(${evaluation.id})"><i class="bi bi-save"></i> Guardar retroalimentacion</button>
                     ` : ''}
@@ -863,6 +946,7 @@ if (!is_authenticated() || (!is_admin() && !is_teacher())) {
             scoreModal = new bootstrap.Modal(document.getElementById('scoreModal'));
             breakdownModal = new bootstrap.Modal(document.getElementById('breakdownModal'));
             roomsModal = new bootstrap.Modal(document.getElementById('roomsModal'));
+            if (IS_ADMIN) evaluationManagersModal = new bootstrap.Modal(document.getElementById('evaluationManagersModal'));
             document.getElementById('roomDate')?.addEventListener('input', updateRoomAvailability);
             await loadInitialData();
             loadEvaluations();

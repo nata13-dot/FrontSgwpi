@@ -551,11 +551,14 @@ if (!is_authenticated()) {
         }
 
         function downloadProjectsExcelTemplate() {
-            const token = localStorage.getItem('auth_token');
-            fetch(`${API_BASE_URL}/projects-template.xls`, {
-                headers: { Authorization: `Bearer ${token}` }
-            })
-                .then(response => response.blob())
+            fetch(`${API_BASE_URL}/projects-template.xls`)
+                .then(async response => {
+                    if (!response.ok) {
+                        const text = await response.text().catch(() => '');
+                        throw new Error(text || `No se pudo generar la plantilla (${response.status})`);
+                    }
+                    return response.blob();
+                })
                 .then(blob => {
                     const url = URL.createObjectURL(blob);
                     const link = document.createElement('a');
@@ -564,7 +567,7 @@ if (!is_authenticated()) {
                     link.click();
                     URL.revokeObjectURL(url);
                 })
-                .catch(() => showAlert('#alertContainer', 'danger', 'No se pudo generar la plantilla Excel'));
+                .catch(error => showAlert('#alertContainer', 'danger', error.message || 'No se pudo generar la plantilla Excel'));
         }
 
         function openProjectsImportModal() {

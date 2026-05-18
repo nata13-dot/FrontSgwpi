@@ -840,11 +840,14 @@ if (!is_authenticated() || !is_admin()) {
         }
 
         function downloadUsersExcelTemplate() {
-            const token = localStorage.getItem('auth_token');
-            fetch(`${API_BASE_URL}/users-template.xls`, {
-                headers: { Authorization: `Bearer ${token}` }
-            })
-                .then(response => response.blob())
+            fetch(`${API_BASE_URL}/users-template.xls`)
+                .then(async response => {
+                    if (!response.ok) {
+                        const text = await response.text().catch(() => '');
+                        throw new Error(text || `No se pudo generar la plantilla (${response.status})`);
+                    }
+                    return response.blob();
+                })
                 .then(blob => {
                     const url = URL.createObjectURL(blob);
                     const link = document.createElement('a');
@@ -853,7 +856,7 @@ if (!is_authenticated() || !is_admin()) {
                     link.click();
                     URL.revokeObjectURL(url);
                 })
-                .catch(() => showError('No se pudo generar la plantilla Excel'));
+                .catch(error => showError(error.message || 'No se pudo generar la plantilla Excel'));
         }
 
         function openUsersImportModal() {

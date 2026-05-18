@@ -43,6 +43,10 @@ function is_teacher() {
 function is_student() {
     return get_user_role() == 3;
 }
+
+function is_evaluation_manager() {
+    return is_admin() || !empty($_SESSION['user']['is_evaluation_manager']);
+}
 function dashboard_url() {
     if (is_admin()) return '/pages/admin/dashboard.php';
     if (is_teacher()) return '/pages/teacher/dashboard.php';
