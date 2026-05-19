@@ -9,6 +9,15 @@ class ApiClient {
         this.timeout = 10000;
         this.cache = new Map();
         this.pending = new Map();
+        this.cachePrefix = `sgpi-api-cache:${this.baseURL}:`;
+        this.defaultCacheTtls = [
+            { pattern: /^\/dashboard\/(stats|teacher|student)$/, ttl: 20000 },
+            { pattern: /^\/proposal\/student-status$/, ttl: 20000 },
+            { pattern: /^\/student\/evaluation-schedule$/, ttl: 30000 },
+            { pattern: /^\/settings\/public$/, ttl: 300000 },
+            { pattern: /^\/settings$/, ttl: 60000 },
+            { pattern: /^\/proposal\/config$/, ttl: 30000 }
+        ];
     }
 
     /**
@@ -45,7 +54,8 @@ class ApiClient {
     async request(method, endpoint, data = null, params = {}) {
         const url = new URL(`${this.baseURL}${endpoint}`);
         const normalizedParams = { ...params };
-        const cacheTtl = Number(normalizedParams._cache_ttl || 0);
+        const requestedCacheTtl = normalizedParams._cache_ttl;
+        const cacheTtl = Number(requestedCacheTtl ?? (method === 'GET' ? this.defaultCacheTtl(endpoint) : 0));
         const forceFresh = Boolean(normalizedParams._fresh);
         delete normalizedParams._cache_ttl;
         delete normalizedParams._fresh;
@@ -60,8 +70,9 @@ class ApiClient {
         const cacheKey = `${method}:${url.toString()}`;
 
         if (method === 'GET' && cacheTtl > 0 && !forceFresh) {
-            const cached = this.cache.get(cacheKey);
+            const cached = this.cache.get(cacheKey) || this.readStoredCache(cacheKey);
             if (cached && cached.expiresAt > Date.now()) {
+                this.cache.set(cacheKey, cached);
                 return cached.value;
             }
         }
@@ -74,8 +85,7 @@ class ApiClient {
             method,
             headers: {
                 'Accept': 'application/json'
-            },
-            timeout: this.timeout
+            }
         };
 
         // Agregar token si existe
@@ -96,7 +106,10 @@ class ApiClient {
         }
 
         const executeRequest = async () => {
-            const response = await fetch(url, options);
+            const controller = new AbortController();
+            const timeoutId = setTimeout(() => controller.abort(), this.timeout);
+            const response = await fetch(url, { ...options, signal: controller.signal })
+                .finally(() => clearTimeout(timeoutId));
 
             // Si no está autenticado (401)
             if (response.status === 401) {
@@ -120,10 +133,12 @@ class ApiClient {
             }
 
             if (method === 'GET' && cacheTtl > 0) {
-                this.cache.set(cacheKey, {
+                const cachedValue = {
                     value: result,
                     expiresAt: Date.now() + cacheTtl
-                });
+                };
+                this.cache.set(cacheKey, cachedValue);
+                this.writeStoredCache(cacheKey, cachedValue);
             } else if (method !== 'GET') {
                 this.clearCache();
             }
@@ -143,6 +158,11 @@ class ApiClient {
             if (method === 'GET') {
                 this.pending.delete(cacheKey);
             }
+            if (error.name === 'AbortError') {
+                const timeoutError = new Error('La solicitud tardo demasiado. Intenta nuevamente.');
+                timeoutError.name = 'AbortError';
+                error = timeoutError;
+            }
             console.error('Error en la solicitud:', error);
             throw error;
         }
@@ -151,6 +171,44 @@ class ApiClient {
     clearCache() {
         this.cache.clear();
         this.pending.clear();
+        try {
+            Object.keys(sessionStorage)
+                .filter(key => key.startsWith(this.cachePrefix))
+                .forEach(key => sessionStorage.removeItem(key));
+        } catch (error) {
+            // La limpieza en memoria ya evita reutilizar datos dentro de la pagina actual.
+        }
+    }
+
+    defaultCacheTtl(endpoint) {
+        const match = this.defaultCacheTtls.find(item => item.pattern.test(endpoint));
+        return match ? match.ttl : 0;
+    }
+
+    storageKey(cacheKey) {
+        const token = auth.getToken() || 'guest';
+        return `${this.cachePrefix}${token.slice(0, 18)}:${cacheKey}`;
+    }
+
+    readStoredCache(cacheKey) {
+        try {
+            const cached = JSON.parse(sessionStorage.getItem(this.storageKey(cacheKey)) || 'null');
+            if (!cached || cached.expiresAt <= Date.now()) {
+                sessionStorage.removeItem(this.storageKey(cacheKey));
+                return null;
+            }
+            return cached;
+        } catch (error) {
+            return null;
+        }
+    }
+
+    writeStoredCache(cacheKey, value) {
+        try {
+            sessionStorage.setItem(this.storageKey(cacheKey), JSON.stringify(value));
+        } catch (error) {
+            // Si el navegador no permite storage, la cache en memoria sigue funcionando.
+        }
     }
 
     translateError(message) {
