@@ -54,6 +54,14 @@ if (!is_authenticated()) {
                             <option value="8">8 - Titulacion</option>
                         </select>
                     </div>
+                    <div class="col-md-8">
+                        <label for="projectSearchInput" class="form-label">Buscar proyecto</label>
+                        <div class="input-group">
+                            <span class="input-group-text"><i class="bi bi-search"></i></span>
+                            <input type="search" class="form-control" id="projectSearchInput" placeholder="Proyecto, estudiante, asesor, empresa o año" oninput="scheduleProjectsSearch()">
+                            <button type="button" class="btn btn-outline-secondary" onclick="clearProjectsSearch()" title="Limpiar busqueda"><i class="bi bi-x-lg"></i></button>
+                        </div>
+                    </div>
                 </div>
                 <div class="card border-0 shadow-sm border-start border-4 border-primary">
                     <div class="card-body p-0">
@@ -228,6 +236,7 @@ if (!is_authenticated()) {
         let projectSelectedStudents = [];
         let assignedStudentProject = {};
         let projectsImportModal;
+        let projectsSearchTimer = null;
 
         function escapeHtml(value) {
             return String(value ?? '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#039;');
@@ -249,7 +258,9 @@ if (!is_authenticated()) {
 
                 const params = { page };
                 const semester = document.getElementById('semesterFilter').value;
+                const search = document.getElementById('projectSearchInput')?.value.trim();
                 if (semester) params.semestre = semester;
+                if (search) params.q = search;
 
                 const response = await api.get('/projects', params);
                 const tbody = document.getElementById('projectsTable');
@@ -299,6 +310,16 @@ if (!is_authenticated()) {
             } catch (error) {
                 showAlert('#alertContainer', 'danger', 'Error cargando proyectos: ' + error.message);
             }
+        }
+
+        function scheduleProjectsSearch() {
+            clearTimeout(projectsSearchTimer);
+            projectsSearchTimer = setTimeout(() => loadProjects(1), 350);
+        }
+
+        function clearProjectsSearch() {
+            document.getElementById('projectSearchInput').value = '';
+            loadProjects(1);
         }
 
         function fullName(student) {

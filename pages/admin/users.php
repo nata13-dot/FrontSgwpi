@@ -54,6 +54,17 @@ if (!is_authenticated() || !is_admin()) {
                     <button type="button" class="btn btn-outline-secondary" id="profileAdmins" onclick="setProfileFilter('1')"><i class="bi bi-shield-lock"></i> Administrativos</button>
                 </div>
 
+                <div class="row g-3 mb-3">
+                    <div class="col-md-8 col-lg-6">
+                        <label class="form-label" for="userSearchInput">Buscar usuario</label>
+                        <div class="input-group">
+                            <span class="input-group-text"><i class="bi bi-search"></i></span>
+                            <input type="search" class="form-control" id="userSearchInput" placeholder="Matricula, nombre, correo o telefono" oninput="scheduleUsersSearch()">
+                            <button type="button" class="btn btn-outline-secondary" onclick="clearUsersSearch()" title="Limpiar busqueda"><i class="bi bi-x-lg"></i></button>
+                        </div>
+                    </div>
+                </div>
+
                 <div class="row g-3 mb-3 d-none" id="studentGroupFilters">
                     <div class="col-md-3">
                         <label class="form-label" for="semesterFilter">Semestre</label>
@@ -312,6 +323,7 @@ if (!is_authenticated() || !is_admin()) {
         let userFormModal;
         let editingGroupId = null;
         let loadedModalUser = null;
+        let usersSearchTimer = null;
 
         function escapeHtml(value) {
             return String(value ?? '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#039;');
@@ -349,6 +361,8 @@ if (!is_authenticated() || !is_admin()) {
                 const params = { page, per_page: usersPerPage };
                 if (currentStatus !== 'all') params.status = currentStatus;
                 if (currentProfile !== 'all') params.perfil_id = currentProfile;
+                const search = document.getElementById('userSearchInput')?.value.trim();
+                if (search) params.q = search;
                 if (currentProfile === '3') {
                     const semester = document.getElementById('semesterFilter').value;
                     const group = document.getElementById('groupFilter').value;
@@ -469,6 +483,16 @@ if (!is_authenticated() || !is_admin()) {
         function setProfileFilter(profile) {
             currentProfile = profile;
             if (profile === '3') loadGroupsForFilter();
+            loadUsers(1);
+        }
+
+        function scheduleUsersSearch() {
+            clearTimeout(usersSearchTimer);
+            usersSearchTimer = setTimeout(() => loadUsers(1), 350);
+        }
+
+        function clearUsersSearch() {
+            document.getElementById('userSearchInput').value = '';
             loadUsers(1);
         }
 
