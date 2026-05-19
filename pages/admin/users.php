@@ -116,8 +116,8 @@ if (!is_authenticated() || !is_admin()) {
                 <div class="modal-body">
                     <div id="usersImportAlert"></div>
                     <label class="form-label" for="usersImportFile">Archivo de plantilla</label>
-                    <input type="file" class="form-control" id="usersImportFile" accept=".xls,.xlsx,.csv" required>
-                    <div class="form-text">Usa la plantilla descargada desde el sistema para conservar los encabezados.</div>
+                    <input type="file" class="form-control" id="usersImportFile" accept=".xls,.csv" required>
+                    <div class="form-text">Usa la plantilla .xls descargada desde el sistema. No la guardes como .xlsx.</div>
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancelar</button>

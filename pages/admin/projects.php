@@ -92,8 +92,8 @@ if (!is_authenticated()) {
                 <div class="modal-body">
                     <div id="projectsImportAlert"></div>
                     <label class="form-label" for="projectsImportFile">Archivo de plantilla</label>
-                    <input type="file" class="form-control" id="projectsImportFile" accept=".xls,.xlsx,.csv" required>
-                    <div class="form-text">En <strong>student_ids</strong> separa las matriculas con coma, punto y coma o barra vertical.</div>
+                    <input type="file" class="form-control" id="projectsImportFile" accept=".xls,.csv" required>
+                    <div class="form-text">Usa la plantilla .xls del sistema. En <strong>matriculas_estudiantes</strong> separa las matriculas con coma, punto y coma o barra vertical.</div>
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancelar</button>
