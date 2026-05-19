@@ -101,7 +101,7 @@ if (is_authenticated()) {
 
                     <form id="loginForm" class="needs-validation" novalidate>
                         <div class="mb-3 form-floating">
-                            <input type="text" class="form-control" id="loginUserId" name="id" placeholder="Matrícula o No. de empleado" required autocomplete="username">
+                            <input type="text" class="form-control" id="loginUserId" name="id" placeholder="No. de Control, No. de empleado" required autocomplete="username">
                             <label for="loginUserId">Numero de control / empleado</label>
                             <div class="invalid-feedback">Ingresa tu numero de control o empleado.</div>
                         </div>

@@ -40,7 +40,7 @@ if (!is_authenticated() || !is_teacher()) {
                 <div class="row g-3 mb-4">
                     <div class="col-md-6">
                         <label class="form-label" for="studentSearch">Buscar alumno</label>
-                        <input type="search" class="form-control" id="studentSearch" placeholder="Matricula, nombre o apellido" oninput="debouncedLoad()">
+                        <input type="search" class="form-control" id="studentSearch" placeholder="No. de Control, No. de empleado, nombre o apellido" oninput="debouncedLoad()">
                     </div>
                     <div class="col-md-4">
                         <label class="form-label" for="subjectFilter">Materia</label>

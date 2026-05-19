@@ -53,7 +53,7 @@ if (!is_authenticated() || !is_admin()) {
 
                             <div class="row">
                                 <div class="col-md-4 mb-3">
-                                    <label for="id" class="form-label">Matrícula/Nómina</label>
+                                    <label for="id" class="form-label">No. de Control, No. de empleado</label>
                                     <input type="text" class="form-control" id="id" name="id" required>
                                     <div class="invalid-feedback">La matricula o nomina es obligatoria.</div>
                                 </div>

@@ -59,7 +59,7 @@ if (!is_authenticated() || !is_admin()) {
                         <label class="form-label" for="userSearchInput">Buscar usuario</label>
                         <div class="input-group">
                             <span class="input-group-text"><i class="bi bi-search"></i></span>
-                            <input type="search" class="form-control" id="userSearchInput" placeholder="Matricula, nombre, correo o telefono" oninput="scheduleUsersSearch()">
+                            <input type="search" class="form-control" id="userSearchInput" placeholder="No. de Control, No. de empleado, nombre, correo o telefono" oninput="scheduleUsersSearch()">
                             <button type="button" class="btn btn-outline-secondary" onclick="clearUsersSearch()" title="Limpiar busqueda"><i class="bi bi-x-lg"></i></button>
                         </div>
                     </div>
@@ -95,7 +95,7 @@ if (!is_authenticated() || !is_admin()) {
                             <table class="table table-hover mb-0 align-middle">
                                 <thead>
                                     <tr>
-                                        <th>Matricula/Nomina</th>
+                                        <th>No. de Control, No. de empleado</th>
                                         <th>Nombre</th>
                                         <th>Email</th>
                                         <th>Perfil</th>
@@ -151,7 +151,7 @@ if (!is_authenticated() || !is_admin()) {
                         <input type="hidden" id="userModalEditingId">
                         <div class="row g-3">
                             <div class="col-md-4">
-                                <label class="form-label" for="userId">Matricula/Nomina</label>
+                                <label class="form-label" for="userId">No. de Control, No. de empleado</label>
                                 <input type="text" class="form-control" id="userId" maxlength="10" required>
                             </div>
                             <div class="col-md-4">
