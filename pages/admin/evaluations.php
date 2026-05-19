@@ -1,7 +1,7 @@
 <?php
 require_once $_SERVER['DOCUMENT_ROOT'] . '/includes/config.php';
 
-if (!is_authenticated() || (!is_admin() && !is_evaluation_manager())) {
+if (!is_authenticated() || (!is_admin() && !is_teacher())) {
     header('Location: /index.php');
     exit;
 }
@@ -34,12 +34,14 @@ if (!is_authenticated() || (!is_admin() && !is_evaluation_manager())) {
                             <i class="bi bi-person-gear"></i> Responsable de evaluaciones
                         </button>
                         <?php endif; ?>
+                        <?php if (is_evaluation_manager()): ?>
                         <button class="btn btn-outline-primary" onclick="openRubricModal()">
                             <i class="bi bi-list-check"></i> Gestionar Rubrica
                         </button>
                         <button class="btn btn-outline-primary" onclick="openRoomsModal()">
                             <i class="bi bi-door-open"></i> Salas
                         </button>
+                        <?php endif; ?>
                     </div>
                 </div>
 
@@ -128,7 +130,7 @@ if (!is_authenticated() || (!is_admin() && !is_evaluation_manager())) {
     </div>
 
     <div class="modal fade" id="rubricModal" tabindex="-1">
-        <div class="modal-dialog modal-lg">
+        <div class="modal-dialog modal-lg modal-dialog-scrollable">
             <div class="modal-content">
                 <div class="modal-header">
                     <h5 class="modal-title">Gestionar Rubrica por Semestre</h5>
@@ -155,7 +157,7 @@ if (!is_authenticated() || (!is_admin() && !is_evaluation_manager())) {
                             </button>
                         </div>
                     </div>
-                    <div id="rubricCriteriaList"></div>
+                    <div id="rubricCriteriaList" style="max-height: 60vh; overflow:auto;"></div>
                 </div>
             </div>
         </div>
@@ -274,6 +276,7 @@ if (!is_authenticated() || (!is_admin() && !is_evaluation_manager())) {
     <script src="/assets/js/app.js"></script>
     <script>
         const IS_ADMIN = <?= is_admin() ? 'true' : 'false' ?>;
+        const CAN_MANAGE_EVALUATIONS = <?= is_evaluation_manager() ? 'true' : 'false' ?>;
     </script>
     <script>
         let projects = [];
@@ -331,12 +334,14 @@ if (!is_authenticated() || (!is_admin() && !is_evaluation_manager())) {
                 refreshCriteria()
             ]);
             projects = projectsResponse || [];
-            const [adminsResponse, teachersResponse] = await Promise.all([
-                api.get('/users', { perfil_id: 1, status: 'active', compact: 1, per_page: 500, _cache_ttl: 60000 }),
-                api.get('/users', { perfil_id: 2, status: 'active', compact: 1, per_page: 500, _cache_ttl: 60000 })
-            ]);
-            teachers = [...(adminsResponse.data || []), ...(teachersResponse.data || [])]
-                .sort((a, b) => fullName(a).localeCompare(fullName(b)));
+            if (CAN_MANAGE_EVALUATIONS) {
+                const [adminsResponse, teachersResponse] = await Promise.all([
+                    api.get('/users', { perfil_id: 1, status: 'active', compact: 1, per_page: 500, _cache_ttl: 60000 }),
+                    api.get('/users', { perfil_id: 2, status: 'active', compact: 1, per_page: 500, _cache_ttl: 60000 })
+                ]);
+                teachers = [...(adminsResponse.data || []), ...(teachersResponse.data || [])]
+                    .sort((a, b) => fullName(a).localeCompare(fullName(b)));
+            }
             await loadRooms();
 
             const projectFilter = document.getElementById('projectFilter');
@@ -494,7 +499,7 @@ if (!is_authenticated() || (!is_admin() && !is_evaluation_manager())) {
                             <div class="btn-group btn-group-sm">
                                 <button class="btn btn-outline-success" onclick="openScoreModal(${evaluation.id})" title="Evaluar" ${disabled}><i class="bi bi-clipboard-check"></i></button>
                                 ${(evaluation.can_manage_evaluations || evaluation.is_room_responsible) ? `<button class="btn btn-outline-primary" onclick="askAdvanceRoom(${evaluation.evaluation_room_id})" title="Finalizar y continuar"><i class="bi bi-skip-forward"></i></button>` : ''}
-                                <button class="btn btn-outline-danger" onclick="deleteEvaluation(${evaluation.id})" title="Eliminar"><i class="bi bi-trash"></i></button>
+                                ${evaluation.can_manage_evaluations ? `<button class="btn btn-outline-danger" onclick="deleteEvaluation(${evaluation.id})" title="Eliminar"><i class="bi bi-trash"></i></button>` : ''}
                             </div>
                         </td>
                     </tr>`;
@@ -537,6 +542,7 @@ if (!is_authenticated() || (!is_admin() && !is_evaluation_manager())) {
         });
 
         function openRubricModal() {
+            if (!CAN_MANAGE_EVALUATIONS) return;
             document.getElementById('rubricSemester').value = '5';
             loadRubricCriteria();
             rubricModal.show();
@@ -548,6 +554,7 @@ if (!is_authenticated() || (!is_admin() && !is_evaluation_manager())) {
         }
 
         async function openRoomsModal() {
+            if (!CAN_MANAGE_EVALUATIONS) return;
             await loadRooms();
             renderRooms();
             renderRoomTeachers();
@@ -556,7 +563,7 @@ if (!is_authenticated() || (!is_admin() && !is_evaluation_manager())) {
         }
 
         function normalizedRoomDate(value) {
-            return value ? String(value).slice(0, 10) : '';
+            return value ? String(value).replace('T', ' ').slice(0, 13) : '';
         }
 
         function conflictingRoomsForCurrentForm() {
@@ -628,11 +635,11 @@ if (!is_authenticated() || (!is_admin() && !is_evaluation_manager())) {
             const hint = document.getElementById('roomAvailabilityHint');
             if (!hint) return;
             if (!document.getElementById('roomDate').value) {
-                hint.textContent = 'Selecciona una fecha para filtrar docentes y proyectos ya ocupados ese dia.';
+                hint.textContent = 'Selecciona fecha y hora para filtrar docentes y proyectos ya ocupados en ese horario.';
                 return;
             }
             if (!busy.rooms.length) {
-                hint.textContent = 'No hay conflictos para la fecha seleccionada.';
+                hint.textContent = 'No hay conflictos para el horario seleccionado.';
                 return;
             }
             const names = busy.rooms.map(room => room.nombre).join(', ');
@@ -640,6 +647,12 @@ if (!is_authenticated() || (!is_admin() && !is_evaluation_manager())) {
         }
 
         function renderRooms() {
+            const roomActions = room => CAN_MANAGE_EVALUATIONS ? `
+                            <button class="btn btn-outline-primary" onclick="editRoom(${room.id})"><i class="bi bi-pencil"></i></button>
+                            <button class="btn btn-outline-success" onclick="lockRoomSequence(${room.id})" title="Bloquear orden"><i class="bi bi-lock"></i></button>
+                            ${room.completed_at ? `<button class="btn btn-outline-secondary" onclick="exportRoom(${room.id})" title="Exportar CSV"><i class="bi bi-file-earmark-spreadsheet"></i></button>` : ''}
+                            <button class="btn btn-outline-danger" onclick="deleteRoom(${room.id})"><i class="bi bi-trash"></i></button>
+            ` : '';
             document.getElementById('roomsList').innerHTML = rooms.map(room => `
                 <div class="border rounded p-3 mb-3">
                     <div class="d-flex justify-content-between gap-2">
@@ -653,10 +666,7 @@ if (!is_authenticated() || (!is_admin() && !is_evaluation_manager())) {
                             <div class="small">Exposicion: ${room.project_presentation_minutes} min · Evaluacion docente: ${room.teacher_evaluation_minutes} min · Oportunidades: ${room.max_attempts}</div>
                         </div>
                         <div class="btn-group btn-group-sm align-self-start">
-                            <button class="btn btn-outline-primary" onclick="editRoom(${room.id})"><i class="bi bi-pencil"></i></button>
-                            <button class="btn btn-outline-success" onclick="lockRoomSequence(${room.id})" title="Bloquear orden"><i class="bi bi-lock"></i></button>
-                            ${room.completed_at ? `<button class="btn btn-outline-secondary" onclick="exportRoom(${room.id})" title="Exportar CSV"><i class="bi bi-file-earmark-spreadsheet"></i></button>` : ''}
-                            <button class="btn btn-outline-danger" onclick="deleteRoom(${room.id})"><i class="bi bi-trash"></i></button>
+                            ${roomActions(room)}
                         </div>
                     </div>
                 </div>`).join('') || '<p class="text-muted">No hay salas creadas.</p>';
@@ -793,7 +803,10 @@ if (!is_authenticated() || (!is_admin() && !is_evaluation_manager())) {
         }
 
         async function loadRubricCriteria() {
-            await refreshCriteria();
+            const criteriaResponse = await api.get('/evaluations/criteria', { _fresh: 1 });
+            criteria = criteriaResponse.criteria || [];
+            levels = criteriaResponse.levels || levels;
+            groupCriteria();
             const semester = document.getElementById('rubricSemester').value;
             const list = document.getElementById('rubricCriteriaList');
             const semesterCriteria = criteriaBySemester[semester] || [];
@@ -821,16 +834,21 @@ if (!is_authenticated() || (!is_admin() && !is_evaluation_manager())) {
         }
 
         async function addCriterion() {
+            if (!CAN_MANAGE_EVALUATIONS) return;
             const semester = document.getElementById('rubricSemester').value;
             const text = document.getElementById('newCriterionText').value.trim();
             if (!text) return;
-            await api.post('/evaluations/rubric-criteria', {
-                semestre: semester,
-                pregunta: text,
-                orden: (criteriaBySemester[semester]?.length || 0) + 1
-            });
-            document.getElementById('newCriterionText').value = '';
-            loadRubricCriteria();
+            try {
+                await api.post('/evaluations/rubric-criteria', {
+                    semestre: semester,
+                    pregunta: text
+                });
+                document.getElementById('newCriterionText').value = '';
+                await loadRubricCriteria();
+                showAlert('#alertContainer', 'success', 'Pregunta agregada a la rubrica.');
+            } catch (error) {
+                showAlert('#alertContainer', 'danger', error.message || 'No se pudo agregar la pregunta.');
+            }
         }
 
         async function updateCriterion(id) {

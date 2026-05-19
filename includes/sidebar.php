@@ -40,9 +40,7 @@ $section = isset($_GET['section']) ? $_GET['section'] : '';
         <a href="/pages/teacher/my-projects.php" class="sidebar-item <?= $current_page == 'my-projects.php' ? 'active' : '' ?>"><i class="bi bi-folder2"></i><span>Mis Proyectos</span></a>
         <a href="/pages/teacher/my-deliverables.php" class="sidebar-item <?= $current_page == 'my-deliverables.php' ? 'active' : '' ?>"><i class="bi bi-file-earmark-check"></i><span>Entregables</span></a>
         <a href="/pages/teacher/proposal-review.php" class="sidebar-item <?= $current_page == 'proposal-review.php' ? 'active' : '' ?>"><i class="bi bi-check2-square"></i><span>Revisar Propuestas</span></a>
-        <?php if (is_evaluation_manager()): ?>
-            <a href="/pages/admin/evaluations.php" class="sidebar-item <?= $current_page == 'evaluations.php' ? 'active' : '' ?>"><i class="bi bi-clipboard-check"></i><span>Evaluaciones</span></a>
-        <?php endif; ?>
+        <a href="/pages/admin/evaluations.php" class="sidebar-item <?= $current_page == 'evaluations.php' ? 'active' : '' ?>"><i class="bi bi-clipboard-check"></i><span>Evaluaciones</span></a>
         <a href="/pages/profile.php" class="sidebar-item <?= $current_page == 'profile.php' ? 'active' : '' ?>"><i class="bi bi-person-circle"></i><span>Mi Perfil</span></a>
     <?php else: ?>
         <div style="padding: 0 20px; margin-bottom: 20px;"><h6 class="text-muted text-uppercase" style="font-size: 0.85rem;">Estudiante</h6></div>
