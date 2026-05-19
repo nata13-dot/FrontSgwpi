@@ -594,11 +594,27 @@ if (!is_authenticated()) {
                 renderImportResult('#projectsImportAlert', result);
                 await loadProjects(1);
             } catch (error) {
-                document.getElementById('projectsImportAlert').innerHTML = `<div class="alert alert-danger">${escapeHtml(error.message || 'No se pudo importar el archivo')}</div>`;
+                renderImportException('#projectsImportAlert', error);
             } finally {
                 button.disabled = false;
                 button.innerHTML = originalText;
             }
+        }
+
+        function renderImportException(target, error) {
+            const result = error.result || {};
+            const errors = result.errors || error.errors || {};
+            const messages = Array.isArray(errors)
+                ? errors.flatMap(item => item.errores || item)
+                : Object.values(errors).flat();
+            const details = messages.length
+                ? `<hr><div class="small">${messages.slice(0, 12).map(message => `<div>${escapeHtml(message)}</div>`).join('')}${messages.length > 12 ? '<div>...</div>' : ''}</div>`
+                : '';
+            document.querySelector(target).innerHTML = `
+                <div class="alert alert-danger">
+                    ${escapeHtml(error.message || result.message || 'No se pudo importar el archivo')}
+                    ${details}
+                </div>`;
         }
 
         function renderImportResult(target, result) {

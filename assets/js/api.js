@@ -90,7 +90,11 @@ class ApiClient {
 
             if (!response.ok) {
                 const validationMessage = result.errors ? Object.values(result.errors).flat().join(' ') : '';
-                throw new Error(this.translateError(result.message || result.error || validationMessage || 'Error en la solicitud'));
+                const error = new Error(this.translateError(result.message || result.error || validationMessage || 'Error en la solicitud'));
+                error.status = response.status;
+                error.result = result;
+                error.errors = result.errors || null;
+                throw error;
             }
 
             return result;
