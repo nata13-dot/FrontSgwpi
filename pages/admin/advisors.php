@@ -141,7 +141,7 @@ if (!is_authenticated() || !is_admin()) {
             return [user?.nombres, user?.apa, user?.ama].filter(Boolean).join(' ') || user?.id || 'Sin nombre';
         }
 
-        function projectActiveAuthors(project, emptyText = 'Sin autores registrados') {
+        function projectActiveAuthors(project, emptyText = 'Sin integrantes registrados') {
             const students = Array.isArray(project?.students) ? project.students : [];
             const names = students
                 .filter(Boolean)
@@ -237,7 +237,7 @@ if (!is_authenticated() || !is_admin()) {
                         <tr id="project-row-${project.id}">
                             <td>
                                 <strong>${escapeHtml(project.title)}</strong>
-                                <div class="small text-muted">${escapeHtml(projectActiveAuthors(project, 'Sin autores activos'))}</div>
+                                <div class="small text-muted">${escapeHtml(projectActiveAuthors(project, 'Sin integrantes activos'))}</div>
                             </td>
                             <td>${project.semestre || '-'}</td>
                             <td>${escapeHtml(project.subject_group?.nombre || project.subjectGroup?.nombre || '-')}</td>
@@ -374,7 +374,7 @@ if (!is_authenticated() || !is_admin()) {
         async function showProjectDetails(projectId) {
             try {
                 const project = await api.get(`/projects/${projectId}`);
-                const students = (project.students || []).map(student => `${escapeHtml(fullName(student))} (${escapeHtml(student.id)})`).join('<br>') || '<span class="text-muted">Sin autores</span>';
+                const students = (project.students || []).map(student => `${escapeHtml(fullName(student))} (${escapeHtml(student.id)})`).join('<br>') || '<span class="text-muted">Sin integrantes</span>';
                 const advisors = (project.advisors || []).map(advisor => `${escapeHtml(fullName(advisor))} ${advisorRoleBadge(advisor)}`).join('<br>') || '<span class="text-muted">Sin asesores</span>';
                 const subjects = (project.asignaturas || []).map(subject => `<span class="badge bg-primary me-1 mb-1">${escapeHtml(subject.nombre || subject.clave || '')}</span>`).join('') || '<span class="text-muted">Sin asignaturas</span>';
 
@@ -385,7 +385,7 @@ if (!is_authenticated() || !is_admin()) {
                             <p class="text-muted">${escapeHtml(project.description || 'Sin descripcion')}</p>
                             <p><strong>Semestre:</strong> ${escapeHtml(project.semestre || '-')} | <strong>Año:</strong> ${escapeHtml(project.year || '-')}</p>
                             <p><strong>Grupo / carga:</strong><br>${escapeHtml(project.subject_group?.nombre || '-')}</p>
-                            <p><strong>Autores:</strong><br>${students}</p>
+                            <p><strong>Integrantes:</strong><br>${students}</p>
                             <p><strong>Asignaturas:</strong><br>${subjects}</p>
                             <p><strong>Empresa:</strong><br>${escapeHtml(project.company_name || '-')}</p>
                             <p><strong>Responsable empresa:</strong><br>${escapeHtml(project.company_contact_name || '-')} ${escapeHtml(project.company_contact_position || '')}</p>

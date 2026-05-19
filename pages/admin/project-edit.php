@@ -90,7 +90,7 @@ if (!$projectId) {
                                 </div>
                             </div>
                             <div class="mb-4">
-                                <label for="studentSearch" class="form-label">Autores estudiantes</label>
+                                <label for="studentSearch" class="form-label">Integrantes estudiantes</label>
                                 <div class="input-group">
                                     <select class="form-select" id="studentSearch">
                                         <option value="">Cargando estudiantes...</option>
@@ -166,7 +166,7 @@ if (!$projectId) {
         function renderSelectedStudents() {
             const container = document.getElementById('selectedStudents');
             if (!selectedStudents.length) {
-                container.innerHTML = '<span class="text-muted small">No hay autores agregados.</span>';
+                container.innerHTML = '<span class="text-muted small">No hay integrantes agregados.</span>';
                 return;
             }
 
@@ -185,7 +185,7 @@ if (!$projectId) {
                 return;
             }
             if (assignedStudentProject[String(student.id)]) {
-                showAlert('#alertBox', 'danger', fullName(student) + ' ya es autor del proyecto ' + assignedStudentProject[String(student.id)]);
+                showAlert('#alertBox', 'danger', fullName(student) + ' ya es integrante del proyecto ' + assignedStudentProject[String(student.id)]);
                 return;
             }
             if (!selectedStudents.some(item => String(item.id) === String(student.id))) {

@@ -121,7 +121,7 @@ if (!is_authenticated() || !is_teacher()) {
 
                                     ${activeAuthors ? `
                                         <div class="mb-3">
-                                            <strong class="d-block mb-2 small">Autores:</strong>
+                                            <strong class="d-block mb-2 small">Integrantes:</strong>
                                             <small>${escapeHtml(activeAuthors)}</small>
                                         </div>
                                     ` : ''}

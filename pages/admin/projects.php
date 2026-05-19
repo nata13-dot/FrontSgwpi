@@ -71,7 +71,7 @@ if (!is_authenticated()) {
                                     <tr>
                                         <th>Nombre del proyecto</th>
                                         <th>Semestre</th>
-                                        <th>Autores</th>
+                                        <th>Integrantes</th>
                                         <th>Periodo / Año</th>
                                         <th>Empresa</th>
                                         <th>Registrado por</th>
@@ -173,7 +173,7 @@ if (!is_authenticated()) {
                                 </select>
                             </div>
                             <div class="col-md-8">
-                                <label class="form-label" for="projectStudentSelect">Autores estudiantes sin proyecto</label>
+                                <label class="form-label" for="projectStudentSelect">Integrantes estudiantes sin proyecto</label>
                                 <select class="form-select" id="projectStudentSelect">
                                     <option value="">Cargando estudiantes...</option>
                                 </select>
@@ -403,7 +403,7 @@ if (!is_authenticated()) {
                         <i class="bi bi-mortarboard"></i> ${escapeHtml(student.id)} - ${escapeHtml(fullName(student))}
                         <button type="button" class="btn-close btn-close-white" aria-label="Quitar" onclick="removeProjectStudent('${escapeHtml(student.id)}')"></button>
                     </span>`).join('')
-                : '<span class="text-muted small">No hay autores agregados.</span>';
+                : '<span class="text-muted small">No hay integrantes agregados.</span>';
         }
 
         function addProjectStudent() {
@@ -498,7 +498,7 @@ if (!is_authenticated()) {
                         <div class="text-start">
                             <p class="text-muted">${escapeHtml(project.description || 'Sin descripcion')}</p>
                             <p><strong>Estado de propuesta:</strong> ${status}</p>
-                            <p><strong>Autores:</strong><br>${escapeHtml(projectActiveAuthors(project))}</p>
+                            <p><strong>Integrantes:</strong><br>${escapeHtml(projectActiveAuthors(project))}</p>
                             <p><strong>Grupo / carga:</strong><br>${escapeHtml(project.subject_group?.nombre || '-')}</p>
                             <p><strong>Asignaturas:</strong><br>${subjects}</p>
                             <p><strong>Empresa:</strong><br>${escapeHtml(project.company_name || '-')}</p>
