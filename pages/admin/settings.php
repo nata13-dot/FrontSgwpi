@@ -331,7 +331,7 @@ async function loadSemesterGroups(kind) {
     const semester = document.getElementById(kind === 'from' ? 'fromSemester' : 'toSemester').value;
     const select = document.getElementById(kind === 'from' ? 'fromGroup' : 'toGroup');
     select.innerHTML = kind === 'from' ? '<option value="">Todos</option>' : '<option value="">Conservar grupo actual</option>';
-    const groups = await api.get('/subject-groups', { semestre: semester });
+    const groups = await api.get('/subject-groups', { semestre: semester, _cache_ttl: 60000 });
     groups.forEach(group => {
         select.innerHTML += `<option value="${esc(group.grupo)}">${esc(group.semestre)} ${esc(group.grupo)} - ${esc(group.nombre)}</option>`;
     });

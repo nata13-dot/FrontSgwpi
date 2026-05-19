@@ -258,7 +258,7 @@ if (!$userId) {
             const select = document.getElementById('grupo');
             select.innerHTML = semester ? '<option value="">Seleccionar grupo...</option>' : '<option value="">Selecciona un semestre</option>';
             if (!semester) return;
-            const groups = await api.get('/subject-groups', { semestre: semester });
+            const groups = await api.get('/subject-groups', { semestre: semester, _cache_ttl: 60000 });
             groups.forEach(group => {
                 select.innerHTML += `<option value="${group.grupo}">${group.semestre} ${group.grupo} - ${group.nombre}</option>`;
             });

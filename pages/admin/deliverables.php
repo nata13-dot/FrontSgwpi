@@ -219,8 +219,8 @@ if (!is_authenticated()) {
 
         async function loadCatalogs() {
             const [projectsResponse, competenciasResponse] = await Promise.all([
-                api.get('/projects'),
-                api.get('/competencias')
+                api.get('/projects', { compact: 1, per_page: 500, _cache_ttl: 30000 }),
+                api.get('/competencias', { per_page: 100, _cache_ttl: 60000 })
             ]);
             projects = projectsResponse.data || [];
             competencias = competenciasResponse.data || [];

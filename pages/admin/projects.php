@@ -101,7 +101,7 @@ if (!is_authenticated()) {
                     <div id="projectsImportAlert"></div>
                     <label class="form-label" for="projectsImportFile">Archivo de plantilla</label>
                     <input type="file" class="form-control" id="projectsImportFile" accept=".xls,.xlsx,.csv" required>
-                    <div class="form-text">En <strong>matriculas_estudiantes</strong> separa una o mas matriculas con coma. Ejemplo: e000001, 0222222.</div>
+                    <div class="form-text">En <strong>matriculas_estudiantes</strong> separa una o mas matriculas con coma. Ejemplo: e000001, 0222222. La carga se toma del semestre/grupo de esos estudiantes.</div>
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancelar</button>
@@ -372,8 +372,8 @@ if (!is_authenticated()) {
 
         async function loadProjectModalStudents(currentProjectId = null) {
             const [usersResponse, projectsResponse] = await Promise.all([
-                api.get('/users', { perfil_id: 3, status: 'active', compact: 1, per_page: 100 }),
-                api.get('/projects', { per_page: 100 })
+                api.get('/users', { perfil_id: 3, status: 'active', compact: 1, per_page: 500, _cache_ttl: 60000 }),
+                api.get('/projects', { compact: 1, per_page: 500, _cache_ttl: 30000 })
             ]);
             projectStudents = usersResponse.data || [];
             assignedStudentProject = {};
@@ -430,7 +430,7 @@ if (!is_authenticated()) {
             const select = document.getElementById('projectSubjectGroup');
             select.innerHTML = semester ? '<option value="">Seleccionar grupo...</option>' : '<option value="">Selecciona primero un semestre</option>';
             if (!semester) return;
-            const groups = await api.get('/subject-groups', { semestre: semester });
+            const groups = await api.get('/subject-groups', { semestre: semester, _cache_ttl: 60000 });
             groups.forEach(group => {
                 const subjects = (group.asignaturas || []).map(item => item.nombre).join(', ');
                 select.innerHTML += `<option value="${group.id}">${escapeHtml(group.nombre)}${group.periodo ? ' - ' + escapeHtml(group.periodo) : ''}${subjects ? ' (' + escapeHtml(subjects) + ')' : ''}</option>`;
@@ -523,7 +523,7 @@ if (!is_authenticated()) {
             try {
                 const [project, subjectsResponse] = await Promise.all([
                     api.get(`/projects/${projectId}`),
-                    api.get('/asignaturas', { per_page: 100 })
+                    api.get('/asignaturas', { per_page: 100, _cache_ttl: 60000 })
                 ]);
                 projectSubjectsCatalog = subjectsResponse.data || [];
                 const selected = (project.asignaturas || []).map(item => Number(item.id));

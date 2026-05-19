@@ -244,7 +244,7 @@ if (!is_authenticated() || !is_admin()) {
 
         async function loadAsignaturas(page = 1) {
             try {
-                const response = await api.get('/asignaturas', { page });
+                const response = await api.get('/asignaturas', { page, _cache_ttl: 30000 });
                 asignaturas = response.data || [];
                 const tbody = document.getElementById('asignaturasTable');
                 tbody.innerHTML = '';
@@ -427,7 +427,7 @@ if (!is_authenticated() || !is_admin()) {
             list.innerHTML = '<div class="text-center py-3"><div class="spinner-border" role="status"></div></div>';
 
             try {
-                subjectGroups = await api.get('/subject-groups', { semestre: semester });
+                subjectGroups = await api.get('/subject-groups', { semestre: semester, _cache_ttl: 60000 });
                 if (!subjectGroups.length) {
                     list.innerHTML = '<p class="text-muted">No hay cargas registradas para este semestre.</p>';
                     return;

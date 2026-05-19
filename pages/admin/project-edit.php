@@ -134,8 +134,8 @@ if (!$projectId) {
 
         async function loadStudents() {
             const [usersResponse, projectsResponse] = await Promise.all([
-                api.get('/users', { perfil_id: 3, status: 'active', compact: 1, per_page: 100 }),
-                api.get('/projects', { per_page: 100 })
+                api.get('/users', { perfil_id: 3, status: 'active', compact: 1, per_page: 500, _cache_ttl: 60000 }),
+                api.get('/projects', { compact: 1, per_page: 500, _cache_ttl: 30000 })
             ]);
 
             students = usersResponse.data || [];
@@ -208,7 +208,7 @@ if (!$projectId) {
             select.innerHTML = semester ? '<option value="">Sin grupo asignado</option>' : '<option value="">Selecciona primero un semestre</option>';
             if (!semester) return;
 
-            const groups = await api.get('/subject-groups', { semestre: semester });
+            const groups = await api.get('/subject-groups', { semestre: semester, _cache_ttl: 60000 });
             groups.forEach(group => {
                 const subjects = (group.asignaturas || []).map(item => item.nombre).join(', ');
                 select.innerHTML += `<option value="${group.id}">${escapeHtml(group.nombre)}${group.periodo ? ' - ' + escapeHtml(group.periodo) : ''}${subjects ? ' (' + escapeHtml(subjects) + ')' : ''}</option>`;

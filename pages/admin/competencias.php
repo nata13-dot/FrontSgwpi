@@ -125,7 +125,7 @@ if (!is_authenticated() || !is_admin()) {
         }
 
         async function loadCatalogs() {
-            const response = await api.get('/asignaturas');
+            const response = await api.get('/asignaturas', { per_page: 100, _cache_ttl: 60000 });
             asignaturas = response.data || [];
             const select = document.getElementById('asignatura_id');
             select.innerHTML = '<option value="">Sin asignatura</option>';
@@ -136,7 +136,7 @@ if (!is_authenticated() || !is_admin()) {
 
         async function loadCompetencias(page = 1) {
             try {
-                const response = await api.get('/competencias', { page });
+                const response = await api.get('/competencias', { page, _cache_ttl: 30000 });
                 competencias = response.data || [];
                 const tbody = document.getElementById('competenciasTable');
                 tbody.innerHTML = '';

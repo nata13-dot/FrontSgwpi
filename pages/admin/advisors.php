@@ -203,8 +203,8 @@ if (!is_authenticated() || !is_admin()) {
 
         async function loadTeachers() {
             const [adminsResponse, teachersResponse] = await Promise.all([
-                api.get('/users', { perfil_id: 1, status: 'active', per_page: 100 }),
-                api.get('/users', { perfil_id: 2, status: 'active', per_page: 100 })
+                api.get('/users', { perfil_id: 1, status: 'active', compact: 1, per_page: 500, _cache_ttl: 60000 }),
+                api.get('/users', { perfil_id: 2, status: 'active', compact: 1, per_page: 500, _cache_ttl: 60000 })
             ]);
             teachers = [...(adminsResponse.data || []), ...(teachersResponse.data || [])]
                 .sort((a, b) => Number(a.perfil_id) - Number(b.perfil_id) || fullName(a).localeCompare(fullName(b)));

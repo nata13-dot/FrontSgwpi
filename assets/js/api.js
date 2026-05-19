@@ -7,6 +7,8 @@ class ApiClient {
     constructor() {
         this.baseURL = API_BASE_URL;
         this.timeout = 10000;
+        this.cache = new Map();
+        this.pending = new Map();
     }
 
     /**
@@ -42,11 +44,31 @@ class ApiClient {
      */
     async request(method, endpoint, data = null, params = {}) {
         const url = new URL(`${this.baseURL}${endpoint}`);
+        const normalizedParams = { ...params };
+        const cacheTtl = Number(normalizedParams._cache_ttl || 0);
+        const forceFresh = Boolean(normalizedParams._fresh);
+        delete normalizedParams._cache_ttl;
+        delete normalizedParams._fresh;
 
         // Agregar parámetros
-        Object.keys(params).forEach(key => {
-            url.searchParams.append(key, params[key]);
+        Object.keys(normalizedParams).forEach(key => {
+            const value = normalizedParams[key];
+            if (value !== undefined && value !== null && value !== '') {
+                url.searchParams.append(key, value);
+            }
         });
+        const cacheKey = `${method}:${url.toString()}`;
+
+        if (method === 'GET' && cacheTtl > 0 && !forceFresh) {
+            const cached = this.cache.get(cacheKey);
+            if (cached && cached.expiresAt > Date.now()) {
+                return cached.value;
+            }
+        }
+
+        if (method === 'GET' && this.pending.has(cacheKey)) {
+            return this.pending.get(cacheKey);
+        }
 
         const options = {
             method,
@@ -73,7 +95,7 @@ class ApiClient {
             options.headers['Content-Type'] = 'application/json';
         }
 
-        try {
+        const executeRequest = async () => {
             const response = await fetch(url, options);
 
             // Si no está autenticado (401)
@@ -97,11 +119,38 @@ class ApiClient {
                 throw error;
             }
 
+            if (method === 'GET' && cacheTtl > 0) {
+                this.cache.set(cacheKey, {
+                    value: result,
+                    expiresAt: Date.now() + cacheTtl
+                });
+            } else if (method !== 'GET') {
+                this.clearCache();
+            }
+
             return result;
+        };
+
+        try {
+            if (method === 'GET') {
+                const pendingRequest = executeRequest().finally(() => this.pending.delete(cacheKey));
+                this.pending.set(cacheKey, pendingRequest);
+                return await pendingRequest;
+            }
+
+            return await executeRequest();
         } catch (error) {
+            if (method === 'GET') {
+                this.pending.delete(cacheKey);
+            }
             console.error('Error en la solicitud:', error);
             throw error;
         }
+    }
+
+    clearCache() {
+        this.cache.clear();
+        this.pending.clear();
     }
 
     translateError(message) {

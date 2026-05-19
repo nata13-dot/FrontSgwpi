@@ -291,6 +291,7 @@ if (!is_authenticated() || (!is_admin() && !is_evaluation_manager())) {
         let roomsModal;
         let evaluationManagersModal;
         let evaluationManagerIds = [];
+        let evaluationsRealtimeTimer = null;
 
         function escapeHtml(value) {
             return String(value ?? '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#039;');
@@ -318,7 +319,7 @@ if (!is_authenticated() || (!is_admin() && !is_evaluation_manager())) {
         }
 
         async function refreshCriteria() {
-            const criteriaResponse = await api.get('/evaluations/criteria');
+            const criteriaResponse = await api.get('/evaluations/criteria', { _cache_ttl: 60000 });
             criteria = criteriaResponse.criteria || [];
             levels = criteriaResponse.levels || levels;
             groupCriteria();
@@ -326,12 +327,16 @@ if (!is_authenticated() || (!is_admin() && !is_evaluation_manager())) {
 
         async function loadInitialData() {
             const [projectsResponse] = await Promise.all([
-                api.get('/evaluations/projects'),
+                api.get('/evaluations/projects', { _cache_ttl: 30000 }),
                 refreshCriteria()
             ]);
             projects = projectsResponse || [];
-            const usersResponse = await api.get('/users', { perfil_id: 2, status: 'active', per_page: 100 });
-            teachers = usersResponse.data || [];
+            const [adminsResponse, teachersResponse] = await Promise.all([
+                api.get('/users', { perfil_id: 1, status: 'active', compact: 1, per_page: 500, _cache_ttl: 60000 }),
+                api.get('/users', { perfil_id: 2, status: 'active', compact: 1, per_page: 500, _cache_ttl: 60000 })
+            ]);
+            teachers = [...(adminsResponse.data || []), ...(teachersResponse.data || [])]
+                .sort((a, b) => fullName(a).localeCompare(fullName(b)));
             await loadRooms();
 
             const projectFilter = document.getElementById('projectFilter');
@@ -415,12 +420,33 @@ if (!is_authenticated() || (!is_admin() && !is_evaluation_manager())) {
             return number ? `EB${number}` : clean;
         }
 
-        async function loadEvaluations() {
+        function hasOpenEvaluationModal() {
+            return Boolean(document.querySelector('.modal.show'));
+        }
+
+        function startEvaluationsRealtime() {
+            clearInterval(evaluationsRealtimeTimer);
+            evaluationsRealtimeTimer = setInterval(async () => {
+                if (document.hidden || hasOpenEvaluationModal()) return;
+                await refreshEvaluationLiveData();
+            }, 5000);
+        }
+
+        async function refreshEvaluationLiveData() {
+            await Promise.all([loadRooms(false, true), loadEvaluations(false, true)]);
+            renderRoomOptions();
+        }
+
+        async function loadEvaluations(showLoading = true, fresh = false) {
             const projectId = document.getElementById('projectFilter').value;
             const params = projectId ? { project_id: projectId } : {};
+            if (fresh) params._fresh = 1;
+            const tbody = document.getElementById('evaluationsTable');
+            if (showLoading) {
+                tbody.innerHTML = '<tr><td colspan="8" class="text-center py-4"><div class="spinner-border" role="status"></div></td></tr>';
+            }
             const response = await api.get('/evaluations', params);
             evaluations = response.data || [];
-            const tbody = document.getElementById('evaluationsTable');
             tbody.innerHTML = '';
 
             if (evaluations.length === 0) {
@@ -446,10 +472,14 @@ if (!is_authenticated() || (!is_admin() && !is_evaluation_manager())) {
                 }
                 const averageColor = evaluation.global_average_color || 'secondary';
                 const disabled = evaluation.can_score_now ? '' : 'disabled';
-                const statusClass = { activo: 'bg-primary', evaluado: 'bg-success', pendiente: 'bg-secondary' }[evaluation.sequence_status] || 'bg-secondary';
+                const statusClass = evaluation.evaluation_badge_color
+                    ? `bg-${evaluation.evaluation_badge_color}`
+                    : ({ activo: 'bg-primary', evaluado: 'bg-success', pendiente: 'bg-secondary' }[evaluation.sequence_status] || 'bg-secondary');
+                const evaluatedClass = evaluation.evaluated_by_all ? 'table-success' : '';
+                const evaluatedBadge = evaluation.evaluated_by_all ? '<span class="badge bg-success ms-2"><i class="bi bi-check2-circle"></i> Evaluado por todos</span>' : '';
                 tbody.innerHTML += `
-                    <tr>
-                        <td><span class="badge ${statusClass} me-1">#${evaluation.presentation_order || '-'}</span>${escapeHtml(evaluation.project?.title || 'N/A')}</td>
+                    <tr class="${evaluatedClass}">
+                        <td><span class="badge ${statusClass} me-1">#${evaluation.presentation_order || '-'}</span>${escapeHtml(evaluation.project?.title || 'N/A')}${evaluatedBadge}</td>
                         <td>${evaluation.semestre}</td>
                         <td>${stageLabel(evaluation.etapa)}</td>
                         <td>${escapeHtml(evaluation.sala || '-')}</td>
@@ -457,7 +487,7 @@ if (!is_authenticated() || (!is_admin() && !is_evaluation_manager())) {
                         <td><span class="badge bg-secondary">${escapeHtml(evaluation.resultado)}</span></td>
                         <td>
                             <button class="btn btn-sm btn-outline-${averageColor}" onclick="showBreakdown(${evaluation.id})">
-                                ${evaluation.global_average}% · ${evaluation.evaluators_count} docentes
+                                ${evaluation.global_average}% · ${evaluation.evaluators_count}/${evaluation.expected_evaluators_count || 0} evaluadores
                             </button>
                         </td>
                         <td>
@@ -512,8 +542,9 @@ if (!is_authenticated() || (!is_admin() && !is_evaluation_manager())) {
             rubricModal.show();
         }
 
-        async function loadRooms() {
-            rooms = await api.get('/evaluations/rooms');
+        async function loadRooms(renderAfterLoad = true, fresh = false) {
+            rooms = await api.get('/evaluations/rooms', fresh ? { _fresh: 1 } : {});
+            if (renderAfterLoad && roomsModal?._isShown) renderRooms();
         }
 
         async function openRoomsModal() {
@@ -562,8 +593,8 @@ if (!is_authenticated() || (!is_admin() && !is_evaluation_manager())) {
             document.getElementById('roomTeachers').innerHTML = availableTeachers.map(teacher => `
                 <div class="form-check">
                     <input class="form-check-input room-teacher" type="checkbox" value="${escapeHtml(teacher.id)}" id="roomTeacher${escapeHtml(teacher.id)}" ${selectedIds.includes(String(teacher.id)) ? 'checked' : ''} onchange="refreshResponsibleTeacherOptions()">
-                    <label class="form-check-label" for="roomTeacher${escapeHtml(teacher.id)}">${escapeHtml(teacher.nombres)} ${escapeHtml(teacher.apa || '')}</label>
-                </div>`).join('') || '<p class="text-muted mb-0">No hay docentes disponibles para esta fecha y hora.</p>';
+                    <label class="form-check-label" for="roomTeacher${escapeHtml(teacher.id)}">${escapeHtml(fullName(teacher))} <span class="text-muted small">${Number(teacher.perfil_id) === 1 ? 'Administrativo' : 'Docente'}</span></label>
+                </div>`).join('') || '<p class="text-muted mb-0">No hay evaluadores disponibles para esta fecha y hora.</p>';
             refreshResponsibleTeacherOptions();
             renderAvailabilityHint(busy);
         }
@@ -580,7 +611,7 @@ if (!is_authenticated() || (!is_admin() && !is_evaluation_manager())) {
 
         async function loadRoomProjects(selected = [], orderMap = {}) {
             const semester = document.getElementById('roomSemester').value;
-            roomProjects = await api.get('/evaluations/projects', { semestre: semester });
+            roomProjects = await api.get('/evaluations/projects', { semestre: semester, _cache_ttl: 30000 });
             const selectedIds = selected.map(Number);
             const busy = busyRoomIds();
             const availableProjects = roomProjects.filter(project => !busy.projects.has(Number(project.id)));
@@ -949,7 +980,8 @@ if (!is_authenticated() || (!is_admin() && !is_evaluation_manager())) {
             if (IS_ADMIN) evaluationManagersModal = new bootstrap.Modal(document.getElementById('evaluationManagersModal'));
             document.getElementById('roomDate')?.addEventListener('input', updateRoomAvailability);
             await loadInitialData();
-            loadEvaluations();
+            await loadEvaluations();
+            startEvaluationsRealtime();
         });
     </script>
 </body>

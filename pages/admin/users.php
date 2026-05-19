@@ -502,7 +502,7 @@ if (!is_authenticated() || !is_admin()) {
             select.innerHTML = '<option value="">Todos</option>';
             const params = {};
             if (semester) params.semestre = semester;
-            groups = await api.get('/subject-groups', params);
+            groups = await api.get('/subject-groups', { ...params, _cache_ttl: 60000 });
             groups.forEach(group => {
                 select.innerHTML += `<option value="${escapeHtml(group.grupo)}">${escapeHtml(group.semestre)} ${escapeHtml(group.grupo)} - ${escapeHtml(group.nombre)}</option>`;
             });
@@ -569,7 +569,7 @@ if (!is_authenticated() || !is_admin()) {
             const select = document.getElementById('userGroup');
             select.innerHTML = semester ? '<option value="">Seleccionar grupo...</option>' : '<option value="">Selecciona un semestre</option>';
             if (!semester) return;
-            const modalGroups = await api.get('/subject-groups', { semestre: semester });
+            const modalGroups = await api.get('/subject-groups', { semestre: semester, _cache_ttl: 60000 });
             modalGroups.forEach(group => {
                 select.innerHTML += `<option value="${escapeHtml(group.grupo)}">${escapeHtml(group.semestre)} ${escapeHtml(group.grupo)} - ${escapeHtml(group.nombre)}</option>`;
             });
@@ -656,8 +656,8 @@ if (!is_authenticated() || !is_admin()) {
             const box = document.getElementById('groupControlContent');
             box.innerHTML = '<div class="col-12 text-center py-4"><div class="spinner-border"></div></div>';
             const [semesterGroups, studentsResponse] = await Promise.all([
-                api.get('/subject-groups', { semestre: semester }),
-                api.get('/users', { perfil_id: 3, status: 'active', compact: 1, per_page: 100 })
+                api.get('/subject-groups', { semestre: semester, _cache_ttl: 60000 }),
+                api.get('/users', { perfil_id: 3, status: 'active', compact: 1, per_page: 500, _cache_ttl: 30000 })
             ]);
                 controlGroups = semesterGroups;
                 const students = (studentsResponse.data || []).filter(student => String(student.semestre || '') === String(semester));
@@ -778,7 +778,7 @@ if (!is_authenticated() || !is_admin()) {
         async function findDuplicateGroup(semester, groupCode, ignoreId = null) {
             const visibleGroups = String(document.getElementById('controlSemester').value) === String(semester)
                 ? controlGroups
-                : await api.get('/subject-groups', { semestre: semester });
+                : await api.get('/subject-groups', { semestre: semester, _cache_ttl: 60000 });
 
             return visibleGroups.find(group => {
                 const sameGroup = String(group.grupo || '').toUpperCase() === String(groupCode || '').toUpperCase();
