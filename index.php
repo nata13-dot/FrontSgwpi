@@ -117,7 +117,7 @@ if (is_authenticated()) {
                                 <input class="form-check-input" type="checkbox" value="1" id="rememberCheck" checked>
                                 <label class="form-check-label text-muted" for="rememberCheck">Recuerdame</label>
                             </div>
-                            <a href="/pages/forgot-password.php" class="text-muted small">¿Olvidaste tu contraseña?</a>
+                            <button type="button" class="btn btn-link text-muted small p-0 text-decoration-none" onclick="openPasswordRecoveryModal()">¿Olvidaste tu contraseña?</button>
                         </div>
 
                         <div class="d-grid">
@@ -130,6 +130,97 @@ if (is_authenticated()) {
                     <div class="text-center mt-3">
                         <small class="text-muted">Acceso exclusivo para usuarios registrados del sistema.</small>
                     </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal fade" id="passwordRecoveryModal" tabindex="-1" aria-labelledby="passwordRecoveryModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content login-modal">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="passwordRecoveryModalLabel"><i class="bi bi-shield-lock"></i> Recuperar contraseña</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+                </div>
+                <div class="modal-body">
+                    <p class="text-muted small">Ingresa tu No. de Control o No. de empleado y el correo registrado en tu perfil.</p>
+                    <div id="passwordRecoveryMessage" class="mb-3"></div>
+                    <form id="passwordRecoveryForm" class="needs-validation" novalidate>
+                        <div class="mb-3 form-floating">
+                            <input type="text" class="form-control" id="recoveryUserId" placeholder="No. de Control, No. de empleado" required autocomplete="username">
+                            <label for="recoveryUserId">No. de Control, No. de empleado</label>
+                            <div class="invalid-feedback">Ingresa tu No. de Control o No. de empleado.</div>
+                        </div>
+                        <div class="mb-3 form-floating">
+                            <input type="email" class="form-control" id="recoveryEmail" placeholder="correo@dominio.com" required autocomplete="email">
+                            <label for="recoveryEmail">Correo registrado</label>
+                            <div class="invalid-feedback">Ingresa un correo valido.</div>
+                        </div>
+                        <div class="d-grid">
+                            <button type="submit" class="btn btn-primary btn-lg" id="passwordRecoverySubmitBtn">
+                                <i class="bi bi-send"></i> Enviar token
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal fade" id="passwordTokenModal" tabindex="-1" aria-labelledby="passwordTokenModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content login-modal">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="passwordTokenModalLabel"><i class="bi bi-envelope-check"></i> Validar token</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+                </div>
+                <div class="modal-body">
+                    <p class="text-muted small">Escribe el token de 6 digitos que enviamos al correo registrado.</p>
+                    <div id="passwordTokenMessage" class="mb-3"></div>
+                    <form id="passwordTokenForm" class="needs-validation" novalidate>
+                        <div class="mb-3 form-floating">
+                            <input type="text" inputmode="numeric" maxlength="6" pattern="[0-9]{6}" class="form-control text-center fs-4" id="recoveryToken" placeholder="000000" required autocomplete="one-time-code">
+                            <label for="recoveryToken">Token</label>
+                            <div class="invalid-feedback">Ingresa el token de 6 digitos.</div>
+                        </div>
+                        <div class="d-grid">
+                            <button type="submit" class="btn btn-primary btn-lg" id="passwordTokenSubmitBtn">
+                                <i class="bi bi-check2-circle"></i> Validar token
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal fade" id="passwordResetModal" tabindex="-1" aria-labelledby="passwordResetModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content login-modal">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="passwordResetModalLabel"><i class="bi bi-person-lock"></i> Nueva contraseña</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+                </div>
+                <div class="modal-body">
+                    <p class="text-muted small">Define tu nueva contraseña antes de entrar al sistema.</p>
+                    <div id="passwordResetMessage" class="mb-3"></div>
+                    <form id="passwordResetForm" class="needs-validation" novalidate>
+                        <div class="mb-3 form-floating">
+                            <input type="password" class="form-control" id="newRecoveryPassword" placeholder="Nueva contraseña" minlength="6" required autocomplete="new-password">
+                            <label for="newRecoveryPassword">Nueva contraseña</label>
+                            <div class="invalid-feedback">La contraseña debe tener al menos 6 caracteres.</div>
+                        </div>
+                        <div class="mb-3 form-floating">
+                            <input type="password" class="form-control" id="newRecoveryPasswordConfirmation" placeholder="Confirmar contraseña" minlength="6" required autocomplete="new-password">
+                            <label for="newRecoveryPasswordConfirmation">Confirmar contraseña</label>
+                            <div class="invalid-feedback">Confirma tu nueva contraseña.</div>
+                        </div>
+                        <div class="d-grid">
+                            <button type="submit" class="btn btn-primary btn-lg" id="passwordResetSubmitBtn">
+                                <i class="bi bi-save"></i> Cambiar contraseña
+                            </button>
+                        </div>
+                    </form>
                 </div>
             </div>
         </div>
@@ -148,11 +239,42 @@ if (is_authenticated()) {
         const loginForm = document.getElementById('loginForm');
         const loginSubmitBtn = document.getElementById('loginSubmitBtn');
         const loginMessageContainer = document.getElementById('loginMessageContainer');
+        const passwordRecoveryModal = bootstrap.Modal.getOrCreateInstance(document.getElementById('passwordRecoveryModal'));
+        const passwordTokenModal = bootstrap.Modal.getOrCreateInstance(document.getElementById('passwordTokenModal'));
+        const passwordResetModal = bootstrap.Modal.getOrCreateInstance(document.getElementById('passwordResetModal'));
+        const recoveryState = { id: '', email: '', token: '' };
 
         function dashboardUrlForCurrentUser() {
             if (auth.isAdmin()) return '/pages/admin/dashboard.php';
             if (auth.isTeacher()) return '/pages/teacher/dashboard.php';
             return '/pages/student/dashboard.php';
+        }
+
+        function escapeHtml(value) {
+            return String(value ?? '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#039;');
+        }
+
+        function modalAlert(type, message) {
+            return `<div class="alert alert-${type} py-2 mb-0" role="alert">${escapeHtml(message)}</div>`;
+        }
+
+        function setButtonLoading(button, loadingText, originalText = null) {
+            if (!button.dataset.originalText) button.dataset.originalText = originalText || button.innerHTML;
+            button.disabled = true;
+            button.innerHTML = `<span class="spinner-border spinner-border-sm me-2"></span>${loadingText}`;
+        }
+
+        function restoreButton(button) {
+            button.disabled = false;
+            button.innerHTML = button.dataset.originalText || button.innerHTML;
+        }
+
+        function openPasswordRecoveryModal() {
+            bootstrap.Modal.getInstance(document.getElementById('loginModal'))?.hide();
+            document.getElementById('passwordRecoveryMessage').innerHTML = '';
+            document.getElementById('passwordRecoveryForm').classList.remove('was-validated');
+            document.getElementById('passwordRecoveryForm').reset();
+            passwordRecoveryModal.show();
         }
 
         document.addEventListener('DOMContentLoaded', () => {
@@ -167,6 +289,126 @@ if (is_authenticated()) {
             if (window.location.hash === '#login') {
                 const loginModal = new bootstrap.Modal(document.getElementById('loginModal'));
                 loginModal.show();
+            }
+
+            if (window.location.hash === '#recover') {
+                openPasswordRecoveryModal();
+            }
+        });
+
+        document.getElementById('passwordRecoveryForm').addEventListener('submit', async (event) => {
+            event.preventDefault();
+            const form = event.target;
+            const button = document.getElementById('passwordRecoverySubmitBtn');
+            const message = document.getElementById('passwordRecoveryMessage');
+            message.innerHTML = '';
+
+            if (!form.checkValidity()) {
+                form.classList.add('was-validated');
+                return;
+            }
+
+            recoveryState.id = document.getElementById('recoveryUserId').value.trim();
+            recoveryState.email = document.getElementById('recoveryEmail').value.trim();
+
+            try {
+                setButtonLoading(button, 'Enviando...');
+                await api.post('/auth/password/request-token', {
+                    id: recoveryState.id,
+                    email: recoveryState.email
+                });
+                passwordRecoveryModal.hide();
+                document.getElementById('passwordTokenForm').reset();
+                document.getElementById('passwordTokenForm').classList.remove('was-validated');
+                document.getElementById('passwordTokenMessage').innerHTML = modalAlert('success', 'Token enviado. Revisa tu correo registrado.');
+                passwordTokenModal.show();
+            } catch (error) {
+                message.innerHTML = modalAlert('danger', error.message || 'No se pudo enviar el token.');
+            } finally {
+                restoreButton(button);
+            }
+        });
+
+        document.getElementById('passwordTokenForm').addEventListener('submit', async (event) => {
+            event.preventDefault();
+            const form = event.target;
+            const button = document.getElementById('passwordTokenSubmitBtn');
+            const message = document.getElementById('passwordTokenMessage');
+            message.innerHTML = '';
+
+            if (!form.checkValidity()) {
+                form.classList.add('was-validated');
+                return;
+            }
+
+            recoveryState.token = document.getElementById('recoveryToken').value.trim();
+
+            try {
+                setButtonLoading(button, 'Validando...');
+                await api.post('/auth/password/verify-token', recoveryState);
+                passwordTokenModal.hide();
+                document.getElementById('passwordResetForm').reset();
+                document.getElementById('passwordResetForm').classList.remove('was-validated');
+                document.getElementById('passwordResetMessage').innerHTML = '';
+                passwordResetModal.show();
+            } catch (error) {
+                message.innerHTML = modalAlert('danger', error.message || 'Token no valido.');
+            } finally {
+                restoreButton(button);
+            }
+        });
+
+        document.getElementById('passwordResetForm').addEventListener('submit', async (event) => {
+            event.preventDefault();
+            const form = event.target;
+            const button = document.getElementById('passwordResetSubmitBtn');
+            const message = document.getElementById('passwordResetMessage');
+            message.innerHTML = '';
+
+            if (!form.checkValidity()) {
+                form.classList.add('was-validated');
+                return;
+            }
+
+            const password = document.getElementById('newRecoveryPassword').value;
+            const confirmation = document.getElementById('newRecoveryPasswordConfirmation').value;
+
+            if (password !== confirmation) {
+                message.innerHTML = modalAlert('danger', 'La nueva contraseña y su confirmacion deben ser identicas.');
+                return;
+            }
+
+            try {
+                setButtonLoading(button, 'Actualizando...');
+                const response = await api.post('/auth/password/reset', {
+                    ...recoveryState,
+                    password,
+                    password_confirmation: confirmation
+                });
+
+                auth.token = response.access_token;
+                auth.user = response.user;
+                localStorage.setItem('auth_token', auth.token);
+                localStorage.setItem('user', JSON.stringify(auth.user));
+
+                await axios.post('/api/set-session.php', {
+                    auth_token: auth.getToken(),
+                    user: auth.getCurrentUser()
+                });
+
+                await Swal.fire({
+                    icon: 'success',
+                    title: 'Contraseña actualizada',
+                    text: 'Entrando al sistema...',
+                    timer: 900,
+                    showConfirmButton: false
+                });
+
+                window.location.replace(dashboardUrlForCurrentUser());
+            } catch (error) {
+                message.innerHTML = modalAlert('danger', error.message || 'No se pudo cambiar la contraseña.');
+            } finally {
+                restoreButton(button);
             }
         });
 
