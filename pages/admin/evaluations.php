@@ -321,6 +321,28 @@ if (!is_authenticated() || (!is_admin() && !is_teacher())) {
             }, {});
         }
 
+        function levelLabel(level) {
+            if (typeof level === 'object' && level !== null) return level.label || level.key || '';
+            const found = levels.find(item => typeof item === 'object' ? item.key === level : item === level);
+            if (found && typeof found === 'object') return found.label || found.key;
+            return String(level || '').replaceAll('_', ' ');
+        }
+
+        function levelValue(level) {
+            return typeof level === 'object' && level !== null ? level.key : level;
+        }
+
+        function levelPoints(level) {
+            const value = levelValue(level);
+            const found = levels.find(item => typeof item === 'object' ? item.key === value : item === value);
+            return found && typeof found === 'object' && found.puntaje !== undefined ? Number(found.puntaje) : null;
+        }
+
+        function levelText(level) {
+            const points = levelPoints(level);
+            return points === null ? levelLabel(level) : `${levelLabel(level)} (${points} pts)`;
+        }
+
         async function refreshCriteria() {
             const criteriaResponse = await api.get('/evaluations/criteria', { _cache_ttl: 60000 });
             criteria = criteriaResponse.criteria || [];
@@ -895,7 +917,7 @@ if (!is_authenticated() || (!is_admin() && !is_teacher())) {
                     <div class="border rounded p-3 mb-3" data-criterion="${criterion.key}">
                         <label class="form-label fw-semibold">${escapeHtml(criterion.label)}</label>
                         <select class="form-select mb-2 criterion-level" required>
-                            ${levels.map(level => `<option value="${level}">${level}</option>`).join('')}
+                            ${levels.map(level => `<option value="${escapeHtml(levelValue(level))}">${escapeHtml(levelText(level))}</option>`).join('')}
                         </select>
                         <textarea class="form-control criterion-comment" rows="2" placeholder="Comentario opcional, no afecta el puntaje"></textarea>
                     </div>`;
@@ -953,7 +975,7 @@ if (!is_authenticated() || (!is_admin() && !is_teacher())) {
                                 ${teacher.scores.map(score => `
                                     <tr>
                                         <td>${escapeHtml(score.criterio_label)}</td>
-                                        <td><span class="badge bg-secondary">${escapeHtml(score.nivel)}</span></td>
+                                        <td><span class="badge bg-secondary">${escapeHtml(score.nivel_label || levelLabel(score.nivel))}</span><div class="small text-muted">${Number(score.puntaje ?? 0)} pts</div></td>
                                         <td>${escapeHtml(score.comentario || '-')}</td>
                                     </tr>`).join('')}
                             </tbody>

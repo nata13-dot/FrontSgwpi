@@ -27,7 +27,7 @@ $section = isset($_GET['section']) ? $_GET['section'] : '';
             <a href="/pages/admin/proposal-config.php" class="sidebar-item sidebar-subitem <?= $current_page == 'proposal-config.php' ? 'active' : '' ?>"><i class="bi bi-calendar-check"></i><span>Propuestas</span></a>
             <a href="/pages/admin/deliverables.php" class="sidebar-item sidebar-subitem <?= $current_page == 'deliverables.php' ? 'active' : '' ?>"><i class="bi bi-file-earmark"></i><span>Entregables</span></a>
             <a href="/pages/admin/evaluations.php" class="sidebar-item sidebar-subitem <?= $current_page == 'evaluations.php' ? 'active' : '' ?>"><i class="bi bi-clipboard-check"></i><span>Evaluaciones</span></a>
-            <a href="/pages/evaluation-documents.php" class="sidebar-item sidebar-subitem <?= $current_page == 'evaluation-documents.php' ? 'active' : '' ?>"><i class="bi bi-file-earmark-slides"></i><span>Documentos de evaluación</span></a>
+            <a href="/pages/evaluation-documents.php" class="sidebar-item sidebar-subitem <?= $current_page == 'evaluation-documents.php' ? 'active' : '' ?>"><i class="bi bi-file-earmark-ppt"></i><span>Documentos de evaluación</span></a>
         </details>
         <details class="sidebar-group" <?= in_array($current_page, ['asignaturas.php']) ? 'open' : '' ?>>
             <summary><i class="bi bi-book"></i><span>Académico</span><i class="bi bi-chevron-down ms-auto"></i></summary>
@@ -50,7 +50,7 @@ $section = isset($_GET['section']) ? $_GET['section'] : '';
             <a href="/pages/teacher/my-projects.php" class="sidebar-item sidebar-subitem <?= $current_page == 'my-projects.php' ? 'active' : '' ?>"><i class="bi bi-folder2"></i><span>Mis proyectos</span></a>
             <a href="/pages/teacher/proposal-review.php" class="sidebar-item sidebar-subitem <?= $current_page == 'proposal-review.php' ? 'active' : '' ?>"><i class="bi bi-check2-square"></i><span>Revisar propuestas</span></a>
             <a href="/pages/admin/evaluations.php" class="sidebar-item sidebar-subitem <?= $current_page == 'evaluations.php' ? 'active' : '' ?>"><i class="bi bi-clipboard-check"></i><span>Evaluaciones</span></a>
-            <a href="/pages/evaluation-documents.php" class="sidebar-item sidebar-subitem <?= $current_page == 'evaluation-documents.php' ? 'active' : '' ?>"><i class="bi bi-file-earmark-slides"></i><span>Documentos de evaluación</span></a>
+            <a href="/pages/evaluation-documents.php" class="sidebar-item sidebar-subitem <?= $current_page == 'evaluation-documents.php' ? 'active' : '' ?>"><i class="bi bi-file-earmark-ppt"></i><span>Documentos de evaluación</span></a>
         </details>
         <details class="sidebar-group" <?= in_array($current_page, ['my-deliverables.php']) ? 'open' : '' ?>>
             <summary><i class="bi bi-file-earmark"></i><span>Entregables</span><i class="bi bi-chevron-down ms-auto"></i></summary>
@@ -67,7 +67,7 @@ $section = isset($_GET['section']) ? $_GET['section'] : '';
         <details class="sidebar-group" <?= in_array($current_page, ['proposal-register.php', 'evaluation-documents.php']) ? 'open' : '' ?>>
             <summary><i class="bi bi-diagram-3"></i><span>Proyectos</span><i class="bi bi-chevron-down ms-auto"></i></summary>
             <a href="/pages/student/proposal-register.php" class="sidebar-item sidebar-subitem <?= $current_page == 'proposal-register.php' ? 'active' : '' ?>"><i class="bi bi-pencil-square"></i><span>Registrar proyecto</span></a>
-            <a href="/pages/evaluation-documents.php" class="sidebar-item sidebar-subitem <?= $current_page == 'evaluation-documents.php' ? 'active' : '' ?>"><i class="bi bi-file-earmark-slides"></i><span>Documentos de evaluación</span></a>
+            <a href="/pages/evaluation-documents.php" class="sidebar-item sidebar-subitem <?= $current_page == 'evaluation-documents.php' ? 'active' : '' ?>"><i class="bi bi-file-earmark-ppt"></i><span>Documentos de evaluación</span></a>
         </details>
         <details class="sidebar-group" <?= in_array($current_page, ['my-deliverables.php']) ? 'open' : '' ?>>
             <summary><i class="bi bi-file-earmark"></i><span>Entregables</span><i class="bi bi-chevron-down ms-auto"></i></summary>

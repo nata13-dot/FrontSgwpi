@@ -1,5 +1,10 @@
 <?php
 require_once $_SERVER['DOCUMENT_ROOT'] . '/includes/config.php';
+
+if (!is_authenticated()) {
+    header('Location: /index.php');
+    exit;
+}
 ?>
 <!DOCTYPE html>
 <html lang="es">
@@ -7,22 +12,43 @@ require_once $_SERVER['DOCUMENT_ROOT'] . '/includes/config.php';
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Documentos de evaluacion - <?= APP_NAME ?></title>
+    <?php require_once $_SERVER['DOCUMENT_ROOT'] . '/includes/visual-preferences.php'; ?>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
-    <link rel="stylesheet" href="/assets/css/style.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
+    <link rel="stylesheet" href="/assets/css/app.css">
     <style>
         .document-card { border-radius: 8px; }
         .document-row { border: 1px solid var(--bs-border-color); border-radius: 8px; padding: 1rem; }
         .document-row + .document-row { margin-top: .75rem; }
         .project-meta { display: flex; flex-wrap: wrap; gap: .5rem; }
+        .project-meta .badge {
+            max-width: min(100%, 680px);
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+        .document-actions {
+            min-width: min(100%, 420px);
+        }
+        .document-actions .form-control {
+            max-width: 240px;
+        }
+        @media (max-width: 767.98px) {
+            .document-actions,
+            .document-actions .form-control,
+            .document-actions .btn {
+                width: 100%;
+                max-width: none;
+            }
+        }
     </style>
 </head>
 <body>
-<?php require_once $_SERVER['DOCUMENT_ROOT'] . '/includes/navbar.php'; ?>
-<div class="d-flex content-wrapper">
-    <?php require_once $_SERVER['DOCUMENT_ROOT'] . '/includes/sidebar.php'; ?>
-    <main class="main-content flex-grow-1">
-        <div class="container-xl py-4">
+    <?php require_once $_SERVER['DOCUMENT_ROOT'] . '/includes/navbar.php'; ?>
+    <div class="d-flex content-wrapper">
+        <?php require_once $_SERVER['DOCUMENT_ROOT'] . '/includes/sidebar.php'; ?>
+        <main class="main-content flex-grow-1">
+            <div class="container-xl mt-5 mb-5">
             <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3 mb-4">
                 <div>
                     <h1 class="mb-1">Documentos de evaluacion</h1>
@@ -40,9 +66,9 @@ require_once $_SERVER['DOCUMENT_ROOT'] . '/includes/config.php';
                     <p class="text-muted mt-3 mb-0">Cargando documentos...</p>
                 </div>
             </div>
-        </div>
-    </main>
-</div>
+            </div>
+        </main>
+    </div>
 
 <?php require_once $_SERVER['DOCUMENT_ROOT'] . '/includes/footer.php'; ?>
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
@@ -78,7 +104,7 @@ function renderDocuments() {
     const container = document.getElementById('documentsContainer');
 
     if (!state.projects.length) {
-        container.innerHTML = '<div class="card border-0 shadow-sm"><div class="card-body text-center py-5"><i class="bi bi-file-earmark-slides display-4 text-muted"></i><h5 class="mt-3">Sin proyectos disponibles</h5><p class="text-muted mb-0">Aun no hay proyectos vinculados a documentos de evaluacion.</p></div></div>';
+        container.innerHTML = '<div class="card border-0 shadow-sm"><div class="card-body text-center py-5"><i class="bi bi-file-earmark-ppt display-4 text-muted"></i><h5 class="mt-3">Sin proyectos disponibles</h5><p class="text-muted mb-0">Aun no hay proyectos vinculados a documentos de evaluacion.</p></div></div>';
         return;
     }
 
@@ -114,7 +140,7 @@ function renderDeliverable(project, deliverable) {
 
     return `
         <div class="document-row">
-            <div class="d-flex flex-column flex-xl-row justify-content-between gap-3">
+                <div class="d-flex flex-column flex-xl-row justify-content-between gap-3">
                 <div>
                     <div class="d-flex flex-wrap align-items-center gap-2 mb-1">
                         <h6 class="mb-0">${esc(deliverable.nombre)}</h6>
@@ -127,7 +153,7 @@ function renderDeliverable(project, deliverable) {
                         Formatos: ${esc(allowed.join(', ').toUpperCase())}
                     </small>
                 </div>
-                <div class="d-flex flex-wrap align-items-center gap-2">
+                <div class="document-actions d-flex flex-wrap justify-content-xl-end align-items-center gap-2">
                     ${deliverable.archivo_path ? `<button type="button" class="btn btn-sm btn-outline-secondary" onclick="descargarEntregable(${deliverable.id}, '${escAttr(deliverable.nombre)}')"><i class="bi bi-download"></i> Descargar</button>` : ''}
                     <input class="form-control form-control-sm" type="file" id="file-${deliverable.id}" accept="${accept}" ${canUpload ? '' : 'disabled'}>
                     <button type="button" class="btn btn-sm btn-primary" onclick="uploadDocument(${deliverable.id})" ${canUpload ? '' : 'disabled'}>

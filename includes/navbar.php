@@ -56,7 +56,7 @@ $management_pages = [
                                         <a class="dropdown-item <?= $current_page == 'proposal-config.php' ? 'active' : '' ?>" href="/pages/admin/proposal-config.php"><i class="bi bi-calendar-check"></i> Propuestas</a>
                                         <a class="dropdown-item <?= $current_page == 'deliverables.php' ? 'active' : '' ?>" href="/pages/admin/deliverables.php"><i class="bi bi-file-earmark"></i> Entregables</a>
                                         <a class="dropdown-item <?= $current_page == 'evaluations.php' ? 'active' : '' ?>" href="/pages/admin/evaluations.php"><i class="bi bi-clipboard-check"></i> Evaluaciones</a>
-                                        <a class="dropdown-item <?= $current_page == 'evaluation-documents.php' ? 'active' : '' ?>" href="/pages/evaluation-documents.php"><i class="bi bi-file-earmark-slides"></i> Documentos de evaluación</a>
+                                        <a class="dropdown-item <?= $current_page == 'evaluation-documents.php' ? 'active' : '' ?>" href="/pages/evaluation-documents.php"><i class="bi bi-file-earmark-ppt"></i> Documentos de evaluación</a>
                                     </div>
                                     <div>
                                         <h6 class="dropdown-header">Académico</h6>
@@ -84,7 +84,7 @@ $management_pages = [
                                         <a class="dropdown-item <?= $current_page == 'my-projects.php' ? 'active' : '' ?>" href="/pages/teacher/my-projects.php"><i class="bi bi-folder2"></i> Mis proyectos</a>
                                         <a class="dropdown-item <?= $current_page == 'proposal-review.php' ? 'active' : '' ?>" href="/pages/teacher/proposal-review.php"><i class="bi bi-check2-square"></i> Revisar propuestas</a>
                                         <a class="dropdown-item <?= $current_page == 'evaluations.php' ? 'active' : '' ?>" href="/pages/admin/evaluations.php"><i class="bi bi-clipboard-check"></i> Evaluaciones</a>
-                                        <a class="dropdown-item <?= $current_page == 'evaluation-documents.php' ? 'active' : '' ?>" href="/pages/evaluation-documents.php"><i class="bi bi-file-earmark-slides"></i> Documentos de evaluación</a>
+                                        <a class="dropdown-item <?= $current_page == 'evaluation-documents.php' ? 'active' : '' ?>" href="/pages/evaluation-documents.php"><i class="bi bi-file-earmark-ppt"></i> Documentos de evaluación</a>
                                     </div>
                                     <div>
                                         <h6 class="dropdown-header">Entregables</h6>
@@ -107,7 +107,7 @@ $management_pages = [
                                     <div>
                                         <h6 class="dropdown-header">Proyectos</h6>
                                         <a class="dropdown-item <?= $current_page == 'proposal-register.php' ? 'active' : '' ?>" href="/pages/student/proposal-register.php"><i class="bi bi-pencil-square"></i> Registrar proyecto</a>
-                                        <a class="dropdown-item <?= $current_page == 'evaluation-documents.php' ? 'active' : '' ?>" href="/pages/evaluation-documents.php"><i class="bi bi-file-earmark-slides"></i> Documentos de evaluación</a>
+                                        <a class="dropdown-item <?= $current_page == 'evaluation-documents.php' ? 'active' : '' ?>" href="/pages/evaluation-documents.php"><i class="bi bi-file-earmark-ppt"></i> Documentos de evaluación</a>
                                     </div>
                                     <div>
                                         <h6 class="dropdown-header">Entregables</h6>
