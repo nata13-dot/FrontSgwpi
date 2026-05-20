@@ -117,7 +117,7 @@ class ApiClient {
                 auth.user = null;
                 localStorage.removeItem('auth_token');
                 localStorage.removeItem('user');
-                window.location.replace('/index.php');
+                window.location.replace('/pages/logout.php?reason=unauthorized');
                 return;
             }
 

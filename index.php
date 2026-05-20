@@ -1,22 +1,31 @@
 <?php
 require_once $_SERVER['DOCUMENT_ROOT'] . '/includes/config.php';
 
-if (is_authenticated()) {
-    if (is_admin()) {
-        header('Location: /pages/admin/dashboard.php');
-    } elseif (is_teacher()) {
-        header('Location: /pages/teacher/dashboard.php');
-    } else {
-        header('Location: /pages/student/dashboard.php');
-    }
-    exit;
-}
+$serverAuthenticated = is_authenticated();
+$serverDashboardUrl = dashboard_url();
 ?><!DOCTYPE html>
 <html lang="es">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title><?= APP_NAME ?> - Inicio</title>
+    <?php if ($serverAuthenticated): ?>
+    <script>
+        (function () {
+            try {
+                const token = localStorage.getItem('auth_token');
+                const user = JSON.parse(localStorage.getItem('user') || 'null');
+                if (token && user) {
+                    window.location.replace('<?= $serverDashboardUrl ?>');
+                    return;
+                }
+            } catch (error) {
+                // Si el estado local esta corrupto, se limpia la sesion completa abajo.
+            }
+            window.location.replace('/pages/logout.php?reason=session_mismatch');
+        })();
+    </script>
+    <?php endif; ?>
     <?php require_once $_SERVER['DOCUMENT_ROOT'] . '/includes/visual-preferences.php'; ?>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">

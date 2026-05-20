@@ -34,21 +34,25 @@ function applySystemSettings(settings) {
     document.documentElement.classList.toggle('grayscale-mode', Boolean(settings.grayscale_mode));
     document.documentElement.style.fontSize = `${settings.font_scale || 100}%`;
 
+    const globalNoticeText = String(settings.global_notice || '').trim();
     const existing = document.getElementById('globalSystemNotice');
-    if (settings.global_notice) {
+    if (globalNoticeText) {
         if (!existing && document.body) {
             const notice = document.createElement('div');
             notice.id = 'globalSystemNotice';
             notice.className = 'global-system-notice';
-            notice.innerHTML = `<i class="bi bi-megaphone"></i><span>${String(settings.global_notice).replace(/[&<>'"]/g, char => ({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'}[char]))}</span>`;
+            notice.innerHTML = `<i class="bi bi-megaphone"></i><span>${escapeToastHtml(globalNoticeText)}</span>`;
             placeGlobalSystemNotice(notice);
         } else if (existing) {
-            existing.querySelector('span').textContent = settings.global_notice;
+            existing.querySelector('span').textContent = globalNoticeText;
             placeGlobalSystemNotice(existing);
         }
         syncGlobalNoticeOffset();
-    } else if (existing) {
-        existing.remove();
+    } else {
+        if (existing) {
+            existing.remove();
+        }
+        syncGlobalNoticeOffset();
     }
 
     startIdleLogoutTimer(Number(settings.session_timeout_minutes || 30));
@@ -67,10 +71,10 @@ function placeGlobalSystemNotice(notice) {
 function syncGlobalNoticeOffset() {
     const notice = document.getElementById('globalSystemNotice');
     const navbar = document.querySelector('.navbar');
-    const height = notice ? notice.offsetHeight : 0;
+    const height = notice && notice.textContent.trim() ? notice.offsetHeight : 0;
     document.documentElement.style.setProperty('--sgpi-global-notice-height', `${height}px`);
     if (navbar) {
-        navbar.classList.toggle('has-global-system-notice', Boolean(notice));
+        navbar.classList.toggle('has-global-system-notice', height > 0);
     }
 }
 
@@ -246,7 +250,7 @@ document.addEventListener('DOMContentLoaded', enhancePasswordVisibility);
 window.addEventListener('pageshow', function () {
     const serverAuthenticated = <?= is_authenticated() ? 'true' : 'false' ?>;
     if (serverAuthenticated && !localStorage.getItem('auth_token')) {
-        window.location.replace('/index.php');
+        window.location.replace('/pages/logout.php?reason=session_mismatch');
     }
 });
 
