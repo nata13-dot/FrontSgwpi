@@ -918,7 +918,7 @@ if (!is_authenticated() || (!is_admin() && !is_teacher())) {
             const roomActions = room => CAN_MANAGE_EVALUATIONS ? `
                             <button class="btn btn-outline-primary" onclick="editRoom(${room.id})"><i class="bi bi-pencil"></i></button>
                             <button class="btn btn-outline-success" onclick="lockRoomSequence(${room.id})" title="Bloquear orden"><i class="bi bi-lock"></i></button>
-                            ${room.completed_at ? `<button class="btn btn-outline-secondary" onclick="exportRoom(${room.id})" title="Exportar CSV"><i class="bi bi-file-earmark-spreadsheet"></i></button>` : ''}
+                            ${room.completed_at ? `<button class="btn btn-outline-secondary" onclick="exportRoom(${room.id})" title="Exportar Excel"><i class="bi bi-file-earmark-spreadsheet"></i></button>` : ''}
                             <button class="btn btn-outline-danger" onclick="deleteRoom(${room.id})"><i class="bi bi-trash"></i></button>
             ` : '';
             document.getElementById('roomsList').innerHTML = rooms.map(room => `
@@ -1070,16 +1070,15 @@ if (!is_authenticated() || (!is_admin() && !is_teacher())) {
                 headers: { Authorization: `Bearer ${auth.getToken()}` }
             });
             if (!response.ok) {
-                showAlert('#alertContainer', 'danger', 'No se pudo generar el Excel/CSV de la sala.');
+                showAlert('#alertContainer', 'danger', 'No se pudo generar el Excel de la sala.');
                 return;
             }
-            const sourceCsv = await response.text();
-            const csv = sourceCsv.startsWith('\uFEFF') ? sourceCsv : `\uFEFF${sourceCsv}`;
-            const blob = new Blob([csv], { type: 'text/csv;charset=utf-8' });
+            const workbook = await response.text();
+            const blob = new Blob([workbook], { type: 'application/vnd.ms-excel;charset=utf-8' });
             const url = URL.createObjectURL(blob);
             const link = document.createElement('a');
             link.href = url;
-            link.download = `evaluaciones_sala_${id}.csv`;
+            link.download = `evaluaciones_sala_${id}.xls`;
             link.click();
             URL.revokeObjectURL(url);
         }
