@@ -6,12 +6,12 @@
     RewriteCond %{REQUEST_FILENAME} !-f
     RewriteCond %{REQUEST_FILENAME} !-d
     
-    # Resolver URLs limpias sin exponer archivos PHP internos
-    RewriteRule ^(.*)$ route.php [QSA,L]
+    # Redirigir todo a index.php
+    RewriteRule ^(.*)$ index.php?path=$1 [QSA,L]
 </IfModule>
 
 # Seguridad
-<FilesMatch "^(\.env|composer\.(json|lock)|.*\.sql)$">
+<FilesMatch "\.(env|json|php|sql)$">
     Deny from all
 </FilesMatch>
 

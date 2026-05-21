@@ -3,7 +3,7 @@ require_once $_SERVER['DOCUMENT_ROOT'] . '/includes/config.php';
 require_once $_SERVER['DOCUMENT_ROOT'] . '/includes/validations.php';
 
 if (!is_authenticated()) {
-    redirect_to('/');
+    header('Location: /index.php');
     exit;
 }
 ?>

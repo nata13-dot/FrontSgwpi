@@ -6,6 +6,6 @@ if (is_authenticated()) {
     exit;
 }
 
-redirect_to('/#login');
+header('Location: /index.php#login');
 exit;
 ?>

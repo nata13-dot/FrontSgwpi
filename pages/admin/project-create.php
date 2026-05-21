@@ -2,7 +2,7 @@
 require_once $_SERVER['DOCUMENT_ROOT'] . '/includes/config.php';
 
 if (!is_authenticated() || !is_admin()) {
-    redirect_to('/');
+    header('Location: /index.php');
     exit;
 }
 ?>
@@ -234,7 +234,7 @@ if (!is_authenticated() || !is_admin()) {
             try {
                 await api.post('/projects', formData);
                 showAlert('#alertBox', 'success', 'Proyecto creado exitosamente');
-                setTimeout(() => window.location.href = '/admin/proyectos', 1200);
+                setTimeout(() => window.location.href = '/pages/admin/projects.php', 1200);
             } catch (error) {
                 showAlert('#alertBox', 'danger', error.message || 'Error al crear proyecto');
             }

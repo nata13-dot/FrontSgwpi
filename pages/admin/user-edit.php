@@ -2,13 +2,13 @@
 require_once $_SERVER['DOCUMENT_ROOT'] . '/includes/config.php';
 
 if (!is_authenticated() || !is_admin()) {
-    redirect_to('/');
+    header('Location: /index.php');
     exit;
 }
 
 $userId = $_GET['id'] ?? null;
 if (!$userId) {
-    redirect_to('/admin/usuarios');
+    header('Location: /pages/admin/users.php');
     exit;
 }
 ?>
@@ -240,7 +240,7 @@ if (!$userId) {
                     </div>
                 `;
                 setTimeout(() => {
-                    window.location.href = '/admin/usuarios';
+                    window.location.href = '/pages/admin/users.php';
                 }, 1500);
             } catch (error) {
                 alertBox.innerHTML = `

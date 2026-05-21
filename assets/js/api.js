@@ -215,7 +215,7 @@ class ApiClient {
         window.SGPI_AUTH_REDIRECTING = true;
         this.clearCache();
         auth.clearLocalSession();
-        window.location.replace(`/salir?reason=${encodeURIComponent(reason)}`);
+        window.location.replace(`/pages/logout.php?reason=${encodeURIComponent(reason)}`);
     }
 
     defaultCacheTtl(endpoint) {

@@ -201,11 +201,11 @@ async function logout() {
             credentials: 'include',
             headers: { 'Authorization': `Bearer ${token}` }
         }).catch(() => {}).finally(() => {
-            window.location.replace('/salir');
+            window.location.replace('/pages/logout.php');
         });
         return;
     }
 
-    window.location.replace('/salir');
+    window.location.replace('/pages/logout.php');
 }
 </script>

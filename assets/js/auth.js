@@ -53,7 +53,7 @@ class AuthManager {
             this.user = null;
             localStorage.removeItem('auth_token');
             localStorage.removeItem('user');
-            window.location.href = '/salir';
+            window.location.href = '/pages/logout.php';
         }
     }
 

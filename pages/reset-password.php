@@ -1,5 +1,5 @@
 <?php
 require_once $_SERVER['DOCUMENT_ROOT'] . '/includes/config.php';
 
-redirect_to('/#recover');
+header('Location: /index.php#recover');
 exit;
