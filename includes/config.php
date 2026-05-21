@@ -109,8 +109,35 @@ if (!defined('SGPI_URL_REWRITE_BUFFER')) {
     ob_start('rewrite_legacy_urls');
 }
 
+function configure_frontend_session(): void {
+    $sessionDir = $_SERVER['DOCUMENT_ROOT'] . '/storage/sessions';
+
+    if (!is_dir($sessionDir)) {
+        @mkdir($sessionDir, 0775, true);
+    }
+
+    if (is_dir($sessionDir) && is_writable($sessionDir)) {
+        session_save_path($sessionDir);
+    }
+
+    $isHttps = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off')
+        || (($_SERVER['HTTP_X_FORWARDED_PROTO'] ?? '') === 'https');
+
+    session_name('SGPI_FRONTEND_SESSION');
+    session_set_cookie_params([
+        'lifetime' => 0,
+        'path' => '/',
+        'secure' => $isHttps,
+        'httponly' => true,
+        'samesite' => 'Lax',
+    ]);
+}
+
 // Iniciar sesión
-session_start();
+if (session_status() === PHP_SESSION_NONE) {
+    configure_frontend_session();
+    session_start();
+}
 
 // Token de autenticación
 $auth_token = $_SESSION['auth_token'] ?? null;

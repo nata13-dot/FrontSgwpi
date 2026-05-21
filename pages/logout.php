@@ -1,5 +1,6 @@
 <?php
-session_start();
+require_once $_SERVER['DOCUMENT_ROOT'] . '/includes/config.php';
+
 $_SESSION = [];
 
 if (ini_get('session.use_cookies')) {
@@ -32,7 +33,7 @@ header('Expires: 0');
         localStorage.removeItem('auth_token');
         localStorage.removeItem('user');
         sessionStorage.clear();
-        window.location.replace('/index.php');
+        window.location.replace('/');
     </script>
 </body>
 </html>

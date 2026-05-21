@@ -16,6 +16,12 @@ if (is_array($data) && !empty($data['auth_token']) && isset($data['user'])) {
     $_SESSION['auth_token'] = $data['auth_token'];
     $_SESSION['user'] = $data['user'];
 
+    if (session_status() === PHP_SESSION_ACTIVE && !session_write_close()) {
+        http_response_code(500);
+        echo json_encode(['error' => 'No se pudo guardar la sesion']);
+        exit;
+    }
+
     echo json_encode(['success' => true]);
 } else {
     http_response_code(400);
