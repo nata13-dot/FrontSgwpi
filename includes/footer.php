@@ -173,7 +173,6 @@ function showSystemNoticeToast(notice) {
     const title = notice.title ? `<strong>${escapeToastHtml(notice.title)}</strong><br>` : '';
     Swal.fire({
         toast: true,
-        backdrop: false,
         position: 'top-end',
         customClass: {
             popup: 'system-notice-toast'
@@ -269,7 +268,6 @@ window.swalToast = function (type, message, timer = 3500) {
 
     Swal.fire({
         toast: true,
-        backdrop: false,
         position: 'top-end',
         customClass: {
             popup: 'system-notice-toast'
