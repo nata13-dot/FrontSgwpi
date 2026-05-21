@@ -31,8 +31,8 @@ class ApiClient {
     /**
      * POST request
      */
-    async post(endpoint, data = {}) {
-        return this.request('POST', endpoint, data);
+    async post(endpoint, data = {}, params = {}) {
+        return this.request('POST', endpoint, data, params);
     }
 
     /**
@@ -56,10 +56,12 @@ class ApiClient {
         const url = new URL(`${this.baseURL}${endpoint}`);
         const normalizedParams = { ...params };
         const requestedCacheTtl = normalizedParams._cache_ttl;
+        const requestTimeout = Number(normalizedParams._timeout || this.timeout);
         const cacheTtl = Number(requestedCacheTtl ?? (method === 'GET' ? this.defaultCacheTtl(endpoint) : 0));
         const forceFresh = Boolean(normalizedParams._fresh);
         delete normalizedParams._cache_ttl;
         delete normalizedParams._fresh;
+        delete normalizedParams._timeout;
 
         // Agregar parámetros
         Object.keys(normalizedParams).forEach(key => {
@@ -108,7 +110,7 @@ class ApiClient {
 
         const executeRequest = async (retryingAfterRefresh = false) => {
             const controller = new AbortController();
-            const timeoutId = setTimeout(() => controller.abort(), this.timeout);
+            const timeoutId = setTimeout(() => controller.abort(), requestTimeout);
             const response = await fetch(url, { ...options, signal: controller.signal })
                 .finally(() => clearTimeout(timeoutId));
 
