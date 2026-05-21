@@ -3,7 +3,7 @@ require_once $_SERVER['DOCUMENT_ROOT'] . '/includes/config.php';
 
 // Verificar autenticación y rol
 if (!is_authenticated() || !is_student()) {
-    header('Location: /index.php');
+    redirect_to('/');
     exit;
 }
 ?>

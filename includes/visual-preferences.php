@@ -1,3 +1,6 @@
+<link rel="icon" type="image/png" href="/assets/img/ITSSMT/ITSSMT.png">
+<link rel="shortcut icon" type="image/png" href="/assets/img/ITSSMT/ITSSMT.png">
+<link rel="apple-touch-icon" href="/assets/img/ITSSMT/ITSSMT.png">
 <style>
 html[data-theme="dark"] {
     background: #111827;

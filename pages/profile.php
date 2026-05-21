@@ -1,6 +1,6 @@
 <?php
 require_once $_SERVER['DOCUMENT_ROOT'] . '/includes/config.php';
-if (!is_authenticated()) { header('Location: /index.php'); exit; }
+if (!is_authenticated()) { redirect_to('/'); exit; }
 ?>
 <!DOCTYPE html>
 <html lang="es">

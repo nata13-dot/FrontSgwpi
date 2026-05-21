@@ -53,7 +53,7 @@
             const docId = params.get('id');
 
             if (!docId) {
-                window.location.href = '/pages/repositorio.php';
+                window.location.href = '/repositorio';
                 return;
             }
 

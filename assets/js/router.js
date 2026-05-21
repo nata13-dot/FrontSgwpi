@@ -22,18 +22,18 @@ class Router {
     async navigate(path) {
         // Si no está autenticado y no es ruta pública
         if (!auth.isAuthenticated() && !this.isPublicRoute(path)) {
-            window.location.href = '/index.php';
+            window.location.href = '/';
             return;
         }
 
         // Si está autenticado y es ruta de login
-        if (auth.isAuthenticated() && path === '/index.php') {
+        if (auth.isAuthenticated() && (path === '/' || path === '/index.php')) {
             if (auth.isAdmin()) {
-                window.location.href = '/pages/admin/dashboard.php';
+                window.location.href = '/admin';
             } else if (auth.isTeacher()) {
-                window.location.href = '/pages/teacher/dashboard.php';
+                window.location.href = '/docente';
             } else {
-                window.location.href = '/pages/student/dashboard.php';
+                window.location.href = '/estudiante';
             }
             return;
         }
@@ -51,10 +51,9 @@ class Router {
      */
     isPublicRoute(path) {
         const publicRoutes = [
+            '/',
             '/index.php',
-            '/index.php',
-            '/pages/forgot-password.php',
-            '/pages/repositorio.php'
+            '/repositorio'
         ];
         return publicRoutes.includes(path);
     }

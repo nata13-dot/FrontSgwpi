@@ -6,6 +6,6 @@
     "php": "8.3.*"
   },
   "scripts": {
-    "start": "php -S 0.0.0.0:${PORT:-8080} -t ."
+    "start": "php -S 0.0.0.0:${PORT:-8080} -t . route.php"
   }
 }
