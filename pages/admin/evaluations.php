@@ -682,8 +682,7 @@ if (!is_authenticated() || (!is_admin() && !is_teacher())) {
                         <td>
                             <div class="btn-group btn-group-sm">
                                 <button class="btn btn-outline-secondary" onclick="showProjectDetails(${evaluation.id})" title="Detalles del proyecto"><i class="bi bi-info-circle"></i></button>
-                                <button class="btn btn-outline-dark" onclick="downloadEvaluationReport(${evaluation.id}, 'pdf')" title="Reporte PDF"><i class="bi bi-file-earmark-pdf"></i></button>
-                                <button class="btn btn-outline-secondary" onclick="downloadEvaluationReport(${evaluation.id}, 'xls')" title="Reporte Excel"><i class="bi bi-file-earmark-spreadsheet"></i></button>
+                                <button class="btn btn-outline-dark" onclick="downloadEvaluationReport(${evaluation.id})" title="Reporte PDF"><i class="bi bi-file-earmark-pdf"></i></button>
                                 <button class="btn btn-outline-success" onclick="openScoreModal(${evaluation.id})" title="Evaluar" ${disabled}><i class="bi bi-clipboard-check"></i></button>
                                 ${(evaluation.can_manage_evaluations || evaluation.is_room_responsible) ? `<button class="btn btn-outline-primary" onclick="askAdvanceRoom(${evaluation.evaluation_room_id})" title="Finalizar y continuar"><i class="bi bi-skip-forward"></i></button>` : ''}
                                 ${evaluation.can_manage_evaluations ? `<button class="btn btn-outline-danger" onclick="deleteEvaluation(${evaluation.id})" title="Eliminar"><i class="bi bi-trash"></i></button>` : ''}
@@ -920,7 +919,7 @@ if (!is_authenticated() || (!is_admin() && !is_teacher())) {
             const roomActions = room => CAN_MANAGE_EVALUATIONS ? `
                             <button class="btn btn-outline-primary" onclick="editRoom(${room.id})"><i class="bi bi-pencil"></i></button>
                             <button class="btn btn-outline-success" onclick="lockRoomSequence(${room.id})" title="Bloquear orden"><i class="bi bi-lock"></i></button>
-                            ${room.completed_at ? `<button class="btn btn-outline-secondary" onclick="exportRoom(${room.id})" title="Exportar Excel"><i class="bi bi-file-earmark-spreadsheet"></i></button>` : ''}
+                            <button class="btn btn-outline-dark" onclick="downloadRoomReport(${room.id})" title="Reporte PDF de sala"><i class="bi bi-file-earmark-pdf"></i></button>
                             <button class="btn btn-outline-danger" onclick="deleteRoom(${room.id})"><i class="bi bi-trash"></i></button>
             ` : '';
             document.getElementById('roomsList').innerHTML = rooms.map(room => `
@@ -1067,42 +1066,40 @@ if (!is_authenticated() || (!is_admin() && !is_teacher())) {
             loadEvaluations();
         }
 
-        async function exportRoom(id) {
-            const response = await fetch(`${API_BASE_URL}/evaluations/rooms/${id}/export`, {
+        async function downloadRoomReport(id) {
+            const response = await fetch(`${API_BASE_URL}/evaluations/rooms/${id}/report.pdf`, {
                 credentials: 'include',
                 headers: { Authorization: `Bearer ${auth.getToken()}` }
             });
             if (!response.ok) {
-                showAlert('#alertContainer', 'danger', 'No se pudo generar el Excel de la sala.');
+                showAlert('#alertContainer', 'danger', 'No se pudo generar el reporte PDF de la sala.');
                 return;
             }
-            const workbook = await response.text();
-            const blob = new Blob([workbook], { type: 'application/vnd.ms-excel;charset=utf-8' });
+            const content = await response.blob();
+            const blob = new Blob([content], { type: 'application/pdf' });
             const url = URL.createObjectURL(blob);
             const link = document.createElement('a');
             link.href = url;
-            link.download = `evaluaciones_sala_${id}.xls`;
+            link.download = `reporte_sala_${id}.pdf`;
             link.click();
             URL.revokeObjectURL(url);
         }
 
-        async function downloadEvaluationReport(id, format) {
-            const extension = format === 'pdf' ? 'pdf' : 'xls';
-            const mime = format === 'pdf' ? 'application/pdf' : 'application/vnd.ms-excel;charset=utf-8';
-            const response = await fetch(`${API_BASE_URL}/evaluations/${id}/report.${extension}`, {
+        async function downloadEvaluationReport(id) {
+            const response = await fetch(`${API_BASE_URL}/evaluations/${id}/report.pdf`, {
                 credentials: 'include',
                 headers: { Authorization: `Bearer ${auth.getToken()}` }
             });
             if (!response.ok) {
-                showAlert('#alertContainer', 'danger', `No se pudo generar el reporte ${extension.toUpperCase()}.`);
+                showAlert('#alertContainer', 'danger', 'No se pudo generar el reporte PDF.');
                 return;
             }
             const content = await response.blob();
-            const blob = new Blob([content], { type: mime });
+            const blob = new Blob([content], { type: 'application/pdf' });
             const url = URL.createObjectURL(blob);
             const link = document.createElement('a');
             link.href = url;
-            link.download = `reporte_evaluacion_${id}.${extension}`;
+            link.download = `reporte_evaluacion_${id}.pdf`;
             link.click();
             URL.revokeObjectURL(url);
         }
