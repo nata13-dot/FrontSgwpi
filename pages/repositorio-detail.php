@@ -143,7 +143,7 @@
 
             if (fileType === 'txt') {
                 try {
-                    const response = await fetch(viewUrl);
+                    const response = await fetch(viewUrl, { credentials: 'include' });
                     const text = await response.text();
                     reader.innerHTML = `<pre class="repository-text-preview">${esc(text)}</pre>`;
                 } catch (error) {
@@ -154,7 +154,7 @@
 
             if (fileType === 'docx') {
                 try {
-                    const response = await fetch(viewUrl);
+                    const response = await fetch(viewUrl, { credentials: 'include' });
                     const buffer = await response.arrayBuffer();
                     const result = await mammoth.convertToHtml({ arrayBuffer: buffer });
                     reader.innerHTML = `<article class="repository-word-preview">${result.value || '<p class="text-muted">El documento no contiene texto visible.</p>'}</article>`;

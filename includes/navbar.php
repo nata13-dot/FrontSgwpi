@@ -198,6 +198,7 @@ async function logout() {
     if (token && apiBaseUrl) {
         fetch(`${apiBaseUrl}/auth/logout`, {
             method: 'POST',
+            credentials: 'include',
             headers: { 'Authorization': `Bearer ${token}` }
         }).catch(() => {}).finally(() => {
             window.location.replace('/pages/logout.php');

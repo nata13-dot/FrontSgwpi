@@ -216,6 +216,7 @@ async function uploadDocument(deliverableId) {
     try {
         const response = await fetch(`${API_BASE_URL}/deliverables/${deliverableId}/upload`, {
             method: 'POST',
+            credentials: 'include',
             headers: { Authorization: `Bearer ${auth.getToken()}` },
             body: formData
         });

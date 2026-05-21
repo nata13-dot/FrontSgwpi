@@ -5,6 +5,10 @@
 
 class AuthManager {
     constructor() {
+        if (window.axios) {
+            window.axios.defaults.withCredentials = true;
+        }
+
         this.token = localStorage.getItem('auth_token');
         this.user = JSON.parse(localStorage.getItem('user') || 'null');
     }
@@ -105,6 +109,7 @@ class AuthManager {
 
         const response = await fetch(`${API_BASE_URL}/auth/refresh`, {
             method: 'POST',
+            credentials: 'include',
             headers: {
                 'Accept': 'application/json',
                 'Content-Type': 'application/json',
@@ -127,6 +132,7 @@ class AuthManager {
         try {
             await fetch('/api/set-session.php', {
                 method: 'POST',
+                credentials: 'include',
                 headers: {
                     'Accept': 'application/json',
                     'Content-Type': 'application/json'

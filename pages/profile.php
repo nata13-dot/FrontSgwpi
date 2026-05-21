@@ -75,6 +75,7 @@ document.getElementById('profileForm').addEventListener('submit', async e => {
         localStorage.setItem('user', JSON.stringify(res.user));
         await fetch('/api/set-session.php', {
             method: 'POST',
+            credentials: 'include',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ auth_token: auth.getToken(), user: res.user })
         });

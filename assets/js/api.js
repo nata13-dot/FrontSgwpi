@@ -111,7 +111,7 @@ class ApiClient {
         const executeRequest = async (retryingAfterRefresh = false) => {
             const controller = new AbortController();
             const timeoutId = setTimeout(() => controller.abort(), requestTimeout);
-            const response = await fetch(url, { ...options, signal: controller.signal })
+            const response = await fetch(url, { ...options, credentials: 'include', signal: controller.signal })
                 .finally(() => clearTimeout(timeoutId));
 
             // Si no está autenticado (401)

@@ -241,6 +241,7 @@ if (!is_authenticated() || !is_student()) {
                 localStorage.setItem('user', JSON.stringify(response.user));
                 await fetch('/api/set-session.php', {
                     method: 'POST',
+                    credentials: 'include',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ auth_token: auth.getToken(), user: response.user })
                 });

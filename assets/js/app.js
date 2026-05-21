@@ -182,6 +182,7 @@ async function descargarEntregable(deliverable_id, nombre = null) {
         }
 
         const response = await fetch(`${API_BASE_URL}/deliverables/${deliverable_id}/download`, {
+            credentials: 'include',
             headers: { 'Authorization': `Bearer ${token}` }
         });
 
@@ -271,6 +272,7 @@ async function subirArchivo(deliverable_id, file) {
 
         const response = await fetch(`${API_BASE_URL}/deliverables/${deliverable_id}/upload`, {
             method: 'POST',
+            credentials: 'include',
             headers: { 'Authorization': `Bearer ${token}` },
             body: formData
         });
@@ -309,6 +311,7 @@ async function calificarEntregable(deliverable_id, calificacion) {
 
         const response = await fetch(`${API_BASE_URL}/deliverables/${deliverable_id}/calificar`, {
             method: 'POST',
+            credentials: 'include',
             headers: {
                 'Authorization': `Bearer ${token}`,
                 'Content-Type': 'application/json'

@@ -572,7 +572,9 @@ if (!is_authenticated()) {
         }
 
         function downloadProjectsExcelTemplate() {
-            fetch(`${API_BASE_URL}/projects-template.xls`)
+            fetch(`${API_BASE_URL}/projects-template.xls`, {
+                credentials: 'include'
+            })
                 .then(async response => {
                     if (!response.ok) {
                         const text = await response.text().catch(() => '');

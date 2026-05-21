@@ -6,6 +6,7 @@ window.SGPI_API_BASE_URL = '<?= API_BASE_URL ?>';
 async function loadPublicSettings() {
     try {
         const response = await fetch(`${window.SGPI_API_BASE_URL}/settings/public`, {
+            credentials: 'include',
             headers: { 'Accept': 'application/json' }
         });
         if (!response.ok) return;

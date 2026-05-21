@@ -864,7 +864,9 @@ if (!is_authenticated() || !is_admin()) {
         }
 
         function downloadUsersExcelTemplate() {
-            fetch(`${API_BASE_URL}/users-template.xls`)
+            fetch(`${API_BASE_URL}/users-template.xls`, {
+                credentials: 'include'
+            })
                 .then(async response => {
                     if (!response.ok) {
                         const text = await response.text().catch(() => '');

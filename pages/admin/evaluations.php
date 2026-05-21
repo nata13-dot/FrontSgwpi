@@ -1067,6 +1067,7 @@ if (!is_authenticated() || (!is_admin() && !is_teacher())) {
 
         async function exportRoom(id) {
             const response = await fetch(`${API_BASE_URL}/evaluations/rooms/${id}/export`, {
+                credentials: 'include',
                 headers: { Authorization: `Bearer ${auth.getToken()}` }
             });
             if (!response.ok) {

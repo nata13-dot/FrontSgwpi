@@ -45,6 +45,7 @@ $serverDashboardUrl = dashboard_url();
 
             try {
                 const response = await fetch('<?= API_BASE_URL ?>/auth/me', {
+                    credentials: 'include',
                     headers: {
                         Accept: 'application/json',
                         Authorization: `Bearer ${token}`
@@ -55,6 +56,7 @@ $serverDashboardUrl = dashboard_url();
 
                 const sessionResponse = await fetch('/api/set-session.php', {
                     method: 'POST',
+                    credentials: 'include',
                     headers: {
                         Accept: 'application/json',
                         'Content-Type': 'application/json'
