@@ -137,9 +137,9 @@ if (!is_authenticated() || (!is_admin() && !is_teacher())) {
                 </div>
                 <div class="modal-body">
                     <div class="row g-3 align-items-end mb-3">
-                        <div class="col-md-3">
+                        <div class="col-md-2">
                             <label class="form-label" for="rubricSemester">Semestre</label>
-                            <select class="form-select" id="rubricSemester" onchange="loadRubricCriteria()">
+                            <select class="form-select" id="rubricSemester" onchange="onRubricScopeChange()">
                                 <option value="5">5</option>
                                 <option value="6">6</option>
                                 <option value="7">7</option>
@@ -153,11 +153,18 @@ if (!is_authenticated() || (!is_admin() && !is_teacher())) {
                                 <option value="numeric">Puntaje 1 a 5</option>
                             </select>
                         </div>
-                        <div class="col-md-4">
+                        <div class="col-md-4 d-none" id="rubricProjectBox">
+                            <label class="form-label" for="rubricProjectId">Proyecto 8vo</label>
+                            <select class="form-select" id="rubricProjectId" onchange="loadRubricCriteria()">
+                                <option value="">Rubrica general de 8vo</option>
+                            </select>
+                            <div class="form-text">Sin proyecto seleccionado editas la general; puede quedar vacia.</div>
+                        </div>
+                        <div class="col-md-3">
                             <label class="form-label" for="newCriterionText">Nueva pregunta</label>
                             <input type="text" class="form-control" id="newCriterionText" maxlength="255">
                         </div>
-                        <div class="col-md-2">
+                        <div class="col-md-1">
                             <button type="button" class="btn btn-primary w-100" onclick="addCriterion()">
                                 <i class="bi bi-plus-circle"></i>
                             </button>
@@ -402,6 +409,16 @@ if (!is_authenticated() || (!is_admin() && !is_teacher())) {
             }, {});
         }
 
+        function criteriaForEvaluation(evaluation) {
+            const projectId = String(evaluation?.project_id || evaluation?.project?.id || '');
+            const semesterCriteria = criteriaBySemester[evaluation?.semestre] || [];
+            return semesterCriteria.filter(criterion => {
+                const criterionProjectId = criterion.project_id === null || criterion.project_id === undefined ? '' : String(criterion.project_id);
+                if (Number(evaluation?.semestre) !== 8) return criterionProjectId === '';
+                return criterionProjectId === '' || criterionProjectId === projectId;
+            });
+        }
+
         function levelLabel(level) {
             if (typeof level === 'object' && level !== null) return level.label || level.key || '';
             const found = levels.find(item => typeof item === 'object' ? item.key === level : item === level);
@@ -513,12 +530,15 @@ if (!is_authenticated() || (!is_admin() && !is_teacher())) {
 
             const projectFilter = document.getElementById('projectFilter');
             const projectSelect = document.getElementById('project_id');
+            const rubricProjectSelect = document.getElementById('rubricProjectId');
             projectFilter.innerHTML = '<option value="">Todos los proyectos</option>';
             projectSelect.innerHTML = '<option value="">Selecciona un proyecto</option>';
+            if (rubricProjectSelect) rubricProjectSelect.innerHTML = '<option value="">Rubrica general de 8vo</option>';
             projects.forEach(project => {
                 const option = `<option value="${project.id}">${escapeHtml(project.title)}</option>`;
                 projectFilter.innerHTML += option;
                 projectSelect.innerHTML += option;
+                if (rubricProjectSelect && Number(project.semestre) === 8) rubricProjectSelect.innerHTML += option;
             });
             renderRoomOptions();
         }
@@ -683,6 +703,7 @@ if (!is_authenticated() || (!is_admin() && !is_teacher())) {
                             <div class="btn-group btn-group-sm">
                                 <button class="btn btn-outline-secondary" onclick="showProjectDetails(${evaluation.id})" title="Detalles del proyecto"><i class="bi bi-info-circle"></i></button>
                                 <button class="btn btn-outline-dark" onclick="downloadEvaluationReport(${evaluation.id})" title="Reporte PDF"><i class="bi bi-file-earmark-pdf"></i></button>
+                                ${(evaluation.can_manage_evaluations && Number(evaluation.semestre) === 8) ? `<button class="btn btn-outline-primary" onclick="openRubricModal(${evaluation.project_id})" title="Rubrica personalizada"><i class="bi bi-ui-checks-grid"></i></button>` : ''}
                                 <button class="btn btn-outline-success" onclick="openScoreModal(${evaluation.id})" title="Evaluar" ${disabled}><i class="bi bi-clipboard-check"></i></button>
                                 ${(evaluation.can_manage_evaluations || evaluation.is_room_responsible) ? `<button class="btn btn-outline-primary" onclick="askAdvanceRoom(${evaluation.evaluation_room_id})" title="Finalizar y continuar"><i class="bi bi-skip-forward"></i></button>` : ''}
                                 ${evaluation.can_manage_evaluations ? `<button class="btn btn-outline-danger" onclick="deleteEvaluation(${evaluation.id})" title="Eliminar"><i class="bi bi-trash"></i></button>` : ''}
@@ -787,9 +808,19 @@ if (!is_authenticated() || (!is_admin() && !is_teacher())) {
             }
         });
 
-        function openRubricModal() {
+        function onRubricScopeChange() {
+            const semester = document.getElementById('rubricSemester').value;
+            const projectBox = document.getElementById('rubricProjectBox');
+            projectBox.classList.toggle('d-none', Number(semester) !== 8);
+            if (Number(semester) !== 8) document.getElementById('rubricProjectId').value = '';
+            loadRubricCriteria();
+        }
+
+        function openRubricModal(projectId = '') {
             if (!CAN_MANAGE_EVALUATIONS) return;
-            document.getElementById('rubricSemester').value = '5';
+            document.getElementById('rubricSemester').value = projectId ? '8' : '5';
+            document.getElementById('rubricProjectId').value = projectId ? String(projectId) : '';
+            document.getElementById('rubricProjectBox').classList.toggle('d-none', !projectId);
             loadRubricCriteria();
             rubricModal.show();
         }
@@ -1111,12 +1142,16 @@ if (!is_authenticated() || (!is_admin() && !is_teacher())) {
             rubricScoreModes = criteriaResponse.score_modes || rubricScoreModes;
             groupCriteria();
             const semester = document.getElementById('rubricSemester').value;
+            const selectedProjectId = Number(semester) === 8 ? document.getElementById('rubricProjectId').value : '';
             document.getElementById('rubricScoreMode').value = currentRubricMode(semester);
             const list = document.getElementById('rubricCriteriaList');
-            const semesterCriteria = criteriaBySemester[semester] || [];
+            const semesterCriteria = (criteriaBySemester[semester] || []).filter(criterion => {
+                const criterionProjectId = criterion.project_id === null || criterion.project_id === undefined ? '' : String(criterion.project_id);
+                return criterionProjectId === String(selectedProjectId || '');
+            });
 
             if (semesterCriteria.length === 0) {
-                list.innerHTML = '<p class="text-muted mb-0">No hay preguntas para este semestre.</p>';
+                list.innerHTML = `<p class="text-muted mb-0">${selectedProjectId ? 'Este proyecto aun no tiene preguntas personalizadas.' : 'No hay preguntas para esta rubrica general.'}</p>`;
                 return;
             }
 
@@ -1128,6 +1163,7 @@ if (!is_authenticated() || (!is_admin() && !is_teacher())) {
                         </div>
                         <div class="col-md-8">
                             <input type="text" class="form-control criterion-question" value="${escapeHtml(criterion.label)}" maxlength="255">
+                            <div class="form-text">${criterion.project_id ? 'Personalizada del proyecto' : 'General del semestre'}</div>
                         </div>
                         <div class="col-md-2 d-flex gap-1">
                             <button type="button" class="btn btn-sm btn-outline-primary" onclick="updateCriterion(${criterion.id})" title="Guardar"><i class="bi bi-save"></i></button>
@@ -1140,13 +1176,16 @@ if (!is_authenticated() || (!is_admin() && !is_teacher())) {
         async function addCriterion() {
             if (!CAN_MANAGE_EVALUATIONS) return;
             const semester = document.getElementById('rubricSemester').value;
+            const projectId = Number(semester) === 8 ? document.getElementById('rubricProjectId').value : '';
             const text = document.getElementById('newCriterionText').value.trim();
             if (!text) return;
             try {
-                await api.post('/evaluations/rubric-criteria', {
+                const payload = {
                     semestre: semester,
                     pregunta: text
-                });
+                };
+                if (projectId) payload.project_id = Number(projectId);
+                await api.post('/evaluations/rubric-criteria', payload);
                 document.getElementById('newCriterionText').value = '';
                 await loadRubricCriteria();
                 showAlert('#alertContainer', 'success', 'Pregunta agregada a la rubrica.');
@@ -1199,7 +1238,7 @@ if (!is_authenticated() || (!is_admin() && !is_teacher())) {
                 showAlert('#alertContainer', 'danger', `Ya alcanzaste el limite de ${evaluation.max_attempts} oportunidad(es) para esta evaluacion.`);
                 return;
             }
-            const semesterCriteria = criteriaBySemester[evaluation?.semestre] || [];
+            const semesterCriteria = criteriaForEvaluation(evaluation);
             const rubricMode = currentRubricMode(evaluation?.semestre);
             const numericOptions = numericLevelOptions();
             const container = document.getElementById('scoreFields');
@@ -1215,7 +1254,7 @@ if (!is_authenticated() || (!is_admin() && !is_teacher())) {
                 const draftScore = (draft.scores || []).find(score => score.criterio === criterion.key) || {};
                 container.innerHTML += `
                     <div class="border rounded p-3 mb-3" data-criterion="${criterion.key}">
-                        <label class="form-label fw-semibold">${escapeHtml(criterion.label)}</label>
+                        <label class="form-label fw-semibold">${escapeHtml(criterion.label)} ${criterion.project_id ? '<span class="badge bg-info text-dark ms-1">Proyecto</span>' : '<span class="badge bg-secondary ms-1">General</span>'}</label>
                         <select class="form-select mb-2 criterion-level" required>
                             ${(rubricMode === 'numeric' ? numericOptions : levels).map(option => {
                                 const value = rubricMode === 'numeric' ? levelValue(option.level) : levelValue(option);
