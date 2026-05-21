@@ -25,6 +25,55 @@ $serverDashboardUrl = dashboard_url();
             window.location.replace('/pages/logout.php?reason=session_mismatch');
         })();
     </script>
+    <?php else: ?>
+    <script>
+        (async function () {
+            const token = localStorage.getItem('auth_token');
+            let user = null;
+
+            try {
+                user = JSON.parse(localStorage.getItem('user') || 'null');
+            } catch (error) {
+                user = null;
+            }
+
+            if (!token || !user) return;
+
+            const dashboardUrl = user.perfil_id === 1
+                ? '/pages/admin/dashboard.php'
+                : (user.perfil_id === 2 ? '/pages/teacher/dashboard.php' : '/pages/student/dashboard.php');
+
+            try {
+                const response = await fetch('<?= API_BASE_URL ?>/auth/me', {
+                    headers: {
+                        Accept: 'application/json',
+                        Authorization: `Bearer ${token}`
+                    }
+                });
+
+                if (!response.ok) throw new Error('invalid_token');
+
+                const sessionResponse = await fetch('/api/set-session.php', {
+                    method: 'POST',
+                    headers: {
+                        Accept: 'application/json',
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ auth_token: token, user })
+                });
+
+                if (!sessionResponse.ok) throw new Error('session_restore_failed');
+                window.location.replace(dashboardUrl);
+            } catch (error) {
+                localStorage.removeItem('auth_token');
+                localStorage.removeItem('user');
+                sessionStorage.clear();
+                if (window.location.hash !== '#login') {
+                    history.replaceState(null, '', '/index.php#login');
+                }
+            }
+        })();
+    </script>
     <?php endif; ?>
     <?php require_once $_SERVER['DOCUMENT_ROOT'] . '/includes/visual-preferences.php'; ?>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">

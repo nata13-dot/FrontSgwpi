@@ -94,6 +94,63 @@ class AuthManager {
     getToken() {
         return this.token;
     }
+
+    /**
+     * Refrescar token JWT sin sacar al usuario de la pantalla actual.
+     */
+    async refreshToken() {
+        if (!this.token) {
+            throw new Error('No hay token para refrescar.');
+        }
+
+        const response = await fetch(`${API_BASE_URL}/auth/refresh`, {
+            method: 'POST',
+            headers: {
+                'Accept': 'application/json',
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${this.token}`
+            }
+        });
+
+        if (!response.ok) {
+            throw new Error('No se pudo refrescar la sesion.');
+        }
+
+        const data = await response.json();
+        if (!data.access_token) {
+            throw new Error('Respuesta de sesion invalida.');
+        }
+
+        this.token = data.access_token;
+        localStorage.setItem('auth_token', this.token);
+
+        try {
+            await fetch('/api/set-session.php', {
+                method: 'POST',
+                headers: {
+                    'Accept': 'application/json',
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ auth_token: this.token, user: this.user })
+            });
+        } catch (error) {
+            // La sesion PHP se revalidara al navegar; el token del API ya quedo actualizado.
+        }
+
+        return this.token;
+    }
+
+    clearLocalSession() {
+        this.token = null;
+        this.user = null;
+        localStorage.removeItem('auth_token');
+        localStorage.removeItem('user');
+        try {
+            sessionStorage.clear();
+        } catch (error) {
+            // Ignorar navegadores que bloquean storage.
+        }
+    }
 }
 
 // Instancia global

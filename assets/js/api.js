@@ -9,6 +9,7 @@ class ApiClient {
         this.timeout = 10000;
         this.cache = new Map();
         this.pending = new Map();
+        this.refreshPromise = null;
         this.cachePrefix = `sgpi-api-cache:${this.baseURL}:`;
         this.defaultCacheTtls = [
             { pattern: /^\/dashboard\/(stats|teacher|student)$/, ttl: 20000 },
@@ -105,7 +106,7 @@ class ApiClient {
             options.headers['Content-Type'] = 'application/json';
         }
 
-        const executeRequest = async () => {
+        const executeRequest = async (retryingAfterRefresh = false) => {
             const controller = new AbortController();
             const timeoutId = setTimeout(() => controller.abort(), this.timeout);
             const response = await fetch(url, { ...options, signal: controller.signal })
@@ -113,12 +114,24 @@ class ApiClient {
 
             // Si no está autenticado (401)
             if (response.status === 401) {
-                auth.token = null;
-                auth.user = null;
-                localStorage.removeItem('auth_token');
-                localStorage.removeItem('user');
-                window.location.replace('/pages/logout.php?reason=unauthorized');
-                return;
+                const canRefresh = auth.getToken()
+                    && endpoint !== '/auth/refresh'
+                    && endpoint !== '/auth/logout'
+                    && !retryingAfterRefresh;
+
+                if (canRefresh) {
+                    try {
+                        const freshToken = await this.refreshAuthToken();
+                        options.headers.Authorization = `Bearer ${freshToken}`;
+                        return executeRequest(true);
+                    } catch (refreshError) {
+                        this.redirectToLogout('expired');
+                        throw refreshError;
+                    }
+                }
+
+                this.redirectToLogout('unauthorized');
+                throw new Error('Sesion expirada. Inicia sesion nuevamente.');
             }
 
             const result = await response.json().catch(() => ({}));
@@ -178,6 +191,29 @@ class ApiClient {
         } catch (error) {
             // La limpieza en memoria ya evita reutilizar datos dentro de la pagina actual.
         }
+    }
+
+    async refreshAuthToken() {
+        if (!this.refreshPromise) {
+            this.refreshPromise = auth.refreshToken()
+                .then(token => {
+                    this.clearCache();
+                    return token;
+                })
+                .finally(() => {
+                    this.refreshPromise = null;
+                });
+        }
+
+        return this.refreshPromise;
+    }
+
+    redirectToLogout(reason = 'unauthorized') {
+        if (window.SGPI_AUTH_REDIRECTING) return;
+        window.SGPI_AUTH_REDIRECTING = true;
+        this.clearCache();
+        auth.clearLocalSession();
+        window.location.replace(`/pages/logout.php?reason=${encodeURIComponent(reason)}`);
     }
 
     defaultCacheTtl(endpoint) {

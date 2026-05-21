@@ -63,17 +63,16 @@ if (!is_authenticated() || (!is_admin() && !is_teacher())) {
                                 <thead>
                                     <tr>
                                         <th>Proyecto</th>
-                                        <th>Semestre</th>
-                                        <th>Etapa</th>
-                                        <th>Sala</th>
-                                        <th>Fecha</th>
-                                        <th>Resultado</th>
+                                        <th>Integrantes</th>
+                                        <th>Datos clave</th>
+                                        <th>Sala y turno</th>
+                                        <th>Estado</th>
                                         <th>Promedio global</th>
                                         <th>Acciones</th>
                                     </tr>
                                 </thead>
                                 <tbody id="evaluationsTable">
-                                    <tr><td colspan="8" class="text-center py-4"><div class="spinner-border" role="status"></div></td></tr>
+                                    <tr><td colspan="7" class="text-center py-4"><div class="spinner-border" role="status"></div></td></tr>
                                 </tbody>
                             </table>
                         </div>
@@ -147,7 +146,14 @@ if (!is_authenticated() || (!is_admin() && !is_teacher())) {
                                 <option value="8">8</option>
                             </select>
                         </div>
-                        <div class="col-md-7">
+                        <div class="col-md-3">
+                            <label class="form-label" for="rubricScoreMode">Metodo</label>
+                            <select class="form-select" id="rubricScoreMode" onchange="saveRubricScoreMode()">
+                                <option value="levels">Acuerdos</option>
+                                <option value="numeric">Puntaje 1 a 5</option>
+                            </select>
+                        </div>
+                        <div class="col-md-4">
                             <label class="form-label" for="newCriterionText">Nueva pregunta</label>
                             <input type="text" class="form-control" id="newCriterionText" maxlength="255">
                         </div>
@@ -172,6 +178,8 @@ if (!is_authenticated() || (!is_admin() && !is_teacher())) {
                 </div>
                 <div class="modal-body">
                     <input type="hidden" id="scoreEvaluationId">
+                    <div id="scoreProjectContext" class="border rounded p-3 mb-3"></div>
+                    <div id="scoreDraftStatus" class="small text-muted mb-2"></div>
                     <div id="scoreFields"></div>
                     <div class="border rounded p-3 mt-3">
                         <label class="form-label fw-semibold" for="generalEvaluationComment">Comentarios o puntos de mejora</label>
@@ -267,6 +275,18 @@ if (!is_authenticated() || (!is_admin() && !is_teacher())) {
         </div>
     </div>
 
+    <div class="modal fade" id="projectDetailsModal" tabindex="-1">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Detalles del Proyecto</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body" id="projectDetailsContent"></div>
+            </div>
+        </div>
+    </div>
+
     <?php require_once $_SERVER['DOCUMENT_ROOT'] . '/includes/footer.php'; ?>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
@@ -287,10 +307,12 @@ if (!is_authenticated() || (!is_admin() && !is_teacher())) {
         let criteria = [];
         let criteriaBySemester = {};
         let levels = [];
+        let rubricScoreModes = {};
         let evaluationModal;
         let rubricModal;
         let scoreModal;
         let breakdownModal;
+        let projectDetailsModal;
         let roomsModal;
         let evaluationManagersModal;
         let evaluationManagerIds = [];
@@ -307,6 +329,65 @@ if (!is_authenticated() || (!is_admin() && !is_teacher())) {
         function projectActiveAuthors(project) {
             const students = Array.isArray(project?.students) ? project.students : [];
             return students.map(student => fullName(student)).filter(Boolean).join(', ');
+        }
+
+        function projectCompany(project) {
+            return project?.company_name || project?.empresa || project?.company?.name || project?.business_name || '';
+        }
+
+        function projectAdvisor(project) {
+            return fullName(project?.advisor || project?.asesor || project?.teacher || project?.docente);
+        }
+
+        function projectControlNumbers(project) {
+            const students = Array.isArray(project?.students) ? project.students : [];
+            return students.map(student => student.numero_control || student.control_number || student.no_control || student.id).filter(Boolean).join(', ');
+        }
+
+        function projectDetailsRows(project) {
+            return [
+                ['Integrantes', projectActiveAuthors(project)],
+                ['No. control', projectControlNumbers(project)],
+                ['Empresa', projectCompany(project)],
+                ['Giro', project?.company_giro || project?.giro],
+                ['Contacto', project?.company_contact_name || project?.contact_name],
+                ['Asesor', projectAdvisor(project)],
+                ['Descripcion', project?.description || project?.descripcion]
+            ].filter(([, value]) => String(value ?? '').trim() !== '');
+        }
+
+        function compactProjectMeta(project) {
+            const rows = projectDetailsRows(project).slice(0, 4);
+            if (rows.length === 0) return '<span class="text-muted small d-block">Sin datos adicionales registrados</span>';
+            return rows.map(([label, value]) => `<span class="text-muted small d-block"><strong>${escapeHtml(label)}:</strong> ${escapeHtml(value)}</span>`).join('');
+        }
+
+        function projectKeyData(project) {
+            const rows = [
+                ['Empresa', projectCompany(project)],
+                ['Giro', project?.company_giro || project?.giro],
+                ['Contacto', project?.company_contact_name || project?.contact_name],
+                ['Periodo', project?.year],
+                ['Estatus', project?.proposal_status]
+            ].filter(([, value]) => String(value ?? '').trim() !== '');
+            return rows.length
+                ? rows.map(([label, value]) => `<span class="small d-block"><strong>${escapeHtml(label)}:</strong> ${escapeHtml(value)}</span>`).join('')
+                : '<span class="text-muted small">Sin datos clave registrados</span>';
+        }
+
+        function orderedRoomProjects(room) {
+            return [...(room?.projects || [])].sort((a, b) => {
+                const orderA = Number(a.presentation_order ?? a.pivot?.presentation_order ?? 0);
+                const orderB = Number(b.presentation_order ?? b.pivot?.presentation_order ?? 0);
+                if (orderA && orderB && orderA !== orderB) return orderA - orderB;
+                if (orderA && !orderB) return -1;
+                if (!orderA && orderB) return 1;
+                return String(a.title || '').localeCompare(String(b.title || ''), 'es', { sensitivity: 'base' });
+            });
+        }
+
+        function evaluationProject(evaluation) {
+            return evaluation?.project || projects.find(project => String(project.id) === String(evaluation?.project_id)) || {};
         }
 
         function stageLabel(stage) {
@@ -343,10 +424,74 @@ if (!is_authenticated() || (!is_admin() && !is_teacher())) {
             return points === null ? levelLabel(level) : `${levelLabel(level)} (${points} pts)`;
         }
 
+        function rubricModeKey(semester) {
+            return `sgpi-rubric-score-mode:${semester}`;
+        }
+
+        function currentRubricMode(semester) {
+            return rubricScoreModes[String(semester)] || localStorage.getItem(rubricModeKey(semester)) || 'levels';
+        }
+
+        async function saveRubricScoreMode() {
+            const semester = document.getElementById('rubricSemester').value;
+            const mode = document.getElementById('rubricScoreMode').value;
+            localStorage.setItem(rubricModeKey(semester), mode);
+            rubricScoreModes[String(semester)] = mode;
+            try {
+                const response = await api.put('/evaluations/rubric-score-modes', { semester: Number(semester), mode });
+                rubricScoreModes = response.score_modes || rubricScoreModes;
+                swalToast('success', 'Metodo de rubrica guardado');
+            } catch (error) {
+                showAlert('#alertContainer', 'danger', error.message || 'No se pudo guardar el metodo de rubrica.');
+            }
+        }
+
+        function numericLevelOptions() {
+            const orderedKeys = ['totalmente_en_desacuerdo', 'en_desacuerdo', 'neutral', 'de_acuerdo', 'totalmente_de_acuerdo'];
+            return orderedKeys.map((key, index) => ({ score: index + 1, level: levels.find(item => levelValue(item) === key) || key }));
+        }
+
+        function scoreDraftKey(evaluationId) {
+            return `sgpi-score-draft:${evaluationId}`;
+        }
+
+        function readScoreDraft(evaluationId) {
+            try {
+                return JSON.parse(localStorage.getItem(scoreDraftKey(evaluationId)) || '{}');
+            } catch (error) {
+                return {};
+            }
+        }
+
+        function collectScoreDraft() {
+            return {
+                general_comment: document.getElementById('generalEvaluationComment').value,
+                apto_titulacion: document.getElementById('apto_titulacion').value,
+                scores: [...document.querySelectorAll('[data-criterion]')].map(row => ({
+                    criterio: row.dataset.criterion,
+                    nivel: row.querySelector('.criterion-level')?.value || '',
+                    comentario: row.querySelector('.criterion-comment')?.value || ''
+                }))
+            };
+        }
+
+        function saveScoreDraft() {
+            const evaluationId = document.getElementById('scoreEvaluationId').value;
+            if (!evaluationId) return;
+            localStorage.setItem(scoreDraftKey(evaluationId), JSON.stringify(collectScoreDraft()));
+            const status = document.getElementById('scoreDraftStatus');
+            if (status) status.innerHTML = '<i class="bi bi-save"></i> Progreso guardado en este navegador.';
+        }
+
+        function clearScoreDraft(evaluationId) {
+            localStorage.removeItem(scoreDraftKey(evaluationId));
+        }
+
         async function refreshCriteria() {
             const criteriaResponse = await api.get('/evaluations/criteria', { _cache_ttl: 60000 });
             criteria = criteriaResponse.criteria || [];
             levels = criteriaResponse.levels || levels;
+            rubricScoreModes = criteriaResponse.score_modes || rubricScoreModes;
             groupCriteria();
         }
 
@@ -470,14 +615,14 @@ if (!is_authenticated() || (!is_admin() && !is_teacher())) {
             if (fresh) params._fresh = 1;
             const tbody = document.getElementById('evaluationsTable');
             if (showLoading) {
-                tbody.innerHTML = '<tr><td colspan="8" class="text-center py-4"><div class="spinner-border" role="status"></div></td></tr>';
+                tbody.innerHTML = '<tr><td colspan="7" class="text-center py-4"><div class="spinner-border" role="status"></div></td></tr>';
             }
             const response = await api.get('/evaluations', params);
-            evaluations = response.data || [];
+            evaluations = orderEvaluationsByRoomSequence(removeDuplicateEvaluations(response.data || []));
             tbody.innerHTML = '';
 
             if (evaluations.length === 0) {
-                tbody.innerHTML = '<tr><td colspan="8" class="text-center text-muted py-4">No hay evaluaciones</td></tr>';
+                tbody.innerHTML = '<tr><td colspan="7" class="text-center text-muted py-4">No hay evaluaciones</td></tr>';
                 return;
             }
 
@@ -489,7 +634,7 @@ if (!is_authenticated() || (!is_admin() && !is_teacher())) {
                     const room = evaluation.room;
                     tbody.innerHTML += `
                         <tr class="table-light">
-                            <td colspan="8">
+                            <td colspan="7">
                                 <div class="d-flex flex-wrap justify-content-between align-items-center gap-2">
                                     <strong>${escapeHtml(room?.nombre || 'Sin sala')}</strong>
                                     <span class="text-muted small">${escapeHtml(room?.salon || '-')} · Responsable: ${escapeHtml(fullName(room?.responsible_teacher) || '-')}</span>
@@ -498,6 +643,7 @@ if (!is_authenticated() || (!is_admin() && !is_teacher())) {
                         </tr>`;
                 }
                 const averageColor = evaluation.global_average_color || 'secondary';
+                const project = evaluationProject(evaluation);
                 const disabled = evaluation.can_score_now ? '' : 'disabled';
                 const statusClass = evaluation.evaluation_badge_color
                     ? `bg-${evaluation.evaluation_badge_color}`
@@ -506,12 +652,28 @@ if (!is_authenticated() || (!is_admin() && !is_teacher())) {
                 const evaluatedBadge = evaluation.evaluated_by_all ? '<span class="badge bg-success ms-2"><i class="bi bi-check2-circle"></i> Evaluado por todos</span>' : '';
                 tbody.innerHTML += `
                     <tr class="${evaluatedClass}">
-                        <td><span class="badge ${statusClass} me-1">#${evaluation.presentation_order || '-'}</span>${escapeHtml(evaluation.project?.title || 'N/A')}${evaluatedBadge}</td>
-                        <td>${evaluation.semestre}</td>
-                        <td>${stageLabel(evaluation.etapa)}</td>
-                        <td>${escapeHtml(evaluation.sala || '-')}</td>
-                        <td>${evaluation.fecha_exposicion ? new Date(evaluation.fecha_exposicion).toLocaleString('es-MX') : '-'}</td>
-                        <td><span class="badge bg-secondary">${escapeHtml(evaluation.resultado)}</span></td>
+                        <td>
+                            <div class="d-flex align-items-start gap-2">
+                                <div>
+                                    <div class="fw-semibold">${escapeHtml(project?.title || 'N/A')}${evaluatedBadge}</div>
+                                    <span class="text-muted small d-block">Semestre ${escapeHtml(evaluation.semestre || '-')} · ${escapeHtml(stageLabel(evaluation.etapa))}</span>
+                                </div>
+                            </div>
+                        </td>
+                        <td>
+                            <div class="small">${escapeHtml(projectActiveAuthors(project) || '-')}</div>
+                            ${projectControlNumbers(project) ? `<div class="text-muted small"><strong>No. control:</strong> ${escapeHtml(projectControlNumbers(project))}</div>` : ''}
+                        </td>
+                        <td>${projectKeyData(project)}</td>
+                        <td>
+                            <span class="badge ${statusClass}">Orden #${evaluation.presentation_order || '-'}</span>
+                            <div class="small mt-1">${escapeHtml(evaluation.sala || evaluation.room?.nombre || '-')}</div>
+                            <div class="text-muted small">${evaluation.fecha_exposicion ? new Date(evaluation.fecha_exposicion).toLocaleString('es-MX') : '-'}</div>
+                        </td>
+                        <td>
+                            <span class="badge bg-secondary">${escapeHtml(evaluation.resultado)}</span>
+                            <div class="small text-muted mt-1">${escapeHtml(evaluation.sequence_status || evaluation.estado || '-')}</div>
+                        </td>
                         <td>
                             <button class="btn btn-sm btn-outline-${averageColor}" onclick="showBreakdown(${evaluation.id})">
                                 ${evaluation.global_average}% · ${evaluation.evaluators_count}/${evaluation.expected_evaluators_count || 0} evaluadores
@@ -519,6 +681,7 @@ if (!is_authenticated() || (!is_admin() && !is_teacher())) {
                         </td>
                         <td>
                             <div class="btn-group btn-group-sm">
+                                <button class="btn btn-outline-secondary" onclick="showProjectDetails(${evaluation.id})" title="Detalles del proyecto"><i class="bi bi-info-circle"></i></button>
                                 <button class="btn btn-outline-success" onclick="openScoreModal(${evaluation.id})" title="Evaluar" ${disabled}><i class="bi bi-clipboard-check"></i></button>
                                 ${(evaluation.can_manage_evaluations || evaluation.is_room_responsible) ? `<button class="btn btn-outline-primary" onclick="askAdvanceRoom(${evaluation.evaluation_room_id})" title="Finalizar y continuar"><i class="bi bi-skip-forward"></i></button>` : ''}
                                 ${evaluation.can_manage_evaluations ? `<button class="btn btn-outline-danger" onclick="deleteEvaluation(${evaluation.id})" title="Eliminar"><i class="bi bi-trash"></i></button>` : ''}
@@ -526,6 +689,66 @@ if (!is_authenticated() || (!is_admin() && !is_teacher())) {
                         </td>
                     </tr>`;
             });
+        }
+
+        function removeDuplicateEvaluations(items) {
+            const seen = new Set();
+            return items.filter(item => {
+                const key = [
+                    item.evaluation_room_id || item.room?.id || 'sin-sala',
+                    item.project_id || item.project?.id || item.id
+                ].join(':');
+                if (seen.has(key)) return false;
+                seen.add(key);
+                return true;
+            });
+        }
+
+        function orderEvaluationsByRoomSequence(items) {
+            return [...items].sort((a, b) => {
+                const roomA = String(a.room?.id || a.evaluation_room_id || '');
+                const roomB = String(b.room?.id || b.evaluation_room_id || '');
+                if (roomA !== roomB) return roomA.localeCompare(roomB, 'es', { numeric: true });
+
+                const orderA = Number(a.presentation_order || 0);
+                const orderB = Number(b.presentation_order || 0);
+                if (orderA && orderB && orderA !== orderB) return orderA - orderB;
+                if (orderA && !orderB) return -1;
+                if (!orderA && orderB) return 1;
+
+                const dateA = new Date(a.fecha_exposicion || 0).getTime();
+                const dateB = new Date(b.fecha_exposicion || 0).getTime();
+                return dateA - dateB;
+            });
+        }
+
+        function showProjectDetails(evaluationId) {
+            const evaluation = evaluations.find(item => Number(item.id) === Number(evaluationId));
+            if (!evaluation) return;
+            const project = evaluationProject(evaluation);
+            const rows = projectDetailsRows(project);
+            document.getElementById('projectDetailsContent').innerHTML = `
+                <h5 class="mb-2">${escapeHtml(project?.title || 'N/A')}</h5>
+                <div class="d-flex flex-wrap gap-2 mb-3">
+                    <span class="badge bg-secondary">Orden #${escapeHtml(evaluation.presentation_order || '-')}</span>
+                    <span class="badge bg-light text-dark">Semestre ${escapeHtml(evaluation.semestre || '-')}</span>
+                    <span class="badge bg-light text-dark">${escapeHtml(stageLabel(evaluation.etapa))}</span>
+                </div>
+                ${rows.length ? `
+                    <div class="table-responsive">
+                        <table class="table table-sm align-middle mb-0">
+                            <tbody>
+                                ${rows.map(([label, value]) => `
+                                    <tr>
+                                        <th style="width: 160px">${escapeHtml(label)}</th>
+                                        <td>${escapeHtml(value)}</td>
+                                    </tr>`).join('')}
+                            </tbody>
+                        </table>
+                    </div>
+                ` : '<p class="text-muted mb-0">No hay datos adicionales registrados para este proyecto.</p>'}
+            `;
+            projectDetailsModal.show();
         }
 
         function openEvaluationModal() {
@@ -601,10 +824,13 @@ if (!is_authenticated() || (!is_admin() && !is_teacher())) {
 
         function busyRoomIds() {
             const conflicts = conflictingRoomsForCurrentForm();
+            const currentRoomId = document.getElementById('roomId').value;
+            const projectRooms = rooms.filter(room => !(currentRoomId && String(room.id) === String(currentRoomId)));
             return {
                 teachers: new Set(conflicts.flatMap(room => (room.teachers || []).map(teacher => String(teacher.id)))),
-                projects: new Set(conflicts.flatMap(room => (room.projects || []).map(project => Number(project.id)))),
-                rooms: conflicts
+                projects: new Set(projectRooms.flatMap(room => (room.projects || []).map(project => Number(project.id)))),
+                rooms: conflicts,
+                projectRooms
             };
         }
 
@@ -643,12 +869,29 @@ if (!is_authenticated() || (!is_admin() && !is_teacher())) {
             roomProjects = await api.get('/evaluations/projects', { semestre: semester, _cache_ttl: 30000 });
             const selectedIds = selected.map(Number);
             const busy = busyRoomIds();
-            const availableProjects = roomProjects.filter(project => !busy.projects.has(Number(project.id)));
+            const selectedSet = new Set(selectedIds);
+            const availableProjects = roomProjects
+                .filter(project => selectedSet.has(Number(project.id)) || !busy.projects.has(Number(project.id)))
+                .sort((a, b) => {
+                    const selectedA = selectedSet.has(Number(a.id));
+                    const selectedB = selectedSet.has(Number(b.id));
+                    if (selectedA !== selectedB) return selectedA ? -1 : 1;
+                    const orderA = Number(orderMap[a.id] || 0);
+                    const orderB = Number(orderMap[b.id] || 0);
+                    if (orderA && orderB && orderA !== orderB) return orderA - orderB;
+                    if (orderA && !orderB) return -1;
+                    if (!orderA && orderB) return 1;
+                    return String(a.title || '').localeCompare(String(b.title || ''), 'es', { sensitivity: 'base' });
+                });
             document.getElementById('roomProjects').innerHTML = availableProjects.map(project => `
                 <div class="d-flex align-items-start gap-2 mb-2">
                     <input class="form-check-input room-project mt-2" type="checkbox" value="${project.id}" id="roomProject${project.id}" ${selectedIds.includes(Number(project.id)) ? 'checked' : ''}>
                     <input class="form-control form-control-sm room-project-order" data-project-id="${project.id}" type="number" min="1" value="${orderMap[project.id] || selectedIds.indexOf(Number(project.id)) + 1 || ''}" style="width:76px" title="Orden">
-                    <label class="form-check-label flex-grow-1" for="roomProject${project.id}">${escapeHtml(project.title)} <span class="text-muted small">${escapeHtml(projectActiveAuthors(project))}</span></label>
+                    <label class="form-check-label flex-grow-1" for="roomProject${project.id}">
+                        <span class="fw-semibold">${escapeHtml(project.title)}</span>
+                        <span class="text-muted small d-block">${escapeHtml(projectActiveAuthors(project) || 'Sin integrantes registrados')}</span>
+                        ${projectCompany(project) ? `<span class="text-muted small d-block">Empresa: ${escapeHtml(projectCompany(project))}</span>` : ''}
+                    </label>
                 </div>`).join('') || '<p class="text-muted mb-0">No hay proyectos disponibles para esta fecha, hora y semestre.</p>';
             renderAvailabilityHint(busy);
         }
@@ -660,12 +903,15 @@ if (!is_authenticated() || (!is_admin() && !is_teacher())) {
                 hint.textContent = 'Selecciona fecha y hora para filtrar docentes y proyectos ya ocupados en ese horario.';
                 return;
             }
-            if (!busy.rooms.length) {
+            if (!busy.rooms.length && !busy.projects.size) {
                 hint.textContent = 'No hay conflictos para el horario seleccionado.';
                 return;
             }
             const names = busy.rooms.map(room => room.nombre).join(', ');
-            hint.innerHTML = `<span class="text-warning"><i class="bi bi-exclamation-triangle"></i> Se ocultaron ${busy.teachers.size} docente(s) y ${busy.projects.size} proyecto(s) ya asignados en: ${escapeHtml(names)}.</span>`;
+            const projectCount = busy.projects.size;
+            const teacherText = busy.rooms.length ? ` Se ocultaron ${busy.teachers.size} docente(s) ocupados en: ${escapeHtml(names)}.` : '';
+            const projectText = projectCount ? ` ${projectCount} proyecto(s) ya asignados a otra sala no estan disponibles.` : '';
+            hint.innerHTML = `<span class="text-warning"><i class="bi bi-exclamation-triangle"></i>${teacherText}${projectText}</span>`;
         }
 
         function renderRooms() {
@@ -684,7 +930,7 @@ if (!is_authenticated() || (!is_admin() && !is_teacher())) {
                             <div class="small mt-1">Docentes: ${(room.teachers || []).map(t => escapeHtml(t.nombres)).join(', ') || '-'}</div>
                             <div class="small">Responsable: ${escapeHtml(fullName(room.responsible_teacher) || '-')}</div>
                             <div class="small">Proyectos: ${(room.projects || []).length} ${room.sequence_locked ? '<span class="badge bg-primary">Orden bloqueado</span>' : ''} ${room.completed_at ? '<span class="badge bg-success">Sala finalizada</span>' : ''}</div>
-                            <ol class="small mb-1 mt-1">${(room.projects || []).map(project => `<li>${escapeHtml(project.title)} <span class="badge bg-light text-dark">${escapeHtml(project.sequence_status || 'pendiente')}</span></li>`).join('')}</ol>
+                            <ol class="small mb-1 mt-1">${orderedRoomProjects(room).map(project => `<li>${escapeHtml(project.title)} <span class="badge bg-light text-dark">${escapeHtml(project.sequence_status || 'pendiente')}</span></li>`).join('')}</ol>
                             <div class="small">Exposicion: ${room.project_presentation_minutes} min · Evaluacion docente: ${room.teacher_evaluation_minutes} min · Oportunidades: ${room.max_attempts}</div>
                         </div>
                         <div class="btn-group btn-group-sm align-self-start">
@@ -707,8 +953,9 @@ if (!is_authenticated() || (!is_admin() && !is_teacher())) {
             document.getElementById('maxAttempts').value = room.max_attempts || 1;
             renderRoomTeachers((room.teachers || []).map(t => t.id));
             refreshResponsibleTeacherOptions(room.responsible_teacher_id || '');
-            const orderMap = Object.fromEntries((room.projects || []).map(p => [p.id, p.presentation_order || 0]));
-            await loadRoomProjects((room.projects || []).map(p => p.id), orderMap);
+            const selectedProjects = orderedRoomProjects(room);
+            const orderMap = Object.fromEntries(selectedProjects.map(p => [p.id, p.presentation_order || 0]));
+            await loadRoomProjects(selectedProjects.map(p => p.id), orderMap);
         }
 
         function resetRoomForm() {
@@ -731,6 +978,17 @@ if (!is_authenticated() || (!is_admin() && !is_teacher())) {
                     projectOrder[input.dataset.projectId] = Number(input.value || 0);
                 }
             });
+            const duplicateProjectIds = projectIds.filter((projectId, index) => projectIds.indexOf(projectId) !== index);
+            if (duplicateProjectIds.length) {
+                showAlert('#alertContainer', 'danger', 'Hay proyectos duplicados en la sala. Revisa la seleccion antes de guardar.');
+                return;
+            }
+            const selectedOrders = Object.values(projectOrder).filter(order => order > 0);
+            const duplicateOrders = selectedOrders.filter((order, index) => selectedOrders.indexOf(order) !== index);
+            if (duplicateOrders.length) {
+                showAlert('#alertContainer', 'danger', 'No repitas el orden de presentacion entre proyectos.');
+                return;
+            }
             const payload = {
                 nombre: normalizeRoomName(document.getElementById('roomName').value),
                 salon: normalizeClassroom(document.getElementById('roomClassroom').value) || null,
@@ -815,7 +1073,9 @@ if (!is_authenticated() || (!is_admin() && !is_teacher())) {
                 showAlert('#alertContainer', 'danger', 'No se pudo generar el Excel/CSV de la sala.');
                 return;
             }
-            const blob = await response.blob();
+            const sourceCsv = await response.text();
+            const csv = sourceCsv.startsWith('\uFEFF') ? sourceCsv : `\uFEFF${sourceCsv}`;
+            const blob = new Blob([csv], { type: 'text/csv;charset=utf-8' });
             const url = URL.createObjectURL(blob);
             const link = document.createElement('a');
             link.href = url;
@@ -828,8 +1088,10 @@ if (!is_authenticated() || (!is_admin() && !is_teacher())) {
             const criteriaResponse = await api.get('/evaluations/criteria', { _fresh: 1 });
             criteria = criteriaResponse.criteria || [];
             levels = criteriaResponse.levels || levels;
+            rubricScoreModes = criteriaResponse.score_modes || rubricScoreModes;
             groupCriteria();
             const semester = document.getElementById('rubricSemester').value;
+            document.getElementById('rubricScoreMode').value = currentRubricMode(semester);
             const list = document.getElementById('rubricCriteriaList');
             const semesterCriteria = criteriaBySemester[semester] || [];
 
@@ -895,14 +1157,31 @@ if (!is_authenticated() || (!is_admin() && !is_teacher())) {
                 showAlert('#alertContainer', 'warning', 'Este proyecto aun no esta liberado para evaluacion dentro de la sala.');
                 return;
             }
-            document.getElementById('generalEvaluationComment').value = '';
+            const draft = readScoreDraft(evaluationId);
+            document.getElementById('scoreDraftStatus').innerHTML = Object.keys(draft).length
+                ? '<i class="bi bi-save"></i> Se restauro un progreso guardado en este navegador.'
+                : '';
+            const project = evaluationProject(evaluation);
+            document.getElementById('scoreProjectContext').innerHTML = `
+                <div class="d-flex flex-wrap justify-content-between gap-2">
+                    <div>
+                        <h6 class="mb-1">${escapeHtml(project?.title || 'N/A')}</h6>
+                        <div class="small text-muted"><strong>Integrantes:</strong> ${escapeHtml(projectActiveAuthors(project) || '-')}</div>
+                        ${projectControlNumbers(project) ? `<div class="small text-muted"><strong>No. control:</strong> ${escapeHtml(projectControlNumbers(project))}</div>` : ''}
+                    </div>
+                    <span class="badge bg-secondary align-self-start">Orden #${escapeHtml(evaluation?.presentation_order || '-')}</span>
+                </div>
+            `;
+            document.getElementById('generalEvaluationComment').value = draft.general_comment || '';
             document.getElementById('titulationAptBox').classList.toggle('d-none', Number(evaluation?.semestre) !== 8);
-            document.getElementById('apto_titulacion').value = evaluation?.apto_titulacion === true ? '1' : (evaluation?.apto_titulacion === false ? '0' : '');
+            document.getElementById('apto_titulacion').value = draft.apto_titulacion ?? (evaluation?.apto_titulacion === true ? '1' : (evaluation?.apto_titulacion === false ? '0' : ''));
             if (evaluation?.current_teacher_has_scores && Number(evaluation.current_teacher_attempts) >= Number(evaluation.max_attempts)) {
                 showAlert('#alertContainer', 'danger', `Ya alcanzaste el limite de ${evaluation.max_attempts} oportunidad(es) para esta evaluacion.`);
                 return;
             }
             const semesterCriteria = criteriaBySemester[evaluation?.semestre] || [];
+            const rubricMode = currentRubricMode(evaluation?.semestre);
+            const numericOptions = numericLevelOptions();
             const container = document.getElementById('scoreFields');
             container.innerHTML = '';
 
@@ -913,15 +1192,26 @@ if (!is_authenticated() || (!is_admin() && !is_teacher())) {
             }
 
             semesterCriteria.forEach(criterion => {
+                const draftScore = (draft.scores || []).find(score => score.criterio === criterion.key) || {};
                 container.innerHTML += `
                     <div class="border rounded p-3 mb-3" data-criterion="${criterion.key}">
                         <label class="form-label fw-semibold">${escapeHtml(criterion.label)}</label>
                         <select class="form-select mb-2 criterion-level" required>
-                            ${levels.map(level => `<option value="${escapeHtml(levelValue(level))}">${escapeHtml(levelText(level))}</option>`).join('')}
+                            ${(rubricMode === 'numeric' ? numericOptions : levels).map(option => {
+                                const value = rubricMode === 'numeric' ? levelValue(option.level) : levelValue(option);
+                                const label = rubricMode === 'numeric' ? `${option.score} punto${option.score === 1 ? '' : 's'}` : levelText(option);
+                                return `<option value="${escapeHtml(value)}" ${String(draftScore.nivel || '') === String(value) ? 'selected' : ''}>${escapeHtml(label)}</option>`;
+                            }).join('')}
                         </select>
-                        <textarea class="form-control criterion-comment" rows="2" placeholder="Comentario opcional, no afecta el puntaje"></textarea>
+                        <textarea class="form-control criterion-comment" rows="2" placeholder="Comentario opcional, no afecta el puntaje">${escapeHtml(draftScore.comentario || '')}</textarea>
                     </div>`;
             });
+            container.querySelectorAll('select, textarea').forEach(input => {
+                input.oninput = saveScoreDraft;
+                input.onchange = saveScoreDraft;
+            });
+            document.getElementById('generalEvaluationComment').oninput = saveScoreDraft;
+            document.getElementById('apto_titulacion').onchange = saveScoreDraft;
             scoreModal.show();
         }
 
@@ -935,6 +1225,12 @@ if (!is_authenticated() || (!is_admin() && !is_teacher())) {
             }));
             try {
                 const evaluation = evaluations.find(item => String(item.id) === String(evaluationId));
+                const confirmSave = await confirmAction({
+                    title: 'Guardar evaluacion',
+                    text: `Se guardara la rubrica para ${evaluationProject(evaluation)?.title || 'este proyecto'}.`,
+                    confirmButtonText: 'Si, guardar'
+                });
+                if (!confirmSave) return;
                 let confirm_update = false;
                 if (evaluation?.current_teacher_has_scores) {
                     confirm_update = await confirmAction({
@@ -948,6 +1244,8 @@ if (!is_authenticated() || (!is_admin() && !is_teacher())) {
                 const aptValue = document.getElementById('apto_titulacion').value;
                 if (aptValue !== '') payload.apto_titulacion = aptValue === '1';
                 await api.post(`/evaluations/${evaluationId}/score`, payload);
+                clearScoreDraft(evaluationId);
+                document.getElementById('scoreEvaluationId').value = '';
                 scoreModal.hide();
                 showAlert('#alertContainer', 'success', 'Rubrica guardada correctamente');
                 loadEvaluations();
@@ -968,18 +1266,20 @@ if (!is_authenticated() || (!is_admin() && !is_teacher())) {
                         <h6 class="mb-0">${escapeHtml(teacher.teacher_name)}</h6>
                         <span class="badge bg-primary">${teacher.average}%</span>
                     </div>
-                    ${teacher.general_comment ? `<div class="alert alert-light border py-2">${escapeHtml(teacher.general_comment)}</div>` : ''}
-                    <div class="table-responsive">
-                        <table class="table table-sm mb-0">
-                            <tbody>
-                                ${teacher.scores.map(score => `
-                                    <tr>
-                                        <td>${escapeHtml(score.criterio_label)}</td>
-                                        <td><span class="badge bg-secondary">${escapeHtml(score.nivel_label || levelLabel(score.nivel))}</span><div class="small text-muted">${Number(score.puntaje ?? 0)} pts</div></td>
-                                        <td>${escapeHtml(score.comentario || '-')}</td>
-                                    </tr>`).join('')}
-                            </tbody>
-                        </table>
+                    ${teacher.general_comment ? `<div class="alert alert-light border py-2 mb-3"><strong>Comentario general:</strong><div class="mt-1" style="white-space:pre-wrap">${escapeHtml(teacher.general_comment)}</div></div>` : ''}
+                    <div class="d-grid gap-2">
+                        ${teacher.scores.map(score => `
+                            <div class="border rounded p-2">
+                                <div class="d-flex flex-wrap justify-content-between gap-2">
+                                    <strong>${escapeHtml(score.criterio_label)}</strong>
+                                    <span>
+                                        <span class="badge bg-secondary">${teacher.score_mode === 'numeric' ? `${Number(score.puntaje ?? 0)} de ${Number(score.puntaje_max || teacher.max_score || 5)}` : escapeHtml(score.nivel_label || levelLabel(score.nivel))}</span>
+                                        <span class="small text-muted ms-1">${Number(score.puntaje ?? 0)} pts</span>
+                                    </span>
+                                </div>
+                                <div class="small text-muted mt-2">Comentario de la pregunta</div>
+                                <div class="bg-light border rounded p-2 mt-1 ${score.comentario ? '' : 'text-muted'}" style="white-space:pre-wrap">${escapeHtml(score.comentario || 'Sin comentario para esta pregunta.')}</div>
+                            </div>`).join('')}
                     </div>
                 </div>`).join('');
             const feedbackBox = `
@@ -1016,8 +1316,10 @@ if (!is_authenticated() || (!is_admin() && !is_teacher())) {
             rubricModal = new bootstrap.Modal(document.getElementById('rubricModal'));
             scoreModal = new bootstrap.Modal(document.getElementById('scoreModal'));
             breakdownModal = new bootstrap.Modal(document.getElementById('breakdownModal'));
+            projectDetailsModal = new bootstrap.Modal(document.getElementById('projectDetailsModal'));
             roomsModal = new bootstrap.Modal(document.getElementById('roomsModal'));
             if (IS_ADMIN) evaluationManagersModal = new bootstrap.Modal(document.getElementById('evaluationManagersModal'));
+            document.getElementById('scoreModal').addEventListener('hide.bs.modal', saveScoreDraft);
             document.getElementById('roomDate')?.addEventListener('input', updateRoomAvailability);
             await loadInitialData();
             await loadEvaluations();
