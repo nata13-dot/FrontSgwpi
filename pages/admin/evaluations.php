@@ -682,6 +682,8 @@ if (!is_authenticated() || (!is_admin() && !is_teacher())) {
                         <td>
                             <div class="btn-group btn-group-sm">
                                 <button class="btn btn-outline-secondary" onclick="showProjectDetails(${evaluation.id})" title="Detalles del proyecto"><i class="bi bi-info-circle"></i></button>
+                                <button class="btn btn-outline-dark" onclick="downloadEvaluationReport(${evaluation.id}, 'pdf')" title="Reporte PDF"><i class="bi bi-file-earmark-pdf"></i></button>
+                                <button class="btn btn-outline-secondary" onclick="downloadEvaluationReport(${evaluation.id}, 'xls')" title="Reporte Excel"><i class="bi bi-file-earmark-spreadsheet"></i></button>
                                 <button class="btn btn-outline-success" onclick="openScoreModal(${evaluation.id})" title="Evaluar" ${disabled}><i class="bi bi-clipboard-check"></i></button>
                                 ${(evaluation.can_manage_evaluations || evaluation.is_room_responsible) ? `<button class="btn btn-outline-primary" onclick="askAdvanceRoom(${evaluation.evaluation_room_id})" title="Finalizar y continuar"><i class="bi bi-skip-forward"></i></button>` : ''}
                                 ${evaluation.can_manage_evaluations ? `<button class="btn btn-outline-danger" onclick="deleteEvaluation(${evaluation.id})" title="Eliminar"><i class="bi bi-trash"></i></button>` : ''}
@@ -1084,6 +1086,27 @@ if (!is_authenticated() || (!is_admin() && !is_teacher())) {
             URL.revokeObjectURL(url);
         }
 
+        async function downloadEvaluationReport(id, format) {
+            const extension = format === 'pdf' ? 'pdf' : 'xls';
+            const mime = format === 'pdf' ? 'application/pdf' : 'application/vnd.ms-excel;charset=utf-8';
+            const response = await fetch(`${API_BASE_URL}/evaluations/${id}/report.${extension}`, {
+                credentials: 'include',
+                headers: { Authorization: `Bearer ${auth.getToken()}` }
+            });
+            if (!response.ok) {
+                showAlert('#alertContainer', 'danger', `No se pudo generar el reporte ${extension.toUpperCase()}.`);
+                return;
+            }
+            const content = await response.blob();
+            const blob = new Blob([content], { type: mime });
+            const url = URL.createObjectURL(blob);
+            const link = document.createElement('a');
+            link.href = url;
+            link.download = `reporte_evaluacion_${id}.${extension}`;
+            link.click();
+            URL.revokeObjectURL(url);
+        }
+
         async function loadRubricCriteria() {
             const criteriaResponse = await api.get('/evaluations/criteria', { _fresh: 1 });
             criteria = criteriaResponse.criteria || [];
@@ -1273,7 +1296,7 @@ if (!is_authenticated() || (!is_admin() && !is_teacher())) {
                                 <div class="d-flex flex-wrap justify-content-between gap-2">
                                     <strong>${escapeHtml(score.criterio_label)}</strong>
                                     <span>
-                                        <span class="badge bg-secondary">${teacher.score_mode === 'numeric' ? `${Number(score.puntaje ?? 0)} de ${Number(score.puntaje_max || teacher.max_score || 5)}` : escapeHtml(score.nivel_label || levelLabel(score.nivel))}</span>
+                                        <span class="badge bg-secondary">${score.score_mode === 'numeric' ? `${Number(score.puntaje ?? 0)} de ${Number(score.puntaje_max || teacher.max_score || 5)}` : escapeHtml(score.nivel_label || levelLabel(score.nivel))}</span>
                                         <span class="small text-muted ms-1">${Number(score.puntaje ?? 0)} pts</span>
                                     </span>
                                 </div>
