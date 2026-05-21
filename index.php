@@ -374,7 +374,7 @@ $serverDashboardUrl = dashboard_url();
                 await api.post('/auth/password/request-token', {
                     id: recoveryState.id,
                     email: recoveryState.email
-                }, { _timeout: 45000 });
+                }, { _timeout: 20000 });
                 passwordRecoveryModal.hide();
                 document.getElementById('passwordTokenForm').reset();
                 document.getElementById('passwordTokenForm').classList.remove('was-validated');
