@@ -238,7 +238,6 @@ if (!is_authenticated() || !is_student()) {
             event.preventDefault();
             try {
                 const response = await api.post('/profile/complete-initial', new FormData(event.target));
-                localStorage.setItem('user', JSON.stringify(response.user));
                 await fetch('/api/set-session.php', {
                     method: 'POST',
                     credentials: 'include',

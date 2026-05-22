@@ -9,8 +9,9 @@ class AuthManager {
             window.axios.defaults.withCredentials = true;
         }
 
-        this.token = localStorage.getItem('auth_token');
-        this.user = JSON.parse(localStorage.getItem('user') || 'null');
+        const serverSession = window.SGPI_SESSION || {};
+        this.token = serverSession.token || null;
+        this.user = serverSession.user || null;
     }
 
     /**
@@ -25,9 +26,6 @@ class AuthManager {
 
             this.token = response.data.access_token;
             this.user = response.data.user;
-
-            localStorage.setItem('auth_token', this.token);
-            localStorage.setItem('user', JSON.stringify(this.user));
 
             return { success: true, data: response.data };
         } catch (error) {
@@ -51,8 +49,6 @@ class AuthManager {
         } finally {
             this.token = null;
             this.user = null;
-            localStorage.removeItem('auth_token');
-            localStorage.removeItem('user');
             window.location.href = '/pages/logout.php';
         }
     }
@@ -127,7 +123,6 @@ class AuthManager {
         }
 
         this.token = data.access_token;
-        localStorage.setItem('auth_token', this.token);
 
         try {
             await fetch('/api/set-session.php', {
@@ -149,8 +144,6 @@ class AuthManager {
     clearLocalSession() {
         this.token = null;
         this.user = null;
-        localStorage.removeItem('auth_token');
-        localStorage.removeItem('user');
         try {
             sessionStorage.clear();
         } catch (error) {

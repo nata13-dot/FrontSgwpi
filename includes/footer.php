@@ -2,6 +2,11 @@
 <script>
 window.SGPI_SETTINGS = window.SGPI_SETTINGS || {};
 window.SGPI_API_BASE_URL = '<?= API_BASE_URL ?>';
+window.SGPI_SESSION = <?= json_encode([
+    'authenticated' => is_authenticated(),
+    'token' => $auth_token,
+    'user' => $current_user
+], JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES) ?>;
 
 async function loadPublicSettings() {
     try {
@@ -84,13 +89,11 @@ window.addEventListener('orientationchange', syncGlobalNoticeOffset, { passive: 
 
 let idleLogoutTimer = null;
 function startIdleLogoutTimer(minutes) {
-    if (!localStorage.getItem('auth_token') || minutes <= 0) return;
+    if (!window.SGPI_SESSION?.authenticated || minutes <= 0) return;
     const timeoutMs = minutes * 60 * 1000;
     const resetTimer = () => {
         clearTimeout(idleLogoutTimer);
         idleLogoutTimer = setTimeout(() => {
-            localStorage.removeItem('auth_token');
-            localStorage.removeItem('user');
             window.location.replace('/pages/logout.php?reason=inactive');
         }, timeoutMs);
     };
@@ -104,12 +107,7 @@ function startIdleLogoutTimer(minutes) {
 loadPublicSettings();
 
 function currentAudienceContext() {
-    let user = null;
-    try {
-        user = JSON.parse(localStorage.getItem('user') || 'null');
-    } catch (error) {
-        user = null;
-    }
+    const user = window.SGPI_SESSION?.user || null;
 
     const roleId = Number(user?.perfil_id || 0);
     const pathname = window.location.pathname.replace(/\/+$/, '') || '/';
@@ -119,7 +117,7 @@ function currentAudienceContext() {
     return {
         isIndex,
         isDashboard,
-        authenticated: Boolean(localStorage.getItem('auth_token') && user),
+        authenticated: Boolean(window.SGPI_SESSION?.authenticated && user),
         role: roleId === 1 ? 'admin' : (roleId === 2 ? 'teacher' : (roleId === 3 ? 'student' : 'public'))
     };
 }
@@ -249,7 +247,7 @@ document.addEventListener('DOMContentLoaded', enhancePasswordVisibility);
 
 window.addEventListener('pageshow', function () {
     const serverAuthenticated = <?= is_authenticated() ? 'true' : 'false' ?>;
-    if (serverAuthenticated && !localStorage.getItem('auth_token')) {
+    if (serverAuthenticated && !window.SGPI_SESSION?.token) {
         window.location.replace('/pages/logout.php?reason=session_mismatch');
     }
 });

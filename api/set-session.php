@@ -12,9 +12,9 @@ if (json_last_error() !== JSON_ERROR_NONE) {
     exit;
 }
 
-if (is_array($data) && !empty($data['auth_token']) && isset($data['user'])) {
-    $_SESSION['auth_token'] = $data['auth_token'];
-    $_SESSION['user'] = $data['user'];
+if (is_array($data) && !empty($data['auth_token']) && isset($data['user']) && is_array($data['user'])) {
+    $remember = array_key_exists('remember', $data) ? !empty($data['remember']) : true;
+    persist_auth_session($data['auth_token'], $data['user'], $remember);
 
     echo json_encode(['success' => true]);
 } else {

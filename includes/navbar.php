@@ -189,9 +189,7 @@ async function logout() {
     });
     if (!confirmed) return;
 
-    const token = localStorage.getItem('auth_token');
-    localStorage.removeItem('auth_token');
-    localStorage.removeItem('user');
+    const token = window.SGPI_SESSION?.token || null;
 
     const apiBaseUrl = typeof API_BASE_URL !== 'undefined' ? API_BASE_URL : window.SGPI_API_BASE_URL;
 

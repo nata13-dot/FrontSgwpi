@@ -12,68 +12,7 @@ $serverDashboardUrl = dashboard_url();
     <?php if ($serverAuthenticated): ?>
     <script>
         (function () {
-            try {
-                const token = localStorage.getItem('auth_token');
-                const user = JSON.parse(localStorage.getItem('user') || 'null');
-                if (token && user) {
-                    window.location.replace('<?= $serverDashboardUrl ?>');
-                    return;
-                }
-            } catch (error) {
-                // Si el estado local esta corrupto, se limpia la sesion completa abajo.
-            }
-            window.location.replace('/pages/logout.php?reason=session_mismatch');
-        })();
-    </script>
-    <?php else: ?>
-    <script>
-        (async function () {
-            const token = localStorage.getItem('auth_token');
-            let user = null;
-
-            try {
-                user = JSON.parse(localStorage.getItem('user') || 'null');
-            } catch (error) {
-                user = null;
-            }
-
-            if (!token || !user) return;
-
-            const dashboardUrl = user.perfil_id === 1
-                ? '/pages/admin/dashboard.php'
-                : (user.perfil_id === 2 ? '/pages/teacher/dashboard.php' : '/pages/student/dashboard.php');
-
-            try {
-                const response = await fetch('<?= API_BASE_URL ?>/auth/me', {
-                    credentials: 'include',
-                    headers: {
-                        Accept: 'application/json',
-                        Authorization: `Bearer ${token}`
-                    }
-                });
-
-                if (!response.ok) throw new Error('invalid_token');
-
-                const sessionResponse = await fetch('/api/set-session.php', {
-                    method: 'POST',
-                    credentials: 'include',
-                    headers: {
-                        Accept: 'application/json',
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify({ auth_token: token, user })
-                });
-
-                if (!sessionResponse.ok) throw new Error('session_restore_failed');
-                window.location.replace(dashboardUrl);
-            } catch (error) {
-                localStorage.removeItem('auth_token');
-                localStorage.removeItem('user');
-                sessionStorage.clear();
-                if (window.location.hash !== '#login') {
-                    history.replaceState(null, '', '/index.php#login');
-                }
-            }
+            window.location.replace('<?= $serverDashboardUrl ?>');
         })();
     </script>
     <?php endif; ?>
@@ -91,6 +30,48 @@ $serverDashboardUrl = dashboard_url();
         .login-brand img {
             height: 54px;
             object-fit: contain;
+        }
+
+        .cookie-notice {
+            position: fixed;
+            left: 1rem;
+            right: 1rem;
+            bottom: 1rem;
+            z-index: 1080;
+            max-width: 760px;
+            margin: 0 auto;
+            background: #ffffff;
+            border: 1px solid rgba(27, 57, 106, 0.14);
+            border-radius: 8px;
+            box-shadow: 0 16px 42px rgba(15, 23, 42, 0.18);
+            padding: 1rem;
+        }
+
+        [data-theme="dark"] .cookie-notice {
+            background: #111827;
+            border-color: rgba(255, 255, 255, 0.12);
+            color: #f8fafc;
+        }
+
+        .cookie-notice[hidden] {
+            display: none !important;
+        }
+
+        .cookie-notice p {
+            margin: 0;
+            color: inherit;
+        }
+
+        @media (min-width: 768px) {
+            .cookie-notice {
+                display: flex;
+                align-items: center;
+                gap: 1rem;
+            }
+
+            .cookie-notice .btn {
+                flex: 0 0 auto;
+            }
         }
     </style>
 </head>
@@ -144,6 +125,15 @@ $serverDashboardUrl = dashboard_url();
                 </div>
             </div>
         </div>
+    </div>
+
+    <div class="cookie-notice" id="cookieNotice" role="status" aria-live="polite" hidden>
+        <p class="small">
+            Este sistema usa cookies necesarias para mantener tu sesion iniciada y proteger el acceso a tu cuenta.
+        </p>
+        <button type="button" class="btn btn-primary btn-sm mt-3 mt-md-0" id="cookieNoticeAccept">
+            Entendido
+        </button>
     </div>
 
     <div class="modal fade" id="loginModal" tabindex="-1" aria-labelledby="loginModalLabel" aria-hidden="true">
@@ -338,6 +328,26 @@ $serverDashboardUrl = dashboard_url();
         }
 
         document.addEventListener('DOMContentLoaded', () => {
+            const cookieNotice = document.getElementById('cookieNotice');
+            const cookieNoticeAccept = document.getElementById('cookieNoticeAccept');
+
+            try {
+                if (cookieNotice && localStorage.getItem('sgpi-cookie-notice-seen') !== '1') {
+                    cookieNotice.hidden = false;
+                }
+            } catch (error) {
+                if (cookieNotice) cookieNotice.hidden = false;
+            }
+
+            cookieNoticeAccept?.addEventListener('click', () => {
+                cookieNotice.hidden = true;
+                try {
+                    localStorage.setItem('sgpi-cookie-notice-seen', '1');
+                } catch (error) {
+                    // El aviso ya quedo cerrado en la pagina actual.
+                }
+            });
+
             document.querySelectorAll('[data-open-login]').forEach(link => {
                 link.addEventListener('click', event => {
                     event.preventDefault();
@@ -448,12 +458,10 @@ $serverDashboardUrl = dashboard_url();
 
                 auth.token = response.access_token;
                 auth.user = response.user;
-                localStorage.setItem('auth_token', auth.token);
-                localStorage.setItem('user', JSON.stringify(auth.user));
-
                 await axios.post('/api/set-session.php', {
                     auth_token: auth.getToken(),
-                    user: auth.getCurrentUser()
+                    user: auth.getCurrentUser(),
+                    remember: true
                 });
 
                 await Swal.fire({
@@ -502,7 +510,8 @@ $serverDashboardUrl = dashboard_url();
 
             await axios.post('/api/set-session.php', {
                 auth_token: auth.getToken(),
-                user: auth.getCurrentUser()
+                user: auth.getCurrentUser(),
+                remember: document.getElementById('rememberCheck')?.checked !== false
             });
 
             await Swal.fire({

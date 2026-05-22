@@ -72,7 +72,6 @@ document.getElementById('profileForm').addEventListener('submit', async e => {
     const data = new FormData(e.target);
     try {
         const res = await api.post('/profile', data);
-        localStorage.setItem('user', JSON.stringify(res.user));
         await fetch('/api/set-session.php', {
             method: 'POST',
             credentials: 'include',

@@ -1,6 +1,7 @@
 <?php
-session_start();
+require_once $_SERVER['DOCUMENT_ROOT'] . '/includes/config.php';
 $_SESSION = [];
+clear_auth_session_cookies();
 
 if (ini_get('session.use_cookies')) {
     $params = session_get_cookie_params();
