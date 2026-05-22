@@ -4,9 +4,6 @@ $section = isset($_GET['section']) ? $_GET['section'] : '';
 ?>
 
 <nav class="sidebar" id="appSidebar">
-    <button type="button" class="sidebar-auto-toggle" id="sidebarAutoToggle" aria-label="Expandir menu lateral" title="Expandir menu">
-        <i class="bi bi-layout-sidebar-inset"></i>
-    </button>
     <?php if (is_authenticated()): ?>
         <div class="sidebar-profile">
             <img src="<?= htmlspecialchars(profile_photo_url($current_user ?? null)) ?>" class="sidebar-profile-photo" alt="Perfil">

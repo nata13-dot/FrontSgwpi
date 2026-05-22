@@ -343,11 +343,11 @@ document.addEventListener('DOMContentLoaded', () => {
 
 document.addEventListener('DOMContentLoaded', () => {
     const sidebar = document.getElementById('appSidebar');
-    const toggle = document.getElementById('sidebarAutoToggle');
+    const profilePhoto = sidebar?.querySelector('.sidebar-profile-photo');
     const desktopQuery = window.matchMedia('(min-width: 769px)');
     let collapseTimer = null;
 
-    if (!sidebar || !toggle) return;
+    if (!sidebar) return;
 
     function isDesktop() {
         return desktopQuery.matches;
@@ -378,16 +378,24 @@ document.addEventListener('DOMContentLoaded', () => {
         if (!isDesktop()) return;
         sidebar.classList.add('sidebar-collapsed');
         sidebar.classList.remove('sidebar-expanded');
-        toggle.setAttribute('aria-label', 'Expandir menu lateral');
-        toggle.setAttribute('title', 'Expandir menu');
+        if (profilePhoto) {
+            profilePhoto.setAttribute('role', 'button');
+            profilePhoto.setAttribute('tabindex', '0');
+            profilePhoto.setAttribute('title', 'Expandir menu');
+            profilePhoto.setAttribute('aria-label', 'Expandir menu lateral');
+        }
     }
 
     function expandSidebar(scheduleCollapse = true) {
         if (!isDesktop()) return;
         sidebar.classList.remove('sidebar-collapsed');
         sidebar.classList.add('sidebar-expanded');
-        toggle.setAttribute('aria-label', 'Contraer menu lateral');
-        toggle.setAttribute('title', 'Contraer menu');
+        if (profilePhoto) {
+            profilePhoto.removeAttribute('role');
+            profilePhoto.removeAttribute('tabindex');
+            profilePhoto.removeAttribute('title');
+            profilePhoto.removeAttribute('aria-label');
+        }
         clearCollapseTimer();
         if (scheduleCollapse) {
             collapseTimer = setTimeout(collapseSidebar, 4500);
@@ -405,25 +413,35 @@ document.addEventListener('DOMContentLoaded', () => {
             collapseSidebar();
         } else {
             sidebar.classList.remove('sidebar-collapsed', 'sidebar-expanded');
+            if (profilePhoto) {
+                profilePhoto.removeAttribute('role');
+                profilePhoto.removeAttribute('tabindex');
+                profilePhoto.removeAttribute('title');
+                profilePhoto.removeAttribute('aria-label');
+            }
         }
     }
 
     setItemTitles();
     syncResponsiveState();
 
-    toggle.addEventListener('click', () => {
-        if (!isDesktop()) return;
-        if (sidebar.classList.contains('sidebar-collapsed')) {
-            expandSidebar(true);
-        } else {
-            collapseSidebar();
-        }
+    profilePhoto?.addEventListener('click', event => {
+        if (!isDesktop() || !sidebar.classList.contains('sidebar-collapsed')) return;
+        event.preventDefault();
+        expandSidebar(true);
+    });
+
+    profilePhoto?.addEventListener('keydown', event => {
+        if (!isDesktop() || !sidebar.classList.contains('sidebar-collapsed')) return;
+        if (!['Enter', ' '].includes(event.key)) return;
+        event.preventDefault();
+        expandSidebar(true);
     });
 
     sidebar.addEventListener('click', event => {
         if (!isDesktop() || !sidebar.classList.contains('sidebar-collapsed')) return;
-        const interactiveItem = event.target.closest('.sidebar-item, .sidebar-group summary, .sidebar-auto-toggle');
-        if (!interactiveItem || interactiveItem.classList.contains('sidebar-auto-toggle')) return;
+        const interactiveItem = event.target.closest('.sidebar-item, .sidebar-group summary');
+        if (!interactiveItem) return;
         event.preventDefault();
         expandSidebar(true);
     });
