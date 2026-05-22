@@ -1816,6 +1816,56 @@ input[type="reset"] {
     line-height: 1.2;
 }
 
+.evaluation-average-btn {
+    border: 0 !important;
+    color: #102033 !important;
+    font-weight: 800;
+    letter-spacing: 0;
+    box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.14), 0 4px 10px rgba(0, 0, 0, 0.08);
+}
+
+.evaluation-average-success {
+    background: #1f7a3f !important;
+    color: #fff !important;
+}
+
+.evaluation-average-warning {
+    background: #f2b705 !important;
+    color: #1f1a05 !important;
+}
+
+.evaluation-average-danger {
+    background: #b42318 !important;
+    color: #fff !important;
+}
+
+.evaluation-average-secondary,
+.evaluation-average-primary {
+    background: #355d8f !important;
+    color: #fff !important;
+}
+
+.evaluation-success-badge {
+    background-color: #1f6f3a !important;
+    color: #fff !important;
+}
+
+.evaluation-row-complete > td {
+    background-color: rgba(31, 111, 58, 0.12) !important;
+}
+
+.evaluation-report-btn {
+    border-color: #5b6678 !important;
+    color: #263241 !important;
+    background-color: #fff !important;
+}
+
+.evaluation-report-btn:hover,
+.evaluation-report-btn:focus {
+    background-color: #263241 !important;
+    color: #fff !important;
+}
+
 .evaluation-actions {
     display: grid;
     gap: 8px;
@@ -1858,6 +1908,52 @@ input[type="reset"] {
     .evaluation-cell-data {
         min-width: 165px;
     }
+}
+
+:root[data-theme="dark"] .evaluation-average-btn {
+    box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.22), 0 4px 12px rgba(0, 0, 0, 0.28);
+}
+
+:root[data-theme="dark"] .evaluation-average-success {
+    background: #2f8f55 !important;
+    color: #f5fff8 !important;
+}
+
+:root[data-theme="dark"] .evaluation-average-warning {
+    background: #f3c316 !important;
+    color: #151303 !important;
+}
+
+:root[data-theme="dark"] .evaluation-average-danger {
+    background: #d0443e !important;
+    color: #fff !important;
+}
+
+:root[data-theme="dark"] .evaluation-average-secondary,
+:root[data-theme="dark"] .evaluation-average-primary {
+    background: #6ea8dc !important;
+    color: #081525 !important;
+}
+
+:root[data-theme="dark"] .evaluation-success-badge {
+    background-color: #2d7a4c !important;
+    color: #f4fff8 !important;
+}
+
+:root[data-theme="dark"] .evaluation-row-complete > td {
+    background-color: rgba(45, 122, 76, 0.18) !important;
+}
+
+:root[data-theme="dark"] .evaluation-report-btn {
+    border-color: #8fa4bf !important;
+    background-color: #243149 !important;
+    color: #f2f6fb !important;
+}
+
+:root[data-theme="dark"] .evaluation-report-btn:hover,
+:root[data-theme="dark"] .evaluation-report-btn:focus {
+    background-color: #dce7f5 !important;
+    color: #101827 !important;
 }
 
 .advisor-admin-badge {
