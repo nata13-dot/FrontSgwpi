@@ -1747,6 +1747,119 @@ input[type="reset"] {
     border-top: 2px solid var(--border-color);
 }
 
+.evaluation-col-project,
+.evaluation-cell-project {
+    min-width: 220px;
+    width: 24%;
+}
+
+.evaluation-col-members,
+.evaluation-cell-members {
+    min-width: 190px;
+    width: 20%;
+}
+
+.evaluation-col-data,
+.evaluation-cell-data {
+    min-width: 180px;
+    width: 19%;
+}
+
+.evaluation-col-room,
+.evaluation-cell-room {
+    min-width: 130px;
+    width: 13%;
+}
+
+.evaluation-col-status,
+.evaluation-cell-status {
+    min-width: 105px;
+    width: 9%;
+}
+
+.evaluation-col-average,
+.evaluation-cell-average {
+    min-width: 135px;
+    width: 10%;
+}
+
+.evaluation-col-actions,
+.evaluation-cell-actions {
+    min-width: 130px;
+    width: 5%;
+}
+
+.table td.evaluation-cell-project,
+.table td.evaluation-cell-members,
+.table td.evaluation-cell-data,
+.table td.evaluation-cell-room,
+.table td.evaluation-cell-status,
+.table td.evaluation-cell-average,
+.table td.evaluation-cell-actions {
+    max-width: none;
+    white-space: normal;
+    overflow: visible;
+    text-overflow: initial;
+    overflow-wrap: anywhere;
+}
+
+.evaluation-cell-data .small,
+.evaluation-cell-members .small,
+.evaluation-cell-project .fw-semibold {
+    white-space: normal;
+    overflow-wrap: anywhere;
+}
+
+.evaluation-cell-average .btn {
+    width: 100%;
+    white-space: normal;
+    line-height: 1.2;
+}
+
+.evaluation-actions {
+    display: grid;
+    gap: 8px;
+    min-width: 118px;
+}
+
+.evaluation-start-btn {
+    display: inline-flex !important;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    width: 100%;
+    font-weight: 700;
+    box-shadow: 0 6px 14px rgba(33, 136, 56, 0.18);
+}
+
+.evaluation-secondary-actions {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(42px, 1fr));
+    gap: 6px;
+}
+
+.evaluation-secondary-actions .btn {
+    display: inline-flex !important;
+    align-items: center;
+    justify-content: center;
+    padding-left: 8px;
+    padding-right: 8px;
+}
+
+@media (max-width: 1199.98px) {
+    .evaluation-col-project,
+    .evaluation-cell-project {
+        min-width: 200px;
+    }
+
+    .evaluation-col-members,
+    .evaluation-cell-members,
+    .evaluation-col-data,
+    .evaluation-cell-data {
+        min-width: 165px;
+    }
+}
+
 .advisor-admin-badge {
     background-color: #6f42c1;
     color: #fff;
@@ -2462,6 +2575,12 @@ select {
         width: 250px !important;
         min-width: 250px !important;
         max-width: 250px;
+        position: sticky;
+        top: calc(var(--sgpi-global-notice-height, 0px) + 86px);
+        align-self: flex-start;
+        max-height: calc(100vh - var(--sgpi-global-notice-height, 0px) - 86px);
+        min-height: calc(100vh - var(--sgpi-global-notice-height, 0px) - 86px);
+        overflow-y: auto;
         transition: width 0.24s ease, min-width 0.24s ease, max-width 0.24s ease, box-shadow 0.24s ease;
     }
 

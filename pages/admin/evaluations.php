@@ -62,13 +62,13 @@ if (!is_authenticated() || (!is_admin() && !is_teacher())) {
                             <table class="table table-hover mb-0 align-middle">
                                 <thead>
                                     <tr>
-                                        <th>Proyecto</th>
-                                        <th>Integrantes</th>
-                                        <th>Datos clave</th>
-                                        <th>Sala y turno</th>
-                                        <th>Estado</th>
-                                        <th>Promedio global</th>
-                                        <th>Acciones</th>
+                                        <th class="evaluation-col-project">Proyecto</th>
+                                        <th class="evaluation-col-members">Integrantes</th>
+                                        <th class="evaluation-col-data">Datos clave</th>
+                                        <th class="evaluation-col-room">Sala y turno</th>
+                                        <th class="evaluation-col-status">Estado</th>
+                                        <th class="evaluation-col-average">Promedio</th>
+                                        <th class="evaluation-col-actions">Acciones</th>
                                     </tr>
                                 </thead>
                                 <tbody id="evaluationsTable">
@@ -736,7 +736,7 @@ if (!is_authenticated() || (!is_admin() && !is_teacher())) {
                 const evaluatedBadge = evaluation.evaluated_by_all ? '<span class="badge bg-success ms-2"><i class="bi bi-check2-circle"></i> Evaluado por todos</span>' : '';
                 tbody.innerHTML += `
                     <tr class="${evaluatedClass} ${isExpanded ? '' : 'd-none'}" data-evaluation-room-row="${escapeHtml(roomKey)}">
-                        <td>
+                        <td class="evaluation-cell-project">
                             <div class="d-flex align-items-start gap-2">
                                 <div>
                                     <div class="fw-semibold">${escapeHtml(project?.title || 'N/A')}${evaluatedBadge}</div>
@@ -744,33 +744,37 @@ if (!is_authenticated() || (!is_admin() && !is_teacher())) {
                                 </div>
                             </div>
                         </td>
-                        <td>
+                        <td class="evaluation-cell-members">
                             <div class="small">${escapeHtml(projectActiveAuthors(project) || '-')}</div>
                             ${projectControlNumbers(project) ? `<div class="text-muted small"><strong>No. control:</strong> ${escapeHtml(projectControlNumbers(project))}</div>` : ''}
                         </td>
-                        <td>${projectKeyData(project)}</td>
-                        <td>
+                        <td class="evaluation-cell-data">${projectKeyData(project)}</td>
+                        <td class="evaluation-cell-room">
                             <span class="badge ${statusClass}">Orden #${evaluation.presentation_order || '-'}</span>
                             <div class="small mt-1">${escapeHtml(evaluation.sala || evaluation.room?.nombre || '-')}</div>
                             <div class="text-muted small">${evaluation.fecha_exposicion ? new Date(evaluation.fecha_exposicion).toLocaleString('es-MX') : '-'}</div>
                         </td>
-                        <td>
+                        <td class="evaluation-cell-status">
                             <span class="badge bg-secondary">${escapeHtml(evaluation.resultado)}</span>
                             <div class="small text-muted mt-1">${escapeHtml(evaluation.sequence_status || evaluation.estado || '-')}</div>
                         </td>
-                        <td>
+                        <td class="evaluation-cell-average">
                             <button class="btn btn-sm btn-outline-${averageColor}" onclick="showBreakdown(${evaluation.id})">
                                 ${evaluation.global_average}% · ${evaluation.evaluators_count}/${evaluation.expected_evaluators_count || 0} evaluadores
                             </button>
                         </td>
-                        <td>
-                            <div class="btn-group btn-group-sm">
-                                <button class="btn btn-outline-secondary" onclick="showProjectDetails(${evaluation.id})" title="Detalles del proyecto"><i class="bi bi-info-circle"></i></button>
-                                <button class="btn btn-outline-dark" onclick="downloadEvaluationReport(${evaluation.id})" title="Reporte PDF"><i class="bi bi-file-earmark-pdf"></i></button>
-                                ${(evaluation.can_manage_evaluations && Number(evaluation.semestre) === 8) ? `<button class="btn btn-outline-primary" onclick="openRubricModal(${evaluation.project_id})" title="Rubrica personalizada"><i class="bi bi-ui-checks-grid"></i></button>` : ''}
-                                <button class="btn btn-outline-success" onclick="openScoreModal(${evaluation.id})" title="Evaluar" ${disabled}><i class="bi bi-clipboard-check"></i></button>
-                                ${(evaluation.can_manage_evaluations || evaluation.is_room_responsible) ? `<button class="btn btn-outline-primary" onclick="askAdvanceRoom(${evaluation.evaluation_room_id})" title="Finalizar y continuar"><i class="bi bi-skip-forward"></i></button>` : ''}
-                                ${evaluation.can_manage_evaluations ? `<button class="btn btn-outline-danger" onclick="deleteEvaluation(${evaluation.id})" title="Eliminar"><i class="bi bi-trash"></i></button>` : ''}
+                        <td class="evaluation-cell-actions">
+                            <div class="evaluation-actions">
+                                <button class="btn btn-sm btn-success evaluation-start-btn" onclick="openScoreModal(${evaluation.id})" title="Evaluar" ${disabled}>
+                                    <i class="bi bi-clipboard-check"></i><span>Evaluar</span>
+                                </button>
+                                <div class="evaluation-secondary-actions">
+                                    <button class="btn btn-sm btn-outline-secondary" onclick="showProjectDetails(${evaluation.id})" title="Detalles del proyecto"><i class="bi bi-info-circle"></i></button>
+                                    <button class="btn btn-sm btn-outline-dark" onclick="downloadEvaluationReport(${evaluation.id})" title="Reporte PDF"><i class="bi bi-file-earmark-pdf"></i></button>
+                                    ${(evaluation.can_manage_evaluations && Number(evaluation.semestre) === 8) ? `<button class="btn btn-sm btn-outline-primary" onclick="openRubricModal(${evaluation.project_id})" title="Rubrica personalizada"><i class="bi bi-ui-checks-grid"></i></button>` : ''}
+                                    ${(evaluation.can_manage_evaluations || evaluation.is_room_responsible) ? `<button class="btn btn-sm btn-outline-primary" onclick="askAdvanceRoom(${evaluation.evaluation_room_id})" title="Finalizar y continuar"><i class="bi bi-skip-forward"></i></button>` : ''}
+                                    ${evaluation.can_manage_evaluations ? `<button class="btn btn-sm btn-outline-danger" onclick="deleteEvaluation(${evaluation.id})" title="Eliminar"><i class="bi bi-trash"></i></button>` : ''}
+                                </div>
                             </div>
                         </td>
                     </tr>`;
