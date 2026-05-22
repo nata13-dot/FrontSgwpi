@@ -1742,6 +1742,11 @@ input[type="reset"] {
     box-shadow: inset 0 1px 0 rgba(240, 173, 78, 0.25), inset 0 -1px 0 rgba(240, 173, 78, 0.25);
 }
 
+.evaluation-room-header td {
+    background: var(--soft-bg);
+    border-top: 2px solid var(--border-color);
+}
+
 .advisor-admin-badge {
     background-color: #6f42c1;
     color: #fff;

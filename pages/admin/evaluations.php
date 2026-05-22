@@ -311,6 +311,7 @@ if (!is_authenticated() || (!is_admin() && !is_teacher())) {
         let teachers = [];
         let rooms = [];
         let evaluations = [];
+        let expandedEvaluationRooms = new Set();
         let criteria = [];
         let criteriaBySemester = {};
         let levels = [];
@@ -629,6 +630,54 @@ if (!is_authenticated() || (!is_admin() && !is_teacher())) {
             renderRoomOptions();
         }
 
+        function evaluationRoomKey(evaluation) {
+            return String(evaluation.room?.id || evaluation.evaluation_room_id || 'sin-sala');
+        }
+
+        function evaluationRoomGroups(items) {
+            return items.reduce((groups, evaluation) => {
+                const key = evaluationRoomKey(evaluation);
+                if (!groups[key]) {
+                    groups[key] = {
+                        total: 0,
+                        evaluated: 0,
+                        active: 0,
+                        pending: 0
+                    };
+                }
+                groups[key].total++;
+                if (evaluation.evaluated_by_all) groups[key].evaluated++;
+                if (evaluation.sequence_status === 'activo') groups[key].active++;
+                if (!evaluation.evaluated_by_all) groups[key].pending++;
+                return groups;
+            }, {});
+        }
+
+        function cssEscape(value) {
+            if (window.CSS && typeof window.CSS.escape === 'function') {
+                return window.CSS.escape(String(value));
+            }
+            return String(value).replace(/[^a-zA-Z0-9_-]/g, '\\$&');
+        }
+
+        function toggleEvaluationRoom(roomKey) {
+            const key = String(roomKey);
+            const expanded = expandedEvaluationRooms.has(key);
+            if (expanded) {
+                expandedEvaluationRooms.delete(key);
+            } else {
+                expandedEvaluationRooms.add(key);
+            }
+
+            document.querySelectorAll(`[data-evaluation-room-row="${cssEscape(key)}"]`).forEach(row => {
+                row.classList.toggle('d-none', expanded);
+            });
+            const icon = document.querySelector(`[data-evaluation-room-icon="${cssEscape(key)}"]`);
+            if (icon) icon.className = expanded ? 'bi bi-chevron-right' : 'bi bi-chevron-down';
+            const label = document.querySelector(`[data-evaluation-room-label="${cssEscape(key)}"]`);
+            if (label) label.textContent = expanded ? 'Desplegar' : 'Ocultar';
+        }
+
         async function loadEvaluations(showLoading = true, fresh = false) {
             const projectId = document.getElementById('projectFilter').value;
             const params = projectId ? { project_id: projectId } : {};
@@ -647,17 +696,32 @@ if (!is_authenticated() || (!is_admin() && !is_teacher())) {
             }
 
             let lastRoomKey = null;
+            const roomGroups = evaluationRoomGroups(evaluations);
             evaluations.forEach(evaluation => {
-                const roomKey = evaluation.room?.id || 'sin-sala';
+                const roomKey = evaluationRoomKey(evaluation);
+                const isExpanded = expandedEvaluationRooms.has(roomKey);
                 if (roomKey !== lastRoomKey) {
                     lastRoomKey = roomKey;
                     const room = evaluation.room;
+                    const stats = roomGroups[roomKey] || { total: 0, evaluated: 0, active: 0, pending: 0 };
                     tbody.innerHTML += `
-                        <tr class="table-light">
+                        <tr class="table-light evaluation-room-header">
                             <td colspan="7">
                                 <div class="d-flex flex-wrap justify-content-between align-items-center gap-2">
-                                    <strong>${escapeHtml(room?.nombre || 'Sin sala')}</strong>
-                                    <span class="text-muted small">${escapeHtml(room?.salon || '-')} · Responsable: ${escapeHtml(fullName(room?.responsible_teacher) || '-')}</span>
+                                    <button type="button" class="btn btn-sm btn-outline-primary d-inline-flex align-items-center gap-2" onclick="toggleEvaluationRoom('${escapeHtml(roomKey)}')">
+                                        <i class="bi ${isExpanded ? 'bi-chevron-down' : 'bi-chevron-right'}" data-evaluation-room-icon="${escapeHtml(roomKey)}"></i>
+                                        <span data-evaluation-room-label="${escapeHtml(roomKey)}">${isExpanded ? 'Ocultar' : 'Desplegar'}</span>
+                                    </button>
+                                    <div class="flex-grow-1">
+                                        <strong>${escapeHtml(room?.nombre || 'Sin sala')}</strong>
+                                        <span class="text-muted small d-block">${escapeHtml(room?.salon || '-')} · Responsable: ${escapeHtml(fullName(room?.responsible_teacher) || '-')}</span>
+                                    </div>
+                                    <div class="d-flex flex-wrap gap-2">
+                                        <span class="badge bg-secondary">${stats.total} proyecto${stats.total === 1 ? '' : 's'}</span>
+                                        <span class="badge bg-success">${stats.evaluated} evaluado${stats.evaluated === 1 ? '' : 's'}</span>
+                                        ${stats.active ? `<span class="badge bg-primary">${stats.active} en turno</span>` : ''}
+                                        ${stats.pending ? `<span class="badge bg-warning text-dark">${stats.pending} pendiente${stats.pending === 1 ? '' : 's'}</span>` : ''}
+                                    </div>
                                 </div>
                             </td>
                         </tr>`;
@@ -671,7 +735,7 @@ if (!is_authenticated() || (!is_admin() && !is_teacher())) {
                 const evaluatedClass = evaluation.evaluated_by_all ? 'table-success' : '';
                 const evaluatedBadge = evaluation.evaluated_by_all ? '<span class="badge bg-success ms-2"><i class="bi bi-check2-circle"></i> Evaluado por todos</span>' : '';
                 tbody.innerHTML += `
-                    <tr class="${evaluatedClass}">
+                    <tr class="${evaluatedClass} ${isExpanded ? '' : 'd-none'}" data-evaluation-room-row="${escapeHtml(roomKey)}">
                         <td>
                             <div class="d-flex align-items-start gap-2">
                                 <div>
