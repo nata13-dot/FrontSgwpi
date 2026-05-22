@@ -340,3 +340,105 @@ document.addEventListener('DOMContentLoaded', () => {
     const tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
     tooltipTriggerList.map(tooltipTriggerEl => new bootstrap.Tooltip(tooltipTriggerEl));
 });
+
+document.addEventListener('DOMContentLoaded', () => {
+    const sidebar = document.getElementById('appSidebar');
+    const toggle = document.getElementById('sidebarAutoToggle');
+    const desktopQuery = window.matchMedia('(min-width: 769px)');
+    let collapseTimer = null;
+
+    if (!sidebar || !toggle) return;
+
+    function isDesktop() {
+        return desktopQuery.matches;
+    }
+
+    function sidebarLabel(element) {
+        return element.querySelector('span')?.textContent?.trim()
+            || element.querySelector('strong')?.textContent?.trim()
+            || element.getAttribute('aria-label')
+            || '';
+    }
+
+    function setItemTitles() {
+        sidebar.querySelectorAll('.sidebar-item, .sidebar-group summary').forEach(item => {
+            const label = sidebarLabel(item);
+            if (label && !item.getAttribute('title')) item.setAttribute('title', label);
+        });
+    }
+
+    function clearCollapseTimer() {
+        if (collapseTimer) {
+            clearTimeout(collapseTimer);
+            collapseTimer = null;
+        }
+    }
+
+    function collapseSidebar() {
+        if (!isDesktop()) return;
+        sidebar.classList.add('sidebar-collapsed');
+        sidebar.classList.remove('sidebar-expanded');
+        toggle.setAttribute('aria-label', 'Expandir menu lateral');
+        toggle.setAttribute('title', 'Expandir menu');
+    }
+
+    function expandSidebar(scheduleCollapse = true) {
+        if (!isDesktop()) return;
+        sidebar.classList.remove('sidebar-collapsed');
+        sidebar.classList.add('sidebar-expanded');
+        toggle.setAttribute('aria-label', 'Contraer menu lateral');
+        toggle.setAttribute('title', 'Contraer menu');
+        clearCollapseTimer();
+        if (scheduleCollapse) {
+            collapseTimer = setTimeout(collapseSidebar, 4500);
+        }
+    }
+
+    function keepOpenBriefly() {
+        if (!isDesktop() || sidebar.classList.contains('sidebar-collapsed')) return;
+        expandSidebar(true);
+    }
+
+    function syncResponsiveState() {
+        clearCollapseTimer();
+        if (isDesktop()) {
+            collapseSidebar();
+        } else {
+            sidebar.classList.remove('sidebar-collapsed', 'sidebar-expanded');
+        }
+    }
+
+    setItemTitles();
+    syncResponsiveState();
+
+    toggle.addEventListener('click', () => {
+        if (!isDesktop()) return;
+        if (sidebar.classList.contains('sidebar-collapsed')) {
+            expandSidebar(true);
+        } else {
+            collapseSidebar();
+        }
+    });
+
+    sidebar.addEventListener('click', event => {
+        if (!isDesktop() || !sidebar.classList.contains('sidebar-collapsed')) return;
+        const interactiveItem = event.target.closest('.sidebar-item, .sidebar-group summary, .sidebar-auto-toggle');
+        if (!interactiveItem || interactiveItem.classList.contains('sidebar-auto-toggle')) return;
+        event.preventDefault();
+        expandSidebar(true);
+    });
+
+    sidebar.addEventListener('mousemove', keepOpenBriefly, { passive: true });
+    sidebar.addEventListener('focusin', () => expandSidebar(true));
+    sidebar.addEventListener('mouseleave', () => {
+        if (!isDesktop()) return;
+        clearCollapseTimer();
+        collapseTimer = setTimeout(collapseSidebar, 1400);
+    }, { passive: true });
+
+    if (desktopQuery.addEventListener) {
+        desktopQuery.addEventListener('change', syncResponsiveState);
+    } else {
+        desktopQuery.addListener(syncResponsiveState);
+    }
+});

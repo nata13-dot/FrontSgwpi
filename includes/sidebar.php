@@ -3,7 +3,10 @@ $current_page = basename($_SERVER['PHP_SELF']);
 $section = isset($_GET['section']) ? $_GET['section'] : '';
 ?>
 
-<nav class="sidebar">
+<nav class="sidebar" id="appSidebar">
+    <button type="button" class="sidebar-auto-toggle" id="sidebarAutoToggle" aria-label="Expandir menu lateral" title="Expandir menu">
+        <i class="bi bi-layout-sidebar-inset"></i>
+    </button>
     <?php if (is_authenticated()): ?>
         <div class="sidebar-profile">
             <img src="<?= htmlspecialchars(profile_photo_url($current_user ?? null)) ?>" class="sidebar-profile-photo" alt="Perfil">
@@ -14,7 +17,7 @@ $section = isset($_GET['section']) ? $_GET['section'] : '';
         </div>
     <?php endif; ?>
     <?php if (is_admin()): ?>
-        <div style="padding: 0 20px; margin-bottom: 20px;"><h6 class="text-muted text-uppercase" style="font-size: 0.85rem;">Administracion</h6></div>
+        <div class="sidebar-section-title" style="padding: 0 20px; margin-bottom: 20px;"><h6 class="text-muted text-uppercase" style="font-size: 0.85rem;">Administracion</h6></div>
         <a href="/pages/admin/dashboard.php" class="sidebar-item <?= $current_page == 'dashboard.php' ? 'active' : '' ?>"><i class="bi bi-speedometer2"></i><span>Inicio</span></a>
         <details class="sidebar-group" <?= in_array($current_page, ['users.php', 'advisors.php']) ? 'open' : '' ?>>
             <summary><i class="bi bi-people"></i><span>Personas</span><i class="bi bi-chevron-down ms-auto"></i></summary>
@@ -43,7 +46,7 @@ $section = isset($_GET['section']) ? $_GET['section'] : '';
         </details>
         <a href="/pages/profile.php" class="sidebar-item <?= $current_page == 'profile.php' ? 'active' : '' ?>"><i class="bi bi-person-circle"></i><span>Mi Perfil</span></a>
     <?php elseif (is_teacher()): ?>
-        <div style="padding: 0 20px; margin-bottom: 20px;"><h6 class="text-muted text-uppercase" style="font-size: 0.85rem;">Docente</h6></div>
+        <div class="sidebar-section-title" style="padding: 0 20px; margin-bottom: 20px;"><h6 class="text-muted text-uppercase" style="font-size: 0.85rem;">Docente</h6></div>
         <a href="/pages/teacher/dashboard.php" class="sidebar-item <?= $current_page == 'dashboard.php' ? 'active' : '' ?>"><i class="bi bi-speedometer2"></i><span>Inicio</span></a>
         <details class="sidebar-group" <?= in_array($current_page, ['my-projects.php', 'proposal-review.php', 'evaluations.php', 'evaluation-documents.php']) ? 'open' : '' ?>>
             <summary><i class="bi bi-diagram-3"></i><span>Proyectos</span><i class="bi bi-chevron-down ms-auto"></i></summary>
@@ -62,7 +65,7 @@ $section = isset($_GET['section']) ? $_GET['section'] : '';
         </details>
         <a href="/pages/profile.php" class="sidebar-item <?= $current_page == 'profile.php' ? 'active' : '' ?>"><i class="bi bi-person-circle"></i><span>Mi Perfil</span></a>
     <?php else: ?>
-        <div style="padding: 0 20px; margin-bottom: 20px;"><h6 class="text-muted text-uppercase" style="font-size: 0.85rem;">Estudiante</h6></div>
+        <div class="sidebar-section-title" style="padding: 0 20px; margin-bottom: 20px;"><h6 class="text-muted text-uppercase" style="font-size: 0.85rem;">Estudiante</h6></div>
         <a href="/pages/student/dashboard.php" class="sidebar-item <?= $current_page == 'dashboard.php' ? 'active' : '' ?>"><i class="bi bi-speedometer2"></i><span>Inicio</span></a>
         <details class="sidebar-group" <?= in_array($current_page, ['proposal-register.php', 'evaluation-documents.php']) ? 'open' : '' ?>>
             <summary><i class="bi bi-diagram-3"></i><span>Proyectos</span><i class="bi bi-chevron-down ms-auto"></i></summary>
