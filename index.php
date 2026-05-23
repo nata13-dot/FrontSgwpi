@@ -32,6 +32,194 @@ $serverDashboardUrl = dashboard_url();
             object-fit: contain;
         }
 
+        .index-hero {
+            background: url('/assets/img/ITSSMT/fondo.jpg');
+            background-size: cover;
+            background-position: center;
+            min-height: 540px;
+            padding: 96px 0 72px;
+            position: relative;
+            display: flex;
+            align-items: center;
+        }
+
+        .index-hero .overlay {
+            background: linear-gradient(90deg, rgba(8, 26, 54, 0.88), rgba(8, 26, 54, 0.55), rgba(8, 26, 54, 0.22));
+        }
+
+        .index-hero-content {
+            position: relative;
+            z-index: 1;
+            max-width: 760px;
+        }
+
+        .repository-hero-kicker {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.45rem;
+            color: #ffffff;
+            background: rgba(255, 255, 255, 0.14);
+            border: 1px solid rgba(255, 255, 255, 0.22);
+            border-radius: 999px;
+            padding: 0.45rem 0.8rem;
+            font-size: 0.9rem;
+            margin-bottom: 1rem;
+        }
+
+        .hero-actions {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.75rem;
+        }
+
+        .repository-spotlight {
+            background: linear-gradient(180deg, #f8fafc 0%, #ffffff 100%);
+        }
+
+        [data-theme="dark"] .repository-spotlight {
+            background: linear-gradient(180deg, #0f172a 0%, #111827 100%);
+        }
+
+        .repository-showcase {
+            border: 1px solid rgba(27, 57, 106, 0.14);
+            border-radius: 8px;
+            background: #ffffff;
+            box-shadow: 0 18px 48px rgba(15, 23, 42, 0.12);
+            overflow: hidden;
+        }
+
+        [data-theme="dark"] .repository-showcase {
+            background: #111827;
+            border-color: rgba(255, 255, 255, 0.12);
+        }
+
+        .repository-showcase-toolbar {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 1rem;
+            padding: 0.9rem 1rem;
+            border-bottom: 1px solid rgba(27, 57, 106, 0.12);
+            background: rgba(27, 57, 106, 0.05);
+        }
+
+        [data-theme="dark"] .repository-showcase-toolbar {
+            border-color: rgba(255, 255, 255, 0.12);
+            background: rgba(255, 255, 255, 0.04);
+        }
+
+        .repository-search-preview {
+            flex: 1;
+            display: flex;
+            align-items: center;
+            gap: 0.55rem;
+            min-width: 0;
+            color: #64748b;
+            background: #ffffff;
+            border: 1px solid rgba(100, 116, 139, 0.22);
+            border-radius: 8px;
+            padding: 0.55rem 0.75rem;
+            font-size: 0.92rem;
+        }
+
+        [data-theme="dark"] .repository-search-preview {
+            color: #cbd5e1;
+            background: #0f172a;
+            border-color: rgba(255, 255, 255, 0.12);
+        }
+
+        .repository-showcase-body {
+            display: grid;
+            grid-template-columns: 0.85fr 1.15fr;
+            min-height: 310px;
+        }
+
+        .repository-list-preview {
+            border-right: 1px solid rgba(27, 57, 106, 0.12);
+            padding: 0.85rem;
+        }
+
+        [data-theme="dark"] .repository-list-preview {
+            border-color: rgba(255, 255, 255, 0.12);
+        }
+
+        .repository-file-row {
+            display: flex;
+            gap: 0.7rem;
+            padding: 0.75rem;
+            border-radius: 8px;
+            align-items: flex-start;
+        }
+
+        .repository-file-row.active {
+            background: rgba(27, 57, 106, 0.08);
+        }
+
+        [data-theme="dark"] .repository-file-row.active {
+            background: rgba(96, 165, 250, 0.12);
+        }
+
+        .repository-file-icon {
+            width: 36px;
+            height: 36px;
+            border-radius: 8px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            background: #1B396A;
+            color: #ffffff;
+            flex: 0 0 auto;
+        }
+
+        .repository-reader-preview {
+            padding: 1.1rem;
+            background: linear-gradient(135deg, rgba(27, 57, 106, 0.08), rgba(255, 255, 255, 0));
+        }
+
+        [data-theme="dark"] .repository-reader-preview {
+            background: linear-gradient(135deg, rgba(96, 165, 250, 0.12), rgba(17, 24, 39, 0));
+        }
+
+        .repository-reader-page {
+            background: #ffffff;
+            border: 1px solid rgba(100, 116, 139, 0.18);
+            border-radius: 8px;
+            min-height: 250px;
+            padding: 1.1rem;
+        }
+
+        [data-theme="dark"] .repository-reader-page {
+            background: #0f172a;
+            border-color: rgba(255, 255, 255, 0.12);
+        }
+
+        .repository-line {
+            height: 10px;
+            border-radius: 999px;
+            background: #dbe4ef;
+            margin-bottom: 0.7rem;
+        }
+
+        [data-theme="dark"] .repository-line {
+            background: #334155;
+        }
+
+        .repository-benefit {
+            display: flex;
+            gap: 0.75rem;
+            align-items: flex-start;
+        }
+
+        .repository-benefit i {
+            color: #1B396A;
+            font-size: 1.35rem;
+            line-height: 1.2;
+        }
+
+        [data-theme="dark"] .repository-benefit i {
+            color: #93c5fd;
+        }
+
         .cookie-notice {
             position: fixed;
             left: 1rem;
@@ -73,53 +261,192 @@ $serverDashboardUrl = dashboard_url();
                 flex: 0 0 auto;
             }
         }
+
+        @media (max-width: 991.98px) {
+            .index-hero {
+                min-height: 480px;
+                padding: 76px 0 56px;
+            }
+
+            .repository-showcase-body {
+                grid-template-columns: 1fr;
+            }
+
+            .repository-list-preview {
+                border-right: 0;
+                border-bottom: 1px solid rgba(27, 57, 106, 0.12);
+            }
+        }
+
+        @media (max-width: 575.98px) {
+            .index-hero {
+                min-height: auto;
+                padding: 64px 0 48px;
+            }
+
+            .index-hero h1 {
+                font-size: 2.35rem;
+            }
+
+            .hero-actions .btn {
+                width: 100%;
+            }
+
+            .repository-showcase-toolbar {
+                align-items: stretch;
+                flex-direction: column;
+            }
+        }
     </style>
 </head>
 <body>
     <?php require_once $_SERVER['DOCUMENT_ROOT'] . '/includes/navbar.php'; ?>
     
-    <div style="background: url('/assets/img/ITSSMT/fondo.jpg'); background-size: cover; background-position: center; padding: 100px 0; position: relative;">
+    <div class="index-hero">
         <div class="overlay"></div>
-        <div class="container-xl" style="position: relative; z-index: 1;">
-            <h1 class="display-3 fw-bold text-white mb-4">Sistema de Gestión de Proyectos Integradores</h1>
-            <p class="lead text-white mb-4">Instituto Tecnológico Superior de San Martín Texmelucan</p>
-            <button type="button" class="btn btn-light btn-lg" data-bs-toggle="modal" data-bs-target="#loginModal">
-                <i class="bi bi-box-arrow-in-right"></i> Iniciar Sesión
-            </button>
+        <div class="container-xl">
+            <div class="index-hero-content">
+                <div class="repository-hero-kicker">
+                    <i class="bi bi-archive"></i>
+                    Repositorio institucional de proyectos integradores
+                </div>
+                <h1 class="display-3 fw-bold text-white mb-4">Consulta, conserva y comparte el conocimiento generado en cada proyecto</h1>
+                <p class="lead text-white mb-4">Accede a documentos, entregables y evidencias academicas desde un repositorio central para estudiantes, docentes y evaluadores.</p>
+                <div class="hero-actions">
+                    <a href="/pages/repositorio.php" class="btn btn-light btn-lg">
+                        <i class="bi bi-search"></i> Explorar repositorio
+                    </a>
+                    <button type="button" class="btn btn-outline-light btn-lg" data-bs-toggle="modal" data-bs-target="#loginModal">
+                        <i class="bi bi-box-arrow-in-right"></i> Iniciar sesion
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="section repository-spotlight">
+        <div class="container-xl">
+            <div class="row g-5 align-items-center">
+                <div class="col-lg-5">
+                    <h2 class="section-title mb-3">Repositorio Digital</h2>
+                    <p class="section-subtitle mb-4">Un espacio para encontrar proyectos, revisar entregables y mantener disponible la memoria academica del instituto.</p>
+                    <div class="d-grid gap-3 mb-4">
+                        <div class="repository-benefit">
+                            <i class="bi bi-file-earmark-text"></i>
+                            <div>
+                                <h5 class="mb-1">Documentos organizados</h5>
+                                <p class="text-muted mb-0">Consulta archivos por proyecto, categoria, periodo y datos clave.</p>
+                            </div>
+                        </div>
+                        <div class="repository-benefit">
+                            <i class="bi bi-eye"></i>
+                            <div>
+                                <h5 class="mb-1">Lectura rapida</h5>
+                                <p class="text-muted mb-0">Previsualiza evidencias y materiales sin perder el contexto del sistema.</p>
+                            </div>
+                        </div>
+                        <div class="repository-benefit">
+                            <i class="bi bi-mortarboard"></i>
+                            <div>
+                                <h5 class="mb-1">Referencia academica</h5>
+                                <p class="text-muted mb-0">Facilita que nuevas generaciones conozcan proyectos previos y buenas practicas.</p>
+                            </div>
+                        </div>
+                    </div>
+                    <a href="/pages/repositorio.php" class="btn btn-primary btn-lg">
+                        <i class="bi bi-archive"></i> Ir al repositorio
+                    </a>
+                </div>
+                <div class="col-lg-7">
+                    <div class="repository-showcase" aria-label="Vista previa del repositorio digital">
+                        <div class="repository-showcase-toolbar">
+                            <div class="repository-search-preview">
+                                <i class="bi bi-search"></i>
+                                Buscar por proyecto, autor, empresa o documento
+                            </div>
+                            <span class="badge bg-primary">Repositorio</span>
+                        </div>
+                        <div class="repository-showcase-body">
+                            <div class="repository-list-preview">
+                                <div class="repository-file-row active">
+                                    <span class="repository-file-icon"><i class="bi bi-file-earmark-pdf"></i></span>
+                                    <div>
+                                        <div class="fw-semibold">Proyecto integrador</div>
+                                        <div class="text-muted small">Reporte final · Evidencia academica</div>
+                                    </div>
+                                </div>
+                                <div class="repository-file-row">
+                                    <span class="repository-file-icon"><i class="bi bi-file-earmark-slides"></i></span>
+                                    <div>
+                                        <div class="fw-semibold">Presentacion</div>
+                                        <div class="text-muted small">Material de exposicion</div>
+                                    </div>
+                                </div>
+                                <div class="repository-file-row">
+                                    <span class="repository-file-icon"><i class="bi bi-tags"></i></span>
+                                    <div>
+                                        <div class="fw-semibold">Etiquetas y categorias</div>
+                                        <div class="text-muted small">Busqueda por areas y entregables</div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="repository-reader-preview">
+                                <div class="repository-reader-page">
+                                    <div class="d-flex align-items-center justify-content-between mb-3">
+                                        <span class="badge bg-light text-dark">Vista de lectura</span>
+                                        <span class="text-muted small">Documento consultable</span>
+                                    </div>
+                                    <div class="repository-line" style="width: 76%;"></div>
+                                    <div class="repository-line" style="width: 92%;"></div>
+                                    <div class="repository-line" style="width: 64%;"></div>
+                                    <div class="repository-line mt-4" style="width: 88%;"></div>
+                                    <div class="repository-line" style="width: 82%;"></div>
+                                    <div class="repository-line" style="width: 54%;"></div>
+                                    <div class="d-flex flex-wrap gap-2 mt-4">
+                                        <span class="badge bg-secondary">PDF</span>
+                                        <span class="badge bg-secondary">Entregable</span>
+                                        <span class="badge bg-secondary">Proyecto</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
         </div>
     </div>
 
     <div class="section">
         <div class="container-xl">
-            <h2 class="section-title text-center mb-5">Características Principales</h2>
+            <h2 class="section-title text-center mb-5">Gestion academica conectada al repositorio</h2>
             
             <div class="row g-4">
                 <div class="col-lg-4">
-                    <div class="card">
+                    <div class="card h-100">
                         <div class="card-body text-center">
                             <i class="bi bi-folder2" style="font-size: 3rem; color: #1B396A;"></i>
-                            <h5 class="mt-3">Gestión de Proyectos</h5>
-                            <p class="text-muted">Administra tus proyectos integradores de forma centralizada</p>
+                            <h5 class="mt-3">Gestion de proyectos</h5>
+                            <p class="text-muted">Administra proyectos integradores y conserva sus evidencias en un mismo flujo.</p>
                         </div>
                     </div>
                 </div>
-                
+
                 <div class="col-lg-4">
-                    <div class="card">
+                    <div class="card h-100">
                         <div class="card-body text-center">
-                            <i class="bi bi-archive" style="font-size: 3rem; color: #1B396A;"></i>
-                            <h5 class="mt-3">Repositorio Digital</h5>
-                            <p class="text-muted">Almacena y organiza todos tus documentos y entregables</p>
+                            <i class="bi bi-clipboard-check" style="font-size: 3rem; color: #1B396A;"></i>
+                            <h5 class="mt-3">Evaluacion documentada</h5>
+                            <p class="text-muted">Relaciona entregables, rubricas y resultados para dar seguimiento academico.</p>
                         </div>
                     </div>
                 </div>
-                
+
                 <div class="col-lg-4">
-                    <div class="card">
+                    <div class="card h-100">
                         <div class="card-body text-center">
                             <i class="bi bi-people" style="font-size: 3rem; color: #1B396A;"></i>
-                            <h5 class="mt-3">Colaboración</h5>
-                            <p class="text-muted">Trabaja con docentes y compañeros de forma eficiente</p>
+                            <h5 class="mt-3">Colaboracion</h5>
+                            <p class="text-muted">Facilita el trabajo entre estudiantes, docentes y responsables de evaluacion.</p>
                         </div>
                     </div>
                 </div>

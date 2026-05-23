@@ -772,7 +772,6 @@ if (!is_authenticated() || (!is_admin() && !is_teacher())) {
                                     <button class="btn btn-sm btn-outline-secondary" onclick="showProjectDetails(${evaluation.id})" title="Detalles del proyecto"><i class="bi bi-info-circle"></i></button>
                                     <button class="btn btn-sm btn-outline-secondary evaluation-report-btn" onclick="downloadEvaluationReport(${evaluation.id})" title="Reporte PDF"><i class="bi bi-file-earmark-pdf"></i></button>
                                     ${(evaluation.can_manage_evaluations && Number(evaluation.semestre) === 8) ? `<button class="btn btn-sm btn-outline-primary" onclick="openRubricModal(${evaluation.project_id})" title="Rubrica personalizada"><i class="bi bi-ui-checks-grid"></i></button>` : ''}
-                                    ${(evaluation.can_manage_evaluations || evaluation.is_room_responsible) ? `<button class="btn btn-sm btn-outline-primary" onclick="askAdvanceRoom(${evaluation.evaluation_room_id})" title="Finalizar y continuar"><i class="bi bi-skip-forward"></i></button>` : ''}
                                     ${evaluation.can_manage_evaluations ? `<button class="btn btn-sm btn-outline-danger" onclick="deleteEvaluation(${evaluation.id})" title="Eliminar"><i class="bi bi-trash"></i></button>` : ''}
                                 </div>
                             </div>
@@ -1144,22 +1143,6 @@ if (!is_authenticated() || (!is_admin() && !is_teacher())) {
         async function lockRoomSequence(id) {
             if (!await confirmAction({ title: 'Bloquear orden de paso', text: 'Despues de bloquear, solo el proyecto en turno podra evaluarse.', confirmButtonText: 'Si, bloquear' })) return;
             await api.post(`/evaluations/rooms/${id}/lock-sequence`, {});
-            await loadRooms();
-            renderRooms();
-            loadEvaluations();
-        }
-
-        async function askAdvanceRoom(id) {
-            const result = await Swal.fire({
-                title: 'La evaluacion del proyecto actual ha finalizado?',
-                text: 'Continuamos con el siguiente proyecto?',
-                icon: 'question',
-                showCancelButton: true,
-                confirmButtonText: 'Si',
-                cancelButtonText: 'No'
-            });
-            if (!result.isConfirmed) return;
-            await api.post(`/evaluations/rooms/${id}/advance`, { continue_next: true });
             await loadRooms();
             renderRooms();
             loadEvaluations();
