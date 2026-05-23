@@ -48,14 +48,19 @@ if (!is_authenticated() || !is_admin()) {
 
     <!-- Stats Section -->
     <div class="container-xl mt-5">
-        <div class="row g-4 mb-5">
+        <div class="row g-4 mb-4">
             <div class="col-lg-3 col-md-6">
                 <a href="/pages/admin/users.php" class="text-decoration-none d-block" aria-label="Ir a gestion de usuarios">
-                    <div class="card stat-card border-0 shadow-sm" style="cursor: pointer;">
-                        <div class="card-body text-center">
-                            <i class="bi bi-people" style="font-size: 3rem; color: #1B396A;"></i>
-                            <h6 class="text-muted mt-3 mb-1">Total de Usuarios</h6>
-                            <h2 class="mb-0" id="totalUsers" style="color: #1B396A; font-weight: 600;">0</h2>
+                    <div class="card dashboard-stat-card border-0 shadow-sm" style="cursor: pointer;">
+                        <div class="card-body">
+                            <div class="d-flex justify-content-between align-items-start gap-3">
+                                <div>
+                                    <div class="dashboard-stat-label">Total de usuarios</div>
+                                    <div class="dashboard-stat-value mt-2" id="totalUsers">0</div>
+                                    <div class="dashboard-stat-note mt-2"><span id="inactiveUsers">0</span> inactivos</div>
+                                </div>
+                                <span class="dashboard-stat-icon"><i class="bi bi-people"></i></span>
+                            </div>
                         </div>
                     </div>
                 </a>
@@ -63,11 +68,16 @@ if (!is_authenticated() || !is_admin()) {
 
             <div class="col-lg-3 col-md-6">
                 <a href="/pages/admin/users.php" class="text-decoration-none d-block" aria-label="Ir a usuarios activos">
-                    <div class="card stat-card border-0 shadow-sm" style="cursor: pointer;">
-                        <div class="card-body text-center">
-                            <i class="bi bi-check-circle" style="font-size: 3rem; color: #28a745;"></i>
-                            <h6 class="text-muted mt-3 mb-1">Usuarios Activos</h6>
-                            <h2 class="mb-0" id="activeUsers" style="color: #28a745; font-weight: 600;">0</h2>
+                    <div class="card dashboard-stat-card border-0 shadow-sm" style="cursor: pointer;">
+                        <div class="card-body">
+                            <div class="d-flex justify-content-between align-items-start gap-3">
+                                <div class="w-100">
+                                    <div class="dashboard-stat-label">Usuarios activos</div>
+                                    <div class="dashboard-stat-value mt-2" id="activeUsers">0</div>
+                                    <div class="dashboard-progress-track mt-3"><div class="dashboard-progress-fill" id="activeUsersProgress" style="width: 0%;"></div></div>
+                                </div>
+                                <span class="dashboard-stat-icon" style="color: #218838;"><i class="bi bi-check-circle"></i></span>
+                            </div>
                         </div>
                     </div>
                 </a>
@@ -75,11 +85,16 @@ if (!is_authenticated() || !is_admin()) {
 
             <div class="col-lg-3 col-md-6">
                 <a href="/pages/admin/projects.php" class="text-decoration-none d-block" aria-label="Ir a gestion de proyectos">
-                    <div class="card stat-card border-0 shadow-sm" style="cursor: pointer;">
-                        <div class="card-body text-center">
-                            <i class="bi bi-folder2-open" style="font-size: 3rem; color: #1B396A;"></i>
-                            <h6 class="text-muted mt-3 mb-1">Proyectos</h6>
-                            <h2 class="mb-0" id="totalProjects" style="color: #1B396A; font-weight: 600;">0</h2>
+                    <div class="card dashboard-stat-card border-0 shadow-sm" style="cursor: pointer;">
+                        <div class="card-body">
+                            <div class="d-flex justify-content-between align-items-start gap-3">
+                                <div>
+                                    <div class="dashboard-stat-label">Proyectos</div>
+                                    <div class="dashboard-stat-value mt-2" id="totalProjects">0</div>
+                                    <div class="dashboard-stat-note mt-2"><span id="pendingProposals">0</span> propuestas pendientes</div>
+                                </div>
+                                <span class="dashboard-stat-icon"><i class="bi bi-folder2-open"></i></span>
+                            </div>
                         </div>
                     </div>
                 </a>
@@ -87,14 +102,51 @@ if (!is_authenticated() || !is_admin()) {
 
             <div class="col-lg-3 col-md-6">
                 <a href="/pages/admin/asignaturas.php" class="text-decoration-none d-block" aria-label="Ir a gestion de asignaturas">
-                    <div class="card stat-card border-0 shadow-sm" style="cursor: pointer;">
-                        <div class="card-body text-center">
-                            <i class="bi bi-mortarboard" style="font-size: 3rem; color: #2D5A96;"></i>
-                            <h6 class="text-muted mt-3 mb-1">Asignaturas</h6>
-                            <h2 class="mb-0" id="totalAsignaturas" style="color: #2D5A96; font-weight: 600;">0</h2>
+                    <div class="card dashboard-stat-card border-0 shadow-sm" style="cursor: pointer;">
+                        <div class="card-body">
+                            <div class="d-flex justify-content-between align-items-start gap-3">
+                                <div>
+                                    <div class="dashboard-stat-label">Asignaturas</div>
+                                    <div class="dashboard-stat-value mt-2" id="totalAsignaturas">0</div>
+                                    <div class="dashboard-stat-note mt-2">Catálogo académico</div>
+                                </div>
+                                <span class="dashboard-stat-icon"><i class="bi bi-mortarboard"></i></span>
+                            </div>
                         </div>
                     </div>
                 </a>
+            </div>
+        </div>
+        <div class="row g-4 mb-4">
+            <div class="col-lg-4">
+                <div class="dashboard-insight-card p-4">
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <h5 class="mb-0"><i class="bi bi-activity"></i> Avance global</h5>
+                        <span class="badge bg-primary" id="globalCompletionBadge">0%</span>
+                    </div>
+                    <div class="dashboard-progress-track mb-3"><div class="dashboard-progress-fill" id="globalCompletionProgress" style="width: 0%;"></div></div>
+                    <p class="text-muted mb-0">Porcentaje de entregables aprobados sobre el total activo.</p>
+                </div>
+            </div>
+            <div class="col-lg-4">
+                <div class="dashboard-insight-card p-4">
+                    <h5 class="mb-3"><i class="bi bi-person-badge"></i> Usuarios por rol</h5>
+                    <div id="usersRoleChart"><p class="dashboard-empty"><i class="bi bi-hourglass-split"></i> Cargando...</p></div>
+                </div>
+            </div>
+            <div class="col-lg-4">
+                <div class="dashboard-insight-card p-4">
+                    <h5 class="mb-3"><i class="bi bi-file-earmark-check"></i> Entregables</h5>
+                    <div class="dashboard-status-grid" id="deliverableStatusGrid"></div>
+                </div>
+            </div>
+        </div>
+        <div class="row g-4 mb-4">
+            <div class="col-12">
+                <div class="dashboard-insight-card p-4">
+                    <h5 class="mb-3"><i class="bi bi-kanban"></i> Estado de propuestas</h5>
+                    <div id="proposalStatusChart"><p class="dashboard-empty"><i class="bi bi-hourglass-split"></i> Cargando...</p></div>
+                </div>
             </div>
         </div>
         <div class="row g-4">
@@ -153,8 +205,8 @@ if (!is_authenticated() || !is_admin()) {
                         <h5 class="mb-0" style="color: white;"><i class="bi bi-clock-history"></i> Proyectos Recientes</h5>
                     </div>
                     <div class="card-body p-0">
-                        <div class="list-group list-group-flush" id="recentProjectsList">
-                            <p class="p-4 text-muted">Cargando...</p>
+                        <div class="p-3" id="recentProjectsList">
+                            <p class="dashboard-empty"><i class="bi bi-hourglass-split"></i> Cargando...</p>
                         </div>
                     </div>
                 </div>
@@ -173,14 +225,74 @@ if (!is_authenticated() || !is_admin()) {
     <script src="/assets/js/api.js"></script>
 
     <script>
+        function escapeHtml(value) {
+            return String(value ?? '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#039;');
+        }
+
+        function percent(value, total) {
+            return total > 0 ? Math.round((Number(value || 0) / total) * 100) : 0;
+        }
+
+        function statusLabel(status) {
+            const labels = {
+                pendiente: 'Pendiente',
+                enviado: 'Enviado',
+                revisado: 'Revisado',
+                aprobado: 'Aprobado',
+                requiere_cambios: 'Requiere cambios',
+                rechazado: 'Rechazado'
+            };
+            return labels[status] || status;
+        }
+
+        function renderBarChart(containerId, data) {
+            const container = document.getElementById(containerId);
+            const entries = Object.entries(data || {});
+            const total = entries.reduce((sum, [, value]) => sum + Number(value || 0), 0);
+            if (!entries.length || total === 0) {
+                container.innerHTML = '<p class="dashboard-empty"><i class="bi bi-inbox"></i> Sin datos para mostrar.</p>';
+                return;
+            }
+            container.innerHTML = entries.map(([label, value]) => {
+                const width = percent(value, total);
+                return `
+                    <div class="dashboard-chart-row">
+                        <div class="dashboard-chart-label">${escapeHtml(statusLabel(label))}</div>
+                        <div class="dashboard-progress-track"><div class="dashboard-progress-fill" style="width: ${width}%;"></div></div>
+                        <div class="dashboard-chart-value">${value}</div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        function renderStatusGrid(containerId, data) {
+            const container = document.getElementById(containerId);
+            container.innerHTML = Object.entries(data || {}).map(([status, value]) => `
+                <div class="dashboard-status-pill">
+                    <strong>${value || 0}</strong>
+                    <span>${escapeHtml(statusLabel(status))}</span>
+                </div>
+            `).join('');
+        }
+
         async function loadDashboard() {
             try {
                 const response = await api.get('/dashboard/stats');
                 
                 document.getElementById('totalUsers').textContent = response.stats.total_users;
                 document.getElementById('activeUsers').textContent = response.stats.active_users;
+                document.getElementById('inactiveUsers').textContent = response.stats.inactive_users || 0;
                 document.getElementById('totalProjects').textContent = response.stats.total_projects;
                 document.getElementById('totalAsignaturas').textContent = response.stats.total_asignaturas;
+                document.getElementById('pendingProposals').textContent = response.stats.pending_proposals || 0;
+                const activeRate = percent(response.stats.active_users, response.stats.total_users);
+                document.getElementById('activeUsersProgress').style.width = `${activeRate}%`;
+                const completionRate = response.stats.deliverable_completion_rate || 0;
+                document.getElementById('globalCompletionBadge').textContent = `${completionRate}%`;
+                document.getElementById('globalCompletionProgress').style.width = `${completionRate}%`;
+                renderBarChart('usersRoleChart', response.charts?.users_by_role || {});
+                renderBarChart('proposalStatusChart', response.charts?.projects_by_proposal_status || {});
+                renderStatusGrid('deliverableStatusGrid', response.charts?.deliverables_by_status || {});
 
                 // Cargar proyectos recientes
                 const projectsList = document.getElementById('recentProjectsList');
@@ -189,18 +301,18 @@ if (!is_authenticated() || !is_admin()) {
                 if (response.recent_projects && response.recent_projects.length > 0) {
                     response.recent_projects.forEach(project => {
                         const item = `
-                            <a href="/pages/admin/projects.php?edit=${project.id}" class="list-group-item list-group-item-action px-4 py-3">
-                                <h6 class="mb-1">${project.title}</h6>
-                                <small class="text-muted">
-                                    <i class="bi bi-person"></i> ${project.creator?.nombres || 'N/A'} | 
+                            <a href="/pages/admin/projects.php?edit=${project.id}" class="dashboard-project-card">
+                                <div class="dashboard-project-title">${escapeHtml(project.title)}</div>
+                                <div class="small text-muted">
+                                    <i class="bi bi-person"></i> ${escapeHtml(project.creator?.nombres || 'N/A')} | 
                                     ${new Date(project.created_at).toLocaleDateString()}
-                                </small>
+                                </div>
                             </a>
                         `;
                         projectsList.innerHTML += item;
                     });
                 } else {
-                    projectsList.innerHTML = '<p class="p-4 text-muted">No hay proyectos recientes</p>';
+                    projectsList.innerHTML = '<p class="dashboard-empty"><i class="bi bi-inbox"></i> No hay proyectos recientes.</p>';
                 }
             } catch (error) {
                 console.error('Error al cargar dashboard:', error);

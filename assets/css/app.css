@@ -293,6 +293,197 @@ h1, h2, h3, h4, h5, h6 {
     letter-spacing: 0.5px;
 }
 
+/* Dashboard insights */
+.dashboard-insight-card {
+    background: var(--surface-bg);
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    box-shadow: 0 8px 24px rgba(17, 24, 39, 0.08);
+    height: 100%;
+}
+
+.dashboard-stat-card {
+    position: relative;
+    overflow: hidden;
+    min-height: 148px;
+    border: 1px solid var(--border-color) !important;
+    background: var(--surface-bg);
+}
+
+.dashboard-stat-card::after {
+    content: '';
+    position: absolute;
+    inset: auto -24px -34px auto;
+    width: 110px;
+    height: 110px;
+    border-radius: 999px;
+    background: rgba(45, 90, 150, 0.12);
+    pointer-events: none;
+}
+
+.dashboard-stat-icon {
+    width: 46px;
+    height: 46px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 8px;
+    background: rgba(27, 57, 106, 0.1);
+    color: var(--primary-blue);
+    font-size: 1.45rem;
+}
+
+.dashboard-stat-value {
+    color: var(--primary-blue);
+    font-size: 2rem;
+    font-weight: 800;
+    line-height: 1;
+}
+
+.dashboard-stat-label {
+    color: var(--text-muted);
+    font-size: 0.82rem;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+}
+
+.dashboard-stat-note {
+    color: var(--text-muted);
+    font-size: 0.86rem;
+}
+
+.dashboard-progress-track {
+    height: 9px;
+    overflow: hidden;
+    border-radius: 999px;
+    background: var(--soft-bg);
+    border: 1px solid var(--border-color);
+}
+
+.dashboard-progress-fill {
+    height: 100%;
+    min-width: 0;
+    border-radius: inherit;
+    background: linear-gradient(90deg, var(--primary-blue), var(--secondary-blue));
+    transition: width 0.35s ease;
+}
+
+.dashboard-chart-row {
+    display: grid;
+    grid-template-columns: minmax(110px, 0.8fr) minmax(120px, 1.5fr) auto;
+    gap: 12px;
+    align-items: center;
+    padding: 10px 0;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.dashboard-chart-row:last-child {
+    border-bottom: 0;
+}
+
+.dashboard-chart-label {
+    color: var(--text-dark);
+    font-weight: 600;
+    overflow-wrap: anywhere;
+}
+
+.dashboard-chart-value {
+    color: var(--text-muted);
+    font-weight: 700;
+    min-width: 34px;
+    text-align: right;
+}
+
+.dashboard-status-grid {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 10px;
+}
+
+.dashboard-status-pill {
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    padding: 12px;
+    background: var(--soft-bg);
+}
+
+.dashboard-status-pill strong {
+    display: block;
+    color: var(--primary-blue);
+    font-size: 1.4rem;
+    line-height: 1;
+}
+
+.dashboard-status-pill span {
+    color: var(--text-muted);
+    display: block;
+    font-size: 0.78rem;
+    font-weight: 700;
+    letter-spacing: 0.02em;
+    margin-top: 6px;
+    text-transform: uppercase;
+}
+
+.dashboard-project-card {
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    color: var(--text-dark);
+    display: block;
+    margin-bottom: 12px;
+    padding: 14px;
+    text-decoration: none;
+}
+
+.dashboard-project-card:hover {
+    background: rgba(27, 57, 106, 0.05);
+    color: var(--text-dark);
+}
+
+.dashboard-project-title {
+    color: var(--text-dark);
+    font-weight: 700;
+    margin-bottom: 8px;
+}
+
+.dashboard-empty {
+    align-items: center;
+    color: var(--text-muted);
+    display: flex;
+    gap: 10px;
+    margin: 0;
+    padding: 18px;
+}
+
+:root[data-theme="dark"] .dashboard-stat-card::after {
+    background: rgba(121, 169, 239, 0.14);
+}
+
+:root[data-theme="dark"] .dashboard-stat-icon {
+    background: rgba(121, 169, 239, 0.12);
+}
+
+@media (max-width: 991.98px) {
+    .dashboard-status-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+}
+
+@media (max-width: 575.98px) {
+    .dashboard-chart-row {
+        grid-template-columns: 1fr;
+        gap: 6px;
+    }
+
+    .dashboard-chart-value {
+        text-align: left;
+    }
+
+    .dashboard-status-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
 @media (max-width: 768px) {
     .card {
         margin-bottom: 1rem;
