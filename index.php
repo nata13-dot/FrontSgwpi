@@ -308,10 +308,10 @@ $serverDashboardUrl = dashboard_url();
             <div class="index-hero-content">
                 <div class="repository-hero-kicker">
                     <i class="bi bi-archive"></i>
-                    Repositorio institucional de proyectos integradores
+                    Repositorio academico del instituto
                 </div>
-                <h1 class="display-3 fw-bold text-white mb-4">Consulta, conserva y comparte el conocimiento generado en cada proyecto</h1>
-                <p class="lead text-white mb-4">Accede a documentos, entregables y evidencias academicas desde un repositorio central para estudiantes, docentes y evaluadores.</p>
+                <h1 class="display-3 fw-bold text-white mb-4">Explora los trabajos y evidencias academicas desarrolladas en el instituto</h1>
+                <p class="lead text-white mb-4">Consulta proyectos integradores, documentos y materiales seleccionados como parte de la memoria academica institucional.</p>
                 <div class="hero-actions">
                     <a href="/pages/repositorio.php" class="btn btn-light btn-lg">
                         <i class="bi bi-search"></i> Explorar repositorio
