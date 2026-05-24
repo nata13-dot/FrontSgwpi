@@ -505,8 +505,8 @@ if (!is_authenticated() || (!is_admin() && !is_teacher())) {
             localStorage.removeItem(scoreDraftKey(evaluationId));
         }
 
-        async function refreshCriteria() {
-            const criteriaResponse = await api.get('/evaluations/criteria', { _cache_ttl: 60000 });
+        async function refreshCriteria(fresh = false) {
+            const criteriaResponse = await api.get('/evaluations/criteria', fresh ? { _fresh: 1 } : { _cache_ttl: 60000 });
             criteria = criteriaResponse.criteria || [];
             levels = criteriaResponse.levels || levels;
             rubricScoreModes = criteriaResponse.score_modes || rubricScoreModes;
@@ -626,7 +626,7 @@ if (!is_authenticated() || (!is_admin() && !is_teacher())) {
         }
 
         async function refreshEvaluationLiveData() {
-            await Promise.all([loadRooms(false, true), loadEvaluations(false, true)]);
+            await Promise.all([refreshCriteria(true), loadRooms(false, true), loadEvaluations(false, true)]);
             renderRoomOptions();
         }
 
@@ -1257,10 +1257,12 @@ if (!is_authenticated() || (!is_admin() && !is_teacher())) {
         async function deleteCriterion(id) {
             if (!await confirmAction({ title: 'Desactivar pregunta', text: '¿Desactivar esta pregunta de la rubrica?', confirmButtonText: 'Si, desactivar' })) return;
             await api.delete(`/evaluations/rubric-criteria/${id}`);
-            loadRubricCriteria();
+            await loadRubricCriteria();
+            await loadEvaluations(false, true);
         }
 
-        function openScoreModal(evaluationId) {
+        async function openScoreModal(evaluationId) {
+            await refreshCriteria(true);
             document.getElementById('scoreEvaluationId').value = evaluationId;
             const evaluation = evaluations.find(item => item.id === evaluationId);
             if (evaluation && !evaluation.can_score_now) {

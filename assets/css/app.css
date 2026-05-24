@@ -740,6 +740,28 @@ h1, h2, h3, h4, h5, h6 {
     z-index: 1;
 }
 
+.repository-page-hero {
+    background: url('/assets/img/ITSSMT/fondo.jpg') center/cover no-repeat !important;
+    min-height: 280px;
+    padding: 72px 0 64px;
+    display: flex;
+    align-items: center;
+}
+
+.repository-page-hero::before {
+    background: linear-gradient(90deg, rgba(8, 26, 54, 0.9), rgba(8, 26, 54, 0.62), rgba(8, 26, 54, 0.28));
+}
+
+.repository-page-hero .container-xl {
+    position: relative;
+    z-index: 1;
+}
+
+.repository-page-hero .lead {
+    max-width: 680px;
+    color: rgba(255, 255, 255, 0.92);
+}
+
 /* Tables */
 .table thead {
     background-color: var(--primary-blue);
@@ -1109,6 +1131,11 @@ html.grayscale-mode {
 
     .hero-gradient {
         padding: 30px 0;
+    }
+
+    .repository-page-hero {
+        min-height: 240px;
+        padding: 56px 0 48px;
     }
 
     .navbar-brand {
@@ -1651,6 +1678,14 @@ html.grayscale-mode {
 :root[data-theme="dark"] .footer,
 :root[data-theme="dark"] .hero-gradient {
     background: linear-gradient(135deg, #162235 0%, #243955 100%) !important;
+}
+
+:root[data-theme="dark"] .repository-page-hero {
+    background: url('/assets/img/ITSSMT/fondo.jpg') center/cover no-repeat !important;
+}
+
+:root[data-theme="dark"] .repository-page-hero::before {
+    background: linear-gradient(90deg, rgba(3, 12, 27, 0.92), rgba(8, 26, 54, 0.68), rgba(8, 26, 54, 0.32));
 }
 
 :root[data-theme="dark"] .alert-primary {

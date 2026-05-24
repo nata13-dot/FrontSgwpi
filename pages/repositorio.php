@@ -14,7 +14,7 @@
     <?php require_once $_SERVER['DOCUMENT_ROOT'] . '/includes/navbar.php'; ?>
     
     <!-- Hero -->
-    <div class="hero-gradient">
+    <div class="hero-gradient repository-page-hero">
         <div class="container-xl">
             <h1 class="display-4 fw-bold mb-3">Repositorio Digital</h1>
             <p class="lead">Explora nuestro repositorio de proyectos y documentos</p>
