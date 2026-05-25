@@ -22,10 +22,10 @@
     </div>
 
     <div class="container-xl pb-5">
-        <?php if (is_authenticated() && is_admin()): ?>
+        <?php if (is_authenticated() && (is_admin() || is_student())): ?>
             <div class="d-flex justify-content-end mt-4">
                 <button type="button" class="btn btn-primary" onclick="openRepositoryUploadModal()">
-                    <i class="bi bi-cloud-arrow-up"></i> Agregar documento
+                    <i class="bi bi-cloud-arrow-up"></i> <?= is_student() ? 'Subir documento de proyecto' : 'Agregar documento' ?>
                 </button>
             </div>
         <?php endif; ?>
@@ -75,7 +75,7 @@
         </div>
     </div>
 
-    <?php if (is_authenticated() && is_admin()): ?>
+    <?php if (is_authenticated() && (is_admin() || is_student())): ?>
     <div class="modal fade" id="repositoryUploadModal" tabindex="-1">
         <div class="modal-dialog modal-lg">
             <div class="modal-content">
@@ -100,11 +100,21 @@
                                 <label class="form-label" for="repoAutores">Autores</label>
                                 <input type="text" class="form-control" id="repoAutores" name="autores" maxlength="1000" required>
                             </div>
+                            <?php if (is_student()): ?>
+                            <div class="col-md-6">
+                                <label class="form-label" for="repoProjectId">Proyecto asignado</label>
+                                <select class="form-select" id="repoProjectId" name="project_id" required>
+                                    <option value="">Cargando proyectos...</option>
+                                </select>
+                                <div class="form-text">El documento quedará privado hasta que administración lo publique.</div>
+                            </div>
+                            <?php endif; ?>
                             <div class="col-md-6">
                                 <label class="form-label" for="repoArchivo">Archivo</label>
                                 <input type="file" class="form-control" id="repoArchivo" name="archivo" accept=".pdf,.doc,.docx,.xls,.xlsx,.zip,.txt,.jpg,.jpeg,.png,.epub" required>
                                 <div class="form-text" id="repoArchivoHelp">Permitidos: PDF, Word, Excel, ZIP, TXT, imagenes JPG/PNG y EPUB.</div>
                             </div>
+                            <?php if (is_admin()): ?>
                             <div class="col-md-6">
                                 <label class="form-label" for="repoVisibility">Visibilidad</label>
                                 <select class="form-select" id="repoVisibility" name="visibility">
@@ -118,10 +128,16 @@
                                     El documento será visible en el repositorio público.
                                 </div>
                             </div>
+                            <?php endif; ?>
+                            <?php if (is_student()): ?>
+                            <input type="hidden" name="visibility" value="private">
+                            <?php endif; ?>
+                            <?php if (is_admin()): ?>
                             <div class="col-12">
                                 <label class="form-label">Etiquetas</label>
                                 <div id="repoTags" class="d-flex flex-wrap gap-2"></div>
                             </div>
+                            <?php endif; ?>
                         </div>
                     </div>
                     <div class="modal-footer">
@@ -143,6 +159,8 @@
     <script>
         const API_BASE_URL = '<?= API_BASE_URL ?>';
         const CAN_MANAGE_REPOSITORY = <?= (is_authenticated() && is_admin()) ? 'true' : 'false' ?>;
+        const CAN_UPLOAD_REPOSITORY = <?= (is_authenticated() && (is_admin() || is_student())) ? 'true' : 'false' ?>;
+        const IS_STUDENT = <?= (is_authenticated() && is_student()) ? 'true' : 'false' ?>;
         let currentPage = 1;
         let filters = {
             buscar: '',
@@ -252,10 +270,11 @@
             document.getElementById('repoArchivo').required = true;
             document.getElementById('repoArchivoHelp').textContent = 'Permitidos: PDF, Word, Excel, ZIP, TXT, imagenes JPG/PNG y EPUB.';
             document.getElementById('repoUploadBtn').innerHTML = '<i class="bi bi-cloud-arrow-up"></i> Subir documento';
-            document.getElementById('repoVisibility').value = 'public';
+            if (document.getElementById('repoVisibility')) document.getElementById('repoVisibility').value = 'public';
             refreshRepositoryVisibilityHelp();
             document.querySelectorAll('.repo-tag').forEach(input => input.checked = false);
-            await loadRepositoryAdminData();
+            if (CAN_MANAGE_REPOSITORY) await loadRepositoryAdminData();
+            if (IS_STUDENT) await loadStudentRepositoryProjects();
             repositoryUploadModal.show();
         }
 
@@ -278,13 +297,23 @@
                 document.getElementById('repoNombre').value = doc.nombre || '';
                 document.getElementById('repoDescripcion').value = doc.descripcion || '';
                 document.getElementById('repoAutores').value = doc.autores || '';
-                document.getElementById('repoVisibility').value = doc.visibility === 'private' ? 'private' : 'public';
+                if (document.getElementById('repoVisibility')) document.getElementById('repoVisibility').value = doc.visibility === 'private' ? 'private' : 'public';
                 refreshRepositoryVisibilityHelp();
                 await loadRepositoryAdminData((doc.tags || []).map(tag => tag.id));
                 repositoryUploadModal.show();
             } catch (error) {
                 swalToast('error', error.message || 'No fue posible cargar el documento');
             }
+        }
+
+        async function loadStudentRepositoryProjects() {
+            const select = document.getElementById('repoProjectId');
+            if (!select) return;
+            const response = await api.get('/my-projects', { compact: 1, per_page: 100, _fresh: 1 });
+            const projects = response.data || [];
+            select.innerHTML = projects.length
+                ? '<option value="">Selecciona un proyecto</option>' + projects.map(project => `<option value="${Number(project.id)}">${escapeHtml(project.title || `Proyecto ${project.id}`)}</option>`).join('')
+                : '<option value="">No tienes proyectos asignados</option>';
         }
 
         function refreshRepositoryVisibilityHelp() {
