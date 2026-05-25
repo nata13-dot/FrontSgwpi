@@ -157,7 +157,8 @@
 
         async function loadDocumentos(page = 1) {
             try {
-                const response = await api.get('/repositorio', {
+                const endpoint = CAN_MANAGE_REPOSITORY ? '/repositorio/admin/list' : '/repositorio';
+                const response = await api.get(endpoint, {
                     ...filters,
                     page: page
                 });
@@ -172,6 +173,9 @@
 
                 response.data.forEach(doc => {
                     const categoryLabel = repositoryCategoryLabel(doc.document_category);
+                    const visibilityBadge = CAN_MANAGE_REPOSITORY
+                        ? `<span class="badge ${doc.visibility === 'private' ? 'text-bg-warning' : 'text-bg-success'} mb-2 ms-1">${doc.visibility === 'private' ? 'Solo docentes/admin' : 'Público'}</span>`
+                        : '';
                     const adminActions = CAN_MANAGE_REPOSITORY ? `
                         <div class="d-flex gap-2 mt-2">
                             <button type="button" class="btn btn-sm btn-outline-secondary flex-fill" onclick="openRepositoryEditModal(${Number(doc.id)})">
@@ -188,6 +192,7 @@
                                 <div class="card-body">
                                     <h6 class="card-title">${escapeHtml(doc.nombre)}</h6>
                                     <span class="badge text-bg-light border mb-2">${escapeHtml(categoryLabel)}</span>
+                                    ${visibilityBadge}
                                     <p class="card-text text-muted small">${escapeHtml(doc.descripcion || '')}</p>
                                     <div class="mb-3">
                                         ${doc.tags ? doc.tags.map(tag => 
