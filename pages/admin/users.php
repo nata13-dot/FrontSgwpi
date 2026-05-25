@@ -220,6 +220,11 @@ if (!is_authenticated() || !is_admin()) {
                             Generar contraseña temporal nueva para cada destinatario
                         </label>
                     </div>
+                    <div class="mb-3 d-none" id="credentialAdminPasswordBox">
+                        <label class="form-label" for="credentialAdminPassword">Contraseña del administrador actual</label>
+                        <input type="password" class="form-control" id="credentialAdminPassword" autocomplete="current-password">
+                        <div class="form-text">Necesaria para autorizar el envío de credenciales.</div>
+                    </div>
                     <div class="small text-muted" id="credentialEmailScope"></div>
                 </div>
                 <div class="modal-footer">
@@ -1160,6 +1165,8 @@ if (!is_authenticated() || !is_admin()) {
             if (!usersCredentialModal) usersCredentialModal = new bootstrap.Modal(document.getElementById('credentialEmailModal'));
             document.getElementById('credentialEmailForm').reset();
             document.getElementById('credentialEmailAlert').innerHTML = '';
+            document.getElementById('credentialAdminPasswordBox').classList.add('d-none');
+            document.getElementById('credentialAdminPassword').value = '';
             document.getElementById('credentialEmailRotatePassword').checked = true;
             document.getElementById('credentialEmailModeSelected').checked = selectedUserIds.size > 0;
             document.getElementById('credentialEmailModeFiltered').checked = selectedUserIds.size === 0;
@@ -1203,20 +1210,22 @@ if (!is_authenticated() || !is_admin()) {
                 return;
             }
 
-            const confirmed = await confirmAction({
-                title: 'Enviar credenciales',
-                text: mode === 'selected'
-                    ? `Esta accion enviara credenciales a ${selectedUserIds.size} usuario(s) seleccionado(s). Verifica destinatarios y plantilla antes de continuar.`
-                    : 'Esta accion puede cambiar contraseñas y enviar credenciales por correo a todos los usuarios del filtro actual. Verifica filtros, destinatarios y plantilla antes de continuar.',
-                confirmButtonText: 'Continuar'
-            });
-            if (!confirmed) return;
+            const passwordBox = document.getElementById('credentialAdminPasswordBox');
+            const passwordInput = document.getElementById('credentialAdminPassword');
+            if (passwordBox.classList.contains('d-none')) {
+                passwordBox.classList.remove('d-none');
+                passwordInput.focus();
+                document.getElementById('credentialEmailAlert').innerHTML = `
+                    <div class="alert alert-info">
+                        ${mode === 'selected'
+                            ? `Confirma el envio a ${selectedUserIds.size} usuario(s) seleccionado(s).`
+                            : 'Confirma el envio a los usuarios del filtro actual.'}
+                        Escribe tu contraseña de administrador y vuelve a presionar "Enviar correos".
+                    </div>`;
+                return;
+            }
 
-            const adminPassword = await promptPassword({
-                title: 'Autorizar envio masivo',
-                inputPlaceholder: 'Contraseña del administrador actual',
-                confirmButtonText: 'Enviar credenciales'
-            });
+            const adminPassword = passwordInput.value.trim();
             if (!adminPassword) return;
             payload.admin_password = adminPassword;
 
