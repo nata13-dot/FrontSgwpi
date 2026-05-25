@@ -35,7 +35,7 @@ if (!is_authenticated() || !is_admin()) {
                         <button type="button" class="btn btn-outline-success" onclick="openUsersImportModal()">
                             <i class="bi bi-upload"></i> Cargar Excel
                         </button>
-                        <button type="button" class="btn btn-outline-warning" onclick="openCredentialEmailModal()">
+                        <button type="button" class="btn btn-outline-warning" id="credentialEmailOpenBtn" onclick="openCredentialEmailModal()">
                             <i class="bi bi-envelope-lock"></i> Enviar credenciales
                         </button>
                         <button type="button" class="btn btn-primary" onclick="openUserModal()">
@@ -93,7 +93,7 @@ if (!is_authenticated() || !is_admin()) {
                 <div id="alertContainer"></div>
 
                 <div class="card border-0 shadow-sm">
-                    <div class="card-header bg-white d-flex flex-wrap align-items-center justify-content-between gap-2">
+                    <div class="card-header bg-white text-dark d-none flex-wrap align-items-center justify-content-between gap-2" id="credentialSelectionToolbar">
                         <div class="small text-muted" id="selectedUsersCount">0 usuarios seleccionados</div>
                         <div class="btn-group btn-group-sm" role="group" aria-label="Seleccion de usuarios">
                             <button type="button" class="btn btn-outline-secondary" onclick="selectVisibleUsers()">
@@ -102,6 +102,9 @@ if (!is_authenticated() || !is_admin()) {
                             <button type="button" class="btn btn-outline-secondary" onclick="clearSelectedUsers()">
                                 <i class="bi bi-x-square"></i> Limpiar seleccion
                             </button>
+                            <button type="button" class="btn btn-outline-secondary" onclick="cancelCredentialSelectionMode()">
+                                <i class="bi bi-x-lg"></i> Cancelar
+                            </button>
                         </div>
                     </div>
                     <div class="card-body p-0">
@@ -109,7 +112,7 @@ if (!is_authenticated() || !is_admin()) {
                             <table class="table table-hover mb-0 align-middle">
                                 <thead>
                                     <tr>
-                                        <th style="width: 44px;">
+                                        <th class="credential-select-col d-none" style="width: 44px;">
                                             <input class="form-check-input" type="checkbox" id="selectVisibleUsersCheckbox" onchange="toggleVisibleUsers(this.checked)" title="Seleccionar usuarios visibles">
                                         </th>
                                         <th>No. de Control, No. de empleado</th>
@@ -414,6 +417,7 @@ if (!is_authenticated() || !is_admin()) {
         let loadedModalUser = null;
         let usersSearchTimer = null;
         let visibleUserIds = [];
+        let credentialSelectionMode = false;
         const selectedUserIds = new Set();
 
         function escapeHtml(value) {
@@ -490,7 +494,7 @@ if (!is_authenticated() || !is_admin()) {
 
                     tbody.innerHTML += `
                         <tr class="${isActive ? '' : 'table-light'}">
-                            <td>
+                            <td class="credential-select-col ${credentialSelectionMode ? '' : 'd-none'}">
                                 <input class="form-check-input user-select-checkbox" type="checkbox" value="${escapeHtml(user.id)}" onchange="toggleUserSelection('${escapeHtml(user.id)}', this.checked)" ${selectedUserIds.has(String(user.id)) ? 'checked' : ''} aria-label="Seleccionar usuario ${escapeHtml(user.id)}">
                             </td>
                             <td><strong>${escapeHtml(user.id)}</strong></td>
@@ -558,6 +562,24 @@ if (!is_authenticated() || !is_admin()) {
             const countBox = document.getElementById('selectedUsersCount');
             if (countBox) countBox.textContent = `${count} usuario${count === 1 ? '' : 's'} seleccionado${count === 1 ? '' : 's'}`;
 
+            document.querySelectorAll('.credential-select-col').forEach(element => {
+                element.classList.toggle('d-none', !credentialSelectionMode);
+            });
+
+            const toolbar = document.getElementById('credentialSelectionToolbar');
+            if (toolbar) {
+                toolbar.classList.toggle('d-none', !credentialSelectionMode);
+                toolbar.classList.toggle('d-flex', credentialSelectionMode);
+            }
+
+            const openButton = document.getElementById('credentialEmailOpenBtn');
+            if (openButton) {
+                openButton.innerHTML = credentialSelectionMode
+                    ? '<i class="bi bi-envelope-check"></i> Continuar envio'
+                    : '<i class="bi bi-envelope-lock"></i> Enviar credenciales';
+                openButton.className = credentialSelectionMode ? 'btn btn-warning' : 'btn btn-outline-warning';
+            }
+
             const selectAll = document.getElementById('selectVisibleUsersCheckbox');
             if (selectAll) {
                 const visibleSelected = visibleUserIds.filter(id => selectedUserIds.has(String(id))).length;
@@ -571,6 +593,22 @@ if (!is_authenticated() || !is_admin()) {
             if (selectedHelp) selectedHelp.textContent = count > 0
                 ? `${count} usuario${count === 1 ? '' : 's'} seleccionado${count === 1 ? '' : 's'} para pruebas controladas.`
                 : 'Selecciona usuarios en la tabla para usar esta opcion.';
+        }
+
+        function enableCredentialSelectionMode() {
+            credentialSelectionMode = true;
+            updateSelectedUsersUi();
+            document.getElementById('alertContainer').innerHTML = `
+                <div class="alert alert-info alert-dismissible fade show" role="alert">
+                    <i class="bi bi-info-circle"></i> Selecciona usuarios en la tabla o presiona <strong>Continuar envio</strong> para usar filtros por perfil.
+                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                </div>`;
+        }
+
+        function cancelCredentialSelectionMode() {
+            credentialSelectionMode = false;
+            clearSelectedUsers();
+            updateSelectedUsersUi();
         }
 
 
@@ -1111,6 +1149,11 @@ if (!is_authenticated() || !is_admin()) {
         }
 
         async function openCredentialEmailModal() {
+            if (!credentialSelectionMode) {
+                enableCredentialSelectionMode();
+                return;
+            }
+
             if (!usersCredentialModal) usersCredentialModal = new bootstrap.Modal(document.getElementById('credentialEmailModal'));
             document.getElementById('credentialEmailForm').reset();
             document.getElementById('credentialEmailAlert').innerHTML = '';
