@@ -403,6 +403,7 @@ if (!is_authenticated() || !is_admin()) {
     <script>const API_BASE_URL = '<?= API_BASE_URL ?>';</script>
     <script src="/assets/js/auth.js"></script>
     <script src="/assets/js/api.js"></script>
+    <script src="/assets/js/app.js"></script>
     <script>
         let currentStatus = 'active';
         let currentProfile = 'all';
