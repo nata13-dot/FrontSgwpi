@@ -132,7 +132,12 @@
             if (!reader) return;
 
             if (fileType === 'pdf') {
-                reader.innerHTML = `<iframe src="${viewUrl}" class="repository-reader-frame" title="Vista previa PDF"></iframe>`;
+                try {
+                    const blobUrl = await fetchPreviewBlobUrl(viewUrl);
+                    reader.innerHTML = `<iframe src="${blobUrl}" class="repository-reader-frame" title="Vista previa PDF"></iframe>`;
+                } catch (error) {
+                    reader.innerHTML = previewFallback(downloadUrl, 'No fue posible cargar la vista previa PDF en el navegador.');
+                }
                 return;
             }
 
@@ -170,6 +175,24 @@
             }
 
             reader.innerHTML = previewFallback(downloadUrl, 'La vista previa para este tipo de archivo no está disponible en el navegador.');
+        }
+
+        async function fetchPreviewBlobUrl(viewUrl) {
+            const headers = {};
+            if (window.auth?.getToken?.()) {
+                headers.Authorization = `Bearer ${auth.getToken()}`;
+            }
+
+            const response = await fetch(viewUrl, {
+                credentials: 'include',
+                headers
+            });
+
+            if (!response.ok) {
+                throw new Error('No se pudo cargar la vista previa.');
+            }
+
+            return URL.createObjectURL(await response.blob());
         }
 
         function previewFallback(downloadUrl, message) {
