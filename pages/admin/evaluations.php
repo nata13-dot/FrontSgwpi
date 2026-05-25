@@ -901,7 +901,9 @@ $is_archived_view = basename($_SERVER['PHP_SELF']) === 'evaluations-archived.php
         }
 
         async function loadRooms(renderAfterLoad = true, fresh = false) {
-            rooms = await api.get('/evaluations/rooms', fresh ? { _fresh: 1 } : {});
+            const params = { archived: IS_ARCHIVED_VIEW ? 1 : 0 };
+            if (fresh) params._fresh = 1;
+            rooms = await api.get('/evaluations/rooms', params);
             if (renderAfterLoad && roomsModal?._isShown) renderRooms();
         }
 
@@ -1026,6 +1028,7 @@ $is_archived_view = basename($_SERVER['PHP_SELF']) === 'evaluations-archived.php
                             <button class="btn btn-outline-primary" onclick="editRoom(${room.id})"><i class="bi bi-pencil"></i></button>
                             <button class="btn btn-outline-success" onclick="lockRoomSequence(${room.id})" title="Bloquear orden"><i class="bi bi-lock"></i></button>
                             <button class="btn btn-outline-dark" onclick="downloadRoomReport(${room.id})" title="Reporte PDF de sala"><i class="bi bi-file-earmark-pdf"></i></button>
+                            <button class="btn btn-outline-secondary" onclick="${IS_ARCHIVED_VIEW ? 'unarchiveRoom' : 'archiveRoom'}(${room.id})" title="${IS_ARCHIVED_VIEW ? 'Restaurar sala' : 'Archivar sala'}"><i class="bi ${IS_ARCHIVED_VIEW ? 'bi-arrow-counterclockwise' : 'bi-archive'}"></i></button>
                             <button class="btn btn-outline-danger" onclick="deleteRoom(${room.id})"><i class="bi bi-trash"></i></button>
             ` : '';
             document.getElementById('roomsList').innerHTML = rooms.map(room => `
@@ -1146,6 +1149,32 @@ $is_archived_view = basename($_SERVER['PHP_SELF']) === 'evaluations-archived.php
             await loadRooms();
             renderRooms();
             renderRoomOptions();
+        }
+
+        async function archiveRoom(id) {
+            if (!await confirmAction({
+                title: 'Archivar sala',
+                text: 'Todas las evaluaciones de esta sala dejaran de aparecer en la vista principal.',
+                confirmButtonText: 'Si, archivar sala'
+            })) return;
+            await api.post(`/evaluations/rooms/${id}/archive`, {});
+            await loadRooms(true, true);
+            renderRooms();
+            loadEvaluations(true, true);
+            swalToast('success', 'Sala archivada');
+        }
+
+        async function unarchiveRoom(id) {
+            if (!await confirmAction({
+                title: 'Restaurar sala',
+                text: 'Todas las evaluaciones de esta sala volveran a la vista principal.',
+                confirmButtonText: 'Si, restaurar sala'
+            })) return;
+            await api.post(`/evaluations/rooms/${id}/unarchive`, {});
+            await loadRooms(true, true);
+            renderRooms();
+            loadEvaluations(true, true);
+            swalToast('success', 'Sala restaurada');
         }
 
         async function lockRoomSequence(id) {
