@@ -14,6 +14,11 @@
     --dashboard-accent-soft: #2D5A96;
     --success-accent: #218838;
     --warning-accent: #b38600;
+    --selection-toolbar-bg: #eef4ff;
+    --selection-toolbar-border: #c7d8f4;
+    --selection-toolbar-text: #21324b;
+    --selection-toolbar-button-bg: #ffffff;
+    --selection-toolbar-button-hover: #dfeaff;
 }
 
 :root[data-theme="dark"] {
@@ -32,6 +37,11 @@
     --dashboard-accent-soft: #76b6ff;
     --success-accent: #6ee7a0;
     --warning-accent: #f8d46b;
+    --selection-toolbar-bg: #1d2a3f;
+    --selection-toolbar-border: #3c5375;
+    --selection-toolbar-text: #edf2f7;
+    --selection-toolbar-button-bg: #172033;
+    --selection-toolbar-button-hover: #263957;
 }
 
 * {
@@ -1552,6 +1562,30 @@ html.grayscale-mode {
     width: 100%;
     max-width: 100%;
     margin-bottom: 1rem;
+}
+
+.credential-selection-toolbar {
+    background: var(--selection-toolbar-bg) !important;
+    border-bottom: 1px solid var(--selection-toolbar-border) !important;
+    color: var(--selection-toolbar-text) !important;
+}
+
+.credential-selection-toolbar .text-muted {
+    color: var(--selection-toolbar-text) !important;
+    opacity: 0.82;
+}
+
+.credential-selection-toolbar .btn-outline-secondary {
+    background-color: var(--selection-toolbar-button-bg);
+    border-color: var(--selection-toolbar-border);
+    color: var(--selection-toolbar-text);
+}
+
+.credential-selection-toolbar .btn-outline-secondary:hover,
+.credential-selection-toolbar .btn-outline-secondary:focus {
+    background-color: var(--selection-toolbar-button-hover);
+    border-color: var(--secondary-blue);
+    color: var(--selection-toolbar-text);
 }
 
 @media (max-width: 768px) {

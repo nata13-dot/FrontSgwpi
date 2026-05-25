@@ -75,7 +75,7 @@ if (!is_authenticated()) {
             <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3 mb-4">
                 <div>
                     <h1 class="mb-1">Documentos de evaluacion</h1>
-                    <p class="text-muted mb-0">Documentos de investigacion guardados en repositorio privado para revision.</p>
+                    <p class="text-muted mb-0">Repositorio privado para desarrollo de proyecto, tesis y residencias.</p>
                 </div>
                 <button class="btn btn-outline-primary" type="button" onclick="loadDocuments(true)">
                     <i class="bi bi-arrow-clockwise"></i> Actualizar
@@ -100,7 +100,7 @@ if (!is_authenticated()) {
 <script src="/assets/js/api.js"></script>
 <script src="/assets/js/app.js"></script>
 <script>
-const state = { projects: [] };
+const state = { projects: [], thesisDocs: [] };
 
 document.addEventListener('DOMContentLoaded', () => {
     if (!auth.isAuthenticated()) {
@@ -115,8 +115,12 @@ async function loadDocuments(forceFresh = false) {
     container.innerHTML = '<div class="text-center py-5"><div class="spinner-border text-primary" role="status"></div><p class="text-muted mt-3 mb-0">Cargando documentos...</p></div>';
 
     try {
-        const response = await api.get('/repositorio/evaluation-documents', forceFresh ? { _fresh: true } : {});
-        state.projects = response.data || [];
+        const [projectResponse, thesisResponse] = await Promise.all([
+            api.get('/repositorio/evaluation-documents', forceFresh ? { _fresh: true } : {}),
+            api.get('/repositorio/thesis-documents', forceFresh ? { _fresh: true } : {})
+        ]);
+        state.projects = projectResponse.data || [];
+        state.thesisDocs = thesisResponse.data?.data || thesisResponse.data || [];
         renderDocuments();
     } catch (error) {
         container.innerHTML = `<div class="alert alert-danger"><i class="bi bi-exclamation-triangle"></i> ${esc(error.message || 'No se pudieron cargar los documentos.')}</div>`;
@@ -126,12 +130,9 @@ async function loadDocuments(forceFresh = false) {
 function renderDocuments() {
     const container = document.getElementById('documentsContainer');
 
-    if (!state.projects.length) {
-        container.innerHTML = '<div class="card border-0 shadow-sm"><div class="card-body text-center py-5"><i class="bi bi-file-earmark-ppt display-4 text-muted"></i><h5 class="mt-3">Sin proyectos disponibles</h5><p class="text-muted mb-0">Aun no hay proyectos vinculados a documentos de evaluacion.</p></div></div>';
-        return;
-    }
-
-    container.innerHTML = state.projects.map(project => `
+    const currentUser = auth.getCurrentUser() || {};
+    const canUploadThesis = Number(currentUser.perfil_id) === 3 && Number(currentUser.semestre) === 9;
+    const projectSection = state.projects.length ? state.projects.map(project => `
         <div class="card border-0 shadow-sm document-card mb-3">
             <div class="card-body">
                 <div class="d-flex flex-column flex-lg-row justify-content-between gap-3">
@@ -144,8 +145,8 @@ function renderDocuments() {
                         </div>
                     </div>
                     <div class="text-lg-end">
-                        <small class="text-muted d-block">Evaluaciones</small>
-                        <strong>${project.evaluaciones.length ? project.evaluaciones.length : 'Sin sala asignada'}</strong>
+                        <small class="text-muted d-block">Repositorio privado</small>
+                        <strong>${project.documents.length} documento(s)</strong>
                     </div>
                 </div>
                 <hr>
@@ -153,7 +154,99 @@ function renderDocuments() {
                 ${project.documents.length ? project.documents.map(document => renderRepositoryDocument(project, document)).join('') : '<p class="text-muted mb-0">Aun no hay documentos cargados para este proyecto.</p>'}
             </div>
         </div>
-    `).join('');
+    `).join('') : '<div class="card border-0 shadow-sm mb-4"><div class="card-body text-center py-5"><i class="bi bi-file-earmark-ppt display-4 text-muted"></i><h5 class="mt-3">Sin proyectos disponibles</h5><p class="text-muted mb-0">Aun no hay proyectos vinculados a Taller de Investigacion I o II.</p></div></div>';
+
+    container.innerHTML = `
+        <section class="mb-4">
+            <div class="d-flex align-items-center justify-content-between gap-3 mb-3">
+                <div>
+                    <h4 class="mb-1">Desarrollo de proyecto</h4>
+                    <p class="text-muted mb-0">Documentos privados de proyectos con Taller de Investigacion.</p>
+                </div>
+            </div>
+            ${projectSection}
+        </section>
+
+        <section>
+            <div class="d-flex align-items-center justify-content-between gap-3 mb-3">
+                <div>
+                    <h4 class="mb-1">Tesis y residencias de 9no</h4>
+                    <p class="text-muted mb-0">Avances privados que docentes pueden revisar y administracion puede publicar.</p>
+                </div>
+            </div>
+            ${canUploadThesis ? renderThesisUploadBox() : ''}
+            ${state.thesisDocs.length ? state.thesisDocs.map(document => renderThesisDocument(document)).join('') : '<div class="card border-0 shadow-sm"><div class="card-body text-center py-5"><i class="bi bi-journal-text display-4 text-muted"></i><h5 class="mt-3">Sin avances cargados</h5><p class="text-muted mb-0">Cuando un alumno de 9no suba tesis o residencias apareceran aqui.</p></div></div>'}
+        </section>
+    `;
+}
+
+function renderThesisUploadBox() {
+    return `
+        <div class="document-row mb-3 bg-light">
+            <h6><i class="bi bi-cloud-arrow-up"></i> Subir avance de 9no</h6>
+            <div class="row g-2">
+                <div class="col-md-3">
+                    <select class="form-select form-select-sm" id="thesisTipo">
+                        <option value="tesis">Tesis general</option>
+                        <option value="residencias">Residencias</option>
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <input class="form-control form-control-sm" id="thesisName" maxlength="255" placeholder="Nombre del avance">
+                </div>
+                <div class="col-md-3">
+                    <input class="form-control form-control-sm" id="thesisDesc" maxlength="5000" placeholder="Descripcion breve">
+                </div>
+                <div class="col-md-3">
+                    <input class="form-control form-control-sm" id="thesisAuthors" maxlength="1000" placeholder="Autores">
+                </div>
+                <div class="col-md-8">
+                    <input class="form-control form-control-sm" type="file" id="thesisFile" accept=".pdf,.doc,.docx">
+                    <div class="form-text">Permitidos: PDF, DOC y DOCX. Se guarda privado hasta que administracion lo publique.</div>
+                </div>
+                <div class="col-md-4">
+                    <button type="button" class="btn btn-sm btn-primary w-100" onclick="uploadThesisDocument()">
+                        <i class="bi bi-upload"></i> Guardar avance
+                    </button>
+                </div>
+            </div>
+        </div>
+    `;
+}
+
+function renderThesisDocument(document) {
+    const publicBadge = document.visibility === 'public'
+        ? '<span class="badge text-bg-success">Publicado</span>'
+        : '<span class="badge text-bg-warning">Privado</span>';
+    const categoryBadge = document.document_category === 'thesis_residency'
+        ? '<span class="badge text-bg-info">Residencias</span>'
+        : '<span class="badge text-bg-primary">Tesis</span>';
+    const submittedBy = document.uploader ? fullName(document.uploader) : 'Sin carga';
+    const canPublish = Number(auth.getCurrentUser()?.perfil_id) === 1;
+
+    return `
+        <div class="document-row mb-3">
+            <div class="d-flex flex-column flex-xl-row justify-content-between gap-3">
+                <div>
+                    <div class="d-flex flex-wrap align-items-center gap-2 mb-1">
+                        <h6 class="mb-0">${esc(document.nombre)}</h6>
+                        ${categoryBadge}
+                        ${publicBadge}
+                    </div>
+                    <p class="text-muted mb-2">${esc(document.descripcion || '')}</p>
+                    <small class="text-muted">
+                        <i class="bi bi-person-check"></i> ${esc(submittedBy)}
+                        <span class="mx-2">|</span>
+                        ${document.created_at ? new Date(document.created_at).toLocaleDateString('es-MX') : ''}
+                    </small>
+                </div>
+                <div class="document-actions d-flex flex-wrap justify-content-xl-end align-items-center gap-2">
+                    <button type="button" class="btn btn-sm btn-outline-secondary" onclick="downloadRepositoryDocument(${document.id}, '${escAttr(document.nombre)}')"><i class="bi bi-download"></i> Descargar</button>
+                    ${canPublish ? `<button type="button" class="btn btn-sm ${document.visibility === 'public' ? 'btn-outline-warning' : 'btn-success'}" onclick="toggleRepositoryPublication(${document.id}, ${document.visibility === 'public' ? 'false' : 'true'})"><i class="bi ${document.visibility === 'public' ? 'bi-eye-slash' : 'bi-globe2'}"></i> ${document.visibility === 'public' ? 'Privado' : 'Publicar'}</button>` : ''}
+                </div>
+            </div>
+        </div>
+    `;
 }
 
 function renderUploadBox(project) {
@@ -267,6 +360,56 @@ async function uploadRepositoryDocument(projectId) {
         await loadDocuments(true);
     } catch (error) {
         showAlert('#alertContainer', 'danger', error.message || 'Error al guardar el documento.');
+    }
+}
+
+async function uploadThesisDocument() {
+    const input = document.getElementById('thesisFile');
+    const file = input?.files?.[0];
+    const allowed = ['pdf', 'doc', 'docx'];
+
+    if (!file) {
+        showAlert('#alertContainer', 'warning', 'Selecciona un archivo antes de guardar.');
+        return;
+    }
+
+    const extension = file.name.split('.').pop().toLowerCase();
+    if (!allowed.includes(extension)) {
+        showAlert('#alertContainer', 'danger', `Formato no permitido. Usa: ${allowed.join(', ').toUpperCase()}`);
+        return;
+    }
+
+    if (!validarTamañoArchivo(file.size)) {
+        showAlert('#alertContainer', 'danger', `Archivo muy grande. Maximo ${Number(window.SGPI_SETTINGS?.max_file_size_mb || 50)}MB.`);
+        return;
+    }
+
+    const currentUser = auth.getCurrentUser() || {};
+    const formData = new FormData();
+    formData.append('tipo', document.getElementById('thesisTipo').value);
+    formData.append('nombre', document.getElementById('thesisName').value.trim() || 'Avance de tesis o residencias');
+    formData.append('descripcion', document.getElementById('thesisDesc').value.trim() || 'Avance privado para revision.');
+    formData.append('autores', document.getElementById('thesisAuthors').value.trim() || fullName(currentUser));
+    formData.append('archivo', file);
+
+    try {
+        const response = await fetch(`${API_BASE_URL}/repositorio/thesis-documents`, {
+            method: 'POST',
+            credentials: 'include',
+            headers: { Authorization: `Bearer ${auth.getToken()}` },
+            body: formData
+        });
+        const result = await response.json().catch(() => ({}));
+
+        if (!response.ok) {
+            throw new Error(result.error || result.message || Object.values(result.errors || {}).flat().join(' ') || 'No se pudo guardar el avance.');
+        }
+
+        api.clearCache();
+        showAlert('#alertContainer', 'success', 'Avance guardado en repositorio privado.');
+        await loadDocuments(true);
+    } catch (error) {
+        showAlert('#alertContainer', 'danger', error.message || 'Error al guardar el avance.');
     }
 }
 

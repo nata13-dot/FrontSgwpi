@@ -167,7 +167,7 @@ if (!is_authenticated() || !is_student()) {
                         <div class="col-12"><label class="form-label">Nombre</label><input class="form-control" name="nombres" id="initialNombres" required></div>
                         <div class="col-md-6"><label class="form-label">Apellido paterno</label><input class="form-control" name="apa" id="initialApa" required></div>
                         <div class="col-md-6"><label class="form-label">Apellido materno</label><input class="form-control" name="ama" id="initialAma"></div>
-                        <div class="col-md-6"><label class="form-label">Semestre</label><select class="form-select" name="semestre" required><option value="">Selecciona</option><option>5</option><option>6</option><option>7</option><option>8</option></select></div>
+                        <div class="col-md-6"><label class="form-label">Semestre</label><select class="form-select" name="semestre" required><option value="">Selecciona</option><option>5</option><option>6</option><option>7</option><option>8</option><option>9</option></select></div>
                         <div class="col-md-6"><label class="form-label">Grupo</label><input class="form-control" name="grupo" placeholder="A, B, 5to A" required></div>
                         <div class="col-12"><label class="form-label">Foto de perfil</label><input type="file" class="form-control" name="photo" accept="image/*"></div>
                     </div>

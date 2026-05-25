@@ -31,8 +31,8 @@
         <?php endif; ?>
 
         <!-- Filters -->
-        <div class="row mb-4 mt-4">
-            <div class="col-md-8">
+        <div class="row g-3 mb-4 mt-4">
+            <div class="col-lg-5 col-md-12">
                 <input 
                     type="text" 
                     class="form-control form-control-lg"
@@ -40,7 +40,16 @@
                     placeholder="Buscar documentos..."
                 >
             </div>
-            <div class="col-md-4">
+            <div class="col-lg-3 col-md-6">
+                <select class="form-select form-select-lg" id="categoryFilter">
+                    <option value="">Todas las categorias</option>
+                    <option value="general">General</option>
+                    <option value="desarrollo">Desarrollo de proyecto</option>
+                    <option value="tesis">Tesis</option>
+                    <option value="residencias">Residencias</option>
+                </select>
+            </div>
+            <div class="col-lg-4 col-md-6">
                 <select class="form-select form-select-lg" id="sortFilter">
                     <option value="reciente">Más recientes</option>
                     <option value="antiguo">Más antiguos</option>
@@ -124,6 +133,7 @@
         let currentPage = 1;
         let filters = {
             buscar: '',
+            categoria: '',
             ordenar: 'reciente'
         };
         let repositoryUploadModal;
@@ -148,6 +158,7 @@
                 }
 
                 response.data.forEach(doc => {
+                    const categoryLabel = repositoryCategoryLabel(doc.document_category);
                     const adminActions = CAN_MANAGE_REPOSITORY ? `
                         <div class="d-flex gap-2 mt-2">
                             <button type="button" class="btn btn-sm btn-outline-secondary flex-fill" onclick="openRepositoryEditModal(${Number(doc.id)})">
@@ -163,6 +174,7 @@
                             <div class="card h-100">
                                 <div class="card-body">
                                     <h6 class="card-title">${escapeHtml(doc.nombre)}</h6>
+                                    <span class="badge text-bg-light border mb-2">${escapeHtml(categoryLabel)}</span>
                                     <p class="card-text text-muted small">${escapeHtml(doc.descripcion || '')}</p>
                                     <div class="mb-3">
                                         ${doc.tags ? doc.tags.map(tag => 
@@ -331,6 +343,20 @@
             filters.ordenar = e.target.value;
             loadDocumentos(1);
         });
+
+        document.getElementById('categoryFilter').addEventListener('change', (e) => {
+            filters.categoria = e.target.value;
+            loadDocumentos(1);
+        });
+
+        function repositoryCategoryLabel(category) {
+            return {
+                repository: 'General',
+                evaluation_document: 'Desarrollo de proyecto',
+                thesis_general: 'Tesis',
+                thesis_residency: 'Residencias'
+            }[category] || 'General';
+        }
 
         // Cargar al iniciar
         document.addEventListener('DOMContentLoaded', () => {

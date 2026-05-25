@@ -38,7 +38,7 @@ if (!is_authenticated()) { header('Location: /index.php'); exit; }
                                 <div class="col-md-4"><label class="form-label">Apellido paterno</label><input class="form-control" id="apa" disabled></div>
                                 <div class="col-md-4"><label class="form-label">Apellido materno</label><input class="form-control" id="ama" disabled></div>
                                 <div class="col-md-6"><label class="form-label">Correo</label><input class="form-control" id="email" disabled></div>
-                                <div class="col-md-3 student-only"><label class="form-label">Semestre</label><select class="form-select" name="semestre" id="semestre"><option value="">-</option><option>5</option><option>6</option><option>7</option><option>8</option></select></div>
+                                <div class="col-md-3 student-only"><label class="form-label">Semestre</label><select class="form-select" name="semestre" id="semestre"><option value="">-</option><option>5</option><option>6</option><option>7</option><option>8</option><option>9</option></select></div>
                                 <div class="col-md-3 student-only"><label class="form-label">Grupo</label><input class="form-control" name="grupo" id="grupo"></div>
                                 <div class="col-md-6"><label class="form-label">Telefono</label><input class="form-control" name="telefonos" id="telefonos"></div>
                                 <div class="col-md-6"><label class="form-label">Direccion</label><input class="form-control" name="direccion" id="direccion"></div>

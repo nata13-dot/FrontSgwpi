@@ -132,6 +132,7 @@ if (!is_authenticated() || !is_admin()) {
                                         <option value="6">6</option>
                                         <option value="7">7</option>
                                         <option value="8">8</option>
+                                        <option value="9">9</option>
                                     </select>
                                 </div>
                                 <div class="col-md-6">
@@ -146,6 +147,7 @@ if (!is_authenticated() || !is_admin()) {
                                         <option value="6">6</option>
                                         <option value="7">7</option>
                                         <option value="8">8</option>
+                                        <option value="9">9</option>
                                         <option value="5">5</option>
                                     </select>
                                 </div>
@@ -279,6 +281,7 @@ async function loadSemesterPreview() {
                                         <option value="6">Enviar a 6</option>
                                         <option value="7">Enviar a 7</option>
                                         <option value="8">Enviar a 8</option>
+                                        <option value="9">Enviar a 9</option>
                                     </select>
                                 </td>
                             </tr>`).join('')}

@@ -77,6 +77,7 @@ if (!is_authenticated() || !is_admin()) {
                             <option value="6">6</option>
                             <option value="7">7</option>
                             <option value="8">8</option>
+                            <option value="9">9</option>
                         </select>
                     </div>
                     <div class="col-md-3">
@@ -93,7 +94,7 @@ if (!is_authenticated() || !is_admin()) {
                 <div id="alertContainer"></div>
 
                 <div class="card border-0 shadow-sm">
-                    <div class="card-header bg-white text-dark d-none flex-wrap align-items-center justify-content-between gap-2" id="credentialSelectionToolbar">
+                    <div class="card-header credential-selection-toolbar d-none flex-wrap align-items-center justify-content-between gap-2" id="credentialSelectionToolbar">
                         <div class="small text-muted" id="selectedUsersCount">0 usuarios seleccionados</div>
                         <div class="btn-group btn-group-sm" role="group" aria-label="Seleccion de usuarios">
                             <button type="button" class="btn btn-outline-secondary" onclick="selectVisibleUsers()">
@@ -267,7 +268,7 @@ if (!is_authenticated() || !is_admin()) {
                                 <label class="form-label" for="userSemester">Semestre</label>
                                 <select class="form-select" id="userSemester" onchange="loadUserModalGroups()">
                                     <option value="">Seleccionar...</option>
-                                    <option value="5">5</option><option value="6">6</option><option value="7">7</option><option value="8">8</option>
+                                    <option value="5">5</option><option value="6">6</option><option value="7">7</option><option value="8">8</option><option value="9">9</option>
                                 </select>
                             </div>
                             <div class="col-md-4 user-student-field d-none">
@@ -331,7 +332,7 @@ if (!is_authenticated() || !is_admin()) {
                         <div class="col-md-4">
                             <label class="form-label">Semestre</label>
                             <select class="form-select" id="controlSemester" onchange="loadControlGroups()">
-                                <option value="5">5</option><option value="6">6</option><option value="7">7</option><option value="8">8</option>
+                                <option value="5">5</option><option value="6">6</option><option value="7">7</option><option value="8">8</option><option value="9">9</option>
                             </select>
                         </div>
                         <div class="col-md-8 d-flex align-items-end justify-content-md-end">
@@ -368,6 +369,7 @@ if (!is_authenticated() || !is_admin()) {
                                     <option value="6">6</option>
                                     <option value="7">7</option>
                                     <option value="8">8</option>
+                                    <option value="9">9</option>
                                 </select>
                             </div>
                             <div class="col-md-6">
