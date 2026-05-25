@@ -5,13 +5,15 @@ if (!is_authenticated() || (!is_admin() && !is_teacher())) {
     header('Location: /index.php');
     exit;
 }
+
+$is_archived_view = basename($_SERVER['PHP_SELF']) === 'evaluations-archived.php';
 ?>
 <!DOCTYPE html>
 <html lang="es">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Evaluaciones - <?= APP_NAME ?></title>
+    <title><?= $is_archived_view ? 'Evaluaciones archivadas' : 'Evaluaciones' ?> - <?= APP_NAME ?></title>
     <?php require_once $_SERVER['DOCUMENT_ROOT'] . '/includes/visual-preferences.php'; ?>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
@@ -25,10 +27,13 @@ if (!is_authenticated() || (!is_admin() && !is_teacher())) {
             <div class="container-xl mt-5 mb-5">
                 <div class="d-flex align-items-center justify-content-between mb-4">
                     <div>
-                        <h1 class="mb-1">Evaluaciones</h1>
-                        <p class="text-muted mb-0">Rubricas unicas por semestre, con comentarios opcionales</p>
+                        <h1 class="mb-1"><?= $is_archived_view ? 'Evaluaciones archivadas' : 'Evaluaciones' ?></h1>
+                        <p class="text-muted mb-0"><?= $is_archived_view ? 'Consulta evaluaciones finalizadas que ya no aparecen en la vista principal.' : 'Rubricas unicas por semestre, con comentarios opcionales' ?></p>
                     </div>
                     <div class="d-flex gap-2">
+                        <a class="btn btn-outline-secondary" href="/pages/admin/<?= $is_archived_view ? 'evaluations.php' : 'evaluations-archived.php' ?>">
+                            <i class="bi <?= $is_archived_view ? 'bi-arrow-left' : 'bi-archive' ?>"></i> <?= $is_archived_view ? 'Volver a evaluaciones' : 'Ver archivadas' ?>
+                        </a>
                         <?php if (is_admin()): ?>
                         <button class="btn btn-outline-primary" onclick="openEvaluationManagersModal()">
                             <i class="bi bi-person-gear"></i> Responsable de evaluaciones
@@ -304,6 +309,7 @@ if (!is_authenticated() || (!is_admin() && !is_teacher())) {
     <script>
         const IS_ADMIN = <?= is_admin() ? 'true' : 'false' ?>;
         const CAN_MANAGE_EVALUATIONS = <?= is_evaluation_manager() ? 'true' : 'false' ?>;
+        const IS_ARCHIVED_VIEW = <?= $is_archived_view ? 'true' : 'false' ?>;
     </script>
     <script>
         let projects = [];
@@ -681,6 +687,7 @@ if (!is_authenticated() || (!is_admin() && !is_teacher())) {
         async function loadEvaluations(showLoading = true, fresh = false) {
             const projectId = document.getElementById('projectFilter').value;
             const params = projectId ? { project_id: projectId } : {};
+            params.archived = IS_ARCHIVED_VIEW ? 1 : 0;
             if (fresh) params._fresh = 1;
             const tbody = document.getElementById('evaluationsTable');
             if (showLoading) {
@@ -691,7 +698,7 @@ if (!is_authenticated() || (!is_admin() && !is_teacher())) {
             tbody.innerHTML = '';
 
             if (evaluations.length === 0) {
-                tbody.innerHTML = '<tr><td colspan="7" class="text-center text-muted py-4">No hay evaluaciones</td></tr>';
+                tbody.innerHTML = `<tr><td colspan="7" class="text-center text-muted py-4">${IS_ARCHIVED_VIEW ? 'No hay evaluaciones archivadas' : 'No hay evaluaciones'}</td></tr>`;
                 return;
             }
 
@@ -772,6 +779,7 @@ if (!is_authenticated() || (!is_admin() && !is_teacher())) {
                                     <button class="btn btn-sm btn-outline-secondary" onclick="showProjectDetails(${evaluation.id})" title="Detalles del proyecto"><i class="bi bi-info-circle"></i></button>
                                     <button class="btn btn-sm btn-outline-secondary evaluation-report-btn" onclick="downloadEvaluationReport(${evaluation.id})" title="Reporte PDF"><i class="bi bi-file-earmark-pdf"></i></button>
                                     ${(evaluation.can_manage_evaluations && Number(evaluation.semestre) === 8) ? `<button class="btn btn-sm btn-outline-primary" onclick="openRubricModal(${evaluation.project_id})" title="Rubrica personalizada"><i class="bi bi-ui-checks-grid"></i></button>` : ''}
+                                    ${evaluation.can_manage_evaluations ? `<button class="btn btn-sm btn-outline-secondary" onclick="${IS_ARCHIVED_VIEW ? 'unarchiveEvaluation' : 'archiveEvaluation'}(${evaluation.id})" title="${IS_ARCHIVED_VIEW ? 'Restaurar a vista principal' : 'Archivar'}"><i class="bi ${IS_ARCHIVED_VIEW ? 'bi-arrow-counterclockwise' : 'bi-archive'}"></i></button>` : ''}
                                     ${evaluation.can_manage_evaluations ? `<button class="btn btn-sm btn-outline-danger" onclick="deleteEvaluation(${evaluation.id})" title="Eliminar"><i class="bi bi-trash"></i></button>` : ''}
                                 </div>
                             </div>
@@ -1421,6 +1429,28 @@ if (!is_authenticated() || (!is_admin() && !is_teacher())) {
             await api.delete(`/evaluations/${id}`);
             showAlert('#alertContainer', 'success', 'Evaluacion eliminada');
             loadEvaluations();
+        }
+
+        async function archiveEvaluation(id) {
+            if (!await confirmAction({
+                title: 'Archivar evaluacion',
+                text: 'La evaluacion dejara de aparecer en la vista principal, pero conservara sus reportes y detalle.',
+                confirmButtonText: 'Si, archivar'
+            })) return;
+            await api.post(`/evaluations/${id}/archive`, {});
+            showAlert('#alertContainer', 'success', 'Evaluacion archivada');
+            loadEvaluations(true, true);
+        }
+
+        async function unarchiveEvaluation(id) {
+            if (!await confirmAction({
+                title: 'Restaurar evaluacion',
+                text: 'La evaluacion volvera a aparecer en la vista principal.',
+                confirmButtonText: 'Si, restaurar'
+            })) return;
+            await api.post(`/evaluations/${id}/unarchive`, {});
+            showAlert('#alertContainer', 'success', 'Evaluacion restaurada');
+            loadEvaluations(true, true);
         }
 
         document.addEventListener('DOMContentLoaded', async () => {
