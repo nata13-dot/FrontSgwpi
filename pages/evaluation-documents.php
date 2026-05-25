@@ -75,7 +75,7 @@ if (!is_authenticated()) {
             <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3 mb-4">
                 <div>
                     <h1 class="mb-1">Documentos de evaluacion</h1>
-                    <p class="text-muted mb-0">Entregables adicionales ligados a proyectos y evaluaciones.</p>
+                    <p class="text-muted mb-0">Documentos de investigacion guardados en repositorio privado para revision.</p>
                 </div>
                 <button class="btn btn-outline-primary" type="button" onclick="loadDocuments(true)">
                     <i class="bi bi-arrow-clockwise"></i> Actualizar
@@ -115,7 +115,7 @@ async function loadDocuments(forceFresh = false) {
     container.innerHTML = '<div class="text-center py-5"><div class="spinner-border text-primary" role="status"></div><p class="text-muted mt-3 mb-0">Cargando documentos...</p></div>';
 
     try {
-        const response = await api.get('/evaluation-documents', forceFresh ? { _fresh: true } : {});
+        const response = await api.get('/repositorio/evaluation-documents', forceFresh ? { _fresh: true } : {});
         state.projects = response.data || [];
         renderDocuments();
     } catch (error) {
@@ -140,7 +140,7 @@ function renderDocuments() {
                         <div class="project-meta">
                             <span class="badge text-bg-light border"><i class="bi bi-people"></i> ${esc(memberNames(project.integrantes))}</span>
                             <span class="badge text-bg-light border"><i class="bi bi-book"></i> ${esc(subjectNames(project.asignaturas))}</span>
-                            ${project.requiere_documento_investigacion ? '<span class="badge text-bg-info">Taller de investigacion</span>' : ''}
+                            <span class="badge text-bg-info">Taller de investigacion</span>
                         </div>
                     </div>
                     <div class="text-lg-end">
@@ -149,38 +149,36 @@ function renderDocuments() {
                     </div>
                 </div>
                 <hr>
-                ${project.deliverables.map(deliverable => renderDeliverable(project, deliverable)).join('')}
+                ${renderUploadBox(project)}
+                ${project.documents.length ? project.documents.map(document => renderRepositoryDocument(project, document)).join('') : '<p class="text-muted mb-0">Aun no hay documentos cargados para este proyecto.</p>'}
             </div>
         </div>
     `).join('');
 }
 
-function renderDeliverable(project, deliverable) {
-    const allowed = deliverable.allowed_extensions || [];
-    const accept = allowed.map(ext => `.${ext}`).join(',');
-    const submittedBy = deliverable.submitted_by ? fullName(deliverable.submitted_by) : 'Sin carga';
-    const canUpload = project.puede_subir;
+function renderUploadBox(project) {
+    if (!project.puede_subir) return '';
 
     return `
-        <div class="document-row">
-                <div class="d-flex flex-column flex-xl-row justify-content-between gap-3">
-                <div>
-                    <div class="d-flex flex-wrap align-items-center gap-2 mb-1">
-                        <h6 class="mb-0">${esc(deliverable.nombre)}</h6>
-                        <span class="badge ${statusClass(deliverable.estado)}">${esc(deliverable.estado || 'pendiente')}</span>
-                    </div>
-                    <p class="text-muted mb-2">${esc(deliverable.descripcion || '')}</p>
-                    <small class="text-muted">
-                        <i class="bi bi-person-check"></i> ${esc(submittedBy)}
-                        <span class="mx-2">|</span>
-                        Formatos: ${esc(allowed.join(', ').toUpperCase())}
-                    </small>
+        <div class="document-row mb-3 bg-light">
+            <h6><i class="bi bi-cloud-arrow-up"></i> Subir documento al repositorio privado</h6>
+            <div class="row g-2">
+                <div class="col-md-4">
+                    <input class="form-control form-control-sm" id="name-${project.project.id}" maxlength="255" placeholder="Nombre del documento">
                 </div>
-                <div class="document-actions d-flex flex-wrap justify-content-xl-end align-items-center gap-2">
-                    ${deliverable.archivo_path ? `<button type="button" class="btn btn-sm btn-outline-secondary" onclick="descargarEntregable(${deliverable.id}, '${escAttr(deliverable.nombre)}')"><i class="bi bi-download"></i> Descargar</button>` : ''}
-                    <input class="form-control form-control-sm" type="file" id="file-${deliverable.id}" accept="${accept}" ${canUpload ? '' : 'disabled'}>
-                    <button type="button" class="btn btn-sm btn-primary" onclick="uploadDocument(${deliverable.id})" ${canUpload ? '' : 'disabled'}>
-                        <i class="bi bi-upload"></i> Guardar
+                <div class="col-md-4">
+                    <input class="form-control form-control-sm" id="desc-${project.project.id}" maxlength="5000" placeholder="Descripcion breve">
+                </div>
+                <div class="col-md-4">
+                    <input class="form-control form-control-sm" id="authors-${project.project.id}" maxlength="1000" placeholder="Autores">
+                </div>
+                <div class="col-md-8">
+                    <input class="form-control form-control-sm" type="file" id="file-${project.project.id}" accept=".pdf,.doc,.docx">
+                    <div class="form-text">Permitidos: PDF, DOC y DOCX.</div>
+                </div>
+                <div class="col-md-4">
+                    <button type="button" class="btn btn-sm btn-primary w-100" onclick="uploadRepositoryDocument(${Number(project.project.id)})">
+                        <i class="bi bi-upload"></i> Guardar privado
                     </button>
                 </div>
             </div>
@@ -188,11 +186,45 @@ function renderDeliverable(project, deliverable) {
     `;
 }
 
-async function uploadDocument(deliverableId) {
-    const input = document.getElementById(`file-${deliverableId}`);
+function renderRepositoryDocument(project, document) {
+    const allowed = document.allowed_extensions || ['pdf', 'doc', 'docx'];
+    const accept = allowed.map(ext => `.${ext}`).join(',');
+    const submittedBy = document.uploaded_by ? fullName(document.uploaded_by) : 'Sin carga';
+    const publicBadge = document.is_public
+        ? '<span class="badge text-bg-success">Publicado</span>'
+        : '<span class="badge text-bg-warning">Privado</span>';
+
+    return `
+        <div class="document-row">
+                <div class="d-flex flex-column flex-xl-row justify-content-between gap-3">
+                <div>
+                    <div class="d-flex flex-wrap align-items-center gap-2 mb-1">
+                        <h6 class="mb-0">${esc(document.nombre)}</h6>
+                        ${publicBadge}
+                    </div>
+                    <p class="text-muted mb-2">${esc(document.descripcion || '')}</p>
+                    <small class="text-muted">
+                        <i class="bi bi-person-check"></i> ${esc(submittedBy)}
+                        <span class="mx-2">|</span>
+                        Formatos: ${esc(allowed.join(', ').toUpperCase())}
+                        <span class="mx-2">|</span>
+                        ${document.created_at ? new Date(document.created_at).toLocaleDateString('es-MX') : ''}
+                    </small>
+                </div>
+                <div class="document-actions d-flex flex-wrap justify-content-xl-end align-items-center gap-2">
+                    <button type="button" class="btn btn-sm btn-outline-secondary" onclick="downloadRepositoryDocument(${document.id}, '${escAttr(document.nombre)}')"><i class="bi bi-download"></i> Descargar</button>
+                    ${project.puede_publicar ? `<button type="button" class="btn btn-sm ${document.is_public ? 'btn-outline-warning' : 'btn-success'}" onclick="toggleRepositoryPublication(${document.id}, ${document.is_public ? 'false' : 'true'})"><i class="bi ${document.is_public ? 'bi-eye-slash' : 'bi-globe2'}"></i> ${document.is_public ? 'Privado' : 'Publicar'}</button>` : ''}
+                </div>
+            </div>
+        </div>
+    `;
+}
+
+async function uploadRepositoryDocument(projectId) {
+    const input = document.getElementById(`file-${projectId}`);
     const file = input?.files?.[0];
-    const deliverable = state.projects.flatMap(project => project.deliverables).find(item => Number(item.id) === Number(deliverableId));
-    const allowed = deliverable?.allowed_extensions || [];
+    const project = state.projects.find(item => Number(item.project.id) === Number(projectId));
+    const allowed = ['pdf', 'doc', 'docx'];
 
     if (!file) {
         showAlert('#alertContainer', 'warning', 'Selecciona un archivo antes de guardar.');
@@ -211,10 +243,14 @@ async function uploadDocument(deliverableId) {
     }
 
     const formData = new FormData();
+    formData.append('project_id', projectId);
+    formData.append('nombre', document.getElementById(`name-${projectId}`).value.trim() || `Documento de investigacion - ${project?.project?.title || projectId}`);
+    formData.append('descripcion', document.getElementById(`desc-${projectId}`).value.trim() || 'Documento de investigacion para revision.');
+    formData.append('autores', document.getElementById(`authors-${projectId}`).value.trim() || memberNames(project?.integrantes || []));
     formData.append('archivo', file);
 
     try {
-        const response = await fetch(`${API_BASE_URL}/deliverables/${deliverableId}/upload`, {
+        const response = await fetch(`${API_BASE_URL}/repositorio/evaluation-documents`, {
             method: 'POST',
             credentials: 'include',
             headers: { Authorization: `Bearer ${auth.getToken()}` },
@@ -227,20 +263,49 @@ async function uploadDocument(deliverableId) {
         }
 
         api.clearCache();
-        showAlert('#alertContainer', 'success', 'Documento guardado correctamente.');
+        showAlert('#alertContainer', 'success', 'Documento guardado en repositorio privado.');
         await loadDocuments(true);
     } catch (error) {
         showAlert('#alertContainer', 'danger', error.message || 'Error al guardar el documento.');
     }
 }
 
-function statusClass(status) {
-    return {
-        pendiente: 'text-bg-warning',
-        enviado: 'text-bg-primary',
-        revisado: 'text-bg-info',
-        aprobado: 'text-bg-success'
-    }[status] || 'text-bg-secondary';
+async function downloadRepositoryDocument(documentId, name) {
+    try {
+        const response = await fetch(`${API_BASE_URL}/repositorio/${documentId}/download`, {
+            headers: { Authorization: `Bearer ${auth.getToken()}` },
+            credentials: 'include'
+        });
+        if (!response.ok) throw new Error('No se pudo descargar el documento.');
+        const blob = await response.blob();
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = name || 'documento';
+        link.click();
+        URL.revokeObjectURL(url);
+    } catch (error) {
+        showAlert('#alertContainer', 'danger', error.message || 'Error descargando documento.');
+    }
+}
+
+async function toggleRepositoryPublication(documentId, makePublic) {
+    const confirmed = await confirmAction({
+        title: makePublic ? 'Publicar documento' : 'Marcar como privado',
+        text: makePublic
+            ? 'El documento sera visible en el repositorio publico.'
+            : 'El documento dejara de ser visible para visitantes del repositorio.',
+        confirmButtonText: makePublic ? 'Publicar' : 'Hacer privado'
+    });
+    if (!confirmed) return;
+
+    try {
+        await api.post(`/repositorio/${documentId}/publish`, { public: makePublic });
+        showAlert('#alertContainer', 'success', makePublic ? 'Documento publicado.' : 'Documento marcado como privado.');
+        await loadDocuments(true);
+    } catch (error) {
+        showAlert('#alertContainer', 'danger', error.message || 'No se pudo actualizar la visibilidad.');
+    }
 }
 
 function memberNames(members) {

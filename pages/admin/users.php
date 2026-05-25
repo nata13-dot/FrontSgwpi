@@ -93,11 +93,25 @@ if (!is_authenticated() || !is_admin()) {
                 <div id="alertContainer"></div>
 
                 <div class="card border-0 shadow-sm">
+                    <div class="card-header bg-white d-flex flex-wrap align-items-center justify-content-between gap-2">
+                        <div class="small text-muted" id="selectedUsersCount">0 usuarios seleccionados</div>
+                        <div class="btn-group btn-group-sm" role="group" aria-label="Seleccion de usuarios">
+                            <button type="button" class="btn btn-outline-secondary" onclick="selectVisibleUsers()">
+                                <i class="bi bi-check2-square"></i> Seleccionar pagina
+                            </button>
+                            <button type="button" class="btn btn-outline-secondary" onclick="clearSelectedUsers()">
+                                <i class="bi bi-x-square"></i> Limpiar seleccion
+                            </button>
+                        </div>
+                    </div>
                     <div class="card-body p-0">
                         <div class="table-responsive">
                             <table class="table table-hover mb-0 align-middle">
                                 <thead>
                                     <tr>
+                                        <th style="width: 44px;">
+                                            <input class="form-check-input" type="checkbox" id="selectVisibleUsersCheckbox" onchange="toggleVisibleUsers(this.checked)" title="Seleccionar usuarios visibles">
+                                        </th>
                                         <th>No. de Control, No. de empleado</th>
                                         <th>Nombre</th>
                                         <th>Email</th>
@@ -109,7 +123,7 @@ if (!is_authenticated() || !is_admin()) {
                                     </tr>
                                 </thead>
                                 <tbody id="usersTable">
-                                    <tr><td colspan="8" class="text-center py-4"><div class="spinner-custom"></div></td></tr>
+                                    <tr><td colspan="9" class="text-center py-4"><div class="spinner-custom"></div></td></tr>
                                 </tbody>
                             </table>
                         </div>
@@ -153,6 +167,21 @@ if (!is_authenticated() || !is_admin()) {
                     <div class="alert alert-warning small">
                         Por seguridad no se envian contraseñas existentes. Si usas la etiqueta <strong>{{Contraseña}}</strong>,
                         el sistema generara una contraseña temporal nueva para cada usuario y guardara solo su hash.
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label d-block">Destinatarios</label>
+                        <div class="vstack gap-2">
+                            <label class="form-check border rounded p-2 ps-4">
+                                <input class="form-check-input" type="radio" name="credentialEmailMode" id="credentialEmailModeSelected" value="selected">
+                                <span class="form-check-label">Solo usuarios seleccionados</span>
+                                <span class="text-muted small d-block" id="credentialEmailSelectedHelp">Selecciona usuarios en la tabla para usar esta opcion.</span>
+                            </label>
+                            <label class="form-check border rounded p-2 ps-4">
+                                <input class="form-check-input" type="radio" name="credentialEmailMode" id="credentialEmailModeFiltered" value="filtered" checked>
+                                <span class="form-check-label">Todos los usuarios del filtro actual</span>
+                                <span class="text-muted small d-block">Usa perfil, estado, busqueda, semestre y grupo actuales.</span>
+                            </label>
+                        </div>
                     </div>
                     <div class="mb-3">
                         <label class="form-label" for="credentialEmailSubject">Asunto</label>
@@ -366,6 +395,8 @@ if (!is_authenticated() || !is_admin()) {
         let editingGroupId = null;
         let loadedModalUser = null;
         let usersSearchTimer = null;
+        let visibleUserIds = [];
+        const selectedUserIds = new Set();
 
         function escapeHtml(value) {
             return String(value ?? '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#039;');
@@ -397,7 +428,7 @@ if (!is_authenticated() || !is_admin()) {
             currentPage = page;
             updateFilterButtons();
             const tbody = document.getElementById('usersTable');
-            tbody.innerHTML = '<tr><td colspan="6" class="text-center py-4"><div class="spinner-custom"></div></td></tr>';
+            tbody.innerHTML = '<tr><td colspan="9" class="text-center py-4"><div class="spinner-custom"></div></td></tr>';
 
             try {
                 const params = { page, per_page: usersPerPage };
@@ -414,11 +445,13 @@ if (!is_authenticated() || !is_admin()) {
 
                 const response = await api.get('/users', params);
                 const users = response.data || [];
+                visibleUserIds = users.map(user => String(user.id));
                 tbody.innerHTML = '';
 
                 if (users.length === 0) {
-                    tbody.innerHTML = '<tr><td colspan="8" class="text-center text-muted py-4">No hay usuarios para este filtro</td></tr>';
+                    tbody.innerHTML = '<tr><td colspan="9" class="text-center text-muted py-4">No hay usuarios para este filtro</td></tr>';
                     renderPagination(response);
+                    updateSelectedUsersUi();
                     return;
                 }
 
@@ -439,6 +472,9 @@ if (!is_authenticated() || !is_admin()) {
 
                     tbody.innerHTML += `
                         <tr class="${isActive ? '' : 'table-light'}">
+                            <td>
+                                <input class="form-check-input user-select-checkbox" type="checkbox" value="${escapeHtml(user.id)}" onchange="toggleUserSelection('${escapeHtml(user.id)}', this.checked)" ${selectedUserIds.has(String(user.id)) ? 'checked' : ''} aria-label="Seleccionar usuario ${escapeHtml(user.id)}">
+                            </td>
                             <td><strong>${escapeHtml(user.id)}</strong></td>
                             <td>${escapeHtml(user.nombres)} ${escapeHtml(user.apa)} ${escapeHtml(user.ama)}</td>
                             <td>${escapeHtml(user.email)}</td>
@@ -457,9 +493,66 @@ if (!is_authenticated() || !is_admin()) {
                 });
 
                 renderPagination(response);
+                updateSelectedUsersUi();
             } catch (error) {
-                tbody.innerHTML = '<tr><td colspan="8" class="text-center text-danger py-4">Error al cargar usuarios</td></tr>';
+                tbody.innerHTML = '<tr><td colspan="9" class="text-center text-danger py-4">Error al cargar usuarios</td></tr>';
+                visibleUserIds = [];
+                updateSelectedUsersUi();
             }
+        }
+
+        function toggleUserSelection(userId, checked) {
+            const id = String(userId);
+            if (checked) {
+                selectedUserIds.add(id);
+            } else {
+                selectedUserIds.delete(id);
+            }
+            updateSelectedUsersUi();
+        }
+
+        function toggleVisibleUsers(checked) {
+            visibleUserIds.forEach(userId => {
+                if (checked) {
+                    selectedUserIds.add(String(userId));
+                } else {
+                    selectedUserIds.delete(String(userId));
+                }
+            });
+            document.querySelectorAll('.user-select-checkbox').forEach(input => {
+                input.checked = checked;
+            });
+            updateSelectedUsersUi();
+        }
+
+        function selectVisibleUsers() {
+            toggleVisibleUsers(true);
+        }
+
+        function clearSelectedUsers() {
+            selectedUserIds.clear();
+            document.querySelectorAll('.user-select-checkbox').forEach(input => input.checked = false);
+            updateSelectedUsersUi();
+        }
+
+        function updateSelectedUsersUi() {
+            const count = selectedUserIds.size;
+            const countBox = document.getElementById('selectedUsersCount');
+            if (countBox) countBox.textContent = `${count} usuario${count === 1 ? '' : 's'} seleccionado${count === 1 ? '' : 's'}`;
+
+            const selectAll = document.getElementById('selectVisibleUsersCheckbox');
+            if (selectAll) {
+                const visibleSelected = visibleUserIds.filter(id => selectedUserIds.has(String(id))).length;
+                selectAll.checked = visibleUserIds.length > 0 && visibleSelected === visibleUserIds.length;
+                selectAll.indeterminate = visibleSelected > 0 && visibleSelected < visibleUserIds.length;
+            }
+
+            const selectedMode = document.getElementById('credentialEmailModeSelected');
+            const selectedHelp = document.getElementById('credentialEmailSelectedHelp');
+            if (selectedMode) selectedMode.disabled = count === 0;
+            if (selectedHelp) selectedHelp.textContent = count > 0
+                ? `${count} usuario${count === 1 ? '' : 's'} seleccionado${count === 1 ? '' : 's'} para pruebas controladas.`
+                : 'Selecciona usuarios en la tabla para usar esta opcion.';
         }
 
 
@@ -949,6 +1042,10 @@ if (!is_authenticated() || !is_admin()) {
             return payload;
         }
 
+        function selectedUsersPayload() {
+            return { user_ids: Array.from(selectedUserIds) };
+        }
+
         function describeCredentialScope(payload) {
             const parts = [];
             const statusLabels = { active: 'activos', inactive: 'inactivos', all: 'todos' };
@@ -961,11 +1058,30 @@ if (!is_authenticated() || !is_admin()) {
             return `Se enviara a los usuarios con correo que coincidan con el filtro actual: ${parts.join(', ')}. Maximo 200 destinatarios.`;
         }
 
+        function selectedCredentialScope() {
+            const count = selectedUserIds.size;
+            return `Se enviara solo a ${count} usuario${count === 1 ? '' : 's'} seleccionado${count === 1 ? '' : 's'}. Esta es la opcion recomendada para pruebas controladas.`;
+        }
+
+        function currentCredentialMode() {
+            return document.querySelector('input[name="credentialEmailMode"]:checked')?.value || 'filtered';
+        }
+
+        function refreshCredentialScopeText() {
+            const scope = currentCredentialMode() === 'selected' && selectedUserIds.size > 0
+                ? selectedCredentialScope()
+                : describeCredentialScope(currentUsersFilterPayload());
+            document.getElementById('credentialEmailScope').textContent = scope;
+        }
+
         async function openCredentialEmailModal() {
             if (!usersCredentialModal) usersCredentialModal = new bootstrap.Modal(document.getElementById('credentialEmailModal'));
             document.getElementById('credentialEmailForm').reset();
             document.getElementById('credentialEmailAlert').innerHTML = '';
             document.getElementById('credentialEmailRotatePassword').checked = true;
+            document.getElementById('credentialEmailModeSelected').checked = selectedUserIds.size > 0;
+            document.getElementById('credentialEmailModeFiltered').checked = selectedUserIds.size === 0;
+            updateSelectedUsersUi();
             try {
                 const template = await api.get('/users/credential-email-template', { _cache_ttl: 300000 });
                 document.getElementById('credentialEmailSubject').value = template.subject || 'Credenciales de acceso al SGPI';
@@ -975,18 +1091,24 @@ if (!is_authenticated() || !is_admin()) {
                 document.getElementById('credentialEmailSubject').value = 'Credenciales de acceso al SGPI';
                 document.getElementById('credentialEmailBody').value = 'Hola {{Nombre}},\n\nUsuario: {{Usuario}}\nCorreo: {{Correo}}\nContraseña temporal: {{Contraseña}}\n\nPor seguridad, cambia tu contraseña despues de iniciar sesion.';
             }
-            document.getElementById('credentialEmailScope').textContent = describeCredentialScope(currentUsersFilterPayload());
+            refreshCredentialScopeText();
             usersCredentialModal.show();
         }
 
         async function sendCredentialEmails(event) {
             event.preventDefault();
+            const mode = currentCredentialMode();
             const payload = {
-                ...currentUsersFilterPayload(),
+                ...(mode === 'selected' ? selectedUsersPayload() : currentUsersFilterPayload()),
                 subject: document.getElementById('credentialEmailSubject').value.trim(),
                 body: document.getElementById('credentialEmailBody').value.trim(),
                 rotate_password: document.getElementById('credentialEmailRotatePassword').checked
             };
+
+            if (mode === 'selected' && selectedUserIds.size === 0) {
+                document.getElementById('credentialEmailAlert').innerHTML = '<div class="alert alert-warning">Selecciona al menos un usuario o cambia a filtro actual.</div>';
+                return;
+            }
 
             if (!payload.subject || !payload.body) {
                 document.getElementById('credentialEmailAlert').innerHTML = '<div class="alert alert-warning">Asunto y base del correo son obligatorios.</div>';
@@ -995,7 +1117,9 @@ if (!is_authenticated() || !is_admin()) {
 
             const confirmed = await confirmAction({
                 title: 'Enviar credenciales',
-                text: 'Esta accion puede cambiar contraseñas y enviar credenciales por correo a varios usuarios. Verifica filtros, destinatarios y plantilla antes de continuar.',
+                text: mode === 'selected'
+                    ? `Esta accion enviara credenciales a ${selectedUserIds.size} usuario(s) seleccionado(s). Verifica destinatarios y plantilla antes de continuar.`
+                    : 'Esta accion puede cambiar contraseñas y enviar credenciales por correo a todos los usuarios del filtro actual. Verifica filtros, destinatarios y plantilla antes de continuar.',
                 confirmButtonText: 'Continuar'
             });
             if (!confirmed) return;
@@ -1033,6 +1157,12 @@ if (!is_authenticated() || !is_admin()) {
                 button.innerHTML = originalText;
             }
         }
+
+        document.addEventListener('change', (event) => {
+            if (event.target?.name === 'credentialEmailMode') {
+                refreshCredentialScopeText();
+            }
+        });
 
         async function importUsersExcel(event) {
             event.preventDefault();
