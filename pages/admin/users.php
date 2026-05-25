@@ -184,6 +184,24 @@ if (!is_authenticated() || !is_admin()) {
                         </div>
                     </div>
                     <div class="mb-3">
+                        <label class="form-label d-block">Perfiles para envio por filtro</label>
+                        <div class="d-flex flex-wrap gap-2">
+                            <label class="form-check border rounded px-3 py-2">
+                                <input class="form-check-input credential-profile-checkbox" type="checkbox" value="1" checked onchange="refreshCredentialScopeText()">
+                                <span class="form-check-label">Administrativos</span>
+                            </label>
+                            <label class="form-check border rounded px-3 py-2">
+                                <input class="form-check-input credential-profile-checkbox" type="checkbox" value="2" checked onchange="refreshCredentialScopeText()">
+                                <span class="form-check-label">Docentes</span>
+                            </label>
+                            <label class="form-check border rounded px-3 py-2">
+                                <input class="form-check-input credential-profile-checkbox" type="checkbox" value="3" checked onchange="refreshCredentialScopeText()">
+                                <span class="form-check-label">Estudiantes</span>
+                            </label>
+                        </div>
+                        <div class="form-text">Estas casillas siempre quedan disponibles. Aplican cuando eliges "Todos los usuarios del filtro actual".</div>
+                    </div>
+                    <div class="mb-3">
                         <label class="form-label" for="credentialEmailSubject">Asunto</label>
                         <input type="text" class="form-control" id="credentialEmailSubject" maxlength="150" required>
                     </div>
@@ -1030,10 +1048,13 @@ if (!is_authenticated() || !is_admin()) {
         function currentUsersFilterPayload() {
             const payload = {};
             if (currentStatus !== 'all') payload.status = currentStatus;
-            if (currentProfile !== 'all') payload.perfil_id = Number(currentProfile);
+            const selectedProfiles = selectedCredentialProfiles();
+            if (selectedProfiles.length > 0 && selectedProfiles.length < 3) {
+                payload.perfil_ids = selectedProfiles;
+            }
             const search = document.getElementById('userSearchInput')?.value.trim();
             if (search) payload.q = search;
-            if (currentProfile === '3') {
+            if (selectedProfiles.length === 1 && Number(selectedProfiles[0]) === 3) {
                 const semester = document.getElementById('semesterFilter').value;
                 const group = document.getElementById('groupFilter').value;
                 if (semester) payload.semestre = Number(semester);
@@ -1046,12 +1067,27 @@ if (!is_authenticated() || !is_admin()) {
             return { user_ids: Array.from(selectedUserIds) };
         }
 
+        function selectedCredentialProfiles() {
+            return Array.from(document.querySelectorAll('.credential-profile-checkbox:checked'))
+                .map(input => Number(input.value));
+        }
+
+        function syncCredentialProfileChecksWithCurrentFilter() {
+            const checkboxes = document.querySelectorAll('.credential-profile-checkbox');
+            checkboxes.forEach(input => {
+                input.checked = currentProfile === 'all' || String(input.value) === String(currentProfile);
+                input.disabled = false;
+            });
+        }
+
         function describeCredentialScope(payload) {
             const parts = [];
             const statusLabels = { active: 'activos', inactive: 'inactivos', all: 'todos' };
             const profileLabels = { 1: 'administrativos', 2: 'docentes', 3: 'estudiantes' };
             parts.push(`Usuarios ${statusLabels[payload.status || 'all'] || 'activos'}`);
-            if (payload.perfil_id) parts.push(profileLabels[payload.perfil_id] || `perfil ${payload.perfil_id}`);
+            if (payload.perfil_ids?.length) {
+                parts.push(payload.perfil_ids.map(id => profileLabels[id] || `perfil ${id}`).join(', '));
+            }
             if (payload.semestre) parts.push(`semestre ${payload.semestre}`);
             if (payload.grupo) parts.push(`grupo ${payload.grupo}`);
             if (payload.q) parts.push(`busqueda: "${payload.q}"`);
@@ -1081,6 +1117,7 @@ if (!is_authenticated() || !is_admin()) {
             document.getElementById('credentialEmailRotatePassword').checked = true;
             document.getElementById('credentialEmailModeSelected').checked = selectedUserIds.size > 0;
             document.getElementById('credentialEmailModeFiltered').checked = selectedUserIds.size === 0;
+            syncCredentialProfileChecksWithCurrentFilter();
             updateSelectedUsersUi();
             try {
                 const template = await api.get('/users/credential-email-template', { _cache_ttl: 300000 });
@@ -1107,6 +1144,11 @@ if (!is_authenticated() || !is_admin()) {
 
             if (mode === 'selected' && selectedUserIds.size === 0) {
                 document.getElementById('credentialEmailAlert').innerHTML = '<div class="alert alert-warning">Selecciona al menos un usuario o cambia a filtro actual.</div>';
+                return;
+            }
+
+            if (mode === 'filtered' && selectedCredentialProfiles().length === 0) {
+                document.getElementById('credentialEmailAlert').innerHTML = '<div class="alert alert-warning">Selecciona al menos un perfil para el envio por filtro.</div>';
                 return;
             }
 
