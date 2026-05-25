@@ -175,7 +175,9 @@
 
         async function loadDocumentos(page = 1) {
             try {
-                const endpoint = CAN_MANAGE_REPOSITORY ? '/repositorio/admin/list' : '/repositorio';
+                const endpoint = CAN_MANAGE_REPOSITORY
+                    ? '/repositorio/admin/list'
+                    : (IS_STUDENT ? '/repositorio/student/list' : '/repositorio');
                 const response = await api.get(endpoint, {
                     ...filters,
                     page: page
@@ -191,8 +193,8 @@
 
                 response.data.forEach(doc => {
                     const categoryLabel = repositoryCategoryLabel(doc.document_category);
-                    const visibilityBadge = CAN_MANAGE_REPOSITORY
-                        ? `<span class="badge ${doc.visibility === 'private' ? 'text-bg-warning' : 'text-bg-success'} mb-2 ms-1">${doc.visibility === 'private' ? 'Solo docentes/admin' : 'Público'}</span>`
+                    const visibilityBadge = (CAN_MANAGE_REPOSITORY || IS_STUDENT)
+                        ? `<span class="badge ${doc.visibility === 'private' ? 'text-bg-warning' : 'text-bg-success'} mb-2 ms-1">${doc.visibility === 'private' ? 'Privado' : 'Público'}</span>`
                         : '';
                     const adminActions = CAN_MANAGE_REPOSITORY ? `
                         <div class="d-flex gap-2 mt-2">
