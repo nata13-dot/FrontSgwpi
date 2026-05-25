@@ -105,6 +105,19 @@
                                 <input type="file" class="form-control" id="repoArchivo" name="archivo" accept=".pdf,.doc,.docx,.xls,.xlsx,.zip,.txt,.jpg,.jpeg,.png,.epub" required>
                                 <div class="form-text" id="repoArchivoHelp">Permitidos: PDF, Word, Excel, ZIP, TXT, imagenes JPG/PNG y EPUB.</div>
                             </div>
+                            <div class="col-md-6">
+                                <label class="form-label" for="repoVisibility">Visibilidad</label>
+                                <select class="form-select" id="repoVisibility" name="visibility">
+                                    <option value="public">Público: aparece para todos</option>
+                                    <option value="private">Privado: solo docentes y administradores</option>
+                                </select>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">Estado de publicación</label>
+                                <div class="border rounded px-3 py-2 small text-muted" id="repoVisibilityHelp">
+                                    El documento será visible en el repositorio público.
+                                </div>
+                            </div>
                             <div class="col-12">
                                 <label class="form-label">Etiquetas</label>
                                 <div id="repoTags" class="d-flex flex-wrap gap-2"></div>
@@ -234,6 +247,8 @@
             document.getElementById('repoArchivo').required = true;
             document.getElementById('repoArchivoHelp').textContent = 'Permitidos: PDF, Word, Excel, ZIP, TXT, imagenes JPG/PNG y EPUB.';
             document.getElementById('repoUploadBtn').innerHTML = '<i class="bi bi-cloud-arrow-up"></i> Subir documento';
+            document.getElementById('repoVisibility').value = 'public';
+            refreshRepositoryVisibilityHelp();
             document.querySelectorAll('.repo-tag').forEach(input => input.checked = false);
             await loadRepositoryAdminData();
             repositoryUploadModal.show();
@@ -258,11 +273,22 @@
                 document.getElementById('repoNombre').value = doc.nombre || '';
                 document.getElementById('repoDescripcion').value = doc.descripcion || '';
                 document.getElementById('repoAutores').value = doc.autores || '';
+                document.getElementById('repoVisibility').value = doc.visibility === 'private' ? 'private' : 'public';
+                refreshRepositoryVisibilityHelp();
                 await loadRepositoryAdminData((doc.tags || []).map(tag => tag.id));
                 repositoryUploadModal.show();
             } catch (error) {
                 swalToast('error', error.message || 'No fue posible cargar el documento');
             }
+        }
+
+        function refreshRepositoryVisibilityHelp() {
+            const visibility = document.getElementById('repoVisibility')?.value || 'public';
+            const help = document.getElementById('repoVisibilityHelp');
+            if (!help) return;
+            help.innerHTML = visibility === 'public'
+                ? '<i class="bi bi-globe2 text-success"></i> El documento será visible para visitantes, estudiantes, docentes y administradores.'
+                : '<i class="bi bi-lock text-warning"></i> El documento no aparecerá en el repositorio público; solo docentes y administradores podrán consultarlo.';
         }
 
         async function submitRepositoryDocument(event) {
@@ -348,6 +374,7 @@
             filters.categoria = e.target.value;
             loadDocumentos(1);
         });
+        document.getElementById('repoVisibility')?.addEventListener('change', refreshRepositoryVisibilityHelp);
 
         function repositoryCategoryLabel(category) {
             return {
