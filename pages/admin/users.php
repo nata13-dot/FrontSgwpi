@@ -35,6 +35,9 @@ if (!is_authenticated() || !is_admin()) {
                         <button type="button" class="btn btn-outline-success" onclick="openUsersImportModal()">
                             <i class="bi bi-upload"></i> Cargar Excel
                         </button>
+                        <button type="button" class="btn btn-outline-warning" onclick="openCredentialEmailModal()">
+                            <i class="bi bi-envelope-lock"></i> Enviar credenciales
+                        </button>
                         <button type="button" class="btn btn-primary" onclick="openUserModal()">
                             <i class="bi bi-plus-circle"></i> Nuevo Usuario
                         </button>
@@ -133,6 +136,44 @@ if (!is_authenticated() || !is_admin()) {
                 <div class="modal-footer">
                     <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancelar</button>
                     <button type="submit" class="btn btn-success" id="usersImportBtn"><i class="bi bi-upload"></i> Importar</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <div class="modal fade" id="credentialEmailModal" tabindex="-1">
+        <div class="modal-dialog modal-lg">
+            <form class="modal-content" id="credentialEmailForm" onsubmit="sendCredentialEmails(event)">
+                <div class="modal-header">
+                    <h5 class="modal-title"><i class="bi bi-envelope-lock"></i> Enviar credenciales</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div id="credentialEmailAlert"></div>
+                    <div class="alert alert-warning small">
+                        Por seguridad no se envian contraseñas existentes. Si usas la etiqueta <strong>{{Contraseña}}</strong>,
+                        el sistema generara una contraseña temporal nueva para cada usuario y guardara solo su hash.
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label" for="credentialEmailSubject">Asunto</label>
+                        <input type="text" class="form-control" id="credentialEmailSubject" maxlength="150" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label" for="credentialEmailBody">Base del correo</label>
+                        <textarea class="form-control" id="credentialEmailBody" rows="9" maxlength="5000" required></textarea>
+                        <div class="form-text" id="credentialEmailTags">Etiquetas disponibles: {{Nombre}}, {{Usuario}}, {{Correo}}, {{Contraseña}}, {{Perfil}}, {{Semestre}}, {{Grupo}}</div>
+                    </div>
+                    <div class="form-check mb-3">
+                        <input class="form-check-input" type="checkbox" id="credentialEmailRotatePassword" checked>
+                        <label class="form-check-label" for="credentialEmailRotatePassword">
+                            Generar contraseña temporal nueva para cada destinatario
+                        </label>
+                    </div>
+                    <div class="small text-muted" id="credentialEmailScope"></div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="submit" class="btn btn-warning" id="credentialEmailBtn"><i class="bi bi-send"></i> Enviar correos</button>
                 </div>
             </form>
         </div>
@@ -320,6 +361,7 @@ if (!is_authenticated() || !is_admin()) {
         let groupControlModal;
         let groupFormModal;
         let usersImportModal;
+        let usersCredentialModal;
         let userFormModal;
         let editingGroupId = null;
         let loadedModalUser = null;
@@ -890,6 +932,106 @@ if (!is_authenticated() || !is_admin()) {
             document.getElementById('usersImportForm').reset();
             document.getElementById('usersImportAlert').innerHTML = '';
             usersImportModal.show();
+        }
+
+        function currentUsersFilterPayload() {
+            const payload = {};
+            if (currentStatus !== 'all') payload.status = currentStatus;
+            if (currentProfile !== 'all') payload.perfil_id = Number(currentProfile);
+            const search = document.getElementById('userSearchInput')?.value.trim();
+            if (search) payload.q = search;
+            if (currentProfile === '3') {
+                const semester = document.getElementById('semesterFilter').value;
+                const group = document.getElementById('groupFilter').value;
+                if (semester) payload.semestre = Number(semester);
+                if (group) payload.grupo = group;
+            }
+            return payload;
+        }
+
+        function describeCredentialScope(payload) {
+            const parts = [];
+            const statusLabels = { active: 'activos', inactive: 'inactivos', all: 'todos' };
+            const profileLabels = { 1: 'administrativos', 2: 'docentes', 3: 'estudiantes' };
+            parts.push(`Usuarios ${statusLabels[payload.status || 'all'] || 'activos'}`);
+            if (payload.perfil_id) parts.push(profileLabels[payload.perfil_id] || `perfil ${payload.perfil_id}`);
+            if (payload.semestre) parts.push(`semestre ${payload.semestre}`);
+            if (payload.grupo) parts.push(`grupo ${payload.grupo}`);
+            if (payload.q) parts.push(`busqueda: "${payload.q}"`);
+            return `Se enviara a los usuarios con correo que coincidan con el filtro actual: ${parts.join(', ')}. Maximo 200 destinatarios.`;
+        }
+
+        async function openCredentialEmailModal() {
+            if (!usersCredentialModal) usersCredentialModal = new bootstrap.Modal(document.getElementById('credentialEmailModal'));
+            document.getElementById('credentialEmailForm').reset();
+            document.getElementById('credentialEmailAlert').innerHTML = '';
+            document.getElementById('credentialEmailRotatePassword').checked = true;
+            try {
+                const template = await api.get('/users/credential-email-template', { _cache_ttl: 300000 });
+                document.getElementById('credentialEmailSubject').value = template.subject || 'Credenciales de acceso al SGPI';
+                document.getElementById('credentialEmailBody').value = template.body || '';
+                document.getElementById('credentialEmailTags').textContent = `Etiquetas disponibles: ${(template.tags || []).join(', ')}`;
+            } catch (error) {
+                document.getElementById('credentialEmailSubject').value = 'Credenciales de acceso al SGPI';
+                document.getElementById('credentialEmailBody').value = 'Hola {{Nombre}},\n\nUsuario: {{Usuario}}\nCorreo: {{Correo}}\nContraseña temporal: {{Contraseña}}\n\nPor seguridad, cambia tu contraseña despues de iniciar sesion.';
+            }
+            document.getElementById('credentialEmailScope').textContent = describeCredentialScope(currentUsersFilterPayload());
+            usersCredentialModal.show();
+        }
+
+        async function sendCredentialEmails(event) {
+            event.preventDefault();
+            const payload = {
+                ...currentUsersFilterPayload(),
+                subject: document.getElementById('credentialEmailSubject').value.trim(),
+                body: document.getElementById('credentialEmailBody').value.trim(),
+                rotate_password: document.getElementById('credentialEmailRotatePassword').checked
+            };
+
+            if (!payload.subject || !payload.body) {
+                document.getElementById('credentialEmailAlert').innerHTML = '<div class="alert alert-warning">Asunto y base del correo son obligatorios.</div>';
+                return;
+            }
+
+            const confirmed = await confirmAction({
+                title: 'Enviar credenciales',
+                text: 'Esta accion puede cambiar contraseñas y enviar credenciales por correo a varios usuarios. Verifica filtros, destinatarios y plantilla antes de continuar.',
+                confirmButtonText: 'Continuar'
+            });
+            if (!confirmed) return;
+
+            const adminPassword = await promptPassword({
+                title: 'Autorizar envio masivo',
+                inputPlaceholder: 'Contraseña del administrador actual',
+                confirmButtonText: 'Enviar credenciales'
+            });
+            if (!adminPassword) return;
+            payload.admin_password = adminPassword;
+
+            const button = document.getElementById('credentialEmailBtn');
+            const originalText = button.innerHTML;
+            button.disabled = true;
+            button.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span> Enviando...';
+            try {
+                const result = await api.post('/users/send-credentials', payload, { _timeout: 60000 });
+                const errors = result.errors || [];
+                const details = errors.length
+                    ? `<hr><div class="small">${errors.slice(0, 10).map(item => `<div>${escapeHtml(item.id)} - ${escapeHtml(item.email)}: ${escapeHtml(item.error)}</div>`).join('')}${errors.length > 10 ? '<div>...</div>' : ''}</div>`
+                    : '';
+                document.getElementById('credentialEmailAlert').innerHTML = `
+                    <div class="alert ${errors.length ? 'alert-warning' : 'alert-success'}">
+                        Enviados: <strong>${Number(result.sent || 0)}</strong>. Fallidos: <strong>${Number(result.failed || 0)}</strong>.
+                        ${details}
+                    </div>`;
+                if (!errors.length) {
+                    swalToast('success', 'Credenciales enviadas');
+                }
+            } catch (error) {
+                document.getElementById('credentialEmailAlert').innerHTML = `<div class="alert alert-danger">${escapeHtml(error.message || 'No se pudieron enviar las credenciales')}</div>`;
+            } finally {
+                button.disabled = false;
+                button.innerHTML = originalText;
+            }
         }
 
         async function importUsersExcel(event) {
