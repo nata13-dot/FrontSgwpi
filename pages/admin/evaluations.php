@@ -1666,6 +1666,9 @@ $is_archived_view = basename($_SERVER['PHP_SELF']) === 'evaluations-archived.php
                 await api.post(`/evaluations/${evaluationId}/score`, payload);
                 clearScoreDraft(evaluationId);
                 document.getElementById('scoreEvaluationId').value = '';
+                if (document.activeElement && document.getElementById('scoreModal').contains(document.activeElement)) {
+                    document.activeElement.blur();
+                }
                 scoreModal.hide();
                 showAlert('#alertContainer', 'success', 'Rubrica guardada correctamente');
                 loadEvaluations();
@@ -1778,6 +1781,11 @@ $is_archived_view = basename($_SERVER['PHP_SELF']) === 'evaluations-archived.php
             projectDetailsModal = new bootstrap.Modal(document.getElementById('projectDetailsModal'));
             roomsModal = new bootstrap.Modal(document.getElementById('roomsModal'));
             if (IS_ADMIN) evaluationManagersModal = new bootstrap.Modal(document.getElementById('evaluationManagersModal'));
+            document.getElementById('scoreModal').addEventListener('hide.bs.modal', () => {
+                if (document.activeElement && document.getElementById('scoreModal').contains(document.activeElement)) {
+                    document.activeElement.blur();
+                }
+            });
             document.getElementById('scoreModal').addEventListener('hide.bs.modal', saveScoreDraft);
             document.getElementById('roomDate')?.addEventListener('input', updateRoomAvailability);
             document.getElementById('roomEndDate')?.addEventListener('input', updateRoomAvailability);
