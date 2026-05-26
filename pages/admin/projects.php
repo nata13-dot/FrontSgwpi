@@ -64,6 +64,10 @@ if (!is_authenticated()) {
                     </div>
                 </div>
                 <div class="card border-0 shadow-sm border-start border-4 border-primary">
+                    <div class="card-header d-flex flex-wrap align-items-center justify-content-between gap-2">
+                        <span><i class="bi bi-folder2-open"></i> Proyectos registrados</span>
+                        <span class="badge bg-light text-primary" id="projectsPageInfo">Cargando...</span>
+                    </div>
                     <div class="card-body p-0">
                         <div class="table-responsive">
                             <table class="table table-hover mb-0 align-middle">
@@ -85,6 +89,7 @@ if (!is_authenticated()) {
                         </div>
                     </div>
                 </div>
+                <nav id="projectsPagination" class="mt-4"></nav>
             </div>
         </div>
     </div>
@@ -237,6 +242,10 @@ if (!is_authenticated()) {
         let assignedStudentProject = {};
         let projectsImportModal;
         let projectsSearchTimer = null;
+        let projectsCurrentPage = 1;
+        let projectsLastPage = 1;
+        let projectsTotal = 0;
+        const PROJECTS_PER_PAGE = 12;
 
         function escapeHtml(value) {
             return String(value ?? '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#039;');
@@ -256,18 +265,23 @@ if (!is_authenticated()) {
                 isStudent = user && user.perfil_id === 3;
                 currentUserId = user && user.id;
 
-                const params = { page };
+                const params = { page, per_page: PROJECTS_PER_PAGE };
                 const semester = document.getElementById('semesterFilter').value;
                 const search = document.getElementById('projectSearchInput')?.value.trim();
                 if (semester) params.semestre = semester;
                 if (search) params.q = search;
 
                 const response = await api.get('/projects', params);
+                projectsCurrentPage = Number(response.current_page || page);
+                projectsLastPage = Number(response.last_page || 1);
+                projectsTotal = Number(response.total || 0);
+                renderProjectsPagination();
                 const tbody = document.getElementById('projectsTable');
                 tbody.innerHTML = '';
 
                 if (!response.data || response.data.length === 0) {
                     tbody.innerHTML = '<tr><td colspan="7" class="text-center text-muted py-4">No hay proyectos</td></tr>';
+                    renderProjectsPagination();
                     return;
                 }
 
@@ -280,6 +294,7 @@ if (!is_authenticated()) {
 
                 if (proyectosFiltrados.length === 0) {
                     tbody.innerHTML = '<tr><td colspan="7" class="text-center text-muted py-4">No hay proyectos para este filtro</td></tr>';
+                    renderProjectsPagination();
                     return;
                 }
 
@@ -310,6 +325,37 @@ if (!is_authenticated()) {
             } catch (error) {
                 showAlert('#alertContainer', 'danger', 'Error cargando proyectos: ' + error.message);
             }
+        }
+
+        function renderProjectsPagination() {
+            const info = document.getElementById('projectsPageInfo');
+            const nav = document.getElementById('projectsPagination');
+            if (info) {
+                info.textContent = projectsTotal
+                    ? `Página ${projectsCurrentPage} de ${projectsLastPage} · ${projectsTotal} proyecto(s)`
+                    : 'Sin proyectos';
+            }
+            if (!nav) return;
+            if (projectsLastPage <= 1) {
+                nav.innerHTML = '';
+                return;
+            }
+            nav.innerHTML = `
+                <ul class="pagination justify-content-center">
+                    <li class="page-item ${projectsCurrentPage <= 1 ? 'disabled' : ''}">
+                        <button class="page-link" type="button" onclick="loadProjects(${projectsCurrentPage - 1})">
+                            <i class="bi bi-chevron-left"></i> Anterior
+                        </button>
+                    </li>
+                    <li class="page-item disabled">
+                        <span class="page-link">${projectsCurrentPage} / ${projectsLastPage}</span>
+                    </li>
+                    <li class="page-item ${projectsCurrentPage >= projectsLastPage ? 'disabled' : ''}">
+                        <button class="page-link" type="button" onclick="loadProjects(${projectsCurrentPage + 1})">
+                            Siguiente <i class="bi bi-chevron-right"></i>
+                        </button>
+                    </li>
+                </ul>`;
         }
 
         function scheduleProjectsSearch() {
