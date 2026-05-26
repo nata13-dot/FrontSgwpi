@@ -18,6 +18,113 @@ $is_archived_view = basename($_SERVER['PHP_SELF']) === 'evaluations-archived.php
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
     <link rel="stylesheet" href="/assets/css/app.css">
+    <style>
+        .room-panel {
+            background: var(--surface-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            height: 100%;
+            overflow: hidden;
+        }
+        .room-panel-header {
+            border-bottom: 1px solid var(--border-color);
+            padding: 1rem 1.15rem;
+            background: var(--soft-bg);
+        }
+        .room-panel-body {
+            padding: 1.15rem;
+        }
+        .room-section-title {
+            color: var(--primary-blue);
+            font-size: .82rem;
+            font-weight: 700;
+            letter-spacing: 0;
+            margin: .25rem 0 .75rem;
+            text-transform: uppercase;
+        }
+        .room-scroll-list {
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            max-height: 280px;
+            overflow: auto;
+            padding: .75rem;
+        }
+        .room-option-card,
+        .room-list-card {
+            background: var(--surface-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 1rem;
+            transition: border-color .15s ease, background-color .15s ease;
+        }
+        .room-option-card {
+            align-items: flex-start;
+            cursor: pointer;
+            display: flex;
+            gap: .65rem;
+            padding: .7rem .8rem;
+        }
+        .room-option-card + .room-option-card {
+            margin-top: .55rem;
+        }
+        .room-option-card:has(input:checked),
+        .room-project-item:has(input:checked) {
+            background: color-mix(in srgb, var(--primary-blue) 9%, var(--surface-bg));
+            border-color: color-mix(in srgb, var(--primary-blue) 45%, var(--border-color));
+        }
+        .room-list-card + .room-list-card {
+            margin-top: .75rem;
+        }
+        .room-project-item {
+            background: var(--surface-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: .65rem;
+        }
+        .room-project-item + .room-project-item {
+            margin-top: .65rem;
+        }
+        .room-card-title {
+            color: var(--text-dark);
+            font-weight: 700;
+        }
+        .room-meta-grid {
+            display: grid;
+            gap: .35rem .8rem;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            margin: .75rem 0;
+        }
+        .room-meta-item {
+            background: var(--soft-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: .55rem .65rem;
+        }
+        .room-action-group {
+            display: flex;
+            flex-wrap: wrap;
+            gap: .35rem;
+            justify-content: flex-end;
+        }
+        .room-action-group .btn {
+            min-width: 2.25rem;
+        }
+        .score-question-card {
+            background: var(--surface-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 1rem;
+        }
+        @media (max-width: 991.98px) {
+            .room-meta-grid {
+                grid-template-columns: 1fr;
+            }
+            .room-action-group {
+                justify-content: flex-start;
+                margin-top: .75rem;
+            }
+        }
+    </style>
 </head>
 <body>
     <?php require_once $_SERVER['DOCUMENT_ROOT'] . '/includes/navbar.php'; ?>
@@ -219,34 +326,52 @@ $is_archived_view = basename($_SERVER['PHP_SELF']) === 'evaluations-archived.php
         <div class="modal-dialog modal-xl">
             <div class="modal-content">
                 <div class="modal-header">
-                    <h5 class="modal-title"><i class="bi bi-door-open"></i> Salas de Evaluacion</h5>
+                    <div>
+                        <h5 class="modal-title"><i class="bi bi-door-open"></i> Salas de Evaluacion</h5>
+                        <div class="text-muted small">Configura fecha, docentes, responsable y orden de proyectos en un solo flujo.</div>
+                    </div>
                     <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                 </div>
                 <div class="modal-body">
                     <div class="row g-3">
                         <div class="col-lg-5">
-                            <div class="border rounded p-3">
+                            <div class="room-panel">
+                                <div class="room-panel-header">
+                                    <h6 class="mb-0"><i class="bi bi-sliders"></i> Configuracion de sala</h6>
+                                </div>
+                                <div class="room-panel-body">
                                 <input type="hidden" id="roomId">
                                 <div class="row g-3">
+                                    <div class="col-12"><div class="room-section-title">Datos generales</div></div>
                                     <div class="col-md-6"><label class="form-label">Sala</label><input class="form-control" id="roomName" placeholder="Sala 1" required><div class="invalid-feedback">Nombre obligatorio y no repetido.</div></div>
                                     <div class="col-md-6"><label class="form-label">Salon</label><input class="form-control" id="roomClassroom" placeholder="Salon/Laboratorio" required></div>
                                     <div class="col-md-4"><label class="form-label">Semestre</label><select class="form-select" id="roomSemester" onchange="loadRoomProjects()"><option value="5">5</option><option value="6">6</option><option value="7">7</option><option value="8">8</option></select></div>
                                     <div class="col-md-8"><label class="form-label">Fecha</label><input type="datetime-local" class="form-control" id="roomDate" required onchange="updateRoomAvailability()"><div class="form-text">Debe ser posterior a la fecha y hora actual.</div></div>
-                                    <div class="col-md-4"><label class="form-label">Min. docentes</label><input type="number" class="form-control" id="teacherMinutes" min="1" max="240" value="15"></div>
-                                    <div class="col-md-4"><label class="form-label">Min. proyecto</label><input type="number" class="form-control" id="presentationMinutes" min="1" max="240" value="20"></div>
+                                    <div class="col-12"><div class="room-section-title">Tiempos</div></div>
+                                    <div class="col-md-4"><label class="form-label">Eval. docente</label><input type="number" class="form-control" id="teacherMinutes" min="1" max="240" value="15"></div>
+                                    <div class="col-md-4"><label class="form-label">Presentacion</label><input type="number" class="form-control" id="presentationMinutes" min="1" max="240" value="20"></div>
                                     <div class="col-md-4"><label class="form-label">Oportunidades</label><input type="number" class="form-control" id="maxAttempts" min="1" max="10" value="1"></div>
-                                    <div class="col-12"><label class="form-label">Docentes</label><div class="border rounded p-2" id="roomTeachers" style="max-height: 160px; overflow:auto;"></div></div>
+                                    <div class="col-12"><div class="room-section-title">Evaluadores</div><div class="room-scroll-list" id="roomTeachers"></div></div>
                                     <div class="col-12"><label class="form-label">Responsable de sala</label><select class="form-select" id="responsibleTeacher"><option value="">Selecciona primero docentes</option></select></div>
-                                    <div class="col-12"><label class="form-label">Proyectos</label><div class="border rounded p-2" id="roomProjects" style="max-height: 220px; overflow:auto;"></div></div>
+                                    <div class="col-12"><div class="room-section-title">Proyectos y orden</div><div class="room-scroll-list" id="roomProjects"></div></div>
                                     <div class="col-12"><div class="small text-muted" id="roomAvailabilityHint"></div></div>
                                 </div>
                                 <div class="d-flex justify-content-end gap-2 mt-3">
                                     <button class="btn btn-outline-secondary" onclick="resetRoomForm()">Limpiar</button>
                                     <button class="btn btn-primary" onclick="saveRoom()"><i class="bi bi-save"></i> Guardar sala</button>
                                 </div>
+                                </div>
                             </div>
                         </div>
-                        <div class="col-lg-7" id="roomsList"></div>
+                        <div class="col-lg-7">
+                            <div class="room-panel">
+                                <div class="room-panel-header d-flex justify-content-between align-items-center gap-2">
+                                    <h6 class="mb-0"><i class="bi bi-list-check"></i> Salas registradas</h6>
+                                    <span class="badge bg-light text-primary" id="roomsCountBadge">0 salas</span>
+                                </div>
+                                <div class="room-panel-body" id="roomsList"></div>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -955,10 +1080,13 @@ $is_archived_view = basename($_SERVER['PHP_SELF']) === 'evaluations-archived.php
             const busy = busyRoomIds();
             const availableTeachers = teachers.filter(teacher => !busy.teachers.has(String(teacher.id)));
             document.getElementById('roomTeachers').innerHTML = availableTeachers.map(teacher => `
-                <div class="form-check">
-                    <input class="form-check-input room-teacher" type="checkbox" value="${escapeHtml(teacher.id)}" id="roomTeacher${escapeHtml(teacher.id)}" ${selectedIds.includes(String(teacher.id)) ? 'checked' : ''} onchange="refreshResponsibleTeacherOptions()">
-                    <label class="form-check-label" for="roomTeacher${escapeHtml(teacher.id)}">${escapeHtml(fullName(teacher))} <span class="text-muted small">${Number(teacher.perfil_id) === 1 ? 'Administrativo' : 'Docente'}</span></label>
-                </div>`).join('') || '<p class="text-muted mb-0">No hay evaluadores disponibles para esta fecha y hora.</p>';
+                <label class="room-option-card" for="roomTeacher${escapeHtml(teacher.id)}">
+                    <input class="form-check-input room-teacher mt-1" type="checkbox" value="${escapeHtml(teacher.id)}" id="roomTeacher${escapeHtml(teacher.id)}" ${selectedIds.includes(String(teacher.id)) ? 'checked' : ''} onchange="refreshResponsibleTeacherOptions()">
+                    <span class="flex-grow-1">
+                        <span class="fw-semibold d-block">${escapeHtml(fullName(teacher))}</span>
+                        <span class="text-muted small">${Number(teacher.perfil_id) === 1 ? 'Administrativo' : 'Docente'}</span>
+                    </span>
+                </label>`).join('') || '<p class="text-muted mb-0">No hay evaluadores disponibles para esta fecha y hora.</p>';
             refreshResponsibleTeacherOptions();
             renderAvailabilityHint(busy);
         }
@@ -993,9 +1121,9 @@ $is_archived_view = basename($_SERVER['PHP_SELF']) === 'evaluations-archived.php
                     return String(a.title || '').localeCompare(String(b.title || ''), 'es', { sensitivity: 'base' });
                 });
             document.getElementById('roomProjects').innerHTML = availableProjects.map(project => `
-                <div class="d-flex align-items-start gap-2 mb-2">
+                <div class="room-project-item d-flex align-items-start gap-2">
                     <input class="form-check-input room-project mt-2" type="checkbox" value="${project.id}" id="roomProject${project.id}" ${selectedIds.includes(Number(project.id)) ? 'checked' : ''}>
-                    <input class="form-control form-control-sm room-project-order" data-project-id="${project.id}" type="number" min="1" value="${orderMap[project.id] || selectedIds.indexOf(Number(project.id)) + 1 || ''}" style="width:76px" title="Orden">
+                    <input class="form-control form-control-sm room-project-order" data-project-id="${project.id}" type="number" min="1" value="${orderMap[project.id] || selectedIds.indexOf(Number(project.id)) + 1 || ''}" style="width:76px" title="Orden" aria-label="Orden de presentacion">
                     <label class="form-check-label flex-grow-1" for="roomProject${project.id}">
                         <span class="fw-semibold">${escapeHtml(project.title)}</span>
                         <span class="text-muted small d-block">${escapeHtml(projectActiveAuthors(project) || 'Sin integrantes registrados')}</span>
@@ -1024,26 +1152,37 @@ $is_archived_view = basename($_SERVER['PHP_SELF']) === 'evaluations-archived.php
         }
 
         function renderRooms() {
+            const badge = document.getElementById('roomsCountBadge');
+            if (badge) badge.textContent = `${rooms.length} sala${rooms.length === 1 ? '' : 's'}`;
             const roomActions = room => CAN_MANAGE_EVALUATIONS ? `
-                            <button class="btn btn-outline-primary" onclick="editRoom(${room.id})"><i class="bi bi-pencil"></i></button>
-                            <button class="btn btn-outline-success" onclick="lockRoomSequence(${room.id})" title="Bloquear orden"><i class="bi bi-lock"></i></button>
-                            <button class="btn btn-outline-dark" onclick="downloadRoomReport(${room.id})" title="Reporte PDF de sala"><i class="bi bi-file-earmark-pdf"></i></button>
-                            <button class="btn btn-outline-secondary" onclick="${IS_ARCHIVED_VIEW ? 'unarchiveRoom' : 'archiveRoom'}(${room.id})" title="${IS_ARCHIVED_VIEW ? 'Restaurar sala' : 'Archivar sala'}"><i class="bi ${IS_ARCHIVED_VIEW ? 'bi-arrow-counterclockwise' : 'bi-archive'}"></i></button>
-                            <button class="btn btn-outline-danger" onclick="deleteRoom(${room.id})"><i class="bi bi-trash"></i></button>
+                            <button class="btn btn-sm btn-outline-primary" onclick="editRoom(${room.id})" title="Editar"><i class="bi bi-pencil"></i></button>
+                            <button class="btn btn-sm btn-outline-success" onclick="lockRoomSequence(${room.id})" title="Bloquear orden"><i class="bi bi-lock"></i></button>
+                            <button class="btn btn-sm btn-outline-dark" onclick="downloadRoomReport(${room.id})" title="Reporte PDF de sala"><i class="bi bi-file-earmark-pdf"></i></button>
+                            <button class="btn btn-sm btn-outline-secondary" onclick="${IS_ARCHIVED_VIEW ? 'unarchiveRoom' : 'archiveRoom'}(${room.id})" title="${IS_ARCHIVED_VIEW ? 'Restaurar sala' : 'Archivar sala'}"><i class="bi ${IS_ARCHIVED_VIEW ? 'bi-arrow-counterclockwise' : 'bi-archive'}"></i></button>
+                            <button class="btn btn-sm btn-outline-danger" onclick="deleteRoom(${room.id})" title="Eliminar"><i class="bi bi-trash"></i></button>
             ` : '';
             document.getElementById('roomsList').innerHTML = rooms.map(room => `
-                <div class="border rounded p-3 mb-3">
-                    <div class="d-flex justify-content-between gap-2">
-                        <div>
-                            <h6 class="mb-1">${escapeHtml(room.nombre)} <span class="badge bg-secondary">${room.semestre}</span></h6>
-                            <div class="small text-muted">${escapeHtml(room.salon || 'Sin salon')} · ${room.fecha_evaluacion ? new Date(room.fecha_evaluacion).toLocaleString('es-MX') : 'Sin fecha'}</div>
-                            <div class="small mt-1">Docentes: ${(room.teachers || []).map(t => escapeHtml(t.nombres)).join(', ') || '-'}</div>
-                            <div class="small">Responsable: ${escapeHtml(fullName(room.responsible_teacher) || '-')}</div>
-                            <div class="small">Proyectos: ${(room.projects || []).length} ${room.sequence_locked ? '<span class="badge bg-primary">Orden bloqueado</span>' : ''} ${room.completed_at ? '<span class="badge bg-success">Sala finalizada</span>' : ''}</div>
-                            <ol class="small mb-1 mt-1">${orderedRoomProjects(room).map(project => `<li>${escapeHtml(project.title)} <span class="badge bg-light text-dark">${escapeHtml(project.sequence_status || 'pendiente')}</span></li>`).join('')}</ol>
-                            <div class="small">Exposicion: ${room.project_presentation_minutes} min · Evaluacion docente: ${room.teacher_evaluation_minutes} min · Oportunidades: ${room.max_attempts}</div>
+                <div class="room-list-card">
+                    <div class="d-flex justify-content-between gap-3 flex-wrap">
+                        <div class="flex-grow-1">
+                            <div class="d-flex align-items-center flex-wrap gap-2">
+                                <span class="room-card-title">${escapeHtml(room.nombre)}</span>
+                                <span class="badge bg-secondary">Semestre ${room.semestre}</span>
+                                ${room.sequence_locked ? '<span class="badge bg-primary">Orden bloqueado</span>' : ''}
+                                ${room.completed_at ? '<span class="badge bg-success">Sala finalizada</span>' : ''}
+                            </div>
+                            <div class="room-meta-grid small">
+                                <div class="room-meta-item"><span class="text-muted d-block">Lugar</span>${escapeHtml(room.salon || 'Sin salon')}</div>
+                                <div class="room-meta-item"><span class="text-muted d-block">Fecha</span>${room.fecha_evaluacion ? new Date(room.fecha_evaluacion).toLocaleString('es-MX') : 'Sin fecha'}</div>
+                                <div class="room-meta-item"><span class="text-muted d-block">Responsable</span>${escapeHtml(fullName(room.responsible_teacher) || '-')}</div>
+                                <div class="room-meta-item"><span class="text-muted d-block">Tiempos</span>${room.project_presentation_minutes} min exposicion / ${room.teacher_evaluation_minutes} min evaluacion</div>
+                            </div>
+                            <div class="small mb-2"><span class="fw-semibold">Docentes:</span> ${(room.teachers || []).map(t => escapeHtml(fullName(t) || t.nombres || '')).filter(Boolean).join(', ') || '-'}</div>
+                            <div class="small fw-semibold mb-1">Proyectos (${(room.projects || []).length})</div>
+                            <ol class="small mb-0 ps-3">${orderedRoomProjects(room).map(project => `<li class="mb-1">${escapeHtml(project.title)} <span class="badge bg-light text-dark">${escapeHtml(project.sequence_status || 'pendiente')}</span></li>`).join('') || '<li>Sin proyectos asignados</li>'}</ol>
+                            <div class="small text-muted mt-2">Oportunidades por docente: ${room.max_attempts}</div>
                         </div>
-                        <div class="btn-group btn-group-sm align-self-start">
+                        <div class="room-action-group align-self-start">
                             ${roomActions(room)}
                         </div>
                     </div>
@@ -1343,9 +1482,10 @@ $is_archived_view = basename($_SERVER['PHP_SELF']) === 'evaluations-archived.php
             semesterCriteria.forEach(criterion => {
                 const draftScore = (draft.scores || []).find(score => score.criterio === criterion.key) || {};
                 container.innerHTML += `
-                    <div class="border rounded p-3 mb-3" data-criterion="${criterion.key}">
+                    <div class="score-question-card mb-3" data-criterion="${criterion.key}">
                         <label class="form-label fw-semibold">${escapeHtml(criterion.label)} ${criterion.project_id ? '<span class="badge bg-info text-dark ms-1">Proyecto</span>' : '<span class="badge bg-secondary ms-1">General</span>'}</label>
                         <select class="form-select mb-2 criterion-level" required>
+                            <option value="" ${draftScore.nivel ? '' : 'selected'} disabled>Seleccionar respuesta</option>
                             ${(rubricMode === 'numeric' ? numericOptions : levels).map(option => {
                                 const value = rubricMode === 'numeric' ? levelValue(option.level) : levelValue(option);
                                 const label = rubricMode === 'numeric' ? `${option.score} punto${option.score === 1 ? '' : 's'}` : levelText(option);
@@ -1372,6 +1512,14 @@ $is_archived_view = basename($_SERVER['PHP_SELF']) === 'evaluations-archived.php
                 nivel: row.querySelector('.criterion-level').value,
                 comentario: row.querySelector('.criterion-comment').value.trim() || null
             }));
+            const missingScores = scores.filter(score => !score.nivel);
+            document.querySelectorAll('.criterion-level').forEach(select => {
+                select.classList.toggle('is-invalid', !select.value);
+            });
+            if (missingScores.length) {
+                showAlert('#alertContainer', 'warning', 'Selecciona una respuesta en todas las preguntas antes de guardar la rubrica.');
+                return;
+            }
             try {
                 const evaluation = evaluations.find(item => String(item.id) === String(evaluationId));
                 const confirmSave = await confirmAction({
