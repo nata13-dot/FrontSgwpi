@@ -2,6 +2,11 @@
  * Función para mostrar alertas
  */
 function showAlert(container, type, message, duration = 5000) {
+    if (typeof window.swalToast === 'function') {
+        window.swalToast(type, message, duration);
+        return;
+    }
+
     const alertId = 'alert-' + Date.now();
     const html = `
         <div id="${alertId}" class="alert alert-${type} alert-dismissible fade show" role="alert">
