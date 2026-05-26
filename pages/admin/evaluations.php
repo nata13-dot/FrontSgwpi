@@ -346,7 +346,8 @@ $is_archived_view = basename($_SERVER['PHP_SELF']) === 'evaluations-archived.php
                                     <div class="col-md-6"><label class="form-label">Sala</label><input class="form-control" id="roomName" placeholder="Sala 1" required><div class="invalid-feedback">Nombre obligatorio y no repetido.</div></div>
                                     <div class="col-md-6"><label class="form-label">Salon</label><input class="form-control" id="roomClassroom" placeholder="Salon/Laboratorio" required></div>
                                     <div class="col-md-4"><label class="form-label">Semestre</label><select class="form-select" id="roomSemester" onchange="loadRoomProjects()"><option value="5">5</option><option value="6">6</option><option value="7">7</option><option value="8">8</option></select></div>
-                                    <div class="col-md-8"><label class="form-label">Fecha</label><input type="datetime-local" class="form-control" id="roomDate" required onchange="updateRoomAvailability()"><div class="form-text">Debe ser posterior a la fecha y hora actual.</div></div>
+                                    <div class="col-md-4"><label class="form-label">Inicio</label><input type="datetime-local" class="form-control" id="roomDate" required onchange="updateRoomAvailability()"><div class="form-text">Posterior a la fecha actual.</div></div>
+                                    <div class="col-md-4"><label class="form-label">Fin</label><input type="datetime-local" class="form-control" id="roomEndDate" required onchange="updateRoomAvailability()"><div class="form-text">Debe ser posterior al inicio.</div></div>
                                     <div class="col-12"><div class="room-section-title">Tiempos</div></div>
                                     <div class="col-md-4"><label class="form-label">Eval. docente</label><input type="number" class="form-control" id="teacherMinutes" min="1" max="240" value="15"></div>
                                     <div class="col-md-4"><label class="form-label">Presentacion</label><input type="number" class="form-control" id="presentationMinutes" min="1" max="240" value="20"></div>
@@ -1041,34 +1042,61 @@ $is_archived_view = basename($_SERVER['PHP_SELF']) === 'evaluations-archived.php
             roomsModal.show();
         }
 
-        function normalizedRoomDate(value) {
-            return value ? String(value).replace('T', ' ').slice(0, 13) : '';
+        function parseRoomDate(value) {
+            if (!value) return null;
+            const normalized = String(value).includes('T') ? String(value) : String(value).replace(' ', 'T');
+            const date = new Date(normalized);
+            return Number.isNaN(date.getTime()) ? null : date;
+        }
+
+        function formatLocalDateTimeInput(date) {
+            const pad = value => String(value).padStart(2, '0');
+            return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}T${pad(date.getHours())}:${pad(date.getMinutes())}`;
+        }
+
+        function roomRange(room) {
+            const start = parseRoomDate(room.fecha_evaluacion);
+            const end = parseRoomDate(room.fecha_fin_evaluacion);
+            return {
+                start,
+                end: end || (start ? new Date(start.getTime() + 60 * 60 * 1000) : null)
+            };
+        }
+
+        function rangesOverlap(startA, endA, startB, endB) {
+            return startA && endA && startB && endB && startA < endB && endA > startB;
         }
 
         function conflictingRoomsForCurrentForm() {
             const currentRoomId = document.getElementById('roomId').value;
-            const selectedDate = normalizedRoomDate(document.getElementById('roomDate').value);
-            if (!selectedDate) return [];
+            const selectedStart = parseRoomDate(document.getElementById('roomDate').value);
+            const selectedEnd = parseRoomDate(document.getElementById('roomEndDate').value);
+            if (!selectedStart || !selectedEnd || selectedEnd <= selectedStart) return [];
 
             return rooms.filter(room => {
                 const isSameRecord = currentRoomId && String(room.id) === String(currentRoomId);
-                return !isSameRecord && normalizedRoomDate(room.fecha_evaluacion) === selectedDate;
+                const range = roomRange(room);
+                return !isSameRecord && rangesOverlap(selectedStart, selectedEnd, range.start, range.end);
             });
         }
 
         function busyRoomIds() {
             const conflicts = conflictingRoomsForCurrentForm();
-            const currentRoomId = document.getElementById('roomId').value;
-            const projectRooms = rooms.filter(room => !(currentRoomId && String(room.id) === String(currentRoomId)));
             return {
                 teachers: new Set(conflicts.flatMap(room => (room.teachers || []).map(teacher => String(teacher.id)))),
-                projects: new Set(projectRooms.flatMap(room => (room.projects || []).map(project => Number(project.id)))),
+                projects: new Set(conflicts.flatMap(room => (room.projects || []).map(project => Number(project.id)))),
                 rooms: conflicts,
-                projectRooms
+                projectRooms: conflicts
             };
         }
 
         async function updateRoomAvailability() {
+            const startInput = document.getElementById('roomDate');
+            const endInput = document.getElementById('roomEndDate');
+            const startsAt = parseRoomDate(startInput.value);
+            if (startsAt && !endInput.value) {
+                endInput.value = formatLocalDateTimeInput(new Date(startsAt.getTime() + 60 * 60 * 1000));
+            }
             const selectedTeachers = [...document.querySelectorAll('.room-teacher:checked')].map(input => input.value);
             const selectedProjects = [...document.querySelectorAll('.room-project:checked')].map(input => Number(input.value));
             renderRoomTeachers(selectedTeachers);
@@ -1136,12 +1164,18 @@ $is_archived_view = basename($_SERVER['PHP_SELF']) === 'evaluations-archived.php
         function renderAvailabilityHint(busy = busyRoomIds()) {
             const hint = document.getElementById('roomAvailabilityHint');
             if (!hint) return;
-            if (!document.getElementById('roomDate').value) {
-                hint.textContent = 'Selecciona fecha y hora para filtrar docentes y proyectos ya ocupados en ese horario.';
+            if (!document.getElementById('roomDate').value || !document.getElementById('roomEndDate').value) {
+                hint.textContent = 'Selecciona hora de inicio y fin para filtrar docentes y proyectos ocupados en ese rango.';
+                return;
+            }
+            const selectedStart = parseRoomDate(document.getElementById('roomDate').value);
+            const selectedEnd = parseRoomDate(document.getElementById('roomEndDate').value);
+            if (!selectedStart || !selectedEnd || selectedEnd <= selectedStart) {
+                hint.innerHTML = '<span class="text-warning"><i class="bi bi-exclamation-triangle"></i> La hora de fin debe ser posterior a la hora de inicio.</span>';
                 return;
             }
             if (!busy.rooms.length && !busy.projects.size) {
-                hint.textContent = 'No hay conflictos para el horario seleccionado.';
+                hint.textContent = 'No hay conflictos para el rango seleccionado.';
                 return;
             }
             const names = busy.rooms.map(room => room.nombre).join(', ');
@@ -1173,7 +1207,7 @@ $is_archived_view = basename($_SERVER['PHP_SELF']) === 'evaluations-archived.php
                             </div>
                             <div class="room-meta-grid small">
                                 <div class="room-meta-item"><span class="text-muted d-block">Lugar</span>${escapeHtml(room.salon || 'Sin salon')}</div>
-                                <div class="room-meta-item"><span class="text-muted d-block">Fecha</span>${room.fecha_evaluacion ? new Date(room.fecha_evaluacion).toLocaleString('es-MX') : 'Sin fecha'}</div>
+                                <div class="room-meta-item"><span class="text-muted d-block">Horario</span>${room.fecha_evaluacion ? new Date(room.fecha_evaluacion).toLocaleString('es-MX') : 'Sin inicio'}${room.fecha_fin_evaluacion ? ` - ${new Date(room.fecha_fin_evaluacion).toLocaleTimeString('es-MX', { hour: '2-digit', minute: '2-digit' })}` : ''}</div>
                                 <div class="room-meta-item"><span class="text-muted d-block">Responsable</span>${escapeHtml(fullName(room.responsible_teacher) || '-')}</div>
                                 <div class="room-meta-item"><span class="text-muted d-block">Tiempos</span>${room.project_presentation_minutes} min exposicion / ${room.teacher_evaluation_minutes} min evaluacion</div>
                             </div>
@@ -1197,6 +1231,7 @@ $is_archived_view = basename($_SERVER['PHP_SELF']) === 'evaluations-archived.php
             document.getElementById('roomClassroom').value = room.salon || '';
             document.getElementById('roomSemester').value = room.semestre;
             document.getElementById('roomDate').value = room.fecha_evaluacion ? room.fecha_evaluacion.slice(0, 16) : '';
+            document.getElementById('roomEndDate').value = room.fecha_fin_evaluacion ? room.fecha_fin_evaluacion.slice(0, 16) : '';
             document.getElementById('teacherMinutes').value = room.teacher_evaluation_minutes || 15;
             document.getElementById('presentationMinutes').value = room.project_presentation_minutes || 20;
             document.getElementById('maxAttempts').value = room.max_attempts || 1;
@@ -1208,7 +1243,7 @@ $is_archived_view = basename($_SERVER['PHP_SELF']) === 'evaluations-archived.php
         }
 
         function resetRoomForm() {
-            ['roomId', 'roomName', 'roomClassroom', 'roomDate'].forEach(id => document.getElementById(id).value = '');
+            ['roomId', 'roomName', 'roomClassroom', 'roomDate', 'roomEndDate'].forEach(id => document.getElementById(id).value = '');
             document.getElementById('responsibleTeacher').innerHTML = '<option value="">Selecciona primero docentes</option>';
             document.getElementById('teacherMinutes').value = 15;
             document.getElementById('presentationMinutes').value = 20;
@@ -1221,6 +1256,12 @@ $is_archived_view = basename($_SERVER['PHP_SELF']) === 'evaluations-archived.php
             const id = document.getElementById('roomId').value;
             const teacherIds = [...document.querySelectorAll('.room-teacher:checked')].map(input => input.value);
             const projectIds = [...document.querySelectorAll('.room-project:checked')].map(input => Number(input.value));
+            const startsAt = parseRoomDate(document.getElementById('roomDate').value);
+            const endsAt = parseRoomDate(document.getElementById('roomEndDate').value);
+            if (!startsAt || !endsAt || endsAt <= startsAt) {
+                showAlert('#alertContainer', 'warning', 'La hora de fin de la sala debe ser posterior a la hora de inicio.');
+                return;
+            }
             const projectOrder = {};
             document.querySelectorAll('.room-project-order').forEach(input => {
                 if (projectIds.includes(Number(input.dataset.projectId))) {
@@ -1244,6 +1285,7 @@ $is_archived_view = basename($_SERVER['PHP_SELF']) === 'evaluations-archived.php
                 semestre: document.getElementById('roomSemester').value,
                 responsible_teacher_id: document.getElementById('responsibleTeacher').value || null,
                 fecha_evaluacion: document.getElementById('roomDate').value,
+                fecha_fin_evaluacion: document.getElementById('roomEndDate').value,
                 teacher_evaluation_minutes: Number(document.getElementById('teacherMinutes').value),
                 project_presentation_minutes: Number(document.getElementById('presentationMinutes').value),
                 max_attempts: Number(document.getElementById('maxAttempts').value),
@@ -1640,6 +1682,7 @@ $is_archived_view = basename($_SERVER['PHP_SELF']) === 'evaluations-archived.php
             if (IS_ADMIN) evaluationManagersModal = new bootstrap.Modal(document.getElementById('evaluationManagersModal'));
             document.getElementById('scoreModal').addEventListener('hide.bs.modal', saveScoreDraft);
             document.getElementById('roomDate')?.addEventListener('input', updateRoomAvailability);
+            document.getElementById('roomEndDate')?.addEventListener('input', updateRoomAvailability);
             await loadInitialData();
             await loadEvaluations();
             startEvaluationsRealtime();
