@@ -775,13 +775,19 @@ $is_archived_view = basename($_SERVER['PHP_SELF']) === 'evaluations-archived.php
                         total: 0,
                         evaluated: 0,
                         active: 0,
-                        pending: 0
+                        pending: 0,
+                        canAdvance: false,
+                        sequenceLocked: false,
+                        completed: false
                     };
                 }
                 groups[key].total++;
                 if (evaluation.evaluated_by_all) groups[key].evaluated++;
                 if (evaluation.sequence_status === 'activo') groups[key].active++;
                 if (!evaluation.evaluated_by_all) groups[key].pending++;
+                groups[key].canAdvance = groups[key].canAdvance || evaluation.can_manage_evaluations || evaluation.is_room_responsible;
+                groups[key].sequenceLocked = groups[key].sequenceLocked || Boolean(evaluation.room?.sequence_locked);
+                groups[key].completed = groups[key].completed || Boolean(evaluation.room?.completed_at);
                 return groups;
             }, {});
         }
@@ -815,13 +821,22 @@ $is_archived_view = basename($_SERVER['PHP_SELF']) === 'evaluations-archived.php
             const projectId = document.getElementById('projectFilter').value;
             const params = projectId ? { project_id: projectId } : {};
             params.archived = IS_ARCHIVED_VIEW ? 1 : 0;
+            params.per_page = 200;
             if (fresh) params._fresh = 1;
             const tbody = document.getElementById('evaluationsTable');
             if (showLoading) {
                 tbody.innerHTML = '<tr><td colspan="7" class="text-center py-4"><div class="spinner-border" role="status"></div></td></tr>';
             }
             const response = await api.get('/evaluations', params);
-            evaluations = orderEvaluationsByRoomSequence(removeDuplicateEvaluations(response.data || []));
+            let evaluationItems = response.data || [];
+            let currentPage = Number(response.current_page || 1);
+            const lastPage = Number(response.last_page || 1);
+            while (currentPage < lastPage) {
+                currentPage++;
+                const nextResponse = await api.get('/evaluations', { ...params, page: currentPage });
+                evaluationItems = evaluationItems.concat(nextResponse.data || []);
+            }
+            evaluations = orderEvaluationsByRoomSequence(removeDuplicateEvaluations(evaluationItems));
             tbody.innerHTML = '';
 
             if (evaluations.length === 0) {
@@ -837,7 +852,8 @@ $is_archived_view = basename($_SERVER['PHP_SELF']) === 'evaluations-archived.php
                 if (roomKey !== lastRoomKey) {
                     lastRoomKey = roomKey;
                     const room = evaluation.room;
-                    const stats = roomGroups[roomKey] || { total: 0, evaluated: 0, active: 0, pending: 0 };
+                    const stats = roomGroups[roomKey] || { total: 0, evaluated: 0, active: 0, pending: 0, canAdvance: false, sequenceLocked: false, completed: false };
+                    const canAdvanceRoom = room?.id && stats.canAdvance && stats.sequenceLocked && !stats.completed;
                     tbody.innerHTML += `
                         <tr class="table-light evaluation-room-header">
                             <td colspan="7">
@@ -855,6 +871,7 @@ $is_archived_view = basename($_SERVER['PHP_SELF']) === 'evaluations-archived.php
                                         <span class="badge evaluation-success-badge">${stats.evaluated} evaluado${stats.evaluated === 1 ? '' : 's'}</span>
                                         ${stats.active ? `<span class="badge bg-primary">${stats.active} en turno</span>` : ''}
                                         ${stats.pending ? `<span class="badge bg-warning text-dark">${stats.pending} pendiente${stats.pending === 1 ? '' : 's'}</span>` : ''}
+                                        ${canAdvanceRoom ? `<button type="button" class="btn btn-sm btn-warning" onclick="advanceRoom(${room.id})"><i class="bi bi-skip-forward"></i> Siguiente proyecto</button>` : ''}
                                     </div>
                                 </div>
                             </td>
@@ -1222,6 +1239,7 @@ $is_archived_view = basename($_SERVER['PHP_SELF']) === 'evaluations-archived.php
             const roomActions = room => CAN_MANAGE_EVALUATIONS ? `
                             <button class="btn btn-sm btn-outline-primary" onclick="editRoom(${room.id})" title="Editar"><i class="bi bi-pencil"></i></button>
                             <button class="btn btn-sm btn-outline-success" onclick="lockRoomSequence(${room.id})" title="Bloquear orden"><i class="bi bi-lock"></i></button>
+                            ${room.sequence_locked && !room.completed_at ? `<button class="btn btn-sm btn-outline-warning" onclick="advanceRoom(${room.id})" title="Siguiente proyecto"><i class="bi bi-skip-forward"></i></button>` : ''}
                             <button class="btn btn-sm btn-outline-dark" onclick="downloadRoomReport(${room.id})" title="Reporte PDF de sala"><i class="bi bi-file-earmark-pdf"></i></button>
                             <button class="btn btn-sm btn-outline-secondary" onclick="${IS_ARCHIVED_VIEW ? 'unarchiveRoom' : 'archiveRoom'}(${room.id})" title="${IS_ARCHIVED_VIEW ? 'Restaurar sala' : 'Archivar sala'}"><i class="bi ${IS_ARCHIVED_VIEW ? 'bi-arrow-counterclockwise' : 'bi-archive'}"></i></button>
                             <button class="btn btn-sm btn-outline-danger" onclick="deleteRoom(${room.id})" title="Eliminar"><i class="bi bi-trash"></i></button>
@@ -1410,6 +1428,23 @@ $is_archived_view = basename($_SERVER['PHP_SELF']) === 'evaluations-archived.php
             await loadRooms();
             renderRooms();
             loadEvaluations();
+        }
+
+        async function advanceRoom(id) {
+            if (!await confirmAction({
+                title: 'Avanzar turno',
+                text: 'El proyecto actual se marcara como finalizado y se activara el siguiente proyecto de la sala.',
+                confirmButtonText: 'Si, avanzar'
+            })) return;
+            try {
+                const response = await api.post(`/evaluations/rooms/${id}/advance`, { continue_next: true });
+                await loadRooms(true, true);
+                renderRooms();
+                await loadEvaluations(true, true);
+                swalToast('success', response.message || 'Turno actualizado');
+            } catch (error) {
+                showAlert('#alertContainer', 'danger', error.message || 'No se pudo avanzar el turno');
+            }
         }
 
         async function downloadRoomReport(id) {
