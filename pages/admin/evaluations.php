@@ -352,7 +352,7 @@ $is_archived_view = basename($_SERVER['PHP_SELF']) === 'evaluations-archived.php
                                     <div class="col-md-4"><label class="form-label">Eval. docente</label><input type="number" class="form-control" id="teacherMinutes" min="1" max="240" value="15"></div>
                                     <div class="col-md-4"><label class="form-label">Presentacion</label><input type="number" class="form-control" id="presentationMinutes" min="1" max="240" value="20"></div>
                                     <div class="col-md-4"><label class="form-label">Oportunidades</label><input type="number" class="form-control" id="maxAttempts" min="1" max="10" value="1"></div>
-                                    <div class="col-12"><div class="room-section-title">Evaluadores</div><div class="room-scroll-list" id="roomTeachers"></div></div>
+                                    <div class="col-12"><div class="room-section-title">Evaluadores</div><div class="form-text mb-2">Un docente puede participar en varias salas el mismo dia mientras los horarios no se empalmen.</div><div class="room-scroll-list" id="roomTeachers"></div></div>
                                     <div class="col-12"><label class="form-label">Responsable de sala</label><select class="form-select" id="responsibleTeacher"><option value="">Selecciona primero docentes</option></select></div>
                                     <div class="col-12"><div class="room-section-title">Proyectos y orden</div><div class="room-scroll-list" id="roomProjects"></div></div>
                                     <div class="col-12"><div class="small text-muted" id="roomAvailabilityHint"></div></div>
@@ -457,6 +457,7 @@ $is_archived_view = basename($_SERVER['PHP_SELF']) === 'evaluations-archived.php
         let evaluationManagersModal;
         let evaluationManagerIds = [];
         let evaluationsRealtimeTimer = null;
+        let roomProjectsReorderTimer = null;
 
         function escapeHtml(value) {
             return String(value ?? '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#039;');
@@ -1090,6 +1091,35 @@ $is_archived_view = basename($_SERVER['PHP_SELF']) === 'evaluations-archived.php
             };
         }
 
+        function currentRoomProjectState() {
+            const selected = [...document.querySelectorAll('.room-project:checked')].map(input => Number(input.value));
+            const orderMap = {};
+            document.querySelectorAll('.room-project-order').forEach(input => {
+                const projectId = Number(input.dataset.projectId);
+                const order = Number(input.value || 0);
+                if (projectId && order > 0) orderMap[projectId] = order;
+            });
+            return { selected, orderMap };
+        }
+
+        function normalizeProjectOrderMap(selectedIds, orderMap = {}) {
+            const normalized = {};
+            let nextOrder = Math.max(0, ...Object.values(orderMap).map(Number).filter(order => order > 0)) + 1;
+            selectedIds.forEach(projectId => {
+                const order = Number(orderMap[projectId] || 0);
+                normalized[projectId] = order > 0 ? order : nextOrder++;
+            });
+            return normalized;
+        }
+
+        function scheduleRoomProjectsReorder() {
+            clearTimeout(roomProjectsReorderTimer);
+            roomProjectsReorderTimer = setTimeout(() => {
+                const { selected, orderMap } = currentRoomProjectState();
+                loadRoomProjects(selected, orderMap);
+            }, 180);
+        }
+
         async function updateRoomAvailability() {
             const startInput = document.getElementById('roomDate');
             const endInput = document.getElementById('roomEndDate');
@@ -1098,9 +1128,9 @@ $is_archived_view = basename($_SERVER['PHP_SELF']) === 'evaluations-archived.php
                 endInput.value = formatLocalDateTimeInput(new Date(startsAt.getTime() + 60 * 60 * 1000));
             }
             const selectedTeachers = [...document.querySelectorAll('.room-teacher:checked')].map(input => input.value);
-            const selectedProjects = [...document.querySelectorAll('.room-project:checked')].map(input => Number(input.value));
+            const { selected: selectedProjects, orderMap } = currentRoomProjectState();
             renderRoomTeachers(selectedTeachers);
-            await loadRoomProjects(selectedProjects);
+            await loadRoomProjects(selectedProjects, orderMap);
         }
 
         function renderRoomTeachers(selected = []) {
@@ -1133,6 +1163,7 @@ $is_archived_view = basename($_SERVER['PHP_SELF']) === 'evaluations-archived.php
             const semester = document.getElementById('roomSemester').value;
             roomProjects = await api.get('/evaluations/projects', { semestre: semester, _cache_ttl: 30000 });
             const selectedIds = selected.map(Number);
+            const normalizedOrderMap = normalizeProjectOrderMap(selectedIds, orderMap);
             const busy = busyRoomIds();
             const selectedSet = new Set(selectedIds);
             const availableProjects = roomProjects
@@ -1141,8 +1172,8 @@ $is_archived_view = basename($_SERVER['PHP_SELF']) === 'evaluations-archived.php
                     const selectedA = selectedSet.has(Number(a.id));
                     const selectedB = selectedSet.has(Number(b.id));
                     if (selectedA !== selectedB) return selectedA ? -1 : 1;
-                    const orderA = Number(orderMap[a.id] || 0);
-                    const orderB = Number(orderMap[b.id] || 0);
+                    const orderA = Number(normalizedOrderMap[a.id] || 0);
+                    const orderB = Number(normalizedOrderMap[b.id] || 0);
                     if (orderA && orderB && orderA !== orderB) return orderA - orderB;
                     if (orderA && !orderB) return -1;
                     if (!orderA && orderB) return 1;
@@ -1150,8 +1181,8 @@ $is_archived_view = basename($_SERVER['PHP_SELF']) === 'evaluations-archived.php
                 });
             document.getElementById('roomProjects').innerHTML = availableProjects.map(project => `
                 <div class="room-project-item d-flex align-items-start gap-2">
-                    <input class="form-check-input room-project mt-2" type="checkbox" value="${project.id}" id="roomProject${project.id}" ${selectedIds.includes(Number(project.id)) ? 'checked' : ''}>
-                    <input class="form-control form-control-sm room-project-order" data-project-id="${project.id}" type="number" min="1" value="${orderMap[project.id] || selectedIds.indexOf(Number(project.id)) + 1 || ''}" style="width:76px" title="Orden" aria-label="Orden de presentacion">
+                    <input class="form-check-input room-project mt-2" type="checkbox" value="${project.id}" id="roomProject${project.id}" ${selectedIds.includes(Number(project.id)) ? 'checked' : ''} onchange="scheduleRoomProjectsReorder()">
+                    <input class="form-control form-control-sm room-project-order" data-project-id="${project.id}" type="number" min="1" value="${normalizedOrderMap[project.id] || ''}" style="width:76px" title="Orden" aria-label="Orden de presentacion" onchange="scheduleRoomProjectsReorder()">
                     <label class="form-check-label flex-grow-1" for="roomProject${project.id}">
                         <span class="fw-semibold">${escapeHtml(project.title)}</span>
                         <span class="text-muted small d-block">${escapeHtml(projectActiveAuthors(project) || 'Sin integrantes registrados')}</span>
@@ -1301,9 +1332,14 @@ $is_archived_view = basename($_SERVER['PHP_SELF']) === 'evaluations-archived.php
                 showAlert('#alertContainer', 'danger', 'La fecha de la sala debe ser posterior al momento actual.');
                 return;
             }
-            const repeated = rooms.find(room => String(room.id) !== String(id) && String(room.nombre || '').toLowerCase() === payload.nombre.toLowerCase());
+            const repeated = rooms.find(room => {
+                if (String(room.id) === String(id)) return false;
+                if (String(room.nombre || '').toLowerCase() !== payload.nombre.toLowerCase()) return false;
+                const range = roomRange(room);
+                return rangesOverlap(startsAt, endsAt, range.start, range.end);
+            });
             if (repeated) {
-                showAlert('#alertContainer', 'danger', 'Ya existe una sala activa con ese nombre.');
+                showAlert('#alertContainer', 'danger', 'Ya existe una sala activa con ese nombre en ese horario.');
                 return;
             }
             if (!teacherIds.length || !projectIds.length) {
