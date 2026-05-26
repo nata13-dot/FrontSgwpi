@@ -1361,11 +1361,21 @@ $is_archived_view = basename($_SERVER['PHP_SELF']) === 'evaluations-archived.php
         }
 
         async function deleteRoom(id) {
-            if (!await confirmAction({ title: 'Desactivar sala', text: 'La sala dejara de aparecer para nuevas evaluaciones.', confirmButtonText: 'Si, desactivar' })) return;
-            await api.delete(`/evaluations/rooms/${id}`);
-            await loadRooms();
-            renderRooms();
-            renderRoomOptions();
+            if (!await confirmAction({
+                title: 'Eliminar sala',
+                text: 'Se eliminaran tambien las evaluaciones, puntajes e intentos vinculados a esta sala.',
+                confirmButtonText: 'Si, eliminar'
+            })) return;
+            try {
+                const response = await api.delete(`/evaluations/rooms/${id}`);
+                await loadRooms();
+                renderRooms();
+                renderRoomOptions();
+                await loadEvaluations();
+                swalToast('success', response.message || 'Sala eliminada');
+            } catch (error) {
+                showAlert('#alertContainer', 'danger', error.message || 'No se pudo eliminar la sala');
+            }
         }
 
         async function archiveRoom(id) {
