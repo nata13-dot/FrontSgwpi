@@ -199,7 +199,7 @@ $is_archived_view = basename($_SERVER['PHP_SELF']) === 'evaluations-archived.php
             <form class="modal-content" id="evaluationForm">
                 <div class="modal-header">
                     <h5 class="modal-title">Nueva Evaluacion</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" onmousedown="this.blur()" onclick="this.blur()"></button>
                 </div>
                 <div class="modal-body">
                     <div class="mb-3">
@@ -245,7 +245,7 @@ $is_archived_view = basename($_SERVER['PHP_SELF']) === 'evaluations-archived.php
             <div class="modal-content">
                 <div class="modal-header">
                     <h5 class="modal-title">Gestionar Rubrica por Semestre</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" onmousedown="this.blur()" onclick="this.blur()"></button>
                 </div>
                 <div class="modal-body">
                     <div class="row g-3 align-items-end mb-3">
@@ -293,7 +293,7 @@ $is_archived_view = basename($_SERVER['PHP_SELF']) === 'evaluations-archived.php
             <form class="modal-content" id="scoreForm">
                 <div class="modal-header">
                     <h5 class="modal-title">Rubrica de Evaluacion</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" onmousedown="this.blur()" onclick="this.blur()"></button>
                 </div>
                 <div class="modal-body">
                     <input type="hidden" id="scoreEvaluationId">
