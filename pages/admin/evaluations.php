@@ -1678,17 +1678,23 @@ $is_archived_view = basename($_SERVER['PHP_SELF']) === 'evaluations-archived.php
             const evaluation = evaluations.find(item => item.id === evaluationId);
             const container = document.getElementById('breakdownContent');
             if (!evaluation) return;
-            const teacherBlocks = evaluation.teacher_breakdown.length === 0
-                ? '<p class="text-muted mb-0">Aun no hay evaluaciones registradas por docentes.</p>'
-                : evaluation.teacher_breakdown.map(teacher => `
-                <div class="border rounded p-3 mb-3">
-                    <div class="d-flex justify-content-between align-items-center mb-2">
-                        <h6 class="mb-0">${escapeHtml(teacher.teacher_name)}</h6>
-                        <span class="badge bg-primary">${teacher.average}%</span>
-                    </div>
-                    ${teacher.general_comment ? `<div class="alert alert-light border py-2 mb-3"><strong>Comentario general:</strong><div class="mt-1" style="white-space:pre-wrap">${escapeHtml(teacher.general_comment)}</div></div>` : ''}
+            const renderTeacherScores = teacher => {
+                if (!teacher.can_view_score_detail) {
+                    return `
+                        <div class="alert alert-secondary border mb-0">
+                            <i class="bi bi-shield-lock"></i>
+                            El desglose por criterio de este docente es privado. Solo se muestra su comentario general y promedio.
+                        </div>`;
+                }
+
+                const scores = teacher.scores || [];
+                if (!scores.length) {
+                    return '<p class="text-muted mb-0">Sin respuestas detalladas registradas.</p>';
+                }
+
+                return `
                     <div class="d-grid gap-2">
-                        ${teacher.scores.map(score => `
+                        ${scores.map(score => `
                             <div class="border rounded p-2">
                                 <div class="d-flex flex-wrap justify-content-between gap-2">
                                     <strong>${escapeHtml(score.criterio_label)}</strong>
@@ -1700,7 +1706,18 @@ $is_archived_view = basename($_SERVER['PHP_SELF']) === 'evaluations-archived.php
                                 <div class="small text-muted mt-2">Comentario de la pregunta</div>
                                 <div class="bg-light border rounded p-2 mt-1 ${score.comentario ? '' : 'text-muted'}" style="white-space:pre-wrap">${escapeHtml(score.comentario || 'Sin comentario para esta pregunta.')}</div>
                             </div>`).join('')}
+                    </div>`;
+            };
+            const teacherBlocks = evaluation.teacher_breakdown.length === 0
+                ? '<p class="text-muted mb-0">Aun no hay evaluaciones registradas por docentes.</p>'
+                : evaluation.teacher_breakdown.map(teacher => `
+                <div class="border rounded p-3 mb-3">
+                    <div class="d-flex justify-content-between align-items-center mb-2">
+                        <h6 class="mb-0">${escapeHtml(teacher.teacher_name)}</h6>
+                        <span class="badge bg-primary">${teacher.average}%</span>
                     </div>
+                    ${teacher.general_comment ? `<div class="alert alert-light border py-2 mb-3"><strong>Comentario general:</strong><div class="mt-1" style="white-space:pre-wrap">${escapeHtml(teacher.general_comment)}</div></div>` : ''}
+                    ${renderTeacherScores(teacher)}
                 </div>`).join('');
             const feedbackBox = `
                 <div class="border rounded p-3">
