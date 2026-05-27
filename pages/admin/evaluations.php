@@ -555,6 +555,13 @@ $is_archived_view = basename($_SERVER['PHP_SELF']) === 'evaluations-archived.php
 
         function levelLabel(level) {
             if (typeof level === 'object' && level !== null) return level.label || level.key || '';
+            const legacyLabels = {
+                nada: 'Totalmente en desacuerdo',
+                poco: 'En desacuerdo',
+                bastante: 'De acuerdo',
+                mucho: 'Totalmente de acuerdo'
+            };
+            if (legacyLabels[level]) return legacyLabels[level];
             const found = levels.find(item => typeof item === 'object' ? item.key === level : item === level);
             if (found && typeof found === 'object') return found.label || found.key;
             return String(level || '').replaceAll('_', ' ');
@@ -855,7 +862,8 @@ $is_archived_view = basename($_SERVER['PHP_SELF']) === 'evaluations-archived.php
                     const stats = roomGroups[roomKey] || { total: 0, evaluated: 0, active: 0, pending: 0, canAdvance: false, sequenceLocked: false, completed: false };
                     const canAdvanceRoom = room?.id && stats.canAdvance && stats.sequenceLocked && !stats.completed;
                     const roomReportButton = room?.id
-                        ? `<button type="button" class="btn btn-sm btn-outline-secondary d-inline-flex align-items-center gap-2" onclick="downloadRoomReport(${room.id})" title="Reporte PDF de sala"><i class="bi bi-file-earmark-pdf"></i><span>Reporte sala</span></button>`
+                        ? `<button type="button" class="btn btn-sm btn-outline-secondary d-inline-flex align-items-center gap-2" onclick="downloadRoomReport(${room.id})" title="Reporte PDF de sala"><i class="bi bi-file-earmark-pdf"></i><span>Reporte sala</span></button>
+                           <button type="button" class="btn btn-sm btn-outline-info d-inline-flex align-items-center gap-2" onclick="downloadRoomTeacherReport(${room.id})" title="Reporte PDF para docentes"><i class="bi bi-people"></i><span>Reporte docentes</span></button>`
                         : '';
                     tbody.innerHTML += `
                         <tr class="table-light evaluation-room-header">
@@ -926,6 +934,7 @@ $is_archived_view = basename($_SERVER['PHP_SELF']) === 'evaluations-archived.php
                                 <div class="evaluation-secondary-actions">
                                     <button class="btn btn-sm btn-outline-secondary" onclick="showProjectDetails(${evaluation.id})" title="Detalles del proyecto"><i class="bi bi-info-circle"></i></button>
                                     <button class="btn btn-sm btn-outline-secondary evaluation-report-btn" onclick="downloadEvaluationReport(${evaluation.id})" title="Reporte PDF"><i class="bi bi-file-earmark-pdf"></i></button>
+                                    <button class="btn btn-sm btn-outline-info" onclick="downloadEvaluationTeacherReport(${evaluation.id})" title="Reporte PDF para docentes"><i class="bi bi-people"></i></button>
                                     ${(evaluation.can_manage_evaluations && Number(evaluation.semestre) === 8) ? `<button class="btn btn-sm btn-outline-primary" onclick="openRubricModal(${evaluation.project_id})" title="Rubrica personalizada"><i class="bi bi-ui-checks-grid"></i></button>` : ''}
                                     ${evaluation.can_manage_evaluations ? `<button class="btn btn-sm btn-outline-secondary" onclick="${IS_ARCHIVED_VIEW ? 'unarchiveEvaluation' : 'archiveEvaluation'}(${evaluation.id})" title="${IS_ARCHIVED_VIEW ? 'Restaurar a vista principal' : 'Archivar'}"><i class="bi ${IS_ARCHIVED_VIEW ? 'bi-arrow-counterclockwise' : 'bi-archive'}"></i></button>` : ''}
                                     ${evaluation.can_manage_evaluations ? `<button class="btn btn-sm btn-outline-danger" onclick="deleteEvaluation(${evaluation.id})" title="Eliminar"><i class="bi bi-trash"></i></button>` : ''}
@@ -1242,6 +1251,7 @@ $is_archived_view = basename($_SERVER['PHP_SELF']) === 'evaluations-archived.php
             if (badge) badge.textContent = `${rooms.length} sala${rooms.length === 1 ? '' : 's'}`;
             const roomActions = room => `
                             <button class="btn btn-sm btn-outline-dark" onclick="downloadRoomReport(${room.id})" title="Reporte PDF de sala"><i class="bi bi-file-earmark-pdf"></i></button>
+                            <button class="btn btn-sm btn-outline-info" onclick="downloadRoomTeacherReport(${room.id})" title="Reporte PDF para docentes"><i class="bi bi-people"></i></button>
                             ${CAN_MANAGE_EVALUATIONS ? `
                             <button class="btn btn-sm btn-outline-primary" onclick="editRoom(${room.id})" title="Editar"><i class="bi bi-pencil"></i></button>
                             <button class="btn btn-sm btn-outline-success" onclick="lockRoomSequence(${room.id})" title="Bloquear orden"><i class="bi bi-lock"></i></button>
@@ -1457,8 +1467,16 @@ $is_archived_view = basename($_SERVER['PHP_SELF']) === 'evaluations-archived.php
             await downloadPdf(`/evaluations/rooms/${id}/report.pdf`, `reporte_sala_${id}.pdf`, 'No se pudo generar el reporte PDF de la sala.');
         }
 
+        async function downloadRoomTeacherReport(id) {
+            await downloadPdf(`/evaluations/rooms/${id}/report.pdf?audience=teachers`, `reporte_sala_${id}_docentes.pdf`, 'No se pudo generar el reporte PDF para docentes.');
+        }
+
         async function downloadEvaluationReport(id) {
             await downloadPdf(`/evaluations/${id}/report.pdf`, `reporte_evaluacion_${id}.pdf`, 'No se pudo generar el reporte PDF.');
+        }
+
+        async function downloadEvaluationTeacherReport(id) {
+            await downloadPdf(`/evaluations/${id}/report.pdf?audience=teachers`, `reporte_evaluacion_${id}_docentes.pdf`, 'No se pudo generar el reporte PDF para docentes.');
         }
 
         async function downloadPdf(endpoint, filename, fallbackMessage) {
