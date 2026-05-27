@@ -1585,7 +1585,8 @@ $is_archived_view = basename($_SERVER['PHP_SELF']) === 'evaluations-archived.php
             `;
             document.getElementById('generalEvaluationComment').value = draft.general_comment || '';
             document.getElementById('titulationAptBox').classList.toggle('d-none', Number(evaluation?.semestre) !== 8);
-            document.getElementById('apto_titulacion').value = draft.apto_titulacion ?? (evaluation?.apto_titulacion === true ? '1' : (evaluation?.apto_titulacion === false ? '0' : ''));
+            document.getElementById('apto_titulacion').value = draft.apto_titulacion
+                ?? (evaluation?.current_teacher_apto_titulacion === true ? '1' : (evaluation?.current_teacher_apto_titulacion === false ? '0' : ''));
             if (evaluation?.current_teacher_has_scores && Number(evaluation.current_teacher_attempts) >= Number(evaluation.max_attempts)) {
                 showAlert('#alertContainer', 'danger', `Ya alcanzaste el limite de ${evaluation.max_attempts} oportunidad(es) para esta evaluacion.`);
                 return;
@@ -1681,6 +1682,18 @@ $is_archived_view = basename($_SERVER['PHP_SELF']) === 'evaluations-archived.php
             const evaluation = evaluations.find(item => item.id === evaluationId);
             const container = document.getElementById('breakdownContent');
             if (!evaluation) return;
+            const aptSummary = evaluation.titulation_apt_summary || {};
+            const renderAptVote = value => value === true ? 'Si' : (value === false ? 'No' : 'Sin respuesta');
+            const aptSummaryBox = aptSummary.applies ? `
+                <div class="alert alert-info border mb-3">
+                    <div class="d-flex flex-wrap justify-content-between gap-2">
+                        <strong>Apto para titulacion: ${escapeHtml(aptSummary.label || 'Sin votos')}</strong>
+                        <span>${Number(aptSummary.yes || 0)} si / ${Number(aptSummary.no || 0)} no</span>
+                    </div>
+                    <div class="small mt-1">
+                        Decision por mayoria: requiere ${Number(aptSummary.required_yes || 0)} voto(s) a favor de ${Number(aptSummary.total || 0)} respuesta(s).
+                    </div>
+                </div>` : '';
             const renderTeacherScores = teacher => {
                 if (!teacher.can_view_score_detail) {
                     return `
@@ -1719,6 +1732,7 @@ $is_archived_view = basename($_SERVER['PHP_SELF']) === 'evaluations-archived.php
                         <h6 class="mb-0">${escapeHtml(teacher.teacher_name)}</h6>
                         <span class="badge bg-primary">${teacher.average}%</span>
                     </div>
+                    ${aptSummary.applies ? `<div class="small text-muted mb-2"><strong>Apto para titulacion:</strong> ${escapeHtml(renderAptVote(teacher.apto_titulacion))}</div>` : ''}
                     ${teacher.general_comment ? `<div class="alert alert-light border py-2 mb-3"><strong>Comentario general:</strong><div class="mt-1" style="white-space:pre-wrap">${escapeHtml(teacher.general_comment)}</div></div>` : ''}
                     ${renderTeacherScores(teacher)}
                 </div>`).join('');
@@ -1731,7 +1745,7 @@ $is_archived_view = basename($_SERVER['PHP_SELF']) === 'evaluations-archived.php
                         <button class="btn btn-sm btn-primary" onclick="saveRoomFeedback(${evaluation.id})"><i class="bi bi-save"></i> Guardar retroalimentacion</button>
                     ` : ''}
                 </div>`;
-            container.innerHTML = teacherBlocks + feedbackBox;
+            container.innerHTML = aptSummaryBox + teacherBlocks + feedbackBox;
             breakdownModal.show();
         }
 
