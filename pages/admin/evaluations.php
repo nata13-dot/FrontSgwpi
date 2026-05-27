@@ -854,6 +854,9 @@ $is_archived_view = basename($_SERVER['PHP_SELF']) === 'evaluations-archived.php
                     const room = evaluation.room;
                     const stats = roomGroups[roomKey] || { total: 0, evaluated: 0, active: 0, pending: 0, canAdvance: false, sequenceLocked: false, completed: false };
                     const canAdvanceRoom = room?.id && stats.canAdvance && stats.sequenceLocked && !stats.completed;
+                    const roomReportButton = room?.id
+                        ? `<button type="button" class="btn btn-sm btn-outline-secondary d-inline-flex align-items-center gap-2" onclick="downloadRoomReport(${room.id})" title="Reporte PDF de sala"><i class="bi bi-file-earmark-pdf"></i><span>Reporte sala</span></button>`
+                        : '';
                     tbody.innerHTML += `
                         <tr class="table-light evaluation-room-header">
                             <td colspan="7">
@@ -867,6 +870,7 @@ $is_archived_view = basename($_SERVER['PHP_SELF']) === 'evaluations-archived.php
                                         <span class="text-muted small d-block">${escapeHtml(room?.salon || '-')} · Responsable: ${escapeHtml(fullName(room?.responsible_teacher) || '-')}</span>
                                     </div>
                                     <div class="d-flex flex-wrap gap-2">
+                                        ${roomReportButton}
                                         <span class="badge bg-secondary">${stats.total} proyecto${stats.total === 1 ? '' : 's'}</span>
                                         <span class="badge evaluation-success-badge">${stats.evaluated} evaluado${stats.evaluated === 1 ? '' : 's'}</span>
                                         ${stats.active ? `<span class="badge bg-primary">${stats.active} en turno</span>` : ''}
@@ -1236,14 +1240,16 @@ $is_archived_view = basename($_SERVER['PHP_SELF']) === 'evaluations-archived.php
         function renderRooms() {
             const badge = document.getElementById('roomsCountBadge');
             if (badge) badge.textContent = `${rooms.length} sala${rooms.length === 1 ? '' : 's'}`;
-            const roomActions = room => CAN_MANAGE_EVALUATIONS ? `
+            const roomActions = room => `
+                            <button class="btn btn-sm btn-outline-dark" onclick="downloadRoomReport(${room.id})" title="Reporte PDF de sala"><i class="bi bi-file-earmark-pdf"></i></button>
+                            ${CAN_MANAGE_EVALUATIONS ? `
                             <button class="btn btn-sm btn-outline-primary" onclick="editRoom(${room.id})" title="Editar"><i class="bi bi-pencil"></i></button>
                             <button class="btn btn-sm btn-outline-success" onclick="lockRoomSequence(${room.id})" title="Bloquear orden"><i class="bi bi-lock"></i></button>
                             ${room.sequence_locked && !room.completed_at ? `<button class="btn btn-sm btn-outline-warning" onclick="advanceRoom(${room.id})" title="Siguiente proyecto"><i class="bi bi-skip-forward"></i></button>` : ''}
-                            <button class="btn btn-sm btn-outline-dark" onclick="downloadRoomReport(${room.id})" title="Reporte PDF de sala"><i class="bi bi-file-earmark-pdf"></i></button>
                             <button class="btn btn-sm btn-outline-secondary" onclick="${IS_ARCHIVED_VIEW ? 'unarchiveRoom' : 'archiveRoom'}(${room.id})" title="${IS_ARCHIVED_VIEW ? 'Restaurar sala' : 'Archivar sala'}"><i class="bi ${IS_ARCHIVED_VIEW ? 'bi-arrow-counterclockwise' : 'bi-archive'}"></i></button>
                             <button class="btn btn-sm btn-outline-danger" onclick="deleteRoom(${room.id})" title="Eliminar"><i class="bi bi-trash"></i></button>
-            ` : '';
+                            ` : ''}
+            `;
             document.getElementById('roomsList').innerHTML = rooms.map(room => `
                 <div class="room-list-card">
                     <div class="d-flex justify-content-between gap-3 flex-wrap">
@@ -1448,31 +1454,37 @@ $is_archived_view = basename($_SERVER['PHP_SELF']) === 'evaluations-archived.php
         }
 
         async function downloadRoomReport(id) {
-            const response = await fetch(`${API_BASE_URL}/evaluations/rooms/${id}/report.pdf`, {
-                credentials: 'include',
-                headers: { Authorization: `Bearer ${auth.getToken()}` }
-            });
-            if (!response.ok) {
-                showAlert('#alertContainer', 'danger', 'No se pudo generar el reporte PDF de la sala.');
-                return;
-            }
-            const content = await response.blob();
-            const blob = new Blob([content], { type: 'application/pdf' });
-            const url = URL.createObjectURL(blob);
-            const link = document.createElement('a');
-            link.href = url;
-            link.download = `reporte_sala_${id}.pdf`;
-            link.click();
-            URL.revokeObjectURL(url);
+            await downloadPdf(`/evaluations/rooms/${id}/report.pdf`, `reporte_sala_${id}.pdf`, 'No se pudo generar el reporte PDF de la sala.');
         }
 
         async function downloadEvaluationReport(id) {
-            const response = await fetch(`${API_BASE_URL}/evaluations/${id}/report.pdf`, {
-                credentials: 'include',
-                headers: { Authorization: `Bearer ${auth.getToken()}` }
-            });
+            await downloadPdf(`/evaluations/${id}/report.pdf`, `reporte_evaluacion_${id}.pdf`, 'No se pudo generar el reporte PDF.');
+        }
+
+        async function downloadPdf(endpoint, filename, fallbackMessage) {
+            const request = async (retryingAfterRefresh = false) => {
+                const response = await fetch(`${API_BASE_URL}${endpoint}`, {
+                    credentials: 'include',
+                    headers: {
+                        Accept: 'application/pdf',
+                        Authorization: `Bearer ${auth.getToken()}`
+                    }
+                });
+
+                if (response.status === 401 && auth.getToken() && !retryingAfterRefresh) {
+                    await api.refreshAuthToken();
+                    return request(true);
+                }
+
+                return response;
+            };
+
+            const response = await request();
             if (!response.ok) {
-                showAlert('#alertContainer', 'danger', 'No se pudo generar el reporte PDF.');
+                const message = await response.clone().json()
+                    .then(data => data.error || data.message)
+                    .catch(() => fallbackMessage);
+                showAlert('#alertContainer', 'danger', message || fallbackMessage);
                 return;
             }
             const content = await response.blob();
@@ -1480,7 +1492,7 @@ $is_archived_view = basename($_SERVER['PHP_SELF']) === 'evaluations-archived.php
             const url = URL.createObjectURL(blob);
             const link = document.createElement('a');
             link.href = url;
-            link.download = `reporte_evaluacion_${id}.pdf`;
+            link.download = filename;
             link.click();
             URL.revokeObjectURL(url);
         }
