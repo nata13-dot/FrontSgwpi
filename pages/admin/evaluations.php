@@ -1686,13 +1686,7 @@ $is_archived_view = basename($_SERVER['PHP_SELF']) === 'evaluations-archived.php
             const renderAptVote = value => value === true ? 'Si' : (value === false ? 'No' : 'Sin respuesta');
             const aptSummaryBox = aptSummary.applies ? `
                 <div class="alert alert-info border mb-3">
-                    <div class="d-flex flex-wrap justify-content-between gap-2">
-                        <strong>Apto para titulacion: ${escapeHtml(aptSummary.label || 'Sin votos')}</strong>
-                        <span>${Number(aptSummary.yes || 0)} si / ${Number(aptSummary.no || 0)} no</span>
-                    </div>
-                    <div class="small mt-1">
-                        Decision por mayoria: requiere ${Number(aptSummary.required_yes || 0)} voto(s) a favor de ${Number(aptSummary.total || 0)} respuesta(s).
-                    </div>
+                    <strong>Apto para titulacion: ${escapeHtml(aptSummary.label || 'Sin votos')}</strong>
                 </div>` : '';
             const renderTeacherScores = teacher => {
                 if (!teacher.can_view_score_detail) {
