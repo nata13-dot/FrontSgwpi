@@ -284,10 +284,17 @@ if (!is_authenticated()) {
         let projectManagementView = 'projects';
         const PROJECTS_PER_PAGE = 12;
         const THESIS_COMMITTEE_ROLES = [
-            { key: 'asesor', legacy: 'primario', label: 'Asesor' },
-            { key: 'revisor_1', legacy: 'secundario', label: 'Revisor 1' },
+            { key: 'asesor', legacy: null, label: 'Asesor' },
+            { key: 'revisor_1', legacy: null, label: 'Revisor 1' },
             { key: 'revisor_2', legacy: null, label: 'Revisor 2' }
         ];
+        const ADVISOR_ROLE_LABELS = {
+            primario: 'Asesor primario',
+            secundario: 'Asesor secundario',
+            asesor: 'Asesor de tesis',
+            revisor_1: 'Revisor 1',
+            revisor_2: 'Revisor 2'
+        };
 
         function escapeHtml(value) {
             return String(value ?? '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#039;');
@@ -312,8 +319,7 @@ if (!is_authenticated()) {
         }
 
         function thesisRoleLabel(role) {
-            const config = THESIS_COMMITTEE_ROLES.find(item => item.key === role || item.legacy === role);
-            return config?.label || role || 'Sin rol';
+            return ADVISOR_ROLE_LABELS[role] || role || 'Sin rol';
         }
 
         function setProjectManagementView(view) {
@@ -356,7 +362,8 @@ if (!is_authenticated()) {
                         <td>
                             <div class="btn-group btn-group-sm" role="group">
                                 <button class="btn btn-outline-secondary" onclick="showProjectDetails(${project.id})" title="Ver detalles"><i class="bi bi-eye"></i></button>
-                                ${isAdmin ? `<a class="btn btn-outline-success" href="/pages/admin/advisors.php?project=${project.id}" title="Asignar comite"><i class="bi bi-person-check"></i></a>` : ''}
+                                ${isAdmin ? `<a class="btn btn-outline-success" href="/pages/admin/advisors.php?project=${project.id}&view=thesis" title="Asignar comite"><i class="bi bi-person-check"></i></a>
+                                <button type="button" class="btn btn-outline-warning" onclick="toggleProjectThesis(${project.id}, false)" title="Quitar de tesis"><i class="bi bi-mortarboard-fill"></i></button>` : ''}
                             </div>
                         </td>
                     </tr>`;
@@ -406,7 +413,14 @@ if (!is_authenticated()) {
                     return;
                 }
 
-                renderThesisTable(proyectosFiltrados);
+                renderThesisTable(proyectosFiltrados.filter(project => project.is_thesis));
+                proyectosFiltrados = proyectosFiltrados.filter(project => !project.is_thesis);
+
+                if (proyectosFiltrados.length === 0) {
+                    tbody.innerHTML = '<tr><td colspan="7" class="text-center text-muted py-4">No hay proyectos integradores para este filtro</td></tr>';
+                    renderProjectsPagination();
+                    return;
+                }
 
                 proyectosFiltrados.forEach(project => {
                     const creatorName = project.creator?.nombres ? String(project.creator.nombres).split(' ')[0] : 'N/A';
@@ -414,9 +428,14 @@ if (!is_authenticated()) {
                         ? `<strong>${escapeHtml(project.company_name)}</strong>${project.company_contact_name ? `<div class="small text-muted">${escapeHtml(project.company_contact_name)}</div>` : ''}`
                         : '<span class="text-muted small">Sin empresa</span>';
 
+                    const thesisBadge = project.is_thesis ? '<span class="badge bg-success ms-2">Tesis</span>' : '';
+                    const thesisAction = project.is_thesis
+                        ? `<button type="button" class="btn btn-outline-warning" onclick="toggleProjectThesis(${project.id}, false)" title="Quitar de tesis"><i class="bi bi-mortarboard-fill"></i></button>`
+                        : `<button type="button" class="btn btn-outline-success" onclick="toggleProjectThesis(${project.id}, true)" title="Marcar como tesis"><i class="bi bi-mortarboard"></i></button>`;
+
                     tbody.innerHTML += `
                         <tr>
-                            <td><strong>${escapeHtml(project.title)}</strong></td>
+                            <td><strong>${escapeHtml(project.title)}</strong>${thesisBadge}</td>
                             <td>${project.semestre || '-'}</td>
                             <td><small>${escapeHtml(projectActiveAuthors(project))}</small></td>
                             <td>${project.year || '-'}</td>
@@ -425,7 +444,8 @@ if (!is_authenticated()) {
                             <td>
                                 <div class="btn-group btn-group-sm" role="group">
                                     <button class="btn btn-outline-secondary" onclick="showProjectDetails(${project.id})" title="Ver detalles"><i class="bi bi-eye"></i></button>
-                                    ${isAdmin ? `<button type="button" class="btn btn-outline-info" onclick="openProjectSubjectsModal(${project.id})" title="Materias"><i class="bi bi-book"></i></button>
+                                    ${isAdmin ? `${thesisAction}
+                                    <button type="button" class="btn btn-outline-info" onclick="openProjectSubjectsModal(${project.id})" title="Materias"><i class="bi bi-book"></i></button>
                                     <button type="button" class="btn btn-outline-primary" onclick="openProjectModal(${project.id})" title="Editar"><i class="bi bi-pencil"></i></button>
                                     <button class="btn btn-outline-danger" onclick="deleteProject(${project.id})" title="Eliminar"><i class="bi bi-trash"></i></button>` : ''}
                                 </div>
@@ -710,6 +730,25 @@ if (!is_authenticated()) {
                 loadProjects();
             } catch (error) {
                 swalToast('danger', error.message || 'Error guardando materias');
+            }
+        }
+
+        async function toggleProjectThesis(projectId, isThesis) {
+            const confirmed = await confirmAction({
+                title: isThesis ? 'Marcar como tesis' : 'Quitar de tesis',
+                text: isThesis
+                    ? 'El proyecto pasara al apartado aislado de gestion de tesis.'
+                    : 'La tesis volvera a gestionarse solo como proyecto integrador y se limpiara su comite de tesis.',
+                confirmButtonText: isThesis ? 'Si, marcar' : 'Si, quitar'
+            });
+            if (!confirmed) return;
+
+            try {
+                await api.put(`/projects/${projectId}`, { is_thesis: isThesis });
+                swalToast('success', isThesis ? 'Proyecto marcado como tesis' : 'Proyecto retirado de tesis');
+                await loadProjects(projectsCurrentPage);
+            } catch (error) {
+                showAlert('#alertContainer', 'danger', error.message || 'No se pudo actualizar el estado de tesis');
             }
         }
 
