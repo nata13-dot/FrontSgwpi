@@ -34,7 +34,7 @@ if (!is_authenticated()) {
                         <button type="button" class="btn btn-outline-success" onclick="openProjectsImportModal()">
                             <i class="bi bi-upload"></i> Cargar Excel
                         </button>
-                        <button type="button" class="btn btn-primary" onclick="openProjectModal()">
+                        <button type="button" class="btn btn-primary" id="newProjectBtn" onclick="openProjectModal()">
                             <i class="bi bi-plus-circle"></i> Nuevo Proyecto
                         </button>
                     </div>
@@ -282,6 +282,7 @@ if (!is_authenticated()) {
         let projectsLastPage = 1;
         let projectsTotal = 0;
         let projectManagementView = 'projects';
+        let projectModalIsThesis = false;
         const PROJECTS_PER_PAGE = 12;
         const THESIS_COMMITTEE_ROLES = [
             { key: 'asesor', legacy: null, label: 'Asesor' },
@@ -329,6 +330,18 @@ if (!is_authenticated()) {
             document.getElementById('projectsPagination').classList.toggle('d-none', view !== 'projects');
             document.getElementById('projectViewBtn').className = view === 'projects' ? 'btn btn-primary' : 'btn btn-outline-secondary';
             document.getElementById('thesisViewBtn').className = view === 'thesis' ? 'btn btn-success' : 'btn btn-outline-secondary';
+            const newButton = document.getElementById('newProjectBtn');
+            if (newButton) {
+                newButton.innerHTML = view === 'thesis'
+                    ? '<i class="bi bi-plus-circle"></i> Nueva Tesis'
+                    : '<i class="bi bi-plus-circle"></i> Nuevo Proyecto';
+            }
+            const searchLabel = document.querySelector('label[for="projectSearchInput"]');
+            const searchInput = document.getElementById('projectSearchInput');
+            if (searchLabel) searchLabel.textContent = view === 'thesis' ? 'Buscar tesis' : 'Buscar proyecto';
+            if (searchInput) searchInput.placeholder = view === 'thesis'
+                ? 'Tesis, estudiante, asesor, empresa o año'
+                : 'Proyecto, estudiante, asesor, empresa o año';
         }
 
         function renderThesisTable(projects) {
@@ -363,7 +376,10 @@ if (!is_authenticated()) {
                             <div class="btn-group btn-group-sm" role="group">
                                 <button class="btn btn-outline-secondary" onclick="showProjectDetails(${project.id})" title="Ver detalles"><i class="bi bi-eye"></i></button>
                                 ${isAdmin ? `<a class="btn btn-outline-success" href="/pages/admin/advisors.php?project=${project.id}&view=thesis" title="Asignar comite"><i class="bi bi-person-check"></i></a>
-                                <button type="button" class="btn btn-outline-warning" onclick="toggleProjectThesis(${project.id}, false)" title="Quitar de tesis"><i class="bi bi-mortarboard-fill"></i></button>` : ''}
+                                <button type="button" class="btn btn-outline-info" onclick="openProjectSubjectsModal(${project.id})" title="Materias"><i class="bi bi-book"></i></button>
+                                <button type="button" class="btn btn-outline-primary" onclick="openProjectModal(${project.id}, true)" title="Editar tesis"><i class="bi bi-pencil"></i></button>
+                                <button type="button" class="btn btn-outline-warning" onclick="toggleProjectThesis(${project.id}, false)" title="Quitar de tesis"><i class="bi bi-mortarboard-fill"></i></button>
+                                <button class="btn btn-outline-danger" onclick="deleteProject(${project.id})" title="Eliminar tesis"><i class="bi bi-trash"></i></button>` : ''}
                             </div>
                         </td>
                     </tr>`;
@@ -508,17 +524,19 @@ if (!is_authenticated()) {
             document.getElementById('projectModalAlert').innerHTML = '';
             document.getElementById('projectModalEditingId').value = '';
             document.getElementById('projectYear').value = new Date().getFullYear();
+            projectModalIsThesis = projectManagementView === 'thesis';
             projectSelectedStudents = [];
             renderProjectSelectedStudents();
         }
 
-        async function openProjectModal(projectId = null) {
+        async function openProjectModal(projectId = null, asThesis = null) {
             if (!projectFormModal) projectFormModal = new bootstrap.Modal(document.getElementById('projectFormModal'));
             resetProjectModal();
+            if (asThesis !== null) projectModalIsThesis = Boolean(asThesis);
             const isEdit = Boolean(projectId);
             document.getElementById('projectModalTitle').innerHTML = isEdit
-                ? '<i class="bi bi-pencil"></i> Editar proyecto'
-                : '<i class="bi bi-folder-plus"></i> Nuevo proyecto';
+                ? `<i class="bi bi-pencil"></i> Editar ${projectModalIsThesis ? 'tesis' : 'proyecto'}`
+                : `<i class="bi ${projectModalIsThesis ? 'bi-mortarboard' : 'bi-folder-plus'}"></i> ${projectModalIsThesis ? 'Nueva tesis' : 'Nuevo proyecto'}`;
             document.getElementById('projectModalSaveBtn').innerHTML = isEdit
                 ? '<i class="bi bi-save"></i> Guardar cambios'
                 : '<i class="bi bi-save"></i> Guardar';
@@ -526,6 +544,8 @@ if (!is_authenticated()) {
             await loadProjectModalStudents(projectId);
             if (isEdit) {
                 const project = await api.get(`/projects/${projectId}`);
+                projectModalIsThesis = Boolean(project.is_thesis);
+                document.getElementById('projectModalTitle').innerHTML = `<i class="bi bi-pencil"></i> Editar ${projectModalIsThesis ? 'tesis' : 'proyecto'}`;
                 document.getElementById('projectModalEditingId').value = project.id;
                 document.getElementById('projectTitle').value = project.title || '';
                 document.getElementById('projectDescription').value = project.description || '';
@@ -636,6 +656,7 @@ if (!is_authenticated()) {
                 company_contact_name: document.getElementById('projectCompanyContact').value.trim(),
                 company_contact_position: document.getElementById('projectCompanyPosition').value.trim(),
                 company_address: document.getElementById('projectCompanyAddress').value.trim(),
+                is_thesis: projectModalIsThesis,
                 student_ids: projectSelectedStudents.map(student => student.id)
             };
 
@@ -646,13 +667,13 @@ if (!is_authenticated()) {
             try {
                 if (editingId) {
                     await api.put(`/projects/${editingId}`, payload);
-                    swalToast('success', 'Proyecto actualizado');
+                    swalToast('success', projectModalIsThesis ? 'Tesis actualizada' : 'Proyecto actualizado');
                 } else {
                     await api.post('/projects', payload);
-                    swalToast('success', 'Proyecto creado');
+                    swalToast('success', projectModalIsThesis ? 'Tesis creada' : 'Proyecto creado');
                 }
                 projectFormModal.hide();
-                await loadProjects(1);
+                await loadProjects(editingId ? projectsCurrentPage : 1);
             } catch (error) {
                 document.getElementById('projectModalAlert').innerHTML = `<div class="alert alert-danger">${escapeHtml(error.message || 'Error guardando proyecto')}</div>`;
             } finally {
