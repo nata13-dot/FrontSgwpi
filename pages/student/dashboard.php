@@ -26,12 +26,12 @@ if (!is_authenticated() || !is_student()) {
         
         <div class="main-content flex-grow-1">
             <!-- Hero -->
-            <div style="background: url('/assets/img/ITSSMT/Sistema2.jpeg'); background-size: cover; background-position: center; padding: 80px 0; position: relative;">
+            <div style="background: url('/assets/img/ITSSMT/Sistema2.webp'); background-size: cover; background-position: center; padding: 80px 0; position: relative;">
                 <div class="overlay"></div>
                 <div class="container-xl" style="position: relative; z-index: 1;">
                     <!-- Logo y Título -->
                     <div class="d-flex align-items-center gap-3 mb-2">
-                        <img src="/assets/img/ITSSMT/ITSSMT.png" alt="ITSSMT" style="height: 50px;">
+                        <img src="/assets/img/ITSSMT/ITSSMT.webp" alt="ITSSMT" style="height: 50px;">
                         <h1 class="display-4 fw-bold text-white mb-0">Panel del Estudiante</h1>
                     </div>
                     

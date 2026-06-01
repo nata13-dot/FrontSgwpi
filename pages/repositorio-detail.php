@@ -141,7 +141,7 @@
                 return;
             }
 
-            if (['jpg', 'jpeg', 'png'].includes(fileType)) {
+            if (['jpg', 'jpeg', 'png', 'webp'].includes(fileType)) {
                 reader.innerHTML = `<img src="${viewUrl}" class="img-fluid rounded" alt="Vista previa de imagen">`;
                 return;
             }

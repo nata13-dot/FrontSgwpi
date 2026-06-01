@@ -33,7 +33,7 @@ $serverDashboardUrl = dashboard_url();
         }
 
         .index-hero {
-            background: url('/assets/img/ITSSMT/fondo.jpg');
+            background: url('/assets/img/ITSSMT/fondo.webp');
             background-size: cover;
             background-position: center;
             min-height: 540px;
@@ -469,7 +469,7 @@ $serverDashboardUrl = dashboard_url();
                 <div class="modal-body">
                     <button type="button" class="btn-close float-end" data-bs-dismiss="modal" aria-label="Cerrar"></button>
                     <div class="login-brand text-center mb-3">
-                        <img src="/assets/img/ITSSMT/ITSSMT.png" alt="ITSSMT">
+                        <img src="/assets/img/ITSSMT/ITSSMT.webp" alt="ITSSMT">
                         <h4 class="mt-2" id="loginModalLabel">Bienvenido</h4>
                         <p class="text-muted mb-0">Ingresa tus credenciales para continuar</p>
                     </div>

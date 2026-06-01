@@ -11,7 +11,7 @@ if (!is_authenticated() || !is_admin()) {
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Asignacion de Asesores - <?= APP_NAME ?></title>
+    <title>Asignacion de Comite de Tesis - <?= APP_NAME ?></title>
     <?php require_once $_SERVER['DOCUMENT_ROOT'] . '/includes/visual-preferences.php'; ?>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
@@ -25,8 +25,8 @@ if (!is_authenticated() || !is_admin()) {
             <div class="container-xl mt-5 mb-5">
                 <div class="d-flex align-items-center justify-content-between mb-4">
                     <div>
-                        <h1 class="mb-1">Asignacion de Asesores</h1>
-                        <p class="text-muted mb-0">Consulta la carga de asesorias por docente o administrador y asigna asesores por proyecto.</p>
+                        <h1 class="mb-1">Asignacion de Comite de Tesis</h1>
+                        <p class="text-muted mb-0">Gestiona asesor, revisor 1 y revisor 2 para cada tesis.</p>
                     </div>
                 </div>
 
@@ -47,7 +47,7 @@ if (!is_authenticated() || !is_admin()) {
 
                 <div class="d-flex flex-wrap gap-2 mb-3" role="group" aria-label="Vista de gestion de asesores">
                     <button type="button" class="btn btn-primary" id="viewByProjectBtn" onclick="setAdvisorView('projects')">
-                        <i class="bi bi-folder2-open"></i> Por proyecto
+                        <i class="bi bi-folder2-open"></i> Por tesis
                     </button>
                     <button type="button" class="btn btn-outline-secondary" id="viewByTeacherBtn" onclick="setAdvisorView('teachers')">
                         <i class="bi bi-person-workspace"></i> Por asesor
@@ -63,16 +63,17 @@ if (!is_authenticated() || !is_admin()) {
                             <table class="table table-hover mb-0 align-middle">
                                 <thead>
                                     <tr>
-                                        <th>Proyecto</th>
+                                        <th>Tesis</th>
                                         <th>Semestre</th>
                                         <th>Grupo</th>
-                                        <th>Asesor primario</th>
-                                        <th>Asesor secundario</th>
+                                        <th>Asesor</th>
+                                        <th>Revisor 1</th>
+                                        <th>Revisor 2</th>
                                         <th>Acciones</th>
                                     </tr>
                                 </thead>
                                 <tbody id="projectsTable">
-                                    <tr><td colspan="6" class="text-center py-4"><div class="spinner-border" role="status"></div></td></tr>
+                                    <tr><td colspan="7" class="text-center py-4"><div class="spinner-border" role="status"></div></td></tr>
                                 </tbody>
                             </table>
                         </div>
@@ -107,7 +108,7 @@ if (!is_authenticated() || !is_admin()) {
                                         <div class="col-sm-4">
                                             <div class="advisor-metric">
                                                 <strong id="summaryProjects">0</strong>
-                                                <span>Asesorias</span>
+                                                <span>Roles asignados</span>
                                             </div>
                                         </div>
                                     </div>
@@ -132,6 +133,12 @@ if (!is_authenticated() || !is_admin()) {
         let projects = [];
         let teachers = [];
         let advisorView = 'projects';
+        const THESIS_ROLES = [
+            { key: 'asesor', label: 'Asesor', badge: 'bg-primary', icon: 'bi-award', help: 'Responsable academico' },
+            { key: 'revisor_1', label: 'Revisor 1', badge: 'bg-info text-dark', icon: 'bi-person-check', help: 'Primera revision' },
+            { key: 'revisor_2', label: 'Revisor 2', badge: 'bg-warning text-dark', icon: 'bi-person-lines-fill', help: 'Segunda revision' }
+        ];
+        const LEGACY_ROLE_MAP = { primario: 'asesor', secundario: 'revisor_1' };
 
         function escapeHtml(value) {
             return String(value ?? '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#039;');
@@ -161,15 +168,24 @@ if (!is_authenticated() || !is_admin()) {
         }
 
         function advisorRoleBadge(advisor) {
-            const role = escapeHtml(advisor.pivot?.rol_asesor || '');
+            const role = escapeHtml(roleLabel(advisor.pivot?.rol_asesor || ''));
             const profile = Number(advisor?.perfil_id) === 1
                 ? '<span class="badge advisor-admin-badge ms-1">Administrador</span>'
                 : '<span class="badge bg-secondary ms-1">Docente</span>';
             return `<span class="badge bg-dark">${role}</span>${profile}`;
         }
 
+        function normalizeRole(role) {
+            return LEGACY_ROLE_MAP[role] || role;
+        }
+
+        function roleLabel(role) {
+            const normalized = normalizeRole(role);
+            return THESIS_ROLES.find(item => item.key === normalized)?.label || role || 'Sin rol';
+        }
+
         function advisorByRole(project, role) {
-            return (project.advisors || []).find(advisor => advisor.pivot?.rol_asesor === role) || null;
+            return (project.advisors || []).find(advisor => normalizeRole(advisor.pivot?.rol_asesor) === role) || null;
         }
 
         function advisorForTeacher(project, teacherId) {
@@ -190,10 +206,11 @@ if (!is_authenticated() || !is_admin()) {
             if (view === 'teachers') renderTeacherAdvisorView();
         }
 
-        function teacherOptions(selectedId, blockedId) {
+        function teacherOptions(selectedId, blockedIds = []) {
+            const blocked = Array.isArray(blockedIds) ? blockedIds.map(String) : [String(blockedIds || '')];
             const options = ['<option value="">Sin asignar</option>'];
             teachers.forEach(teacher => {
-                const disabled = blockedId && String(teacher.id) === String(blockedId) ? 'disabled' : '';
+                const disabled = blocked.includes(String(teacher.id)) ? 'disabled' : '';
                 const selected = selectedId && String(teacher.id) === String(selectedId) ? 'selected' : '';
                 const optionStyle = Number(teacher.perfil_id) === 1 ? 'style="color:#6f42c1;font-weight:600;"' : '';
                 options.push(`<option value="${escapeHtml(teacher.id)}" ${selected} ${disabled} ${optionStyle}>${escapeHtml(fullName(teacher))} (${escapeHtml(teacher.id)}) - ${escapeHtml(profileName(teacher))}</option>`);
@@ -212,7 +229,7 @@ if (!is_authenticated() || !is_admin()) {
 
         async function loadProjects() {
             const tbody = document.getElementById('projectsTable');
-            tbody.innerHTML = '<tr><td colspan="6" class="text-center py-4"><div class="spinner-border" role="status"></div></td></tr>';
+            tbody.innerHTML = '<tr><td colspan="7" class="text-center py-4"><div class="spinner-border" role="status"></div></td></tr>';
 
             try {
                 const params = {};
@@ -224,15 +241,18 @@ if (!is_authenticated() || !is_admin()) {
                 projects = response.data || [];
 
                 if (!projects.length) {
-                    tbody.innerHTML = '<tr><td colspan="6" class="text-center text-muted py-4">No hay proyectos</td></tr>';
+                    tbody.innerHTML = '<tr><td colspan="7" class="text-center text-muted py-4">No hay tesis</td></tr>';
                     renderTeacherAdvisorView();
                     updateSaveAllButton();
                     return;
                 }
 
                 tbody.innerHTML = projects.map(project => {
-                    const primary = advisorByRole(project, 'primario');
-                    const secondary = advisorByRole(project, 'secundario');
+                    const selectedByRole = Object.fromEntries(THESIS_ROLES.map(role => [role.key, advisorByRole(project, role.key)]));
+                    const blockedByRole = roleKey => THESIS_ROLES
+                        .filter(role => role.key !== roleKey)
+                        .map(role => selectedByRole[role.key]?.id || '')
+                        .filter(Boolean);
                     return `
                         <tr id="project-row-${project.id}">
                             <td>
@@ -241,24 +261,16 @@ if (!is_authenticated() || !is_admin()) {
                             </td>
                             <td>${project.semestre || '-'}</td>
                             <td>${escapeHtml(project.subject_group?.nombre || project.subjectGroup?.nombre || '-')}</td>
-                            <td>
-                                <div class="d-flex align-items-center gap-2 mb-2">
-                                    <span class="badge bg-primary"><i class="bi bi-award"></i> Primario</span>
-                                    <small class="text-muted">Responsable principal</small>
-                                </div>
-                                <select class="form-select form-select-sm border-primary" id="primary-${project.id}" onchange="syncBlockedOptions(${project.id}); markAdvisorRow(${project.id})">
-                                    ${teacherOptions(primary?.id, secondary?.id)}
-                                </select>
-                            </td>
-                            <td>
-                                <div class="d-flex align-items-center gap-2 mb-2">
-                                    <span class="badge bg-info text-dark"><i class="bi bi-person-check"></i> Secundario</span>
-                                    <small class="text-muted">Apoyo academico</small>
-                                </div>
-                                <select class="form-select form-select-sm border-info" id="secondary-${project.id}" onchange="syncBlockedOptions(${project.id}); markAdvisorRow(${project.id})">
-                                    ${teacherOptions(secondary?.id, primary?.id)}
-                                </select>
-                            </td>
+                            ${THESIS_ROLES.map(role => `
+                                <td>
+                                    <div class="d-flex align-items-center gap-2 mb-2">
+                                        <span class="badge ${role.badge}"><i class="bi ${role.icon}"></i> ${role.label}</span>
+                                        <small class="text-muted">${role.help}</small>
+                                    </div>
+                                    <select class="form-select form-select-sm" id="${role.key}-${project.id}" onchange="syncBlockedOptions(${project.id}); markAdvisorRow(${project.id})">
+                                        ${teacherOptions(selectedByRole[role.key]?.id, blockedByRole(role.key))}
+                                    </select>
+                                </td>`).join('')}
                             <td>
                                 <div class="btn-group btn-group-sm">
                                     <button class="btn btn-outline-warning" onclick="revertAdvisorRow(${project.id})" title="Deshacer cambios"><i class="bi bi-arrow-counterclockwise"></i></button>
@@ -271,7 +283,7 @@ if (!is_authenticated() || !is_admin()) {
                 if (advisorView === 'teachers') renderTeacherAdvisorView();
             } catch (error) {
                 showAlert('#alertContainer', 'danger', 'Error cargando proyectos: ' + error.message);
-                tbody.innerHTML = '<tr><td colspan="6" class="text-center text-danger py-4">Error al cargar proyectos</td></tr>';
+                tbody.innerHTML = '<tr><td colspan="7" class="text-center text-danger py-4">Error al cargar tesis</td></tr>';
                 renderTeacherAdvisorView();
                 updateSaveAllButton();
             }
@@ -284,9 +296,10 @@ if (!is_authenticated() || !is_admin()) {
             const search = (document.getElementById('teacherSearch')?.value || '').trim().toLowerCase();
             const teachersWithProjects = teachers.map(teacher => {
                 const assignedProjects = projectsForTeacher(teacher.id);
-                const primaryCount = assignedProjects.filter(project => advisorForTeacher(project, teacher.id)?.pivot?.rol_asesor === 'primario').length;
-                const secondaryCount = assignedProjects.filter(project => advisorForTeacher(project, teacher.id)?.pivot?.rol_asesor === 'secundario').length;
-                return { teacher, assignedProjects, primaryCount, secondaryCount };
+                const asesorCount = assignedProjects.filter(project => normalizeRole(advisorForTeacher(project, teacher.id)?.pivot?.rol_asesor) === 'asesor').length;
+                const reviewerOneCount = assignedProjects.filter(project => normalizeRole(advisorForTeacher(project, teacher.id)?.pivot?.rol_asesor) === 'revisor_1').length;
+                const reviewerTwoCount = assignedProjects.filter(project => normalizeRole(advisorForTeacher(project, teacher.id)?.pivot?.rol_asesor) === 'revisor_2').length;
+                return { teacher, assignedProjects, asesorCount, reviewerOneCount, reviewerTwoCount };
             }).filter(item => {
                 const haystack = `${item.teacher.id} ${fullName(item.teacher)} ${item.teacher.email || ''}`.toLowerCase();
                 return !search || haystack.includes(search);
@@ -307,8 +320,9 @@ if (!is_authenticated() || !is_admin()) {
                 const teacher = item.teacher;
                 const projectCards = item.assignedProjects.length ? item.assignedProjects.map(project => {
                     const advisor = advisorForTeacher(project, teacher.id);
-                    const role = advisor?.pivot?.rol_asesor || 'asesor';
-                    const roleClass = role === 'primario' ? 'bg-primary' : 'bg-info text-dark';
+                    const role = normalizeRole(advisor?.pivot?.rol_asesor || 'asesor');
+                    const roleConfig = THESIS_ROLES.find(item => item.key === role) || THESIS_ROLES[0];
+                    const roleClass = roleConfig.badge;
                     const groupName = project.subject_group?.nombre || project.subjectGroup?.nombre || '-';
                     return `
                         <div class="advisor-project-item">
@@ -317,7 +331,7 @@ if (!is_authenticated() || !is_admin()) {
                                     <h6 class="mb-1">${escapeHtml(project.title)}</h6>
                                     <div class="small text-muted">${escapeHtml(projectActiveAuthors(project))}</div>
                                 </div>
-                                <span class="badge ${roleClass}">${escapeHtml(role)}</span>
+                                <span class="badge ${roleClass}">${escapeHtml(roleConfig.label)}</span>
                             </div>
                             <div class="row g-2 mt-2 small">
                                 <div class="col-md-4"><strong>Semestre:</strong> ${escapeHtml(project.semestre || '-')}</div>
@@ -350,8 +364,9 @@ if (!is_authenticated() || !is_admin()) {
                             </div>
                             <div class="card-body">
                                 <div class="d-flex flex-wrap gap-2 mb-3">
-                                    <span class="badge bg-primary">${item.primaryCount} primario</span>
-                                    <span class="badge bg-info text-dark">${item.secondaryCount} secundario</span>
+                                    <span class="badge bg-primary">${item.asesorCount} asesor</span>
+                                    <span class="badge bg-info text-dark">${item.reviewerOneCount} revisor 1</span>
+                                    <span class="badge bg-warning text-dark">${item.reviewerTwoCount} revisor 2</span>
                                 </div>
                                 <div class="advisor-project-list">
                                     ${projectCards}
@@ -364,7 +379,7 @@ if (!is_authenticated() || !is_admin()) {
 
         function focusProjectAssignment(projectId) {
             setAdvisorView('projects');
-            const rowSelect = document.getElementById(`primary-${projectId}`);
+            const rowSelect = document.getElementById(`asesor-${projectId}`);
             if (!rowSelect) return;
             rowSelect.closest('tr')?.scrollIntoView({ behavior: 'smooth', block: 'center' });
             rowSelect.closest('tr')?.classList.add('table-warning');
@@ -401,16 +416,17 @@ if (!is_authenticated() || !is_admin()) {
         }
 
         function syncBlockedOptions(projectId) {
-            const primarySelect = document.getElementById(`primary-${projectId}`);
-            const secondarySelect = document.getElementById(`secondary-${projectId}`);
-            const primary = primarySelect.value;
-            const secondary = secondarySelect.value;
+            const selectedValues = Object.fromEntries(THESIS_ROLES.map(role => {
+                const select = document.getElementById(`${role.key}-${projectId}`);
+                return [role.key, select?.value || ''];
+            }));
 
-            [...secondarySelect.options].forEach(option => {
-                option.disabled = option.value !== '' && option.value === primary;
-            });
-            [...primarySelect.options].forEach(option => {
-                option.disabled = option.value !== '' && option.value === secondary;
+            THESIS_ROLES.forEach(role => {
+                const select = document.getElementById(`${role.key}-${projectId}`);
+                if (!select) return;
+                [...select.options].forEach(option => {
+                    option.disabled = option.value !== '' && THESIS_ROLES.some(other => other.key !== role.key && selectedValues[other.key] === option.value);
+                });
             });
         }
 
@@ -419,11 +435,11 @@ if (!is_authenticated() || !is_admin()) {
             const row = document.getElementById(`project-row-${projectId}`);
             if (!project || !row) return;
 
-            const currentPrimary = advisorByRole(project, 'primario')?.id || '';
-            const currentSecondary = advisorByRole(project, 'secundario')?.id || '';
-            const nextPrimary = document.getElementById(`primary-${projectId}`).value;
-            const nextSecondary = document.getElementById(`secondary-${projectId}`).value;
-            const hasChanges = currentPrimary !== nextPrimary || currentSecondary !== nextSecondary;
+            const hasChanges = THESIS_ROLES.some(role => {
+                const currentValue = advisorByRole(project, role.key)?.id || '';
+                const nextValue = document.getElementById(`${role.key}-${projectId}`)?.value || '';
+                return currentValue !== nextValue;
+            });
 
             row.classList.toggle('advisor-row-editing', hasChanges);
             row.classList.toggle('table-warning', hasChanges);
@@ -433,13 +449,11 @@ if (!is_authenticated() || !is_admin()) {
         function changedAdvisorProjectIds() {
             return projects
                 .filter(project => {
-                    const primarySelect = document.getElementById(`primary-${project.id}`);
-                    const secondarySelect = document.getElementById(`secondary-${project.id}`);
-                    if (!primarySelect || !secondarySelect) return false;
-
-                    const currentPrimary = advisorByRole(project, 'primario')?.id || '';
-                    const currentSecondary = advisorByRole(project, 'secundario')?.id || '';
-                    return currentPrimary !== primarySelect.value || currentSecondary !== secondarySelect.value;
+                    return THESIS_ROLES.some(role => {
+                        const select = document.getElementById(`${role.key}-${project.id}`);
+                        if (!select) return false;
+                        return (advisorByRole(project, role.key)?.id || '') !== select.value;
+                    });
                 })
                 .map(project => project.id);
         }
@@ -449,12 +463,12 @@ if (!is_authenticated() || !is_admin()) {
             if (!button) return;
 
             const count = projects.reduce((total, project) => {
-                const primarySelect = document.getElementById(`primary-${project.id}`);
-                const secondarySelect = document.getElementById(`secondary-${project.id}`);
-                if (!primarySelect || !secondarySelect) return total;
-                const currentPrimary = advisorByRole(project, 'primario')?.id || '';
-                const currentSecondary = advisorByRole(project, 'secundario')?.id || '';
-                return total + (currentPrimary !== primarySelect.value ? 1 : 0) + (currentSecondary !== secondarySelect.value ? 1 : 0);
+                return total + THESIS_ROLES.reduce((roleTotal, role) => {
+                    const select = document.getElementById(`${role.key}-${project.id}`);
+                    if (!select) return roleTotal;
+                    const currentValue = advisorByRole(project, role.key)?.id || '';
+                    return roleTotal + (currentValue !== select.value ? 1 : 0);
+                }, 0);
             }, 0);
             button.disabled = count === 0;
             button.innerHTML = count
@@ -466,12 +480,10 @@ if (!is_authenticated() || !is_admin()) {
             const project = projects.find(item => Number(item.id) === Number(projectId));
             if (!project) return;
 
-            const primarySelect = document.getElementById(`primary-${projectId}`);
-            const secondarySelect = document.getElementById(`secondary-${projectId}`);
-            if (!primarySelect || !secondarySelect) return;
-
-            primarySelect.value = advisorByRole(project, 'primario')?.id || '';
-            secondarySelect.value = advisorByRole(project, 'secundario')?.id || '';
+            THESIS_ROLES.forEach(role => {
+                const select = document.getElementById(`${role.key}-${projectId}`);
+                if (select) select.value = advisorByRole(project, role.key)?.id || '';
+            });
             syncBlockedOptions(projectId);
             markAdvisorRow(projectId);
             swalToast('info', 'Cambios de la fila revertidos');
@@ -494,17 +506,17 @@ if (!is_authenticated() || !is_admin()) {
             const project = projects.find(item => Number(item.id) === Number(projectId));
             if (!project) return;
 
-            const currentPrimary = advisorByRole(project, 'primario')?.id || '';
-            const currentSecondary = advisorByRole(project, 'secundario')?.id || '';
-            const nextPrimary = document.getElementById(`primary-${projectId}`).value;
-            const nextSecondary = document.getElementById(`secondary-${projectId}`).value;
-
-            if (nextPrimary && nextSecondary && nextPrimary === nextSecondary) {
-                showAlert('#alertContainer', 'danger', 'El asesor primario y secundario deben ser personas diferentes.');
+            const nextValues = THESIS_ROLES.map(role => document.getElementById(`${role.key}-${projectId}`)?.value || '').filter(Boolean);
+            if (new Set(nextValues).size !== nextValues.length) {
+                showAlert('#alertContainer', 'danger', 'Asesor, revisor 1 y revisor 2 deben ser personas diferentes.');
                 return;
             }
 
-            const changed = currentPrimary !== nextPrimary || currentSecondary !== nextSecondary;
+            const changed = THESIS_ROLES.some(role => {
+                const currentValue = advisorByRole(project, role.key)?.id || '';
+                const nextValue = document.getElementById(`${role.key}-${projectId}`)?.value || '';
+                return currentValue !== nextValue;
+            });
             if (!changed) {
                 swalToast('info', 'No hay cambios por guardar');
                 return;
@@ -518,10 +530,7 @@ if (!is_authenticated() || !is_admin()) {
             if (!adminPassword) return;
 
             try {
-                if (currentPrimary && currentPrimary !== nextPrimary) await removeAdvisor(projectId, currentPrimary, adminPassword);
-                if (currentSecondary && currentSecondary !== nextSecondary) await removeAdvisor(projectId, currentSecondary, adminPassword);
-                await assignAdvisor(projectId, 'primario', nextPrimary, adminPassword);
-                await assignAdvisor(projectId, 'secundario', nextSecondary, adminPassword);
+                await applyAdvisorChanges(projectId, adminPassword);
 
                 showAlert('#alertContainer', 'success', 'Asesores actualizados correctamente');
                 await loadProjects();
@@ -538,12 +547,11 @@ if (!is_authenticated() || !is_admin()) {
             }
 
             const invalidProjectId = changedProjectIds.find(projectId => {
-                const nextPrimary = document.getElementById(`primary-${projectId}`).value;
-                const nextSecondary = document.getElementById(`secondary-${projectId}`).value;
-                return nextPrimary && nextSecondary && nextPrimary === nextSecondary;
+                const nextValues = THESIS_ROLES.map(role => document.getElementById(`${role.key}-${projectId}`)?.value || '').filter(Boolean);
+                return new Set(nextValues).size !== nextValues.length;
             });
             if (invalidProjectId) {
-                showAlert('#alertContainer', 'danger', 'El asesor primario y secundario deben ser personas diferentes.');
+                showAlert('#alertContainer', 'danger', 'Asesor, revisor 1 y revisor 2 deben ser personas diferentes.');
                 document.getElementById(`project-row-${invalidProjectId}`)?.scrollIntoView({ behavior: 'smooth', block: 'center' });
                 return;
             }
@@ -580,20 +588,23 @@ if (!is_authenticated() || !is_admin()) {
             const project = projects.find(item => Number(item.id) === Number(projectId));
             if (!project) return;
 
-            const currentPrimary = advisorByRole(project, 'primario')?.id || '';
-            const currentSecondary = advisorByRole(project, 'secundario')?.id || '';
-            const nextPrimary = document.getElementById(`primary-${projectId}`).value;
-            const nextSecondary = document.getElementById(`secondary-${projectId}`).value;
+            for (const role of THESIS_ROLES) {
+                const currentValue = advisorByRole(project, role.key)?.id || '';
+                const nextValue = document.getElementById(`${role.key}-${projectId}`)?.value || '';
+                if (currentValue && currentValue !== nextValue) await removeAdvisor(projectId, currentValue, adminPassword);
+            }
 
-            if (currentPrimary && currentPrimary !== nextPrimary) await removeAdvisor(projectId, currentPrimary, adminPassword);
-            if (currentSecondary && currentSecondary !== nextSecondary) await removeAdvisor(projectId, currentSecondary, adminPassword);
-            await assignAdvisor(projectId, 'primario', nextPrimary, adminPassword);
-            await assignAdvisor(projectId, 'secundario', nextSecondary, adminPassword);
+            for (const role of THESIS_ROLES) {
+                const nextValue = document.getElementById(`${role.key}-${projectId}`)?.value || '';
+                await assignAdvisor(projectId, role.key, nextValue, adminPassword);
+            }
         }
 
         document.addEventListener('DOMContentLoaded', async () => {
             await loadTeachers();
             await loadProjects();
+            const params = new URLSearchParams(window.location.search);
+            if (params.get('project')) focusProjectAssignment(params.get('project'));
         });
     </script>
 </body>

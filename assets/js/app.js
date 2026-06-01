@@ -148,7 +148,8 @@ function validarMimeType(mimeType) {
         txt: ['text/plain'],
         jpg: ['image/jpeg'],
         jpeg: ['image/jpeg'],
-        png: ['image/png']
+        png: ['image/png'],
+        webp: ['image/webp']
     };
     const extensions = window.SGPI_SETTINGS?.allowed_file_types || ['pdf', 'doc', 'docx', 'xls', 'xlsx', 'zip'];
     const tiposPermitidos = extensions.flatMap(extension => mimeByExtension[extension] || []);

@@ -111,8 +111,8 @@
                             <?php endif; ?>
                             <div class="col-md-6">
                                 <label class="form-label" for="repoArchivo">Archivo</label>
-                                <input type="file" class="form-control" id="repoArchivo" name="archivo" accept=".pdf,.doc,.docx,.xls,.xlsx,.zip,.txt,.jpg,.jpeg,.png,.epub" required>
-                                <div class="form-text" id="repoArchivoHelp">Permitidos: PDF, Word, Excel, ZIP, TXT, imagenes JPG/PNG y EPUB.</div>
+                                <input type="file" class="form-control" id="repoArchivo" name="archivo" accept=".pdf,.doc,.docx,.xls,.xlsx,.zip,.txt,.jpg,.jpeg,.png,.webp,.epub" required>
+                                <div class="form-text" id="repoArchivoHelp">Permitidos: PDF, Word, Excel, ZIP, TXT, imagenes JPG/PNG/WebP y EPUB.</div>
                             </div>
                             <?php if (is_admin()): ?>
                             <div class="col-md-6">
@@ -270,7 +270,7 @@
             document.getElementById('repoDocumentId').value = '';
             document.getElementById('repositoryModalTitle').innerHTML = '<i class="bi bi-cloud-arrow-up"></i> Agregar documento al repositorio';
             document.getElementById('repoArchivo').required = true;
-            document.getElementById('repoArchivoHelp').textContent = 'Permitidos: PDF, Word, Excel, ZIP, TXT, imagenes JPG/PNG y EPUB.';
+            document.getElementById('repoArchivoHelp').textContent = 'Permitidos: PDF, Word, Excel, ZIP, TXT, imagenes JPG/PNG/WebP y EPUB.';
             document.getElementById('repoUploadBtn').innerHTML = '<i class="bi bi-cloud-arrow-up"></i> Subir documento';
             if (document.getElementById('repoVisibility')) document.getElementById('repoVisibility').value = 'public';
             refreshRepositoryVisibilityHelp();
@@ -335,14 +335,14 @@
                 showAlert('#repositoryUploadAlert', 'danger', 'Ningun campo del documento puede quedar vacio.');
                 return;
             }
-            const allowedExtensions = ['pdf', 'doc', 'docx', 'xls', 'xlsx', 'zip', 'txt', 'jpg', 'jpeg', 'png', 'epub'];
+            const allowedExtensions = ['pdf', 'doc', 'docx', 'xls', 'xlsx', 'zip', 'txt', 'jpg', 'jpeg', 'png', 'webp', 'epub'];
             const extension = file?.name.split('.').pop().toLowerCase();
             if (!documentId && !file) {
                 showAlert('#repositoryUploadAlert', 'danger', 'Selecciona un archivo para subir.');
                 return;
             }
             if (file && !allowedExtensions.includes(extension)) {
-                showAlert('#repositoryUploadAlert', 'danger', 'Selecciona un archivo permitido: PDF, Word, Excel, ZIP, TXT, JPG, PNG o EPUB.');
+                showAlert('#repositoryUploadAlert', 'danger', 'Selecciona un archivo permitido: PDF, Word, Excel, ZIP, TXT, JPG, PNG, WebP o EPUB.');
                 return;
             }
 

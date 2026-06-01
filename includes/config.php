@@ -158,7 +158,7 @@ function dashboard_url() {
 function profile_photo_url($user = null) {
     $user = $user ?? ($_SESSION['user'] ?? null);
     $path = $user['photo_path'] ?? null;
-    return $path ? API_ORIGIN_URL . '/storage/' . ltrim($path, '/') : '/assets/img/ITSSMT/ISC.png';
+    return $path ? API_ORIGIN_URL . '/storage/' . ltrim($path, '/') : '/assets/img/ITSSMT/ISC.webp';
 }
 
 /**

@@ -751,7 +751,7 @@ h1, h2, h3, h4, h5, h6 {
 }
 
 .repository-page-hero {
-    background: url('/assets/img/ITSSMT/fondo.jpg') center/cover no-repeat !important;
+    background: url('/assets/img/ITSSMT/fondo.webp') center/cover no-repeat !important;
     min-height: 280px;
     padding: 72px 0 64px;
     display: flex;
@@ -1715,7 +1715,7 @@ html.grayscale-mode {
 }
 
 :root[data-theme="dark"] .repository-page-hero {
-    background: url('/assets/img/ITSSMT/fondo.jpg') center/cover no-repeat !important;
+    background: url('/assets/img/ITSSMT/fondo.webp') center/cover no-repeat !important;
 }
 
 :root[data-theme="dark"] .repository-page-hero::before {

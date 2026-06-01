@@ -12,7 +12,7 @@ if (!is_authenticated()) {
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Gestion de Proyectos - <?= APP_NAME ?></title>
+    <title>Gestion de Proyectos y Tesis - <?= APP_NAME ?></title>
     <?php require_once $_SERVER['DOCUMENT_ROOT'] . '/includes/visual-preferences.php'; ?>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
@@ -25,7 +25,7 @@ if (!is_authenticated()) {
         <div class="main-content flex-grow-1">
             <div class="container-xl mt-5 mb-5">
                 <div class="d-flex align-items-center justify-content-between mb-4">
-                    <div><h1 class="mb-1">Gestion de Proyectos</h1><span class="badge bg-primary"><i class="bi bi-table"></i> Vista resumida de proyectos</span></div>
+                    <div><h1 class="mb-1">Gestion de Proyectos y Tesis</h1><span class="badge bg-primary"><i class="bi bi-table"></i> Vista resumida de proyectos y tesis</span></div>
                     <?php if (is_admin()): ?>
                     <div class="d-flex flex-wrap gap-2">
                         <button type="button" class="btn btn-outline-primary" onclick="downloadProjectsExcelTemplate()">
@@ -42,6 +42,15 @@ if (!is_authenticated()) {
                 </div>
 
                 <div id="alertContainer" class="mb-3"></div>
+
+                <div class="d-flex flex-wrap gap-2 mb-3" role="group" aria-label="Vista de gestion de proyectos y tesis">
+                    <button type="button" class="btn btn-primary" id="projectViewBtn" onclick="setProjectManagementView('projects')">
+                        <i class="bi bi-folder2-open"></i> Proyectos
+                    </button>
+                    <button type="button" class="btn btn-outline-secondary" id="thesisViewBtn" onclick="setProjectManagementView('thesis')">
+                        <i class="bi bi-mortarboard"></i> Tesis
+                    </button>
+                </div>
 
                 <div class="row g-3 mb-3">
                     <div class="col-md-4">
@@ -63,7 +72,34 @@ if (!is_authenticated()) {
                         </div>
                     </div>
                 </div>
-                <div class="card border-0 shadow-sm border-start border-4 border-primary">
+                <div class="card border-0 shadow-sm border-start border-4 border-success d-none" id="thesisManagementView">
+                    <div class="card-header d-flex flex-wrap align-items-center justify-content-between gap-2">
+                        <span><i class="bi bi-mortarboard"></i> Gestion de tesis</span>
+                        <span class="badge bg-light text-success" id="thesisCountInfo">Cargando...</span>
+                    </div>
+                    <div class="card-body p-0">
+                        <div class="table-responsive">
+                            <table class="table table-hover mb-0 align-middle">
+                                <thead class="table-success">
+                                    <tr>
+                                        <th>Tesis</th>
+                                        <th>Semestre</th>
+                                        <th>Grupo</th>
+                                        <th>Integrantes</th>
+                                        <th>Comite</th>
+                                        <th>Estado</th>
+                                        <th>Acciones</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="thesisTable">
+                                    <tr><td colspan="7" class="text-center py-4"><div class="spinner-border" role="status"></div></td></tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card border-0 shadow-sm border-start border-4 border-primary" id="projectManagementView">
                     <div class="card-header d-flex flex-wrap align-items-center justify-content-between gap-2">
                         <span><i class="bi bi-folder2-open"></i> Proyectos registrados</span>
                         <span class="badge bg-light text-primary" id="projectsPageInfo">Cargando...</span>
@@ -245,7 +281,13 @@ if (!is_authenticated()) {
         let projectsCurrentPage = 1;
         let projectsLastPage = 1;
         let projectsTotal = 0;
+        let projectManagementView = 'projects';
         const PROJECTS_PER_PAGE = 12;
+        const THESIS_COMMITTEE_ROLES = [
+            { key: 'asesor', legacy: 'primario', label: 'Asesor' },
+            { key: 'revisor_1', legacy: 'secundario', label: 'Revisor 1' },
+            { key: 'revisor_2', legacy: null, label: 'Revisor 2' }
+        ];
 
         function escapeHtml(value) {
             return String(value ?? '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#039;');
@@ -255,6 +297,70 @@ if (!is_authenticated()) {
             const students = Array.isArray(project?.students) ? project.students : [];
             const names = students.map(student => fullName(student)).filter(Boolean);
             return names.length ? names.join(', ') : emptyText;
+        }
+
+        function advisorByThesisRole(project, role) {
+            const config = THESIS_COMMITTEE_ROLES.find(item => item.key === role);
+            return (project.advisors || []).find(advisor => {
+                const advisorRole = advisor.pivot?.rol_asesor;
+                return advisorRole === role || (config?.legacy && advisorRole === config.legacy);
+            }) || null;
+        }
+
+        function advisorName(advisor) {
+            return [advisor?.nombres, advisor?.apa, advisor?.ama].filter(Boolean).join(' ') || advisor?.id || 'Sin asignar';
+        }
+
+        function thesisRoleLabel(role) {
+            const config = THESIS_COMMITTEE_ROLES.find(item => item.key === role || item.legacy === role);
+            return config?.label || role || 'Sin rol';
+        }
+
+        function setProjectManagementView(view) {
+            projectManagementView = view;
+            document.getElementById('projectManagementView').classList.toggle('d-none', view !== 'projects');
+            document.getElementById('thesisManagementView').classList.toggle('d-none', view !== 'thesis');
+            document.getElementById('projectsPagination').classList.toggle('d-none', view !== 'projects');
+            document.getElementById('projectViewBtn').className = view === 'projects' ? 'btn btn-primary' : 'btn btn-outline-secondary';
+            document.getElementById('thesisViewBtn').className = view === 'thesis' ? 'btn btn-success' : 'btn btn-outline-secondary';
+        }
+
+        function renderThesisTable(projects) {
+            const tbody = document.getElementById('thesisTable');
+            const info = document.getElementById('thesisCountInfo');
+            if (!tbody || !info) return;
+            info.textContent = `${projects.length} tesis`;
+
+            if (!projects.length) {
+                tbody.innerHTML = '<tr><td colspan="7" class="text-center text-muted py-4">No hay tesis registradas</td></tr>';
+                return;
+            }
+
+            tbody.innerHTML = projects.map(project => {
+                const committee = THESIS_COMMITTEE_ROLES.map(role => {
+                    const advisor = advisorByThesisRole(project, role.key);
+                    return `<div><span class="badge bg-light text-dark border">${role.label}</span> ${escapeHtml(advisor ? advisorName(advisor) : 'Sin asignar')}</div>`;
+                }).join('');
+                const status = project.proposal_status
+                    ? `<span class="badge bg-info text-dark">${escapeHtml(project.proposal_status)}</span>`
+                    : '<span class="badge bg-secondary">Sin estado</span>';
+
+                return `
+                    <tr>
+                        <td><strong>${escapeHtml(project.title)}</strong><div class="small text-muted">${escapeHtml(project.company_name || 'Sin empresa')}</div></td>
+                        <td>${project.semestre || '-'}</td>
+                        <td>${escapeHtml(project.subject_group?.nombre || project.subjectGroup?.nombre || '-')}</td>
+                        <td><small>${escapeHtml(projectActiveAuthors(project))}</small></td>
+                        <td class="small">${committee}</td>
+                        <td>${status}</td>
+                        <td>
+                            <div class="btn-group btn-group-sm" role="group">
+                                <button class="btn btn-outline-secondary" onclick="showProjectDetails(${project.id})" title="Ver detalles"><i class="bi bi-eye"></i></button>
+                                ${isAdmin ? `<a class="btn btn-outline-success" href="/pages/admin/advisors.php?project=${project.id}" title="Asignar comite"><i class="bi bi-person-check"></i></a>` : ''}
+                            </div>
+                        </td>
+                    </tr>`;
+            }).join('');
         }
 
         async function loadProjects(page = 1) {
@@ -281,6 +387,7 @@ if (!is_authenticated()) {
 
                 if (!response.data || response.data.length === 0) {
                     tbody.innerHTML = '<tr><td colspan="7" class="text-center text-muted py-4">No hay proyectos</td></tr>';
+                    renderThesisTable([]);
                     renderProjectsPagination();
                     return;
                 }
@@ -294,9 +401,12 @@ if (!is_authenticated()) {
 
                 if (proyectosFiltrados.length === 0) {
                     tbody.innerHTML = '<tr><td colspan="7" class="text-center text-muted py-4">No hay proyectos para este filtro</td></tr>';
+                    renderThesisTable([]);
                     renderProjectsPagination();
                     return;
                 }
+
+                renderThesisTable(proyectosFiltrados);
 
                 proyectosFiltrados.forEach(project => {
                     const creatorName = project.creator?.nombres ? String(project.creator.nombres).split(' ')[0] : 'N/A';
@@ -534,7 +644,7 @@ if (!is_authenticated()) {
         async function showProjectDetails(projectId) {
             try {
                 const project = await api.get(`/projects/${projectId}`);
-                const advisors = (project.advisors || []).map(advisor => `${escapeHtml(advisor.nombres || '')} ${escapeHtml(advisor.apa || '')} <span class="badge bg-secondary">${escapeHtml(advisor.pivot?.rol_asesor || '')}</span>`).join('<br>') || '<span class="text-muted">Sin asesores</span>';
+                const advisors = (project.advisors || []).map(advisor => `${escapeHtml(advisor.nombres || '')} ${escapeHtml(advisor.apa || '')} <span class="badge bg-secondary">${escapeHtml(thesisRoleLabel(advisor.pivot?.rol_asesor || ''))}</span>`).join('<br>') || '<span class="text-muted">Sin asesores</span>';
                 const subjects = (project.asignaturas || []).map(subject => `<span class="badge bg-primary me-1 mb-1">${escapeHtml(subject.nombre || subject.name || '')}</span>`).join('') || '<span class="text-muted">Sin asignaturas</span>';
                 const status = project.proposal_status ? `<span class="badge bg-info text-dark">${escapeHtml(project.proposal_status)}</span>` : '<span class="text-muted">Sin estado</span>';
 

@@ -13,7 +13,7 @@ $management_pages = [
 <nav class="navbar navbar-expand-lg navbar-dark sticky-top">
     <div class="container-xl">
         <a href="<?= $home_url ?>" class="navbar-brand">
-            <img src="/assets/img/ITSSMT/ITSSMT.png" alt="ITSSMT">
+            <img src="/assets/img/ITSSMT/ITSSMT.webp" alt="ITSSMT">
             <div class="navbar-brand-text">
                 <span>Gestión de Proyectos</span>
                 <span>Integradores ITSSMT</span>

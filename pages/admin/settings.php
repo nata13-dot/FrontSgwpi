@@ -81,7 +81,7 @@ if (!is_authenticated() || !is_admin()) {
                                 <div class="col-12">
                                     <label class="form-label">Tipos de archivo permitidos</label>
                                     <div class="d-flex flex-wrap gap-3" id="allowedFileTypes">
-                                        <?php foreach (['pdf', 'doc', 'docx', 'xls', 'xlsx', 'zip', 'txt', 'jpg', 'jpeg', 'png'] as $type): ?>
+                                        <?php foreach (['pdf', 'doc', 'docx', 'xls', 'xlsx', 'zip', 'txt', 'jpg', 'jpeg', 'png', 'webp'] as $type): ?>
                                             <div class="form-check">
                                                 <input class="form-check-input allowed-file-type" type="checkbox" value="<?= $type ?>" id="fileType<?= $type ?>">
                                                 <label class="form-check-label text-uppercase" for="fileType<?= $type ?>"><?= $type ?></label>

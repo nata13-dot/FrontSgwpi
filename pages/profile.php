@@ -28,7 +28,7 @@ if (!is_authenticated()) { header('Location: /index.php'); exit; }
                     <div class="row g-4">
                         <div class="col-md-4">
                             <div class="text-center">
-                                <img id="profilePhoto" src="/assets/img/ITSSMT/ISC.png" class="rounded-circle border mb-3" style="width:140px;height:140px;object-fit:cover;" alt="Foto de perfil">
+                                <img id="profilePhoto" src="/assets/img/ITSSMT/ISC.webp" class="rounded-circle border mb-3" style="width:140px;height:140px;object-fit:cover;" alt="Foto de perfil">
                                 <input type="file" class="form-control" name="photo" accept="image/*">
                             </div>
                         </div>
@@ -60,7 +60,7 @@ if (!is_authenticated()) { header('Location: /index.php'); exit; }
 <script src="/assets/js/auth.js"></script><script src="/assets/js/api.js"></script>
 <script>
 let currentUser = null;
-function photoUrl(path) { return path ? `<?= API_ORIGIN_URL ?>/storage/${path}` : '/assets/img/ITSSMT/ISC.png'; }
+function photoUrl(path) { return path ? `<?= API_ORIGIN_URL ?>/storage/${path}` : '/assets/img/ITSSMT/ISC.webp'; }
 async function loadProfile() {
     currentUser = await api.get('/profile');
     ['nombres','apa','ama','email','semestre','grupo','telefonos','direccion'].forEach(id => { const el = document.getElementById(id); if (el) el.value = currentUser[id] || ''; });
