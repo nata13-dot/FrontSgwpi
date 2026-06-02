@@ -20,37 +20,53 @@ if (!is_authenticated() || !is_admin()) {
 </head>
 <body>
     <?php require_once $_SERVER['DOCUMENT_ROOT'] . '/includes/navbar.php'; ?>
-    
-    <!-- Page Header -->
-    <div style="background: url('/assets/img/ITSSMT/fondochido2.webp'); background-size: cover; background-position: center; padding: 80px 0; position: relative;">
-        <div class="overlay"></div>
-        <div class="container-xl" style="position: relative; z-index: 1;">
-            <!-- Logo y Título -->
-            <div class="d-flex align-items-center gap-3 mb-2">
-                <img src="/assets/img/ITSSMT/ITSSMT.webp" alt="ITSSMT" style="height: 50px;">
-                <h1 class="display-4 fw-bold text-white mb-0">Panel de Administrador</h1>
+
+    <div class="d-flex content-wrapper">
+        <?php require_once $_SERVER['DOCUMENT_ROOT'] . '/includes/sidebar.php'; ?>
+
+        <div class="main-content flex-grow-1">
+            <!-- Page Header -->
+            <div style="background: url('/assets/img/ITSSMT/fondochido2.webp'); background-size: cover; background-position: center; padding: 80px 0; position: relative;">
+                <div class="overlay"></div>
+                <div class="container-xl" style="position: relative; z-index: 1;">
+                    <!-- Logo y Título -->
+                    <div class="d-flex align-items-center gap-3 mb-2">
+                        <img src="/assets/img/ITSSMT/ITSSMT.webp" alt="ITSSMT" style="height: 50px;">
+                        <h1 class="display-4 fw-bold text-white mb-0">Panel de Administrador</h1>
+                    </div>
+                    
+                    <!-- Subtítulo -->
+                    <p class="text-white opacity-90 mb-3" style="font-size: 1.1rem;">
+                        <strong>Bienvenido, <?= htmlspecialchars($current_user['nombres']) ?></strong> | Gestión integral del sistema
+                    </p>
+                    
+                    <!-- Breadcrumb -->
+                    <nav aria-label="breadcrumb">
+                        <ol class="breadcrumb" style="background: rgba(255,255,255,0.15); border-radius: 5px; padding: 8px 12px; margin: 0;">
+                            <li class="breadcrumb-item"><a href="/index.php" class="text-white text-decoration-none">Inicio</a></li>
+                            <li class="breadcrumb-item active text-white opacity-75">Panel Administrativo</li>
+                        </ol>
+                    </nav>
+                </div>
             </div>
-            
-            <!-- Subtítulo -->
-            <p class="text-white opacity-90 mb-3" style="font-size: 1.1rem;">
-                <strong>Bienvenido, <?= htmlspecialchars($current_user['nombres']) ?></strong> | Gestión integral del sistema
-            </p>
-            
-            <!-- Breadcrumb -->
-            <nav aria-label="breadcrumb">
-                <ol class="breadcrumb" style="background: rgba(255,255,255,0.15); border-radius: 5px; padding: 8px 12px; margin: 0;">
-                    <li class="breadcrumb-item"><a href="/index.php" class="text-white text-decoration-none">Inicio</a></li>
-                    <li class="breadcrumb-item active text-white opacity-75">Panel Administrativo</li>
-                </ol>
-            </nav>
-        </div>
-    </div>
 
     <!-- Stats Section -->
-    <div class="container-xl mt-5">
+    <div class="container-xl mt-5 mb-5">
+        <section class="dashboard-action-panel" aria-live="polite">
+            <div>
+                <div class="dashboard-action-kicker">Siguiente acción sugerida</div>
+                <div class="dashboard-action-title" id="adminNextActionTitle">Revisa la actividad del sistema</div>
+                <p class="dashboard-action-text" id="adminNextActionText">Cuando carguen los datos te mostraremos el punto que necesita más atención.</p>
+            </div>
+            <a href="/pages/admin/projects.php" class="dashboard-action-link" id="adminNextActionLink">
+                <i class="bi bi-arrow-right-circle"></i>
+                <span>Ir a proyectos</span>
+            </a>
+        </section>
+
         <div class="row g-4 mb-4">
             <div class="col-lg-3 col-md-6">
-                <a href="/pages/admin/users.php" class="text-decoration-none d-block" aria-label="Ir a gestion de usuarios">
+                <a href="/pages/admin/users.php" class="text-decoration-none d-block dashboard-stat-link" aria-label="Ir a gestion de usuarios">
                     <div class="card dashboard-stat-card border-0 shadow-sm" style="cursor: pointer;">
                         <div class="card-body">
                             <div class="d-flex justify-content-between align-items-start gap-3">
@@ -67,7 +83,7 @@ if (!is_authenticated() || !is_admin()) {
             </div>
 
             <div class="col-lg-3 col-md-6">
-                <a href="/pages/admin/users.php" class="text-decoration-none d-block" aria-label="Ir a usuarios activos">
+                <a href="/pages/admin/users.php" class="text-decoration-none d-block dashboard-stat-link" aria-label="Ir a usuarios activos">
                     <div class="card dashboard-stat-card border-0 shadow-sm" style="cursor: pointer;">
                         <div class="card-body">
                             <div class="d-flex justify-content-between align-items-start gap-3">
@@ -84,7 +100,7 @@ if (!is_authenticated() || !is_admin()) {
             </div>
 
             <div class="col-lg-3 col-md-6">
-                <a href="/pages/admin/projects.php" class="text-decoration-none d-block" aria-label="Ir a gestion de proyectos">
+                <a href="/pages/admin/projects.php" class="text-decoration-none d-block dashboard-stat-link" aria-label="Ir a gestion de proyectos">
                     <div class="card dashboard-stat-card border-0 shadow-sm" style="cursor: pointer;">
                         <div class="card-body">
                             <div class="d-flex justify-content-between align-items-start gap-3">
@@ -101,7 +117,7 @@ if (!is_authenticated() || !is_admin()) {
             </div>
 
             <div class="col-lg-3 col-md-6">
-                <a href="/pages/admin/asignaturas.php" class="text-decoration-none d-block" aria-label="Ir a gestion de asignaturas">
+                <a href="/pages/admin/asignaturas.php" class="text-decoration-none d-block dashboard-stat-link" aria-label="Ir a gestion de asignaturas">
                     <div class="card dashboard-stat-card border-0 shadow-sm" style="cursor: pointer;">
                         <div class="card-body">
                             <div class="d-flex justify-content-between align-items-start gap-3">
@@ -202,7 +218,10 @@ if (!is_authenticated() || !is_admin()) {
             <div class="col-lg-6">
                 <div class="card border-0 shadow-sm">
                     <div class="card-header" style="background: linear-gradient(135deg, #1B396A 0%, #2D5A96 100%); color: white; border: 0;">
-                        <h5 class="mb-0" style="color: white;"><i class="bi bi-clock-history"></i> Proyectos Recientes</h5>
+                        <div class="dashboard-card-header-actions">
+                            <h5 class="mb-0" style="color: white;"><i class="bi bi-clock-history"></i> Proyectos Recientes</h5>
+                            <a href="/pages/admin/projects.php">Ver todos <i class="bi bi-arrow-right"></i></a>
+                        </div>
                     </div>
                     <div class="card-body p-0">
                         <div class="p-3" id="recentProjectsList">
@@ -211,6 +230,8 @@ if (!is_authenticated() || !is_admin()) {
                     </div>
                 </div>
             </div>
+        </div>
+    </div>
         </div>
     </div>
 
@@ -267,12 +288,41 @@ if (!is_authenticated() || !is_admin()) {
 
         function renderStatusGrid(containerId, data) {
             const container = document.getElementById(containerId);
-            container.innerHTML = Object.entries(data || {}).map(([status, value]) => `
+            const entries = Object.entries(data || {});
+            if (!entries.length) {
+                container.innerHTML = '<p class="dashboard-empty"><i class="bi bi-inbox"></i> Sin datos para mostrar.</p>';
+                return;
+            }
+            container.innerHTML = entries.map(([status, value]) => `
                 <div class="dashboard-status-pill">
                     <strong>${value || 0}</strong>
                     <span>${escapeHtml(statusLabel(status))}</span>
                 </div>
             `).join('');
+        }
+
+        function updateAdminNextAction(stats) {
+            const title = document.getElementById('adminNextActionTitle');
+            const text = document.getElementById('adminNextActionText');
+            const link = document.getElementById('adminNextActionLink');
+            if ((stats.pending_proposals || 0) > 0) {
+                title.textContent = `${stats.pending_proposals} propuestas pendientes`;
+                text.textContent = 'Empieza por revisar las propuestas para mantener el flujo académico en movimiento.';
+                link.href = '/pages/admin/proposal-config.php';
+                link.innerHTML = '<i class="bi bi-calendar-check"></i><span>Revisar propuestas</span>';
+                return;
+            }
+            if ((stats.inactive_users || 0) > 0) {
+                title.textContent = `${stats.inactive_users} usuarios inactivos`;
+                text.textContent = 'Valida cuentas pendientes o desactiva las que ya no deben tener acceso.';
+                link.href = '/pages/admin/users.php';
+                link.innerHTML = '<i class="bi bi-people"></i><span>Gestionar usuarios</span>';
+                return;
+            }
+            title.textContent = 'Todo se ve estable';
+            text.textContent = 'Puedes continuar con la revisión general de proyectos y entregables.';
+            link.href = '/pages/admin/projects.php';
+            link.innerHTML = '<i class="bi bi-diagram-3"></i><span>Ver proyectos</span>';
         }
 
         async function loadDashboard() {
@@ -285,6 +335,7 @@ if (!is_authenticated() || !is_admin()) {
                 document.getElementById('totalProjects').textContent = response.stats.total_projects;
                 document.getElementById('totalAsignaturas').textContent = response.stats.total_asignaturas;
                 document.getElementById('pendingProposals').textContent = response.stats.pending_proposals || 0;
+                updateAdminNextAction(response.stats);
                 const activeRate = percent(response.stats.active_users, response.stats.total_users);
                 document.getElementById('activeUsersProgress').style.width = `${activeRate}%`;
                 const completionRate = response.stats.deliverable_completion_rate || 0;

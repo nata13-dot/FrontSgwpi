@@ -51,51 +51,69 @@ if (!is_authenticated() || !is_student()) {
             </div>
 
             <div class="container-xl mt-5 mb-5">
+                <section class="dashboard-action-panel" aria-live="polite">
+                    <div>
+                        <div class="dashboard-action-kicker">Siguiente paso</div>
+                        <div class="dashboard-action-title" id="studentNextActionTitle">Revisa tu avance</div>
+                        <p class="dashboard-action-text" id="studentNextActionText">Cuando carguen tus datos te mostraremos la acción más útil para continuar.</p>
+                    </div>
+                    <a href="/pages/student/my-deliverables.php" class="dashboard-action-link" id="studentNextActionLink">
+                        <i class="bi bi-arrow-right-circle"></i>
+                        <span>Ver entregables</span>
+                    </a>
+                </section>
+
                 <!-- Stats -->
                 <div class="row g-4 mb-4">
                     <div class="col-lg-4 col-md-6">
-                        <div class="card dashboard-stat-card border-0 shadow-sm">
-                            <div class="card-body">
-                                <div class="d-flex justify-content-between align-items-start gap-3">
-                                    <div>
-                                        <div class="dashboard-stat-label">Mis proyectos</div>
-                                        <div class="dashboard-stat-value mt-2" id="myProjects">0</div>
-                                        <div class="dashboard-stat-note mt-2"><span id="pendingProposals">0</span> propuestas pendientes</div>
+                        <a href="/pages/student/proposal-register.php" class="text-decoration-none d-block dashboard-stat-link" aria-label="Ir a registrar o consultar proyecto">
+                            <div class="card dashboard-stat-card border-0 shadow-sm" style="cursor: pointer;">
+                                <div class="card-body">
+                                    <div class="d-flex justify-content-between align-items-start gap-3">
+                                        <div>
+                                            <div class="dashboard-stat-label">Mis proyectos</div>
+                                            <div class="dashboard-stat-value mt-2" id="myProjects">0</div>
+                                            <div class="dashboard-stat-note mt-2"><span id="pendingProposals">0</span> propuestas pendientes</div>
+                                        </div>
+                                        <span class="dashboard-stat-icon"><i class="bi bi-folder2"></i></span>
                                     </div>
-                                    <span class="dashboard-stat-icon"><i class="bi bi-folder2"></i></span>
                                 </div>
                             </div>
-                        </div>
+                        </a>
                     </div>
 
                     <div class="col-lg-4 col-md-6">
-                        <div class="card dashboard-stat-card border-0 shadow-sm">
-                            <div class="card-body">
-                                <div class="d-flex justify-content-between align-items-start gap-3">
-                                    <div class="w-100">
-                                        <div class="dashboard-stat-label">Entregables completados</div>
-                                        <div class="dashboard-stat-value mt-2" id="completedDeliverables">0</div>
-                                        <div class="dashboard-progress-track mt-3"><div class="dashboard-progress-fill" id="completionProgress" style="width: 0%;"></div></div>
+                        <a href="/pages/student/my-deliverables.php" class="text-decoration-none d-block dashboard-stat-link" aria-label="Ir a mis entregables">
+                            <div class="card dashboard-stat-card border-0 shadow-sm" style="cursor: pointer;">
+                                <div class="card-body">
+                                    <div class="d-flex justify-content-between align-items-start gap-3">
+                                        <div class="w-100">
+                                            <div class="dashboard-stat-label">Entregables completados</div>
+                                            <div class="dashboard-stat-value mt-2" id="completedDeliverables">0</div>
+                                            <div class="dashboard-progress-track mt-3"><div class="dashboard-progress-fill" id="completionProgress" style="width: 0%;"></div></div>
+                                        </div>
+                                        <span class="dashboard-stat-icon" style="color: #218838;"><i class="bi bi-file-earmark-check"></i></span>
                                     </div>
-                                    <span class="dashboard-stat-icon" style="color: #218838;"><i class="bi bi-file-earmark-check"></i></span>
                                 </div>
                             </div>
-                        </div>
+                        </a>
                     </div>
 
                     <div class="col-lg-4 col-md-6">
-                        <div class="card dashboard-stat-card border-0 shadow-sm">
-                            <div class="card-body">
-                                <div class="d-flex justify-content-between align-items-start gap-3">
-                                    <div>
-                                        <div class="dashboard-stat-label">Entregables pendientes</div>
-                                        <div class="dashboard-stat-value mt-2" id="pendingDeliverables">0</div>
-                                        <div class="dashboard-stat-note mt-2">Por enviar o revisar</div>
+                        <a href="/pages/student/my-deliverables.php" class="text-decoration-none d-block dashboard-stat-link" aria-label="Ir a entregables pendientes">
+                            <div class="card dashboard-stat-card border-0 shadow-sm" style="cursor: pointer;">
+                                <div class="card-body">
+                                    <div class="d-flex justify-content-between align-items-start gap-3">
+                                        <div>
+                                            <div class="dashboard-stat-label">Entregables pendientes</div>
+                                            <div class="dashboard-stat-value mt-2" id="pendingDeliverables">0</div>
+                                            <div class="dashboard-stat-note mt-2">Por enviar o revisar</div>
+                                        </div>
+                                        <span class="dashboard-stat-icon" style="color: #b38600;"><i class="bi bi-clock"></i></span>
                                     </div>
-                                    <span class="dashboard-stat-icon" style="color: #b38600;"><i class="bi bi-clock"></i></span>
                                 </div>
                             </div>
-                        </div>
+                        </a>
                     </div>
                 </div>
                 <div class="row g-4 mb-4">
@@ -128,7 +146,10 @@ if (!is_authenticated() || !is_student()) {
                     <div class="col-12">
                         <div class="card border-0 shadow-sm">
                             <div class="card-header" style="background: linear-gradient(135deg, #1B396A 0%, #2D5A96 100%); color: white; border: 0;">
-                                <h5 class="mb-0"><i class="bi bi-clock-history"></i> Mis Proyectos Activos</h5>
+                                <div class="dashboard-card-header-actions">
+                                    <h5 class="mb-0"><i class="bi bi-clock-history"></i> Mis Proyectos Activos</h5>
+                                    <a href="/pages/student/proposal-register.php">Ir a proyecto <i class="bi bi-arrow-right"></i></a>
+                                </div>
                             </div>
                             <div class="card-body" id="projectsList">
                                 <p class="dashboard-empty"><i class="bi bi-hourglass-split"></i> Cargando...</p>
@@ -235,7 +256,13 @@ if (!is_authenticated() || !is_student()) {
         }
 
         function renderStatusGrid(containerId, data) {
-            document.getElementById(containerId).innerHTML = Object.entries(data || {}).map(([status, value]) => `
+            const container = document.getElementById(containerId);
+            const entries = Object.entries(data || {});
+            if (!entries.length) {
+                container.innerHTML = '<p class="dashboard-empty"><i class="bi bi-inbox"></i> Sin datos para mostrar.</p>';
+                return;
+            }
+            container.innerHTML = entries.map(([status, value]) => `
                 <div class="dashboard-status-pill">
                     <strong>${value || 0}</strong>
                     <span>${escapeHtml(statusLabel(status))}</span>
@@ -247,6 +274,30 @@ if (!is_authenticated() || !is_student()) {
             return percent(project.approved_deliverables_count || 0, project.deliverables_count || 0);
         }
 
+        function updateStudentNextAction(stats) {
+            const title = document.getElementById('studentNextActionTitle');
+            const text = document.getElementById('studentNextActionText');
+            const link = document.getElementById('studentNextActionLink');
+            if ((stats.my_projects || 0) === 0) {
+                title.textContent = 'Registra tu proyecto';
+                text.textContent = 'Empieza creando tu propuesta para que pueda avanzar a revisión.';
+                link.href = '/pages/student/proposal-register.php';
+                link.innerHTML = '<i class="bi bi-pencil-square"></i><span>Registrar proyecto</span>';
+                return;
+            }
+            if ((stats.pending_deliverables || 0) > 0) {
+                title.textContent = `${stats.pending_deliverables} entregables pendientes`;
+                text.textContent = 'Revisa qué documentos faltan por enviar o necesitan atención.';
+                link.href = '/pages/student/my-deliverables.php';
+                link.innerHTML = '<i class="bi bi-file-earmark-check"></i><span>Ver entregables</span>';
+                return;
+            }
+            title.textContent = 'Tu avance está al día';
+            text.textContent = 'Consulta tus presentaciones programadas o mantén actualizados tus documentos.';
+            link.href = '/pages/evaluation-documents.php';
+            link.innerHTML = '<i class="bi bi-file-earmark-ppt"></i><span>Ver documentos</span>';
+        }
+
         async function loadDashboard() {
             try {
                 await checkInitialProfile();
@@ -256,6 +307,7 @@ if (!is_authenticated() || !is_student()) {
                 document.getElementById('completedDeliverables').textContent = response.stats.completed_deliverables;
                 document.getElementById('pendingDeliverables').textContent = response.stats.pending_deliverables;
                 document.getElementById('pendingProposals').textContent = response.stats.pending_proposals || 0;
+                updateStudentNextAction(response.stats);
                 const completionRate = response.stats.deliverable_completion_rate || 0;
                 document.getElementById('completionBadge').textContent = `${completionRate}%`;
                 document.getElementById('completionProgress').style.width = `${completionRate}%`;

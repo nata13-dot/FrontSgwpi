@@ -51,51 +51,69 @@ if (!is_authenticated() || !is_teacher()) {
             </div>
 
             <div class="container-xl mt-5 mb-5">
+                <section class="dashboard-action-panel" aria-live="polite">
+                    <div>
+                        <div class="dashboard-action-kicker">Siguiente paso</div>
+                        <div class="dashboard-action-title" id="teacherNextActionTitle">Revisa tu carga de trabajo</div>
+                        <p class="dashboard-action-text" id="teacherNextActionText">Cuando carguen los datos te mostraremos la acción que requiere más atención.</p>
+                    </div>
+                    <a href="/pages/teacher/my-deliverables.php" class="dashboard-action-link" id="teacherNextActionLink">
+                        <i class="bi bi-arrow-right-circle"></i>
+                        <span>Ver entregables</span>
+                    </a>
+                </section>
+
                 <!-- Stats -->
                 <div class="row g-4 mb-4">
                     <div class="col-lg-4 col-md-6">
-                        <div class="card dashboard-stat-card border-0 shadow-sm">
-                            <div class="card-body">
-                                <div class="d-flex justify-content-between align-items-start gap-3">
-                                    <div>
-                                        <div class="dashboard-stat-label">Mis proyectos</div>
-                                        <div class="dashboard-stat-value mt-2" id="myProjects">0</div>
-                                        <div class="dashboard-stat-note mt-2"><span id="pendingProposals">0</span> propuestas pendientes</div>
+                        <a href="/pages/teacher/my-projects.php" class="text-decoration-none d-block dashboard-stat-link" aria-label="Ir a mis proyectos">
+                            <div class="card dashboard-stat-card border-0 shadow-sm" style="cursor: pointer;">
+                                <div class="card-body">
+                                    <div class="d-flex justify-content-between align-items-start gap-3">
+                                        <div>
+                                            <div class="dashboard-stat-label">Mis proyectos</div>
+                                            <div class="dashboard-stat-value mt-2" id="myProjects">0</div>
+                                            <div class="dashboard-stat-note mt-2"><span id="pendingProposals">0</span> propuestas pendientes</div>
+                                        </div>
+                                        <span class="dashboard-stat-icon"><i class="bi bi-folder2"></i></span>
                                     </div>
-                                    <span class="dashboard-stat-icon"><i class="bi bi-folder2"></i></span>
                                 </div>
                             </div>
-                        </div>
+                        </a>
                     </div>
 
                     <div class="col-lg-4 col-md-6">
-                        <div class="card dashboard-stat-card border-0 shadow-sm">
-                            <div class="card-body">
-                                <div class="d-flex justify-content-between align-items-start gap-3">
-                                    <div>
-                                        <div class="dashboard-stat-label">Estudiantes asociados</div>
-                                        <div class="dashboard-stat-value mt-2" id="students">0</div>
-                                        <div class="dashboard-stat-note mt-2">En proyectos y grupos activos</div>
+                        <a href="/pages/teacher/my-projects.php" class="text-decoration-none d-block dashboard-stat-link" aria-label="Ir a estudiantes asociados por proyecto">
+                            <div class="card dashboard-stat-card border-0 shadow-sm" style="cursor: pointer;">
+                                <div class="card-body">
+                                    <div class="d-flex justify-content-between align-items-start gap-3">
+                                        <div>
+                                            <div class="dashboard-stat-label">Estudiantes asociados</div>
+                                            <div class="dashboard-stat-value mt-2" id="students">0</div>
+                                            <div class="dashboard-stat-note mt-2">En proyectos y grupos activos</div>
+                                        </div>
+                                        <span class="dashboard-stat-icon"><i class="bi bi-people"></i></span>
                                     </div>
-                                    <span class="dashboard-stat-icon"><i class="bi bi-people"></i></span>
                                 </div>
                             </div>
-                        </div>
+                        </a>
                     </div>
 
                     <div class="col-lg-4 col-md-6">
-                        <div class="card dashboard-stat-card border-0 shadow-sm">
-                            <div class="card-body">
-                                <div class="d-flex justify-content-between align-items-start gap-3">
-                                    <div class="w-100">
-                                        <div class="dashboard-stat-label">Entregables pendientes</div>
-                                        <div class="dashboard-stat-value mt-2" id="pendingDeliverables">0</div>
-                                        <div class="dashboard-progress-track mt-3"><div class="dashboard-progress-fill" id="completionProgress" style="width: 0%;"></div></div>
+                        <a href="/pages/teacher/my-deliverables.php" class="text-decoration-none d-block dashboard-stat-link" aria-label="Ir a entregables pendientes">
+                            <div class="card dashboard-stat-card border-0 shadow-sm" style="cursor: pointer;">
+                                <div class="card-body">
+                                    <div class="d-flex justify-content-between align-items-start gap-3">
+                                        <div class="w-100">
+                                            <div class="dashboard-stat-label">Entregables pendientes</div>
+                                            <div class="dashboard-stat-value mt-2" id="pendingDeliverables">0</div>
+                                            <div class="dashboard-progress-track mt-3"><div class="dashboard-progress-fill" id="completionProgress" style="width: 0%;"></div></div>
+                                        </div>
+                                        <span class="dashboard-stat-icon"><i class="bi bi-file-earmark"></i></span>
                                     </div>
-                                    <span class="dashboard-stat-icon"><i class="bi bi-file-earmark"></i></span>
                                 </div>
                             </div>
-                        </div>
+                        </a>
                     </div>
                 </div>
                 <div class="row g-4 mb-4">
@@ -128,7 +146,10 @@ if (!is_authenticated() || !is_teacher()) {
                     <div class="col-12">
                         <div class="card border-0 shadow-sm">
                             <div class="card-header" style="background: linear-gradient(135deg, #1B396A 0%, #2D5A96 100%); color: white; border: 0;">
-                                <h5 class="mb-0"><i class="bi bi-clock-history"></i> Mis Proyectos Recientes</h5>
+                                <div class="dashboard-card-header-actions">
+                                    <h5 class="mb-0"><i class="bi bi-clock-history"></i> Mis Proyectos Recientes</h5>
+                                    <a href="/pages/teacher/my-projects.php">Ver todos <i class="bi bi-arrow-right"></i></a>
+                                </div>
                             </div>
                             <div class="card-body" id="projectsList">
                                 <p class="dashboard-empty"><i class="bi bi-hourglass-split"></i> Cargando...</p>
@@ -194,7 +215,13 @@ if (!is_authenticated() || !is_teacher()) {
         }
 
         function renderStatusGrid(containerId, data) {
-            document.getElementById(containerId).innerHTML = Object.entries(data || {}).map(([status, value]) => `
+            const container = document.getElementById(containerId);
+            const entries = Object.entries(data || {});
+            if (!entries.length) {
+                container.innerHTML = '<p class="dashboard-empty"><i class="bi bi-inbox"></i> Sin datos para mostrar.</p>';
+                return;
+            }
+            container.innerHTML = entries.map(([status, value]) => `
                 <div class="dashboard-status-pill">
                     <strong>${value || 0}</strong>
                     <span>${escapeHtml(statusLabel(status))}</span>
@@ -206,6 +233,30 @@ if (!is_authenticated() || !is_teacher()) {
             return percent(project.approved_deliverables_count || 0, project.deliverables_count || 0);
         }
 
+        function updateTeacherNextAction(stats) {
+            const title = document.getElementById('teacherNextActionTitle');
+            const text = document.getElementById('teacherNextActionText');
+            const link = document.getElementById('teacherNextActionLink');
+            if ((stats.pending_proposals || 0) > 0) {
+                title.textContent = `${stats.pending_proposals} propuestas por revisar`;
+                text.textContent = 'Empieza por aprobar o solicitar cambios en las propuestas pendientes.';
+                link.href = '/pages/teacher/proposal-review.php';
+                link.innerHTML = '<i class="bi bi-check2-square"></i><span>Revisar propuestas</span>';
+                return;
+            }
+            if ((stats.pending_deliverables || 0) > 0) {
+                title.textContent = `${stats.pending_deliverables} entregables pendientes`;
+                text.textContent = 'Revisa entregables para que los estudiantes sepan si deben corregir o continuar.';
+                link.href = '/pages/teacher/my-deliverables.php';
+                link.innerHTML = '<i class="bi bi-file-earmark-check"></i><span>Revisar entregables</span>';
+                return;
+            }
+            title.textContent = 'Tu panel está al día';
+            text.textContent = 'Puedes consultar tus proyectos recientes o preparar evaluaciones.';
+            link.href = '/pages/teacher/my-projects.php';
+            link.innerHTML = '<i class="bi bi-folder2"></i><span>Ver proyectos</span>';
+        }
+
         async function loadDashboard() {
             try {
                 const response = await api.get('/dashboard/teacher');
@@ -214,6 +265,7 @@ if (!is_authenticated() || !is_teacher()) {
                 document.getElementById('students').textContent = response.stats.students;
                 document.getElementById('pendingDeliverables').textContent = response.stats.pending_deliverables;
                 document.getElementById('pendingProposals').textContent = response.stats.pending_proposals || 0;
+                updateTeacherNextAction(response.stats);
                 const completionRate = response.stats.deliverable_completion_rate || 0;
                 document.getElementById('completionBadge').textContent = `${completionRate}%`;
                 document.getElementById('completionProgress').style.width = `${completionRate}%`;
