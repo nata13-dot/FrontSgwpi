@@ -61,6 +61,16 @@ html, body {
     height: 100%;
 }
 
+body.sgpi-page-ready {
+    animation: sgpiPageIn 0.2s ease both;
+}
+
+body.sgpi-page-leaving {
+    opacity: 0;
+    transform: translateY(6px);
+    transition: opacity 0.16s ease, transform 0.16s ease;
+}
+
 h1, h2, h3, h4, h5, h6 {
     color: var(--primary-blue);
     font-family: 'Raleway', sans-serif;
@@ -2063,6 +2073,8 @@ input[type="reset"] {
     border-bottom: 1px solid #ffe69c;
     box-shadow: 0 4px 10px rgba(83, 63, 3, 0.08);
     font-size: 0.95rem;
+    animation: sgpiNoticeIn 0.18s ease both;
+    overflow-wrap: anywhere;
 }
 
 .navbar.has-global-system-notice {
@@ -2073,6 +2085,41 @@ input[type="reset"] {
     background: #332b16;
     color: #ffe8a3;
     border-color: #5a4718;
+}
+
+@keyframes sgpiNoticeIn {
+    from {
+        opacity: 0;
+        transform: translateY(-6px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+@keyframes sgpiPageIn {
+    from {
+        opacity: 0;
+        transform: translateY(4px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    body,
+    .global-system-notice {
+        animation: none !important;
+        transform: none !important;
+        transition: none !important;
+    }
+
+    body {
+        opacity: 1 !important;
+    }
 }
 
 .advisor-metric {

@@ -7,26 +7,45 @@ window.SGPI_SESSION = <?= json_encode([
     'token' => $auth_token,
     'user' => $current_user
 ], JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES) ?>;
+window.SGPI_SETTINGS_SYNC_INTERVAL = window.SGPI_SETTINGS_SYNC_INTERVAL || 5000;
+window.SGPI_SETTINGS_SIGNATURE = null;
 
-async function loadPublicSettings() {
+async function loadPublicSettings({ force = false, broadcast = false } = {}) {
     try {
-        const response = await fetch(`${window.SGPI_API_BASE_URL}/settings/public`, {
+        const url = new URL(`${window.SGPI_API_BASE_URL}/settings/public`);
+        if (force) url.searchParams.set('_', Date.now());
+
+        const response = await fetch(url.toString(), {
             credentials: 'include',
+            cache: force ? 'no-store' : 'default',
             headers: { 'Accept': 'application/json' }
         });
         if (!response.ok) return;
-        window.SGPI_SETTINGS = await response.json();
+        const settings = await response.json();
+        const signature = settingsSignature(settings);
+        if (!force && signature === window.SGPI_SETTINGS_SIGNATURE) return;
+
+        window.SGPI_SETTINGS = settings;
+        window.SGPI_SETTINGS_SIGNATURE = signature;
         applySystemSettings(window.SGPI_SETTINGS);
+
+        if (broadcast) {
+            broadcastSystemSettings(settings);
+        }
     } catch (error) {
         console.warn('No se pudieron cargar los ajustes generales', error);
     }
 }
 
 function applySystemSettings(settings) {
+    settings = settings || {};
+    window.SGPI_SETTINGS = settings;
+    window.SGPI_SETTINGS_SIGNATURE = settingsSignature(window.SGPI_SETTINGS);
     localStorage.setItem('sgpi-public-settings', JSON.stringify({
         default_theme: settings.default_theme || 'system',
         grayscale_mode: Boolean(settings.grayscale_mode),
         font_scale: Number(settings.font_scale || 100),
+        global_notice: settings.global_notice || '',
         system_notices: settings.system_notices || []
     }));
 
@@ -65,6 +84,62 @@ function applySystemSettings(settings) {
     queueSystemNoticeToasts(settings.system_notices || []);
 }
 
+function settingsSignature(settings) {
+    try {
+        return JSON.stringify({
+            default_theme: settings?.default_theme || 'system',
+            grayscale_mode: Boolean(settings?.grayscale_mode),
+            font_scale: Number(settings?.font_scale || 100),
+            global_notice: settings?.global_notice || '',
+            session_timeout_minutes: Number(settings?.session_timeout_minutes || 30),
+            max_file_size_mb: Number(settings?.max_file_size_mb || 50),
+            allowed_file_types: settings?.allowed_file_types || [],
+            system_notices: settings?.system_notices || []
+        });
+    } catch (error) {
+        return String(Date.now());
+    }
+}
+
+function broadcastSystemSettings(settings) {
+    try {
+        localStorage.setItem('sgpi-settings-updated', JSON.stringify({
+            at: Date.now(),
+            settings
+        }));
+    } catch (error) {
+        // La sincronizacion por polling seguira activa.
+    }
+}
+
+function startSystemSettingsSync() {
+    if (window.SGPI_SETTINGS_SYNC_READY) return;
+    window.SGPI_SETTINGS_SYNC_READY = true;
+
+    window.addEventListener('storage', event => {
+        if (event.key !== 'sgpi-settings-updated' || !event.newValue) return;
+        try {
+            const payload = JSON.parse(event.newValue);
+            if (payload?.settings) {
+                applySystemSettings(payload.settings);
+                return;
+            }
+        } catch (error) {
+            // Si el payload no se pudo leer, pedimos una copia fresca.
+        }
+        loadPublicSettings({ force: true });
+    });
+
+    window.addEventListener('focus', () => loadPublicSettings({ force: true }), { passive: true });
+    document.addEventListener('visibilitychange', () => {
+        if (!document.hidden) loadPublicSettings({ force: true });
+    });
+
+    setInterval(() => {
+        if (!document.hidden) loadPublicSettings({ force: true });
+    }, window.SGPI_SETTINGS_SYNC_INTERVAL);
+}
+
 function placeGlobalSystemNotice(notice) {
     const navbar = document.querySelector('.navbar');
     if (navbar && navbar.parentNode) {
@@ -88,6 +163,7 @@ window.addEventListener('resize', syncGlobalNoticeOffset, { passive: true });
 window.addEventListener('orientationchange', syncGlobalNoticeOffset, { passive: true });
 
 let idleLogoutTimer = null;
+let idleLogoutListenersReady = false;
 function startIdleLogoutTimer(minutes) {
     if (!window.SGPI_SESSION?.authenticated || minutes <= 0) return;
     const timeoutMs = minutes * 60 * 1000;
@@ -98,13 +174,18 @@ function startIdleLogoutTimer(minutes) {
         }, timeoutMs);
     };
 
-    ['click', 'keydown', 'mousemove', 'scroll', 'touchstart'].forEach(eventName => {
-        window.addEventListener(eventName, resetTimer, { passive: true });
-    });
+    window.SGPI_RESET_IDLE_TIMER = resetTimer;
+    if (!idleLogoutListenersReady) {
+        idleLogoutListenersReady = true;
+        ['click', 'keydown', 'mousemove', 'scroll', 'touchstart'].forEach(eventName => {
+            window.addEventListener(eventName, () => window.SGPI_RESET_IDLE_TIMER?.(), { passive: true });
+        });
+    }
     resetTimer();
 }
 
 loadPublicSettings();
+startSystemSettingsSync();
 
 function currentAudienceContext() {
     const user = window.SGPI_SESSION?.user || null;
@@ -132,7 +213,7 @@ function noticeMatchesCurrentAudience(notice, context) {
 }
 
 function queueSystemNoticeToasts(notices) {
-    if (!Array.isArray(notices) || !notices.length || window.SGPI_NOTICES_SHOWN) return;
+    if (!Array.isArray(notices) || !notices.length) return;
 
     const context = currentAudienceContext();
     if (!context.isIndex && !context.isDashboard) return;
@@ -145,7 +226,6 @@ function queueSystemNoticeToasts(notices) {
 
     if (!applicable.length) return;
 
-    window.SGPI_NOTICES_SHOWN = true;
     applicable.forEach(notice => seenNoticeIds.add(noticeSeenKey(notice)));
     writeSeenNoticeIds(seenNoticeIds);
 
@@ -190,7 +270,7 @@ function noticeToastDuration(notice) {
 }
 
 function noticeSeenKey(notice) {
-    return String(notice.id || `${notice.audience || 'all'}:${notice.title || ''}:${notice.message || ''}`);
+    return String(`${notice.id || 'notice'}:${notice.updated_at || notice.created_at || ''}:${notice.audience || 'all'}:${notice.title || ''}:${notice.message || ''}`);
 }
 
 function readSeenNoticeIds() {
@@ -244,6 +324,37 @@ function enhancePasswordVisibility() {
 }
 
 document.addEventListener('DOMContentLoaded', enhancePasswordVisibility);
+
+function initPageTransitions() {
+    document.body.classList.add('sgpi-page-ready');
+
+    document.addEventListener('click', event => {
+        const link = event.target.closest('a[href]');
+        if (!link || event.defaultPrevented) return;
+        if (event.button !== 0 || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
+        if (link.target && link.target !== '_self') return;
+        if (link.hasAttribute('download') || link.dataset.noTransition !== undefined) return;
+
+        const href = link.getAttribute('href') || '';
+        if (!href || href.startsWith('#') || href.startsWith('javascript:') || href.startsWith('mailto:') || href.startsWith('tel:')) return;
+
+        const url = new URL(link.href, window.location.href);
+        if (url.origin !== window.location.origin) return;
+        if (url.pathname === window.location.pathname && url.hash) return;
+
+        event.preventDefault();
+        document.body.classList.add('sgpi-page-leaving');
+        setTimeout(() => {
+            window.location.assign(url.href);
+        }, 140);
+    });
+}
+
+document.addEventListener('DOMContentLoaded', initPageTransitions);
+window.addEventListener('pageshow', () => {
+    document.body?.classList.remove('sgpi-page-leaving');
+    document.body?.classList.add('sgpi-page-ready');
+});
 
 window.addEventListener('pageshow', function () {
     const serverAuthenticated = <?= is_authenticated() ? 'true' : 'false' ?>;
