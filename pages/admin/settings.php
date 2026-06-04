@@ -241,7 +241,6 @@ document.getElementById('settingsForm').addEventListener('submit', async event =
         showAlert('#alertContainer', 'success', response.message || 'Ajustes guardados');
         window.SGPI_SETTINGS = response.settings;
         if (typeof applySystemSettings === 'function') applySystemSettings(response.settings);
-        if (typeof broadcastSystemSettings === 'function') broadcastSystemSettings(response.settings);
     } catch (error) {
         showAlert('#alertContainer', 'danger', error.message || 'Error guardando ajustes');
     }
