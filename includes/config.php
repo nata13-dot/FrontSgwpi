@@ -5,7 +5,21 @@ header('Pragma: no-cache');
 header('Expires: 0');
 
 define('APP_NAME', 'Sistema de Gestión de Proyectos Integradores');
-$configuredApiUrl = getenv('API_BASE_URL') ?: 'http://127.0.0.1:8000/api';
+$requestHost = strtolower(preg_replace('/:\d+$/', '', trim(
+    explode(',', $_SERVER['HTTP_X_FORWARDED_HOST'] ?? $_SERVER['HTTP_HOST'] ?? 'localhost')[0]
+)));
+$localHosts = ['localhost', '127.0.0.1', '::1', 'frontend_swgpi.test'];
+$isLocalRequest = in_array($requestHost, $localHosts, true)
+    || str_ends_with($requestHost, '.test');
+$productionApiUrl = 'https://apiswgpi-production-0e59.up.railway.app/api';
+$configuredApiUrl = trim((string) getenv('API_BASE_URL'));
+
+if ($configuredApiUrl === '') {
+    $configuredApiUrl = $isLocalRequest ? 'http://127.0.0.1:8000/api' : $productionApiUrl;
+} elseif (!$isLocalRequest && preg_match('#^https?://(127\.0\.0\.1|localhost)(:\d+)?(?:/|$)#i', $configuredApiUrl)) {
+    $configuredApiUrl = $productionApiUrl;
+}
+
 $configuredApiUrl = rtrim($configuredApiUrl, '/');
 define('API_BASE_URL', $configuredApiUrl);
 define('API_ORIGIN_URL', preg_replace('#/api$#', '', API_BASE_URL));
