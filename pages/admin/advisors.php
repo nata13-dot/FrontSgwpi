@@ -657,6 +657,11 @@ if (!is_authenticated() || !is_admin()) {
             if (!project) return;
 
             const roles = activeAssignmentRoles();
+            const nextValues = roles.map(role => document.getElementById(`${role.key}-${projectId}`)?.value || '').filter(Boolean);
+            if (new Set(nextValues).size !== nextValues.length) {
+                throw new Error('Los roles de la fila deben ser personas diferentes.');
+            }
+
             for (const role of roles) {
                 const currentValue = advisorByRole(project, role.key)?.id || '';
                 const nextValue = document.getElementById(`${role.key}-${projectId}`)?.value || '';

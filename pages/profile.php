@@ -78,9 +78,10 @@ document.getElementById('profileForm').addEventListener('submit', async e => {
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ auth_token: auth.getToken(), user: res.user })
         });
+        currentUser = res.user;
+        if (window.SGPI_SESSION) window.SGPI_SESSION.user = res.user;
         swalToast('success', 'Perfil actualizado');
-        loadProfile();
-        setTimeout(() => window.location.reload(), 700);
+        await loadProfile();
     } catch (error) { Swal.fire('Error', error.message, 'error'); }
 });
 document.addEventListener('DOMContentLoaded', loadProfile);

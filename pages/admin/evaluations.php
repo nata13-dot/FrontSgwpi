@@ -141,18 +141,23 @@ $is_archived_view = basename($_SERVER['PHP_SELF']) === 'evaluations-archived.php
                         <a class="btn btn-outline-secondary" href="/pages/admin/<?= $is_archived_view ? 'evaluations.php' : 'evaluations-archived.php' ?>">
                             <i class="bi <?= $is_archived_view ? 'bi-arrow-left' : 'bi-archive' ?>"></i> <?= $is_archived_view ? 'Volver a evaluaciones' : 'Ver archivadas' ?>
                         </a>
-                        <?php if (is_admin()): ?>
-                        <button class="btn btn-outline-primary" onclick="openEvaluationManagersModal()">
-                            <i class="bi bi-person-gear"></i> Responsable de evaluaciones
+                        <?php if (is_evaluation_manager()): ?>
+                        <button class="btn btn-outline-secondary" id="archiveSelectionBtn" onclick="handleArchiveSelectionButton()">
+                            <i class="bi <?= $is_archived_view ? 'bi-arrow-counterclockwise' : 'bi-archive' ?>"></i> <span id="archiveSelectionButtonText"><?= $is_archived_view ? 'Desarchivar' : 'Archivar' ?></span>
+                        </button>
+                        <button class="btn btn-outline-secondary d-none" id="archiveSelectionCancelBtn" onclick="cancelArchiveSelectionMode()">
+                            Cancelar
                         </button>
                         <?php endif; ?>
                         <?php if (is_evaluation_manager()): ?>
                         <button class="btn btn-outline-primary" onclick="openRubricModal()">
                             <i class="bi bi-list-check"></i> Gestionar Rubrica
                         </button>
-                        <button class="btn btn-outline-primary" onclick="openRoomsModal()">
-                            <i class="bi bi-door-open"></i> Salas
-                        </button>
+                        <?php endif; ?>
+                        <?php if (is_admin()): ?>
+                        <a class="btn btn-outline-primary" href="/pages/admin/evaluation-rooms.php">
+                            <i class="bi bi-door-open"></i> Gestionar salas
+                        </a>
                         <?php endif; ?>
                     </div>
                 </div>
@@ -379,28 +384,6 @@ $is_archived_view = basename($_SERVER['PHP_SELF']) === 'evaluations-archived.php
         </div>
     </div>
 
-    <?php if (is_admin()): ?>
-    <div class="modal fade" id="evaluationManagersModal" tabindex="-1">
-        <div class="modal-dialog modal-lg">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title"><i class="bi bi-person-gear"></i> Responsable de evaluaciones</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-                </div>
-                <div class="modal-body">
-                    <div id="evaluationManagersAlert"></div>
-                    <p class="text-muted small">Selecciona uno o mas docentes para que tengan disponible la gestion completa de evaluaciones en su perfil.</p>
-                    <div class="border rounded p-2" id="evaluationManagersList" style="max-height: 360px; overflow:auto;"></div>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancelar</button>
-                    <button type="button" class="btn btn-primary" id="saveEvaluationManagersBtn" onclick="saveEvaluationManagers()"><i class="bi bi-save"></i> Guardar responsables</button>
-                </div>
-            </div>
-        </div>
-    </div>
-    <?php endif; ?>
-
     <div class="modal fade" id="breakdownModal" tabindex="-1">
         <div class="modal-dialog modal-lg">
             <div class="modal-content">
@@ -444,6 +427,8 @@ $is_archived_view = basename($_SERVER['PHP_SELF']) === 'evaluations-archived.php
         let rooms = [];
         let evaluations = [];
         let expandedEvaluationRooms = new Set();
+        let archiveSelectionMode = false;
+        let selectedArchiveEvaluationIds = new Set();
         let criteria = [];
         let criteriaBySemester = {};
         let levels = [];
@@ -454,9 +439,9 @@ $is_archived_view = basename($_SERVER['PHP_SELF']) === 'evaluations-archived.php
         let breakdownModal;
         let projectDetailsModal;
         let roomsModal;
-        let evaluationManagersModal;
-        let evaluationManagerIds = [];
         let evaluationsRealtimeTimer = null;
+        let evaluationsRefreshInProgress = false;
+        let evaluationsBulkActionInProgress = false;
         let roomProjectsReorderTimer = null;
 
         function escapeHtml(value) {
@@ -470,6 +455,29 @@ $is_archived_view = basename($_SERVER['PHP_SELF']) === 'evaluations-archived.php
         function projectActiveAuthors(project) {
             const students = Array.isArray(project?.students) ? project.students : [];
             return students.map(student => fullName(student)).filter(Boolean).join(', ');
+        }
+
+        function evaluationPresentationIndicator(evaluation) {
+            const uploaded = Boolean(evaluation?.document_readiness?.presentation_uploaded);
+            return `<i class="bi bi-circle-fill ${uploaded ? 'text-success' : 'text-danger'} ms-2"
+                title="${uploaded ? 'Presentacion cargada' : 'Presentacion pendiente'}"></i>`;
+        }
+
+        function evaluationMemberIndicators(evaluation, project) {
+            const statuses = new Map(
+                (evaluation?.document_readiness?.students || []).map(student => [String(student.id), student])
+            );
+            const students = Array.isArray(project?.students) ? project.students : [];
+            if (!students.length) return '<span class="text-muted">Sin integrantes</span>';
+
+            return students.map(student => {
+                const released = Boolean(statuses.get(String(student.id))?.released);
+                return `<div class="small">
+                    ${escapeHtml(fullName(student))}
+                    <i class="bi bi-circle-fill ${released ? 'text-success' : 'text-danger'} ms-1"
+                        title="${released ? 'Alumno liberado' : 'Alumno no liberado'}"></i>
+                </div>`;
+            }).join('');
         }
 
         function projectCompany(project) {
@@ -646,7 +654,7 @@ $is_archived_view = basename($_SERVER['PHP_SELF']) === 'evaluations-archived.php
         }
 
         async function refreshCriteria(fresh = false) {
-            const criteriaResponse = await api.get('/evaluations/criteria', fresh ? { _fresh: 1 } : { _cache_ttl: 60000 });
+            const criteriaResponse = await api.get('/evaluations/criteria', fresh ? { _fresh: 1, _timeout: 30000 } : { _cache_ttl: 60000, _timeout: 30000 });
             criteria = criteriaResponse.criteria || [];
             levels = criteriaResponse.levels || levels;
             rubricScoreModes = criteriaResponse.score_modes || rubricScoreModes;
@@ -654,20 +662,43 @@ $is_archived_view = basename($_SERVER['PHP_SELF']) === 'evaluations-archived.php
         }
 
         async function loadInitialData() {
-            const [projectsResponse] = await Promise.all([
-                api.get('/evaluations/projects', { _cache_ttl: 30000 }),
+            const [projectsResult, criteriaResult] = await Promise.allSettled([
+                api.get('/evaluations/projects', { _cache_ttl: 30000, _timeout: 45000 }),
                 refreshCriteria()
             ]);
-            projects = projectsResponse || [];
+
+            if (projectsResult.status === 'fulfilled') {
+                projects = projectsResult.value || [];
+            } else {
+                projects = [];
+                showAlert('#alertContainer', 'warning', 'No se pudieron cargar los proyectos para los filtros. La lista de evaluaciones intentara cargarse de todos modos.');
+            }
+
+            if (criteriaResult.status === 'rejected') {
+                console.warn('No se pudieron cargar los criterios de evaluacion:', criteriaResult.reason);
+            }
+
             if (CAN_MANAGE_EVALUATIONS) {
-                const [adminsResponse, teachersResponse] = await Promise.all([
-                    api.get('/users', { perfil_id: 1, status: 'active', compact: 1, per_page: 500, _cache_ttl: 60000 }),
-                    api.get('/users', { perfil_id: 2, status: 'active', compact: 1, per_page: 500, _cache_ttl: 60000 })
+                const [adminsResult, teachersResult] = await Promise.allSettled([
+                    api.get('/users', { perfil_id: 1, status: 'active', compact: 1, per_page: 500, _cache_ttl: 60000, _timeout: 45000 }),
+                    api.get('/users', { perfil_id: 2, status: 'active', compact: 1, per_page: 500, _cache_ttl: 60000, _timeout: 45000 })
                 ]);
+                const adminsResponse = adminsResult.status === 'fulfilled' ? adminsResult.value : { data: [] };
+                const teachersResponse = teachersResult.status === 'fulfilled' ? teachersResult.value : { data: [] };
                 teachers = [...(adminsResponse.data || []), ...(teachersResponse.data || [])]
                     .sort((a, b) => fullName(a).localeCompare(fullName(b)));
+
+                if (adminsResult.status === 'rejected' || teachersResult.status === 'rejected') {
+                    showAlert('#alertContainer', 'warning', 'No se pudieron cargar todos los docentes. Algunas opciones de salas o responsables podrian aparecer incompletas.');
+                }
             }
-            await loadRooms();
+
+            try {
+                await loadRooms();
+            } catch (error) {
+                rooms = [];
+                showAlert('#alertContainer', 'warning', 'No se pudieron cargar las salas al iniciar. Puedes reintentar desde la vista de evaluaciones.');
+            }
 
             const projectFilter = document.getElementById('projectFilter');
             const projectSelect = document.getElementById('project_id');
@@ -682,57 +713,6 @@ $is_archived_view = basename($_SERVER['PHP_SELF']) === 'evaluations-archived.php
                 if (rubricProjectSelect && Number(project.semestre) === 8) rubricProjectSelect.innerHTML += option;
             });
             renderRoomOptions();
-        }
-
-        async function openEvaluationManagersModal() {
-            if (!IS_ADMIN) return;
-            if (!evaluationManagersModal) evaluationManagersModal = new bootstrap.Modal(document.getElementById('evaluationManagersModal'));
-            document.getElementById('evaluationManagersAlert').innerHTML = '';
-            document.getElementById('evaluationManagersList').innerHTML = '<div class="text-center py-3"><div class="spinner-border" role="status"></div></div>';
-            evaluationManagersModal.show();
-
-            try {
-                const response = await api.get('/evaluation-managers');
-                evaluationManagerIds = (response.manager_ids || []).map(String);
-                const availableTeachers = response.teachers || teachers;
-                const orderedTeachers = [...availableTeachers].sort((a, b) => {
-                    const aSelected = evaluationManagerIds.includes(String(a.id)) ? 0 : 1;
-                    const bSelected = evaluationManagerIds.includes(String(b.id)) ? 0 : 1;
-                    if (aSelected !== bSelected) return aSelected - bSelected;
-                    return fullName(a).localeCompare(fullName(b), 'es', { sensitivity: 'base' });
-                });
-                document.getElementById('evaluationManagersList').innerHTML = orderedTeachers.map(teacher => `
-                    <div class="form-check border-bottom py-2">
-                        <input class="form-check-input evaluation-manager-check" type="checkbox" value="${escapeHtml(teacher.id)}" id="evaluationManager${escapeHtml(teacher.id)}" ${evaluationManagerIds.includes(String(teacher.id)) ? 'checked' : ''}>
-                        <label class="form-check-label" for="evaluationManager${escapeHtml(teacher.id)}">
-                            <strong>${escapeHtml(fullName(teacher))}</strong>
-                            <span class="text-muted small d-block">${escapeHtml(teacher.id)}${teacher.email ? ' · ' + escapeHtml(teacher.email) : ''}</span>
-                        </label>
-                    </div>
-                `).join('') || '<p class="text-muted mb-0">No hay docentes activos.</p>';
-            } catch (error) {
-                document.getElementById('evaluationManagersAlert').innerHTML = `<div class="alert alert-danger">${escapeHtml(error.message || 'Error cargando responsables')}</div>`;
-                document.getElementById('evaluationManagersList').innerHTML = '';
-            }
-        }
-
-        async function saveEvaluationManagers() {
-            const teacherIds = [...document.querySelectorAll('.evaluation-manager-check:checked')].map(input => input.value);
-            const button = document.getElementById('saveEvaluationManagersBtn');
-            const originalText = button.innerHTML;
-            button.disabled = true;
-            button.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span> Guardando...';
-
-            try {
-                const response = await api.put('/evaluation-managers', { teacher_ids: teacherIds });
-                evaluationManagerIds = (response.manager_ids || []).map(String);
-                document.getElementById('evaluationManagersAlert').innerHTML = '<div class="alert alert-success">Responsables actualizados. Los docentes veran la opcion al volver a iniciar sesion.</div>';
-            } catch (error) {
-                document.getElementById('evaluationManagersAlert').innerHTML = `<div class="alert alert-danger">${escapeHtml(error.message || 'Error guardando responsables')}</div>`;
-            } finally {
-                button.disabled = false;
-                button.innerHTML = originalText;
-            }
         }
 
         function renderRoomOptions() {
@@ -760,14 +740,26 @@ $is_archived_view = basename($_SERVER['PHP_SELF']) === 'evaluations-archived.php
         function startEvaluationsRealtime() {
             clearInterval(evaluationsRealtimeTimer);
             evaluationsRealtimeTimer = setInterval(async () => {
-                if (document.hidden || hasOpenEvaluationModal()) return;
+                if (document.hidden || hasOpenEvaluationModal() || evaluationsBulkActionInProgress || evaluationsRefreshInProgress) return;
                 await refreshEvaluationLiveData();
-            }, 5000);
+            }, 15000);
         }
 
         async function refreshEvaluationLiveData() {
-            await Promise.all([refreshCriteria(true), loadRooms(false, true), loadEvaluations(false, true)]);
-            renderRoomOptions();
+            if (evaluationsRefreshInProgress || evaluationsBulkActionInProgress) return;
+            evaluationsRefreshInProgress = true;
+            try {
+                await refreshCriteria(true);
+                await loadRooms(false, true);
+                await loadEvaluations(false, true);
+                renderRoomOptions();
+            } catch (error) {
+                if (error?.name !== 'AbortError') {
+                    console.warn('No se pudo actualizar evaluaciones en segundo plano:', error);
+                }
+            } finally {
+                evaluationsRefreshInProgress = false;
+            }
         }
 
         function evaluationRoomKey(evaluation) {
@@ -789,9 +781,9 @@ $is_archived_view = basename($_SERVER['PHP_SELF']) === 'evaluations-archived.php
                     };
                 }
                 groups[key].total++;
-                if (evaluation.evaluated_by_all) groups[key].evaluated++;
+                if (evaluation.is_completed) groups[key].evaluated++;
                 if (evaluation.sequence_status === 'activo') groups[key].active++;
-                if (!evaluation.evaluated_by_all) groups[key].pending++;
+                if (!evaluation.is_completed) groups[key].pending++;
                 groups[key].canAdvance = groups[key].canAdvance || evaluation.can_manage_evaluations || evaluation.is_room_responsible;
                 groups[key].sequenceLocked = groups[key].sequenceLocked || Boolean(evaluation.room?.sequence_locked);
                 groups[key].completed = groups[key].completed || Boolean(evaluation.room?.completed_at);
@@ -824,26 +816,217 @@ $is_archived_view = basename($_SERVER['PHP_SELF']) === 'evaluations-archived.php
             if (label) label.textContent = expanded ? 'Desplegar' : 'Ocultar';
         }
 
-        async function loadEvaluations(showLoading = true, fresh = false) {
-            const projectId = document.getElementById('projectFilter').value;
-            const params = projectId ? { project_id: projectId } : {};
-            params.archived = IS_ARCHIVED_VIEW ? 1 : 0;
-            params.per_page = 200;
-            if (fresh) params._fresh = 1;
+        function canUseArchiveSelection() {
+            return CAN_MANAGE_EVALUATIONS;
+        }
+
+        function archiveSelectionAction() {
+            return IS_ARCHIVED_VIEW
+                ? {
+                    baseLabel: 'Desarchivar',
+                    selectedLabel: 'Desarchivar seleccionados',
+                    emptyMessage: 'Selecciona evaluaciones, una sala completa o un semestre completo para desarchivar.',
+                    confirmTitle: 'Desarchivar seleccionados',
+                    confirmText: 'Se restauraran las evaluaciones seleccionadas a la vista principal.',
+                    confirmButton: 'Desarchivar seleccionados',
+                    endpoint: '/evaluations/unarchive-selected',
+                    successMessage: 'Evaluaciones desarchivadas correctamente',
+                    errorMessage: 'No se pudieron desarchivar las evaluaciones seleccionadas.'
+                }
+                : {
+                    baseLabel: 'Archivar',
+                    selectedLabel: 'Archivar seleccionados',
+                    emptyMessage: 'Selecciona evaluaciones, una sala completa o un semestre completo para archivar.',
+                    confirmTitle: 'Archivar seleccionados',
+                    confirmText: 'Se archivaran las evaluaciones seleccionadas. Se conservaran sus reportes y detalle.',
+                    confirmButton: 'Archivar seleccionados',
+                    endpoint: '/evaluations/archive-selected',
+                    successMessage: 'Evaluaciones archivadas correctamente',
+                    errorMessage: 'No se pudieron archivar las evaluaciones seleccionadas.'
+                };
+        }
+
+        function archiveableEvaluations() {
+            if (!canUseArchiveSelection()) return [];
+            return evaluations.filter(evaluation => evaluation.can_manage_evaluations);
+        }
+
+        function archiveableEvaluationIdsForSemester(semesterKey) {
+            return archiveableEvaluations()
+                .filter(evaluation => evaluationSemesterKey(evaluation) === String(semesterKey))
+                .map(evaluation => Number(evaluation.id));
+        }
+
+        function archiveableEvaluationIdsForRoom(roomKey) {
+            return archiveableEvaluations()
+                .filter(evaluation => evaluationRoomKey(evaluation) === String(roomKey))
+                .map(evaluation => Number(evaluation.id));
+        }
+
+        function selectionStateForIds(ids) {
+            const cleanIds = ids.filter(Boolean);
+            return {
+                checked: cleanIds.length > 0 && cleanIds.every(id => selectedArchiveEvaluationIds.has(Number(id))),
+                indeterminate: cleanIds.some(id => selectedArchiveEvaluationIds.has(Number(id))) && !cleanIds.every(id => selectedArchiveEvaluationIds.has(Number(id)))
+            };
+        }
+
+        function renderArchiveGroupCheckbox(type, key, ids, label) {
+            if (!archiveSelectionMode || !canUseArchiveSelection() || ids.length === 0) return '';
+            const state = selectionStateForIds(ids);
+            const safeKey = escapeHtml(key);
+            const dataKeyName = type === 'semester' ? 'archiveSemesterKey' : 'archiveRoomKey';
+            return `
+                <label class="archive-selection-control">
+                    <input class="form-check-input" type="checkbox" data-archive-${type}-key="${safeKey}" onchange="toggleArchiveGroupSelection('${type}', this.dataset.${dataKeyName}, this.checked)" ${state.checked ? 'checked' : ''}>
+                    <span>${escapeHtml(label)}</span>
+                </label>`;
+        }
+
+        function renderArchiveEvaluationCheckbox(evaluation) {
+            if (!archiveSelectionMode || !canUseArchiveSelection() || !evaluation.can_manage_evaluations) return '';
+            const id = Number(evaluation.id);
+            return `
+                <input class="form-check-input archive-selection-checkbox mt-1" type="checkbox" data-archive-evaluation-id="${id}" onchange="toggleArchiveEvaluationSelection(${id}, this.checked)" ${selectedArchiveEvaluationIds.has(id) ? 'checked' : ''} title="Seleccionar evaluacion">`;
+        }
+
+        function pruneArchiveSelection() {
+            const validIds = new Set(archiveableEvaluations().map(evaluation => Number(evaluation.id)));
+            selectedArchiveEvaluationIds = new Set([...selectedArchiveEvaluationIds].filter(id => validIds.has(Number(id))));
+        }
+
+        function updateArchiveSelectionControls() {
+            const button = document.getElementById('archiveSelectionBtn');
+            const buttonText = document.getElementById('archiveSelectionButtonText');
+            const cancelButton = document.getElementById('archiveSelectionCancelBtn');
+            if (!button || !buttonText || !cancelButton) return;
+            const count = selectedArchiveEvaluationIds.size;
+            const action = archiveSelectionAction();
+            buttonText.textContent = archiveSelectionMode ? `${action.selectedLabel}${count ? ` (${count})` : ''}` : action.baseLabel;
+            button.classList.toggle('btn-warning', archiveSelectionMode);
+            button.classList.toggle('btn-outline-secondary', !archiveSelectionMode);
+            cancelButton.classList.toggle('d-none', !archiveSelectionMode);
+        }
+
+        function syncArchiveSelectionCheckboxes() {
+            document.querySelectorAll('[data-archive-evaluation-id]').forEach(input => {
+                input.checked = selectedArchiveEvaluationIds.has(Number(input.dataset.archiveEvaluationId));
+            });
+            document.querySelectorAll('[data-archive-semester-key]').forEach(input => {
+                const ids = archiveableEvaluationIdsForSemester(input.dataset.archiveSemesterKey);
+                const state = selectionStateForIds(ids);
+                input.checked = state.checked;
+                input.indeterminate = state.indeterminate;
+            });
+            document.querySelectorAll('[data-archive-room-key]').forEach(input => {
+                const ids = archiveableEvaluationIdsForRoom(input.dataset.archiveRoomKey);
+                const state = selectionStateForIds(ids);
+                input.checked = state.checked;
+                input.indeterminate = state.indeterminate;
+            });
+        }
+
+        async function handleArchiveSelectionButton() {
+            if (!canUseArchiveSelection()) return;
+            if (!archiveSelectionMode) {
+                archiveSelectionMode = true;
+                selectedArchiveEvaluationIds.clear();
+                updateArchiveSelectionControls();
+                await loadEvaluations(false);
+                return;
+            }
+            if (selectedArchiveEvaluationIds.size === 0) {
+                showAlert('#alertContainer', 'warning', archiveSelectionAction().emptyMessage);
+                return;
+            }
+            await archiveSelectedEvaluations();
+        }
+
+        async function cancelArchiveSelectionMode() {
+            archiveSelectionMode = false;
+            selectedArchiveEvaluationIds.clear();
+            updateArchiveSelectionControls();
+            await loadEvaluations(false);
+        }
+
+        function toggleArchiveEvaluationSelection(id, checked) {
+            if (checked) {
+                selectedArchiveEvaluationIds.add(Number(id));
+            } else {
+                selectedArchiveEvaluationIds.delete(Number(id));
+            }
+            updateArchiveSelectionControls();
+            syncArchiveSelectionCheckboxes();
+        }
+
+        function toggleArchiveGroupSelection(type, key, checked) {
+            const ids = type === 'semester'
+                ? archiveableEvaluationIdsForSemester(key)
+                : archiveableEvaluationIdsForRoom(key);
+            ids.forEach(id => {
+                if (checked) {
+                    selectedArchiveEvaluationIds.add(Number(id));
+                } else {
+                    selectedArchiveEvaluationIds.delete(Number(id));
+                }
+            });
+            updateArchiveSelectionControls();
+            syncArchiveSelectionCheckboxes();
+        }
+
+        async function archiveSelectedEvaluations() {
+            const ids = [...selectedArchiveEvaluationIds];
+            const action = archiveSelectionAction();
+            if (!await confirmAction({
+                title: action.confirmTitle,
+                text: `${action.confirmText} Total: ${ids.length} evaluacion${ids.length === 1 ? '' : 'es'}.`,
+                confirmButtonText: action.confirmButton
+            })) return;
+            try {
+                const button = document.getElementById('archiveSelectionBtn');
+                if (button) button.disabled = true;
+                evaluationsBulkActionInProgress = true;
+                await api.post(action.endpoint, { ids }, { _timeout: 45000 });
+                archiveSelectionMode = false;
+                evaluations = evaluations.filter(evaluation => !ids.includes(Number(evaluation.id)));
+                selectedArchiveEvaluationIds.clear();
+                updateArchiveSelectionControls();
+                showAlert('#alertContainer', 'success', action.successMessage);
+                await loadEvaluations(false, false, true);
+            } catch (error) {
+                showAlert('#alertContainer', 'danger', error.message || action.errorMessage);
+            } finally {
+                evaluationsBulkActionInProgress = false;
+                const button = document.getElementById('archiveSelectionBtn');
+                if (button) button.disabled = false;
+            }
+        }
+
+        async function loadEvaluations(showLoading = true, fresh = false, useLocal = false) {
             const tbody = document.getElementById('evaluationsTable');
-            if (showLoading) {
-                tbody.innerHTML = '<tr><td colspan="7" class="text-center py-4"><div class="spinner-border" role="status"></div></td></tr>';
+            if (!useLocal) {
+                const projectId = document.getElementById('projectFilter').value;
+                const params = projectId ? { project_id: projectId } : {};
+                params.archived = IS_ARCHIVED_VIEW ? 1 : 0;
+                params.per_page = 200;
+                if (fresh) params._fresh = 1;
+                params._timeout = 30000;
+                if (showLoading) {
+                    tbody.innerHTML = '<tr><td colspan="7" class="text-center py-4"><div class="spinner-border" role="status"></div></td></tr>';
+                }
+                const response = await api.get('/evaluations', params);
+                let evaluationItems = response.data || [];
+                let currentPage = Number(response.current_page || 1);
+                const lastPage = Number(response.last_page || 1);
+                while (currentPage < lastPage) {
+                    currentPage++;
+                    const nextResponse = await api.get('/evaluations', { ...params, page: currentPage });
+                    evaluationItems = evaluationItems.concat(nextResponse.data || []);
+                }
+                evaluations = orderEvaluationsByRoomSequence(removeDuplicateEvaluations(evaluationItems));
             }
-            const response = await api.get('/evaluations', params);
-            let evaluationItems = response.data || [];
-            let currentPage = Number(response.current_page || 1);
-            const lastPage = Number(response.last_page || 1);
-            while (currentPage < lastPage) {
-                currentPage++;
-                const nextResponse = await api.get('/evaluations', { ...params, page: currentPage });
-                evaluationItems = evaluationItems.concat(nextResponse.data || []);
-            }
-            evaluations = orderEvaluationsByRoomSequence(removeDuplicateEvaluations(evaluationItems));
+            pruneArchiveSelection();
+            updateArchiveSelectionControls();
             tbody.innerHTML = '';
 
             if (evaluations.length === 0) {
@@ -851,9 +1034,36 @@ $is_archived_view = basename($_SERVER['PHP_SELF']) === 'evaluations-archived.php
                 return;
             }
 
+            let lastSemesterKey = null;
             let lastRoomKey = null;
             const roomGroups = evaluationRoomGroups(evaluations);
             evaluations.forEach(evaluation => {
+                const semesterKey = evaluationSemesterKey(evaluation);
+                if (semesterKey !== lastSemesterKey) {
+                    lastSemesterKey = semesterKey;
+                    lastRoomKey = null;
+                    const semesterStats = evaluationSemesterStats(evaluations, semesterKey);
+                    const semesterSelection = renderArchiveGroupCheckbox('semester', semesterKey, archiveableEvaluationIdsForSemester(semesterKey), 'Seleccionar semestre');
+                    tbody.innerHTML += `
+                        <tr class="evaluation-semester-header">
+                            <td colspan="7">
+                                <div class="d-flex flex-wrap justify-content-between align-items-center gap-2">
+                                    <div class="d-flex align-items-start gap-2">
+                                        ${semesterSelection}
+                                        <div>
+                                            <strong>Semestre ${escapeHtml(semesterKey)}</strong>
+                                            <span class="text-muted small d-block">${IS_ARCHIVED_VIEW ? 'Evaluaciones archivadas separadas por semestre' : 'Evaluaciones activas separadas por semestre'}</span>
+                                        </div>
+                                    </div>
+                                    <div class="d-flex flex-wrap gap-2">
+                                        <span class="badge bg-light text-dark">${semesterStats.total} evaluacion${semesterStats.total === 1 ? '' : 'es'}</span>
+                                        <span class="badge evaluation-success-badge">${semesterStats.evaluated} completa${semesterStats.evaluated === 1 ? '' : 's'}</span>
+                                        ${semesterStats.pending ? `<span class="badge bg-warning text-dark">${semesterStats.pending} pendiente${semesterStats.pending === 1 ? '' : 's'}</span>` : ''}
+                                    </div>
+                                </div>
+                            </td>
+                        </tr>`;
+                }
                 const roomKey = evaluationRoomKey(evaluation);
                 const isExpanded = expandedEvaluationRooms.has(roomKey);
                 if (roomKey !== lastRoomKey) {
@@ -865,6 +1075,7 @@ $is_archived_view = basename($_SERVER['PHP_SELF']) === 'evaluations-archived.php
                         ? `<button type="button" class="btn btn-sm btn-outline-secondary d-inline-flex align-items-center gap-2" onclick="downloadRoomReport(${room.id})" title="Reporte PDF de sala"><i class="bi bi-file-earmark-pdf"></i><span>Reporte sala</span></button>
                            <button type="button" class="btn btn-sm btn-outline-info d-inline-flex align-items-center gap-2" onclick="downloadRoomTeacherReport(${room.id})" title="Reporte PDF para docentes"><i class="bi bi-people"></i><span>Reporte docentes</span></button>`
                         : '';
+                    const roomSelection = renderArchiveGroupCheckbox('room', roomKey, archiveableEvaluationIdsForRoom(roomKey), 'Seleccionar sala');
                     tbody.innerHTML += `
                         <tr class="table-light evaluation-room-header">
                             <td colspan="7">
@@ -874,8 +1085,13 @@ $is_archived_view = basename($_SERVER['PHP_SELF']) === 'evaluations-archived.php
                                         <span data-evaluation-room-label="${escapeHtml(roomKey)}">${isExpanded ? 'Ocultar' : 'Desplegar'}</span>
                                     </button>
                                     <div class="flex-grow-1">
-                                        <strong>${escapeHtml(room?.nombre || 'Sin sala')}</strong>
-                                        <span class="text-muted small d-block">${escapeHtml(room?.salon || '-')} · Responsable: ${escapeHtml(fullName(room?.responsible_teacher) || '-')}</span>
+                                        <div class="d-flex align-items-start gap-2">
+                                            ${roomSelection}
+                                            <div>
+                                                <strong>${escapeHtml(room?.nombre || 'Sin sala')}</strong>
+                                                <span class="text-muted small d-block">${escapeHtml(room?.salon || '-')} · Responsable: ${escapeHtml(fullName(room?.responsible_teacher) || '-')}</span>
+                                            </div>
+                                        </div>
                                     </div>
                                     <div class="d-flex flex-wrap gap-2">
                                         ${roomReportButton}
@@ -895,20 +1111,24 @@ $is_archived_view = basename($_SERVER['PHP_SELF']) === 'evaluations-archived.php
                 const statusClass = evaluation.evaluation_badge_color
                     ? `bg-${evaluation.evaluation_badge_color}`
                     : ({ activo: 'bg-primary', evaluado: 'evaluation-success-badge', pendiente: 'bg-secondary' }[evaluation.sequence_status] || 'bg-secondary');
-                const evaluatedClass = evaluation.evaluated_by_all ? 'evaluation-row-complete' : '';
-                const evaluatedBadge = evaluation.evaluated_by_all ? '<span class="badge evaluation-success-badge ms-2"><i class="bi bi-check2-circle"></i> Evaluado por todos</span>' : '';
+                const evaluatedClass = evaluation.is_completed ? 'evaluation-row-complete' : '';
+                const evaluatedBadge = evaluation.is_completed
+                    ? `<span class="badge evaluation-success-badge ms-2"><i class="bi bi-check2-circle"></i> ${evaluation.evaluated_by_all ? 'Evaluado por todos' : 'Evaluacion completada'}</span>`
+                    : '';
+                const evaluationSelection = renderArchiveEvaluationCheckbox(evaluation);
                 tbody.innerHTML += `
                     <tr class="${evaluatedClass} ${isExpanded ? '' : 'd-none'}" data-evaluation-room-row="${escapeHtml(roomKey)}">
                         <td class="evaluation-cell-project">
                             <div class="d-flex align-items-start gap-2">
+                                ${evaluationSelection}
                                 <div>
-                                    <div class="fw-semibold">${escapeHtml(project?.title || 'N/A')}${evaluatedBadge}</div>
+                                    <div class="fw-semibold">${escapeHtml(project?.title || 'N/A')}${evaluationPresentationIndicator(evaluation)}${evaluatedBadge}</div>
                                     <span class="text-muted small d-block">Semestre ${escapeHtml(evaluation.semestre || '-')} · ${escapeHtml(stageLabel(evaluation.etapa))}</span>
                                 </div>
                             </div>
                         </td>
                         <td class="evaluation-cell-members">
-                            <div class="small">${escapeHtml(projectActiveAuthors(project) || '-')}</div>
+                            <div>${evaluationMemberIndicators(evaluation, project)}</div>
                             ${projectControlNumbers(project) ? `<div class="text-muted small"><strong>No. control:</strong> ${escapeHtml(projectControlNumbers(project))}</div>` : ''}
                         </td>
                         <td class="evaluation-cell-data">${projectKeyData(project)}</td>
@@ -928,9 +1148,15 @@ $is_archived_view = basename($_SERVER['PHP_SELF']) === 'evaluations-archived.php
                         </td>
                         <td class="evaluation-cell-actions">
                             <div class="evaluation-actions">
-                                <button class="btn btn-sm btn-success evaluation-start-btn" onclick="openScoreModal(${evaluation.id})" title="Evaluar" ${disabled}>
+                                <button class="btn btn-sm btn-success evaluation-start-btn" onclick="openScoreModal(${evaluation.id})"
+                                    title="${evaluation.document_readiness?.all_students_released ? 'Evaluar' : 'No se puede evaluar: hay alumnos sin liberar'}" ${disabled}>
                                     <i class="bi bi-clipboard-check"></i><span>Evaluar</span>
                                 </button>
+                                ${evaluation.can_mark_completed ? `
+                                    <button class="btn btn-sm btn-outline-success" onclick="markEvaluationCompleted(${evaluation.id})"
+                                        title="Marcar esta evaluacion como completada con los docentes presentes">
+                                        <i class="bi bi-check2-circle"></i><span>Marcar evaluada</span>
+                                    </button>` : ''}
                                 <div class="evaluation-secondary-actions">
                                     <button class="btn btn-sm btn-outline-secondary" onclick="showProjectDetails(${evaluation.id})" title="Detalles del proyecto"><i class="bi bi-info-circle"></i></button>
                                     <button class="btn btn-sm btn-outline-secondary evaluation-report-btn" onclick="downloadEvaluationReport(${evaluation.id})" title="Reporte PDF"><i class="bi bi-file-earmark-pdf"></i></button>
@@ -943,6 +1169,7 @@ $is_archived_view = basename($_SERVER['PHP_SELF']) === 'evaluations-archived.php
                         </td>
                     </tr>`;
             });
+            syncArchiveSelectionCheckboxes();
         }
 
         function removeDuplicateEvaluations(items) {
@@ -960,6 +1187,10 @@ $is_archived_view = basename($_SERVER['PHP_SELF']) === 'evaluations-archived.php
 
         function orderEvaluationsByRoomSequence(items) {
             return [...items].sort((a, b) => {
+                const semesterA = Number(a.semestre || 0);
+                const semesterB = Number(b.semestre || 0);
+                if (semesterA !== semesterB) return semesterA - semesterB;
+
                 const roomA = String(a.room?.id || a.evaluation_room_id || '');
                 const roomB = String(b.room?.id || b.evaluation_room_id || '');
                 if (roomA !== roomB) return roomA.localeCompare(roomB, 'es', { numeric: true });
@@ -974,6 +1205,24 @@ $is_archived_view = basename($_SERVER['PHP_SELF']) === 'evaluations-archived.php
                 const dateB = new Date(b.fecha_exposicion || 0).getTime();
                 return dateA - dateB;
             });
+        }
+
+        function evaluationSemesterKey(evaluation) {
+            return String(evaluation?.semestre || 'Sin semestre');
+        }
+
+        function evaluationSemesterStats(items, semesterKey) {
+            return items
+                .filter(item => evaluationSemesterKey(item) === semesterKey)
+                .reduce((stats, item) => {
+                    stats.total++;
+                    if (item.is_completed) {
+                        stats.evaluated++;
+                    } else {
+                        stats.pending++;
+                    }
+                    return stats;
+                }, { total: 0, evaluated: 0, pending: 0 });
         }
 
         function showProjectDetails(evaluationId) {
@@ -1060,6 +1309,7 @@ $is_archived_view = basename($_SERVER['PHP_SELF']) === 'evaluations-archived.php
         async function loadRooms(renderAfterLoad = true, fresh = false) {
             const params = { archived: IS_ARCHIVED_VIEW ? 1 : 0 };
             if (fresh) params._fresh = 1;
+            params._timeout = 30000;
             rooms = await api.get('/evaluations/rooms', params);
             if (renderAfterLoad && roomsModal?._isShown) renderRooms();
         }
@@ -1191,7 +1441,12 @@ $is_archived_view = basename($_SERVER['PHP_SELF']) === 'evaluations-archived.php
 
         async function loadRoomProjects(selected = [], orderMap = {}) {
             const semester = document.getElementById('roomSemester').value;
-            roomProjects = await api.get('/evaluations/projects', { semestre: semester, _cache_ttl: 30000 });
+            roomProjects = await api.get('/evaluations/projects', { semestre: semester, _fresh: 1 });
+            const currentRoomId = Number(document.getElementById('roomId').value || 0);
+            roomProjects = roomProjects.filter(project => {
+                const assignedRoomId = Number(project.assigned_room_id || 0);
+                return !assignedRoomId || assignedRoomId === currentRoomId;
+            });
             const selectedIds = selected.map(Number);
             const normalizedOrderMap = normalizeProjectOrderMap(selectedIds, orderMap);
             const busy = busyRoomIds();
@@ -1463,6 +1718,25 @@ $is_archived_view = basename($_SERVER['PHP_SELF']) === 'evaluations-archived.php
             }
         }
 
+        async function markEvaluationCompleted(id) {
+            const evaluation = evaluations.find(item => Number(item.id) === Number(id));
+            if (!evaluation) return;
+            if (!await confirmAction({
+                title: 'Marcar evaluacion como completada',
+                text: `Se conservaran las ${evaluation.evaluators_count || 0} rubricas registradas de ${evaluation.expected_evaluators_count || 0} docentes asignados. Los docentes ausentes quedaran sin evaluacion.`,
+                confirmButtonText: 'Si, marcar evaluada'
+            })) return;
+
+            try {
+                const response = await api.post(`/evaluations/${id}/mark-completed`, {});
+                replaceEvaluationLocal(response.evaluation);
+                await loadEvaluations(false, false, true);
+                swalToast('success', response.message || 'Evaluacion marcada como completada');
+            } catch (error) {
+                showAlert('#alertContainer', 'danger', error.message || 'No se pudo marcar la evaluacion como completada');
+            }
+        }
+
         async function downloadRoomReport(id) {
             await downloadPdf(`/evaluations/rooms/${id}/report.pdf`, `reporte_sala_${id}.pdf`, 'No se pudo generar el reporte PDF de la sala.');
         }
@@ -1515,11 +1789,13 @@ $is_archived_view = basename($_SERVER['PHP_SELF']) === 'evaluations-archived.php
             URL.revokeObjectURL(url);
         }
 
-        async function loadRubricCriteria() {
-            const criteriaResponse = await api.get('/evaluations/criteria', { _fresh: 1 });
-            criteria = criteriaResponse.criteria || [];
-            levels = criteriaResponse.levels || levels;
-            rubricScoreModes = criteriaResponse.score_modes || rubricScoreModes;
+        async function loadRubricCriteria(useLocal = false) {
+            if (!useLocal) {
+                const criteriaResponse = await api.get('/evaluations/criteria', { _fresh: 1, _timeout: 30000 });
+                criteria = criteriaResponse.criteria || [];
+                levels = criteriaResponse.levels || levels;
+                rubricScoreModes = criteriaResponse.score_modes || rubricScoreModes;
+            }
             groupCriteria();
             const semester = document.getElementById('rubricSemester').value;
             const selectedProjectId = Number(semester) === 8 ? document.getElementById('rubricProjectId').value : '';
@@ -1565,9 +1841,10 @@ $is_archived_view = basename($_SERVER['PHP_SELF']) === 'evaluations-archived.php
                     pregunta: text
                 };
                 if (projectId) payload.project_id = Number(projectId);
-                await api.post('/evaluations/rubric-criteria', payload);
+                const response = await api.post('/evaluations/rubric-criteria', payload);
+                criteria.push(response.criterion);
                 document.getElementById('newCriterionText').value = '';
-                await loadRubricCriteria();
+                await loadRubricCriteria(true);
                 showAlert('#alertContainer', 'success', 'Pregunta agregada a la rubrica.');
             } catch (error) {
                 showAlert('#alertContainer', 'danger', error.message || 'No se pudo agregar la pregunta.');
@@ -1576,18 +1853,20 @@ $is_archived_view = basename($_SERVER['PHP_SELF']) === 'evaluations-archived.php
 
         async function updateCriterion(id) {
             const row = document.querySelector(`[data-rubric-id="${id}"]`);
-            await api.put(`/evaluations/rubric-criteria/${id}`, {
+            const response = await api.put(`/evaluations/rubric-criteria/${id}`, {
                 pregunta: row.querySelector('.criterion-question').value.trim(),
                 orden: row.querySelector('.criterion-order').value || 0
             });
-            loadRubricCriteria();
+            const index = criteria.findIndex(criterion => Number(criterion.id) === Number(id));
+            if (index >= 0) criteria[index] = response.criterion;
+            loadRubricCriteria(true);
         }
 
         async function deleteCriterion(id) {
             if (!await confirmAction({ title: 'Desactivar pregunta', text: '¿Desactivar esta pregunta de la rubrica?', confirmButtonText: 'Si, desactivar' })) return;
             await api.delete(`/evaluations/rubric-criteria/${id}`);
-            await loadRubricCriteria();
-            await loadEvaluations(false, true);
+            criteria = criteria.filter(criterion => Number(criterion.id) !== Number(id));
+            await loadRubricCriteria(true);
         }
 
         async function openScoreModal(evaluationId) {
@@ -1694,7 +1973,8 @@ $is_archived_view = basename($_SERVER['PHP_SELF']) === 'evaluations-archived.php
                 const payload = { scores, confirm_update, general_comment: document.getElementById('generalEvaluationComment').value.trim() || null };
                 const aptValue = document.getElementById('apto_titulacion').value;
                 if (aptValue !== '') payload.apto_titulacion = aptValue === '1';
-                await api.post(`/evaluations/${evaluationId}/score`, payload);
+                const response = await api.post(`/evaluations/${evaluationId}/score`, payload);
+                replaceEvaluationLocal(response.evaluation);
                 clearScoreDraft(evaluationId);
                 document.getElementById('scoreEvaluationId').value = '';
                 if (document.activeElement && document.getElementById('scoreModal').contains(document.activeElement)) {
@@ -1702,7 +1982,7 @@ $is_archived_view = basename($_SERVER['PHP_SELF']) === 'evaluations-archived.php
                 }
                 scoreModal.hide();
                 showAlert('#alertContainer', 'success', 'Rubrica guardada correctamente');
-                loadEvaluations();
+                loadEvaluations(false, false, true);
             } catch (error) {
                 showAlert('#alertContainer', 'danger', error.message || 'Error guardando rubrica');
             }
@@ -1774,19 +2054,29 @@ $is_archived_view = basename($_SERVER['PHP_SELF']) === 'evaluations-archived.php
         }
 
         async function saveRoomFeedback(evaluationId) {
-            await api.post(`/evaluations/${evaluationId}/feedback`, {
+            const response = await api.post(`/evaluations/${evaluationId}/feedback`, {
                 room_feedback: document.getElementById('roomFeedbackText').value.trim()
             });
+            replaceEvaluationLocal(response.evaluation);
             breakdownModal.hide();
             showAlert('#alertContainer', 'success', 'Retroalimentacion guardada');
-            loadEvaluations();
+            loadEvaluations(false, false, true);
+        }
+
+        function replaceEvaluationLocal(updatedEvaluation) {
+            if (!updatedEvaluation) return;
+            const index = evaluations.findIndex(item => Number(item.id) === Number(updatedEvaluation.id));
+            if (index >= 0) evaluations[index] = updatedEvaluation;
+            else evaluations.unshift(updatedEvaluation);
+            evaluations = orderEvaluationsByRoomSequence(removeDuplicateEvaluations(evaluations));
         }
 
         async function deleteEvaluation(id) {
             if (!await confirmAction({ title: 'Eliminar evaluacion', text: '¿Eliminar esta evaluacion?', confirmButtonText: 'Si, eliminar' })) return;
             await api.delete(`/evaluations/${id}`);
+            evaluations = evaluations.filter(evaluation => Number(evaluation.id) !== Number(id));
             showAlert('#alertContainer', 'success', 'Evaluacion eliminada');
-            loadEvaluations();
+            loadEvaluations(false, false, true);
         }
 
         async function archiveEvaluation(id) {
@@ -1796,8 +2086,9 @@ $is_archived_view = basename($_SERVER['PHP_SELF']) === 'evaluations-archived.php
                 confirmButtonText: 'Si, archivar'
             })) return;
             await api.post(`/evaluations/${id}/archive`, {});
+            evaluations = evaluations.filter(evaluation => Number(evaluation.id) !== Number(id));
             showAlert('#alertContainer', 'success', 'Evaluacion archivada');
-            loadEvaluations(true, true);
+            loadEvaluations(false, false, true);
         }
 
         async function unarchiveEvaluation(id) {
@@ -1807,8 +2098,9 @@ $is_archived_view = basename($_SERVER['PHP_SELF']) === 'evaluations-archived.php
                 confirmButtonText: 'Si, restaurar'
             })) return;
             await api.post(`/evaluations/${id}/unarchive`, {});
+            evaluations = evaluations.filter(evaluation => Number(evaluation.id) !== Number(id));
             showAlert('#alertContainer', 'success', 'Evaluacion restaurada');
-            loadEvaluations(true, true);
+            loadEvaluations(false, false, true);
         }
 
         document.addEventListener('DOMContentLoaded', async () => {
@@ -1818,7 +2110,6 @@ $is_archived_view = basename($_SERVER['PHP_SELF']) === 'evaluations-archived.php
             breakdownModal = new bootstrap.Modal(document.getElementById('breakdownModal'));
             projectDetailsModal = new bootstrap.Modal(document.getElementById('projectDetailsModal'));
             roomsModal = new bootstrap.Modal(document.getElementById('roomsModal'));
-            if (IS_ADMIN) evaluationManagersModal = new bootstrap.Modal(document.getElementById('evaluationManagersModal'));
             document.getElementById('scoreModal').addEventListener('hide.bs.modal', () => {
                 if (document.activeElement && document.getElementById('scoreModal').contains(document.activeElement)) {
                     document.activeElement.blur();
@@ -1827,9 +2118,15 @@ $is_archived_view = basename($_SERVER['PHP_SELF']) === 'evaluations-archived.php
             document.getElementById('scoreModal').addEventListener('hide.bs.modal', saveScoreDraft);
             document.getElementById('roomDate')?.addEventListener('input', updateRoomAvailability);
             document.getElementById('roomEndDate')?.addEventListener('input', updateRoomAvailability);
-            await loadInitialData();
-            await loadEvaluations();
-            startEvaluationsRealtime();
+            try {
+                await loadInitialData();
+                await loadEvaluations();
+            } catch (error) {
+                showAlert('#alertContainer', 'danger', error.message || 'No se pudo cargar la vista de evaluaciones.');
+                console.error('Error cargando evaluaciones:', error);
+            } finally {
+                startEvaluationsRealtime();
+            }
         });
     </script>
 </body>

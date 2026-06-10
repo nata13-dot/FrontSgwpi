@@ -26,7 +26,7 @@ if (!is_authenticated() || !is_admin()) {
 
         <div class="main-content flex-grow-1">
             <!-- Page Header -->
-            <div style="background: url('/assets/img/ITSSMT/fondochido2.webp'); background-size: cover; background-position: center; padding: 80px 0; position: relative;">
+            <div class="page-image-header" style="background: url('/assets/img/ITSSMT/fondochido2.webp'); background-size: cover; background-position: center; padding: 80px 0; position: relative;">
                 <div class="overlay"></div>
                 <div class="container-xl" style="position: relative; z-index: 1;">
                     <!-- Logo y Título -->

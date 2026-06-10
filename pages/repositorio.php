@@ -373,7 +373,7 @@
         async function deleteRepositoryDocument(documentId) {
             if (!CAN_MANAGE_REPOSITORY) return;
             const confirmed = window.Swal
-                ? await Swal.fire({
+                ? await stableSwalFire({
                     title: 'Eliminar documento',
                     text: 'Esta accion quitara el documento del repositorio.',
                     icon: 'warning',

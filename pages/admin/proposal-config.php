@@ -22,7 +22,7 @@ if (!is_authenticated() || !is_admin()) { header('Location: /index.php'); exit; 
             <div class="d-flex flex-wrap justify-content-between align-items-center gap-3 mb-4">
                 <div>
                     <h1 class="mb-1">Gestion de Propuestas</h1>
-                    <p class="text-muted mb-0">Selecciona la materia y asigna los docentes responsables por grupo.</p>
+                    <p class="text-muted mb-0">Configura responsables, excepciones y periodos para Fundamentos de Ingeniería de Software.</p>
                 </div>
                 <button class="btn btn-primary" onclick="loadConfig()"><i class="bi bi-arrow-clockwise"></i></button>
             </div>
@@ -39,9 +39,7 @@ if (!is_authenticated() || !is_admin()) { header('Location: /index.php'); exit; 
                     <div class="row g-3 mb-3">
                         <div class="col-lg-5">
                             <label class="form-label">Materia a supervisar</label>
-                            <select class="form-select" id="subjectFilter" onchange="renderResponsibleTable()">
-                                <option value="">Selecciona una materia</option>
-                            </select>
+                            <select class="form-select" id="subjectFilter" onchange="renderResponsibleTable()" disabled></select>
                         </div>
                         <div class="col-lg-3">
                             <label class="form-label">Semestre</label>
@@ -90,8 +88,8 @@ if (!is_authenticated() || !is_admin()) { header('Location: /index.php'); exit; 
                 </div>
                 <div class="card-body">
                     <div class="row g-3 align-items-end">
-                        <div class="col-lg-3"><label class="form-label">Materia</label><select class="form-select" id="exceptionSubject"></select></div>
-                        <div class="col-lg-3"><label class="form-label">Docente revisor</label><select class="form-select" id="exceptionTeacher"></select></div>
+                        <div class="col-lg-3"><label class="form-label">Materia</label><select class="form-select" id="exceptionSubject" disabled></select></div>
+                        <div class="col-lg-3"><label class="form-label">Carga de propuestas</label><select class="form-select" id="exceptionGroup"></select></div>
                         <div class="col-lg-3"><label class="form-label">Buscar alumno</label><input class="form-control" id="studentSearch" placeholder="Control, nombre o apellido" oninput="searchStudentsForException()"></div>
                         <div class="col-lg-3"><label class="form-label">Alumno</label><select class="form-select" id="exceptionStudent"></select></div>
                         <div class="col-lg-9"><input class="form-control" id="exceptionNotes" placeholder="Motivo o nota opcional"></div>
@@ -99,7 +97,7 @@ if (!is_authenticated() || !is_admin()) { header('Location: /index.php'); exit; 
                     </div>
                     <div class="table-responsive mt-3">
                         <table class="table table-sm align-middle mb-0">
-                            <thead><tr><th>Materia</th><th>Docente</th><th>Alumno</th><th>Grupo alumno</th><th>Nota</th><th class="text-end">Acciones</th></tr></thead>
+                            <thead><tr><th>Materia</th><th>Carga asignada</th><th>Alumno</th><th>Grupo alumno</th><th>Nota</th><th class="text-end">Acciones</th></tr></thead>
                             <tbody id="exceptionsTable"></tbody>
                         </table>
                     </div>
@@ -124,7 +122,7 @@ if (!is_authenticated() || !is_admin()) { header('Location: /index.php'); exit; 
 <script src="/assets/js/auth.js"></script>
 <script src="/assets/js/api.js"></script>
 <script>
-let config = { subject_groups: [], teachers: [], asignaturas: [], exceptions: [] };
+let config = { default_subject: null, subject_groups: [], teachers: [], asignaturas: [], exceptions: [] };
 const esc = value => String(value ?? '').replace(/[&<>'"]/g, char => ({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'}[char]));
 
 async function loadConfig() {
@@ -137,13 +135,14 @@ async function loadConfig() {
 
 function renderSubjectOptions() {
     const select = document.getElementById('subjectFilter');
-    const current = select.value;
-    select.innerHTML = '<option value="">Selecciona una materia</option>' + config.asignaturas.map(subject => `
-        <option value="${subject.id}">${esc(subject.clave ? subject.clave + ' - ' : '')}${esc(subject.nombre)}</option>
-    `).join('');
-    if (current) select.value = current;
+    const subject = config.default_subject;
+    select.innerHTML = subject
+        ? `<option value="${subject.id}">${esc(subject.clave ? subject.clave + ' - ' : '')}${esc(subject.nombre)}</option>`
+        : '<option value="">Materia predeterminada no encontrada</option>';
     document.getElementById('exceptionSubject').innerHTML = select.innerHTML;
-    document.getElementById('exceptionTeacher').innerHTML = '<option value="">Selecciona docente</option>' + teacherOptions();
+    document.getElementById('exceptionGroup').innerHTML = '<option value="">Selecciona una carga</option>' + config.subject_groups.map(group => `
+        <option value="${group.id}">${esc(group.nombre)} - ${esc(group.grupo || '')}</option>
+    `).join('');
 }
 
 function teacherOptions() {
@@ -284,7 +283,7 @@ function renderExceptions() {
     document.getElementById('exceptionsTable').innerHTML = rows.map(item => `
         <tr>
             <td>${esc(item.asignatura?.nombre || '-')}</td>
-            <td>${esc(item.teacher?.nombres || '')} ${esc(item.teacher?.apa || '')}</td>
+            <td>${esc(item.subject_group?.nombre || '-')}</td>
             <td>${esc(item.student?.id || '')} - ${esc(item.student?.nombres || '')} ${esc(item.student?.apa || '')}</td>
             <td>${esc(item.student?.semestre || '-')} ${esc(item.student?.grupo || '')}</td>
             <td>${esc(item.notes || '-')}</td>
@@ -295,26 +294,29 @@ function renderExceptions() {
 
 async function addException() {
     const payload = {
-        asignatura_id: document.getElementById('exceptionSubject').value,
-        teacher_id: document.getElementById('exceptionTeacher').value,
+        subject_group_id: document.getElementById('exceptionGroup').value,
         student_id: document.getElementById('exceptionStudent').value,
         notes: document.getElementById('exceptionNotes').value.trim() || null
     };
-    if (!payload.asignatura_id || !payload.teacher_id || !payload.student_id) {
-        Swal.fire('Faltan datos', 'Selecciona materia, docente y alumno.', 'warning');
+    if (!payload.subject_group_id || !payload.student_id) {
+        Swal.fire('Faltan datos', 'Selecciona la carga de propuestas y el alumno.', 'warning');
         return;
     }
-    await api.post('/proposal/exceptions', payload);
+    const response = await api.post('/proposal/exceptions', payload);
+    const existingIndex = config.exceptions.findIndex(item => Number(item.id) === Number(response.exception.id));
+    if (existingIndex >= 0) config.exceptions[existingIndex] = response.exception;
+    else config.exceptions.unshift(response.exception);
     document.getElementById('exceptionNotes').value = '';
     swalToast('Excepcion agregada', 'success');
-    loadConfig();
+    renderExceptions();
 }
 
 async function deleteException(id) {
     if (!await confirmAction({ title: 'Quitar excepcion' })) return;
     await api.delete(`/proposal/exceptions/${id}`);
+    config.exceptions = config.exceptions.filter(item => Number(item.id) !== Number(id));
     swalToast('Excepcion removida', 'success');
-    loadConfig();
+    renderExceptions();
 }
 
 async function assignTeacher(groupId) {
@@ -330,15 +332,22 @@ async function assignTeacher(groupId) {
     }
 
     try {
-        await api.post('/proposal/assignments', {
+        const response = await api.post('/proposal/assignments', {
             subject_group_id: groupId,
             asignatura_id: subject.id,
             teacher_id: teacherId,
             labor: `Revision de propuesta: ${subject.nombre}`,
             activo: true
         });
+        const group = config.subject_groups.find(item => Number(item.id) === Number(groupId));
+        if (group) {
+            group.teacher_assignments = group.teacher_assignments || [];
+            const existingIndex = group.teacher_assignments.findIndex(item => Number(item.id) === Number(response.assignment.id));
+            if (existingIndex >= 0) group.teacher_assignments[existingIndex] = response.assignment;
+            else group.teacher_assignments.push(response.assignment);
+        }
         swalToast('Docente asignado al grupo', 'success');
-        loadConfig();
+        renderResponsibleTable();
     } catch (error) {
         Swal.fire('Error', error.message, 'error');
     }
@@ -347,8 +356,11 @@ async function assignTeacher(groupId) {
 async function deleteAssignment(id) {
     if (!await confirmAction({ title: 'Quitar docente responsable' })) return;
     await api.delete(`/proposal/assignments/${id}`);
+    config.subject_groups.forEach(group => {
+        group.teacher_assignments = (group.teacher_assignments || []).filter(item => Number(item.id) !== Number(id));
+    });
     swalToast('Responsable removido', 'success');
-    loadConfig();
+    renderResponsibleTable();
 }
 
 async function addWindow(groupId) {
@@ -360,9 +372,14 @@ async function addWindow(groupId) {
     }
 
     try {
-        await api.post('/proposal/windows', { subject_group_id: groupId, starts_at, ends_at, activo: true });
+        const response = await api.post('/proposal/windows', { subject_group_id: groupId, starts_at, ends_at, activo: true });
+        const group = config.subject_groups.find(item => Number(item.id) === Number(groupId));
+        if (group) {
+            group.registration_windows = group.registration_windows || [];
+            group.registration_windows.push(response.window);
+        }
         swalToast('Ventana creada', 'success');
-        loadConfig();
+        renderWindows();
     } catch (error) {
         Swal.fire('Error', error.message, 'error');
     }
@@ -371,8 +388,11 @@ async function addWindow(groupId) {
 async function deleteWindow(id) {
     if (!await confirmAction({ title: 'Eliminar ventana' })) return;
     await api.delete(`/proposal/windows/${id}`);
+    config.subject_groups.forEach(group => {
+        group.registration_windows = (group.registration_windows || []).filter(item => Number(item.id) !== Number(id));
+    });
     swalToast('Ventana eliminada', 'success');
-    loadConfig();
+    renderWindows();
 }
 
 document.addEventListener('DOMContentLoaded', loadConfig);

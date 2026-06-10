@@ -10,6 +10,28 @@ class ApiClient {
         this.cache = new Map();
         this.pending = new Map();
         this.refreshPromise = null;
+        this.localMutationWindow = 10000;
+        this.resourceEndpoints = [
+            '/evaluations/rubric-criteria',
+            '/evaluations/rooms',
+            '/proposal/assignments',
+            '/proposal/exceptions',
+            '/proposal/windows',
+            '/proposal/projects',
+            '/subject-groups',
+            '/document-tags',
+            '/evaluation-managers',
+            '/deliverables',
+            '/evaluations',
+            '/competencias',
+            '/asignaturas',
+            '/repositorio',
+            '/projects',
+            '/notices',
+            '/settings',
+            '/profile',
+            '/users'
+        ];
         this.cachePrefix = `sgpi-api-cache:${this.baseURL}:`;
         this.defaultCacheTtls = [
             { pattern: /^\/dashboard\/(stats|teacher|student)$/, ttl: 20000 },
@@ -72,9 +94,11 @@ class ApiClient {
         });
         const cacheKey = `${method}:${url.toString()}`;
 
-        if (method === 'GET' && cacheTtl > 0 && !forceFresh) {
+        if (method === 'GET') {
             const cached = this.cache.get(cacheKey) || this.readStoredCache(cacheKey);
-            if (cached && cached.expiresAt > Date.now()) {
+            const locallyUpdated = cached?.locallyUpdatedUntil > Date.now();
+            const normallyValid = !forceFresh && cached?.expiresAt > Date.now();
+            if (cached && (locallyUpdated || normallyValid)) {
                 this.cache.set(cacheKey, cached);
                 return cached.value;
             }
@@ -94,6 +118,7 @@ class ApiClient {
         // Agregar token si existe
         if (auth.getToken()) {
             options.headers.Authorization = `Bearer ${auth.getToken()}`;
+            if (auth.remember) options.headers['X-SGPI-Remember'] = '1';
         }
 
         // Agregar body si existe
@@ -127,7 +152,9 @@ class ApiClient {
                         options.headers.Authorization = `Bearer ${freshToken}`;
                         return executeRequest(true);
                     } catch (refreshError) {
-                        this.redirectToLogout('expired');
+                        if (refreshError?.authTerminal) {
+                            this.redirectToLogout('expired');
+                        }
                         throw refreshError;
                     }
                 }
@@ -147,15 +174,19 @@ class ApiClient {
                 throw error;
             }
 
-            if (method === 'GET' && cacheTtl > 0) {
+            if (method === 'GET') {
                 const cachedValue = {
                     value: result,
-                    expiresAt: Date.now() + cacheTtl
+                    expiresAt: cacheTtl > 0 ? Date.now() + cacheTtl : 0,
+                    locallyUpdatedUntil: 0,
+                    endpoint: this.normalizeEndpoint(endpoint)
                 };
                 this.cache.set(cacheKey, cachedValue);
-                this.writeStoredCache(cacheKey, cachedValue);
+                if (cacheTtl > 0) {
+                    this.writeStoredCache(cacheKey, cachedValue);
+                }
             } else if (method !== 'GET') {
-                this.clearCache();
+                this.applyMutationToCache(method, endpoint, data, result);
             }
 
             return result;
@@ -193,6 +224,193 @@ class ApiClient {
         } catch (error) {
             // La limpieza en memoria ya evita reutilizar datos dentro de la pagina actual.
         }
+    }
+
+    applyMutationToCache(method, endpoint, requestData, result) {
+        const resource = this.resourceEndpoint(endpoint);
+        const mutationId = this.endpointId(endpoint);
+        const entity = this.mutationEntity(result, requestData, mutationId);
+        const now = Date.now();
+
+        this.cache.forEach((cached, cacheKey) => {
+            if (!cached || !this.cacheMatchesResource(cached.endpoint, resource)) return;
+
+            const patched = this.patchCachedValue(
+                cached.value,
+                method,
+                entity,
+                mutationId,
+                this.isCollectionMutation(endpoint, resource)
+                    && this.cacheAcceptsCreatedEntity(cacheKey)
+            );
+            if (!patched.changed) return;
+
+            cached.value = patched.value;
+            cached.locallyUpdatedUntil = now + this.localMutationWindow;
+            this.cache.set(cacheKey, cached);
+        });
+
+        window.dispatchEvent(new CustomEvent('sgpi:api-mutated', {
+            detail: {
+                method,
+                endpoint: this.normalizeEndpoint(endpoint),
+                resource,
+                id: entity?.id ?? mutationId ?? null,
+                entity,
+                result
+            }
+        }));
+    }
+
+    patchCachedValue(value, method, entity, mutationId, isCollectionMutation) {
+        if (Array.isArray(value)) {
+            return this.patchArray(value, method, entity, mutationId, isCollectionMutation);
+        }
+
+        if (!value || typeof value !== 'object') {
+            return { value, changed: false };
+        }
+
+        if (Array.isArray(value.data)) {
+            const patched = this.patchArray(value.data, method, entity, mutationId, isCollectionMutation);
+            if (!patched.changed) return { value, changed: false };
+
+            const next = { ...value, data: patched.value };
+            if (Number.isFinite(Number(next.total))) {
+                const delta = patched.value.length - value.data.length;
+                next.total = Math.max(0, Number(next.total) + delta);
+            }
+            return { value: next, changed: true };
+        }
+
+        const valueId = this.entityId(value);
+        const targetId = this.entityId(entity) ?? mutationId;
+        if (valueId !== null && targetId !== null && String(valueId) === String(targetId)) {
+            if (method === 'DELETE') return { value: null, changed: true };
+            return { value: { ...value, ...entity }, changed: true };
+        }
+
+        return { value, changed: false };
+    }
+
+    patchArray(items, method, entity, mutationId, isCollectionMutation) {
+        const targetId = this.entityId(entity) ?? mutationId;
+        const index = targetId === null
+            ? -1
+            : items.findIndex(item => String(this.entityId(item)) === String(targetId));
+
+        if (method === 'DELETE') {
+            if (index < 0) return { value: items, changed: false };
+            return { value: items.filter((_, itemIndex) => itemIndex !== index), changed: true };
+        }
+
+        if (!entity || typeof entity !== 'object') {
+            return { value: items, changed: false };
+        }
+
+        if (index >= 0) {
+            const meaningfulKeys = Object.keys(entity).filter(key => !['id', 'ID'].includes(key));
+            if (meaningfulKeys.length === 0) {
+                return { value: items, changed: false };
+            }
+            const next = [...items];
+            next[index] = { ...next[index], ...entity };
+            return { value: next, changed: true };
+        }
+
+        if (method === 'POST' && isCollectionMutation && this.entityId(entity) !== null) {
+            return { value: [entity, ...items], changed: true };
+        }
+
+        return { value: items, changed: false };
+    }
+
+    mutationEntity(result, requestData, mutationId) {
+        const preferredKeys = [
+            'user', 'project', 'deliverable', 'evaluation', 'room', 'group',
+            'asignatura', 'competencia', 'tag', 'document', 'notice',
+            'exception', 'assignment', 'window', 'criterion'
+        ];
+        for (const key of preferredKeys) {
+            if (result?.[key] && typeof result[key] === 'object' && !Array.isArray(result[key])) {
+                return result[key];
+            }
+        }
+
+        if (result && typeof result === 'object' && !Array.isArray(result) && this.entityId(result) !== null) {
+            return result;
+        }
+
+        const requestObject = requestData instanceof FormData
+            ? Object.fromEntries(requestData.entries())
+            : requestData;
+        const fallback = requestObject && typeof requestObject === 'object' && !Array.isArray(requestObject)
+            ? { ...requestObject }
+            : {};
+
+        if (result && typeof result === 'object' && !Array.isArray(result)) {
+            Object.entries(result).forEach(([key, value]) => {
+                if (!['message', 'errors', 'error'].includes(key) && typeof value !== 'object') {
+                    fallback[key] = value;
+                }
+            });
+        }
+        if (mutationId !== null && fallback.id === undefined) fallback.id = mutationId;
+        return Object.keys(fallback).length ? fallback : null;
+    }
+
+    cacheMatchesResource(cachedEndpoint, resource) {
+        if (!cachedEndpoint || !resource) return false;
+        return cachedEndpoint === resource;
+    }
+
+    isCollectionMutation(endpoint, resource) {
+        return this.normalizeEndpoint(endpoint) === resource;
+    }
+
+    cacheAcceptsCreatedEntity(cacheKey) {
+        try {
+            const url = new URL(String(cacheKey).replace(/^[A-Z]+:/, ''));
+            return Number(url.searchParams.get('page') || 1) <= 1;
+        } catch (error) {
+            return true;
+        }
+    }
+
+    resourceEndpoint(endpoint) {
+        const normalized = this.normalizeEndpoint(endpoint);
+        const knownResource = this.resourceEndpoints.find(resource => (
+            normalized === resource || normalized.startsWith(`${resource}/`)
+        ));
+        if (knownResource) return knownResource;
+
+        const segments = normalized.split('/').filter(Boolean);
+        const idIndex = segments.findIndex(segment => /^\d+$/.test(segment));
+        if (idIndex >= 0) {
+            return `/${segments.slice(0, idIndex).join('/')}`;
+        }
+        return normalized;
+    }
+
+    endpointId(endpoint) {
+        const normalized = this.normalizeEndpoint(endpoint);
+        const resource = this.resourceEndpoint(normalized);
+        const remainder = normalized.slice(resource.length).split('/').filter(Boolean);
+        const first = remainder[0] || null;
+        const actionNames = new Set([
+            'archive-selected', 'unarchive-selected', 'import-excel',
+            'send-credentials', 'apply-semester-change'
+        ]);
+        return first && !actionNames.has(first) ? first : null;
+    }
+
+    normalizeEndpoint(endpoint) {
+        return `/${String(endpoint || '').split('?')[0].replace(/^\/+|\/+$/g, '')}`;
+    }
+
+    entityId(entity) {
+        if (!entity || typeof entity !== 'object') return null;
+        return entity.id ?? entity.ID ?? entity.user_id ?? entity.project_id ?? null;
     }
 
     async refreshAuthToken() {

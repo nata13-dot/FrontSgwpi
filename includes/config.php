@@ -5,7 +5,7 @@ header('Pragma: no-cache');
 header('Expires: 0');
 
 define('APP_NAME', 'Sistema de Gestión de Proyectos Integradores');
-$configuredApiUrl = getenv('API_BASE_URL') ?: 'https://apiswgpi-production-0e59.up.railway.app/api';
+$configuredApiUrl = getenv('API_BASE_URL') ?: 'http://127.0.0.1:8000/api';
 $configuredApiUrl = rtrim($configuredApiUrl, '/');
 define('API_BASE_URL', $configuredApiUrl);
 define('API_ORIGIN_URL', preg_replace('#/api$#', '', API_BASE_URL));
@@ -13,7 +13,9 @@ define('FRONTEND_URL', getenv('FRONTEND_URL') ?: '');
 define('SGPI_AUTH_TOKEN_COOKIE', 'sgpi_auth_token');
 define('SGPI_AUTH_USER_COOKIE', 'sgpi_auth_user');
 define('SGPI_AUTH_SIGNATURE_COOKIE', 'sgpi_auth_signature');
-define('SGPI_AUTH_COOKIE_TTL', 60 * 60 * 24 * 30);
+define('SGPI_AUTH_REMEMBER_COOKIE', 'sgpi_auth_remember');
+define('SGPI_COOKIE_SUPPORT_COOKIE', 'sgpi_cookie_support');
+define('SGPI_AUTH_COOKIE_TTL', 60 * 60 * 24 * 28);
 define('SGPI_AUTH_COOKIE_SECRET', getenv('SGPI_AUTH_COOKIE_SECRET') ?: getenv('APP_KEY') ?: hash('sha256', __DIR__ . '|' . API_BASE_URL));
 
 // Iniciar sesión
@@ -21,7 +23,7 @@ session_set_cookie_params([
     'lifetime' => 0,
     'path' => '/',
     'domain' => '',
-    'secure' => !empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off',
+    'secure' => sgpi_request_is_secure(),
     'httponly' => true,
     'samesite' => 'Lax'
 ]);
@@ -42,12 +44,22 @@ function sgpi_auth_signature($token, $encodedUser) {
     return hash_hmac('sha256', $token . '|' . $encodedUser, SGPI_AUTH_COOKIE_SECRET);
 }
 
+function sgpi_auth_signature_v2($token, $encodedUser, $remember) {
+    return hash_hmac('sha256', $token . '|' . $encodedUser . '|' . ($remember ? '1' : '0'), SGPI_AUTH_COOKIE_SECRET);
+}
+
+function sgpi_request_is_secure() {
+    if (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') return true;
+    $forwardedProto = strtolower(trim(explode(',', $_SERVER['HTTP_X_FORWARDED_PROTO'] ?? '')[0] ?? ''));
+    return $forwardedProto === 'https';
+}
+
 function sgpi_cookie_options($expires = 0) {
     return [
         'expires' => $expires,
         'path' => '/',
         'domain' => '',
-        'secure' => !empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off',
+        'secure' => sgpi_request_is_secure(),
         'httponly' => true,
         'samesite' => 'Lax'
     ];
@@ -57,25 +69,31 @@ function persist_auth_session($token, $user, $remember = true) {
     if (!$token || !is_array($user)) return false;
 
     $encodedUser = sgpi_base64url_encode(json_encode($user, JSON_UNESCAPED_UNICODE));
-    $signature = sgpi_auth_signature($token, $encodedUser);
     $expires = $remember ? time() + SGPI_AUTH_COOKIE_TTL : 0;
 
     $_SESSION['auth_token'] = $token;
     $_SESSION['user'] = $user;
+    $_SESSION['auth_remember'] = (bool) $remember;
 
     setcookie(SGPI_AUTH_TOKEN_COOKIE, $token, sgpi_cookie_options($expires));
     setcookie(SGPI_AUTH_USER_COOKIE, $encodedUser, sgpi_cookie_options($expires));
-    setcookie(SGPI_AUTH_SIGNATURE_COOKIE, $signature, sgpi_cookie_options($expires));
+    setcookie(SGPI_AUTH_REMEMBER_COOKIE, $remember ? '1' : '0', sgpi_cookie_options($expires));
+    setcookie(SGPI_AUTH_SIGNATURE_COOKIE, sgpi_auth_signature_v2($token, $encodedUser, $remember), sgpi_cookie_options($expires));
+    setcookie(SGPI_COOKIE_SUPPORT_COOKIE, '1', array_merge(sgpi_cookie_options($expires), ['httponly' => false]));
     $_COOKIE[SGPI_AUTH_TOKEN_COOKIE] = $token;
     $_COOKIE[SGPI_AUTH_USER_COOKIE] = $encodedUser;
-    $_COOKIE[SGPI_AUTH_SIGNATURE_COOKIE] = $signature;
+    $_COOKIE[SGPI_AUTH_REMEMBER_COOKIE] = $remember ? '1' : '0';
+    $_COOKIE[SGPI_AUTH_SIGNATURE_COOKIE] = sgpi_auth_signature_v2($token, $encodedUser, $remember);
+    $_COOKIE[SGPI_COOKIE_SUPPORT_COOKIE] = '1';
 
     return true;
 }
 
 function clear_auth_session_cookies() {
-    foreach ([SGPI_AUTH_TOKEN_COOKIE, SGPI_AUTH_USER_COOKIE, SGPI_AUTH_SIGNATURE_COOKIE] as $cookie) {
-        setcookie($cookie, '', sgpi_cookie_options(time() - 42000));
+    foreach ([SGPI_AUTH_TOKEN_COOKIE, SGPI_AUTH_USER_COOKIE, SGPI_AUTH_REMEMBER_COOKIE, SGPI_AUTH_SIGNATURE_COOKIE, SGPI_COOKIE_SUPPORT_COOKIE] as $cookie) {
+        $options = sgpi_cookie_options(time() - 42000);
+        if ($cookie === SGPI_COOKIE_SUPPORT_COOKIE) $options['httponly'] = false;
+        setcookie($cookie, '', $options);
         unset($_COOKIE[$cookie]);
     }
 }
@@ -84,9 +102,12 @@ function restore_auth_session_from_cookies() {
     $token = $_COOKIE[SGPI_AUTH_TOKEN_COOKIE] ?? null;
     $encodedUser = $_COOKIE[SGPI_AUTH_USER_COOKIE] ?? null;
     $signature = $_COOKIE[SGPI_AUTH_SIGNATURE_COOKIE] ?? null;
+    $remember = ($_COOKIE[SGPI_AUTH_REMEMBER_COOKIE] ?? '1') === '1';
 
     if (!$token || !$encodedUser || !$signature) return false;
-    if (!hash_equals(sgpi_auth_signature($token, $encodedUser), $signature)) {
+    $validSignature = hash_equals(sgpi_auth_signature_v2($token, $encodedUser, $remember), $signature)
+        || hash_equals(sgpi_auth_signature($token, $encodedUser), $signature);
+    if (!$validSignature) {
         clear_auth_session_cookies();
         return false;
     }
@@ -100,6 +121,7 @@ function restore_auth_session_from_cookies() {
 
     $_SESSION['auth_token'] = $token;
     $_SESSION['user'] = $user;
+    $_SESSION['auth_remember'] = $remember;
     return true;
 }
 
@@ -114,6 +136,7 @@ $auth_token = $_SESSION['auth_token'] ?? null;
 
 // Usuario autenticado
 $current_user = $_SESSION['user'] ?? null;
+$auth_remember = !empty($_SESSION['auth_remember']);
 
 $sgpiSessionWriteRequest = str_ends_with($_SERVER['SCRIPT_NAME'] ?? '', '/api/set-session.php')
     || str_ends_with($_SERVER['SCRIPT_NAME'] ?? '', '/pages/logout.php');

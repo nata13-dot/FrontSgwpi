@@ -5,7 +5,8 @@ window.SGPI_API_BASE_URL = '<?= API_BASE_URL ?>';
 window.SGPI_SESSION = <?= json_encode([
     'authenticated' => is_authenticated(),
     'token' => $auth_token,
-    'user' => $current_user
+    'user' => $current_user,
+    'remember' => $auth_remember
 ], JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES) ?>;
 window.SGPI_SETTINGS_SYNC_INTERVAL = window.SGPI_SETTINGS_SYNC_INTERVAL || 5000;
 window.SGPI_SETTINGS_SIGNATURE = null;
@@ -78,6 +79,7 @@ function applySystemSettings(settings) {
     }
 
     startIdleLogoutTimer(Number(settings.session_timeout_minutes || 30));
+    renderNotificationMenu(settings.system_notices || []);
     queueSystemNoticeToasts(settings.system_notices || []);
 }
 
@@ -161,6 +163,13 @@ let idleLogoutTimer = null;
 let idleLogoutListenersReady = false;
 function startIdleLogoutTimer(minutes) {
     if (!window.SGPI_SESSION?.authenticated || minutes <= 0) return;
+    if (typeof auth !== 'undefined') {
+        auth.configureSessionTimeout?.(minutes);
+    }
+    if (window.SGPI_SESSION?.remember) {
+        clearTimeout(idleLogoutTimer);
+        return;
+    }
     const timeoutMs = minutes * 60 * 1000;
     const resetTimer = () => {
         clearTimeout(idleLogoutTimer);
@@ -205,6 +214,119 @@ function noticeMatchesCurrentAudience(notice, context) {
     if (audience === 'authenticated') return context.authenticated;
     if (audience === 'academic') return ['teacher', 'student'].includes(context.role);
     return audience === context.role;
+}
+
+function activeSystemNoticesForCurrentAudience(notices) {
+    if (!Array.isArray(notices)) return [];
+    const context = currentAudienceContext();
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+
+    return notices
+        .filter(notice => notice && notice.active !== false && notice.message)
+        .filter(notice => noticeMatchesCurrentAudience(notice, context))
+        .filter(notice => {
+            if (notice.starts_at && new Date(notice.starts_at) > today) return false;
+            if (notice.ends_at && new Date(notice.ends_at) < today) return false;
+            return true;
+        })
+        .sort((a, b) => String(b.updated_at || b.created_at || '').localeCompare(String(a.updated_at || a.created_at || '')));
+}
+
+function renderNotificationMenu(notices) {
+    const badge = document.getElementById('notificationBadge');
+    const list = document.getElementById('notificationList');
+    const summary = document.getElementById('notificationSummary');
+    if (!badge || !list || !summary) return;
+
+    const applicable = activeSystemNoticesForCurrentAudience(notices);
+    const readIds = readNotificationIds();
+    const unreadCount = applicable.filter(notice => !readIds.has(noticeSeenKey(notice))).length;
+    badge.hidden = unreadCount === 0;
+    badge.textContent = unreadCount > 9 ? '9+' : String(unreadCount);
+    summary.textContent = applicable.length === 1
+        ? '1 aviso disponible'
+        : `${applicable.length} avisos disponibles`;
+
+    if (!applicable.length) {
+        list.innerHTML = `
+            <div class="notification-empty">
+                <i class="bi bi-bell-slash"></i>
+                <span>No hay notificaciones nuevas.</span>
+            </div>`;
+        return;
+    }
+
+    list.innerHTML = applicable.slice(0, 8).map(notice => {
+        const type = escapeToastHtml(notice.type || 'info');
+        const title = escapeToastHtml(notice.title || 'Aviso del sistema');
+        const message = escapeToastHtml(notice.message || '');
+        const date = escapeToastHtml(formatNotificationDate(notice.updated_at || notice.created_at || notice.starts_at));
+        return `
+            <article class="notification-item notification-item-${type}">
+                <span class="notification-icon"><i class="bi ${notificationIcon(type)}"></i></span>
+                <div>
+                    <strong>${title}</strong>
+                    <p>${message}</p>
+                    ${date ? `<small>${date}</small>` : ''}
+                </div>
+            </article>`;
+    }).join('');
+}
+
+function initNotificationMenu() {
+    const menu = document.getElementById('notificationMenu');
+    const badge = document.getElementById('notificationBadge');
+    if (!menu || menu.dataset.notificationReady) return;
+    menu.dataset.notificationReady = '1';
+
+    menu.addEventListener('shown.bs.dropdown', () => {
+        const applicable = activeSystemNoticesForCurrentAudience(window.SGPI_SETTINGS?.system_notices || []);
+        const readIds = readNotificationIds();
+        applicable.forEach(notice => readIds.add(noticeSeenKey(notice)));
+        writeNotificationIds(readIds);
+        if (badge) {
+            badge.hidden = true;
+            badge.textContent = '0';
+        }
+    });
+}
+
+function readNotificationIds() {
+    try {
+        return new Set(JSON.parse(localStorage.getItem('sgpi-read-notifications') || '[]'));
+    } catch (error) {
+        return new Set();
+    }
+}
+
+function writeNotificationIds(ids) {
+    try {
+        localStorage.setItem('sgpi-read-notifications', JSON.stringify([...ids]));
+    } catch (error) {
+        // Si storage esta bloqueado, el contador solo se limpia durante esta vista.
+    }
+}
+
+function notificationIcon(type) {
+    const icons = {
+        danger: 'bi-exclamation-triangle',
+        warning: 'bi-exclamation-circle',
+        success: 'bi-check-circle',
+        info: 'bi-info-circle'
+    };
+    return icons[type] || icons.info;
+}
+
+function formatNotificationDate(value) {
+    if (!value) return '';
+    const date = new Date(value);
+    if (Number.isNaN(date.getTime())) return String(value);
+    return date.toLocaleDateString('es-MX', {
+        day: '2-digit',
+        month: 'short',
+        year: 'numeric'
+    });
 }
 
 function queueSystemNoticeToasts(notices) {
@@ -319,6 +441,7 @@ function enhancePasswordVisibility() {
 }
 
 document.addEventListener('DOMContentLoaded', enhancePasswordVisibility);
+document.addEventListener('DOMContentLoaded', initNotificationMenu);
 
 window.addEventListener('pageshow', function () {
     const serverAuthenticated = <?= is_authenticated() ? 'true' : 'false' ?>;
@@ -355,6 +478,71 @@ window.swalToast = function (type, message, timer = 3500) {
     return true;
 };
 
+function captureDialogViewport() {
+    const activeElement = document.activeElement instanceof HTMLElement ? document.activeElement : null;
+    const scrollPositions = [...document.querySelectorAll('*')]
+        .filter(element => element.scrollHeight > element.clientHeight || element.scrollWidth > element.clientWidth)
+        .filter(element => element.scrollTop || element.scrollLeft)
+        .map(element => ({
+            element,
+            top: element.scrollTop,
+            left: element.scrollLeft
+        }));
+
+    return {
+        activeElement,
+        x: window.scrollX,
+        y: window.scrollY,
+        scrollPositions
+    };
+}
+
+function restoreDialogViewport(viewport, restoreFocus = false) {
+    if (!viewport) return;
+
+    window.scrollTo({ left: viewport.x, top: viewport.y, behavior: 'auto' });
+    viewport.scrollPositions.forEach(position => {
+        if (!position.element?.isConnected) return;
+        position.element.scrollLeft = position.left;
+        position.element.scrollTop = position.top;
+    });
+
+    if (restoreFocus && viewport.activeElement?.isConnected) {
+        try {
+            viewport.activeElement.focus({ preventScroll: true });
+        } catch (error) {
+            // El control puede dejar de ser enfocable despues de actualizar la vista.
+        }
+    }
+}
+
+window.stableSwalFire = async function (options = {}) {
+    if (!window.Swal) return null;
+
+    const viewport = captureDialogViewport();
+    const userDidOpen = options.didOpen;
+    const userDidClose = options.didClose;
+    const restore = restoreFocus => {
+        restoreDialogViewport(viewport, restoreFocus);
+        requestAnimationFrame(() => restoreDialogViewport(viewport, restoreFocus));
+    };
+
+    return Swal.fire({
+        ...options,
+        heightAuto: false,
+        scrollbarPadding: false,
+        returnFocus: false,
+        didOpen: popup => {
+            restore(false);
+            if (typeof userDidOpen === 'function') userDidOpen(popup);
+        },
+        didClose: () => {
+            restore(true);
+            if (typeof userDidClose === 'function') userDidClose();
+        }
+    });
+};
+
 window.confirmAction = async function ({
     title = '¿Confirmar accion?',
     text = '',
@@ -363,7 +551,7 @@ window.confirmAction = async function ({
 } = {}) {
     if (!window.Swal) return window.confirm(text || title);
 
-    const result = await Swal.fire({
+    const result = await stableSwalFire({
         title,
         text,
         icon,
@@ -385,7 +573,7 @@ window.promptText = async function ({
 } = {}) {
     if (!window.Swal) return window.prompt(title);
 
-    const result = await Swal.fire({
+    const result = await stableSwalFire({
         title,
         input: 'text',
         inputPlaceholder,
@@ -405,7 +593,7 @@ window.promptPassword = async function ({
 } = {}) {
     if (!window.Swal) return window.prompt(title);
 
-    const result = await Swal.fire({
+    const result = await stableSwalFire({
         title,
         input: 'password',
         inputPlaceholder,
@@ -424,7 +612,7 @@ window.promptPassword = async function ({
 window.promptAdminAction = async function () {
     if (!window.Swal) return window.prompt('Usuario administrador protegido. Escribe DESACTIVAR o ELIMINAR para continuar:');
 
-    const result = await Swal.fire({
+    const result = await stableSwalFire({
         title: 'Usuario administrador protegido',
         text: 'Selecciona la accion que deseas autorizar.',
         icon: 'warning',

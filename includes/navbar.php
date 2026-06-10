@@ -19,6 +19,14 @@ $management_pages = [
                 <span>Integradores ITSSMT</span>
             </div>
         </a>
+
+        <?php if (is_authenticated()): ?>
+            <form class="global-search" role="search" action="/pages/repositorio.php" method="get">
+                <i class="bi bi-search"></i>
+                <input type="search" name="q" placeholder="Buscar en el sistema..." aria-label="Buscar en el sistema">
+                <kbd>Ctrl + K</kbd>
+            </form>
+        <?php endif; ?>
         
         <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
             <span class="navbar-toggler-icon"></span>
@@ -122,10 +130,42 @@ $management_pages = [
                         </li>
                     <?php endif; ?>
                     
+                    <li class="nav-item nav-icon-item dropdown">
+                        <button class="nav-link nav-icon-link" type="button" id="notificationMenu" data-bs-toggle="dropdown" data-bs-auto-close="outside" aria-expanded="false" aria-label="Notificaciones">
+                            <i class="bi bi-bell"></i>
+                            <span class="nav-icon-badge" id="notificationBadge" hidden>0</span>
+                        </button>
+                        <div class="dropdown-menu dropdown-menu-end notification-menu" aria-labelledby="notificationMenu">
+                            <div class="notification-menu-header">
+                                <div>
+                                    <strong>Notificaciones</strong>
+                                    <small id="notificationSummary">Avisos del sistema</small>
+                                </div>
+                                <?php if (is_admin()): ?>
+                                    <a href="/pages/admin/notices.php" class="btn btn-sm btn-outline-primary">Gestionar</a>
+                                <?php endif; ?>
+                            </div>
+                            <div class="notification-list" id="notificationList">
+                                <div class="notification-empty">
+                                    <i class="bi bi-bell-slash"></i>
+                                    <span>No hay notificaciones nuevas.</span>
+                                </div>
+                            </div>
+                        </div>
+                    </li>
+                    <li class="nav-item nav-icon-item">
+                        <a class="nav-link nav-icon-link" href="/pages/evaluation-documents.php" aria-label="Mensajes">
+                            <i class="bi bi-envelope"></i>
+                            <span class="nav-icon-badge">1</span>
+                        </a>
+                    </li>
                     <li class="nav-item dropdown">
                         <a class="nav-link dropdown-toggle user-nav-link" href="#" id="userMenu" role="button" data-bs-toggle="dropdown">
                             <img src="<?= htmlspecialchars(profile_photo_url($current_user)) ?>" class="profile-thumb" alt="Perfil">
-                            <?= isset($current_user['nombres']) ? htmlspecialchars($current_user['nombres']) : 'Perfil' ?>
+                            <span class="user-nav-name">
+                                <strong><?= isset($current_user['nombres']) ? htmlspecialchars($current_user['nombres']) : 'Perfil' ?></strong>
+                                <small><?= is_admin() ? 'Administrador' : (is_teacher() ? 'Docente' : 'Estudiante') ?></small>
+                            </span>
                         </a>
                         <ul class="dropdown-menu dropdown-menu-end">
                             <li><a class="dropdown-item" href="<?= dashboard_url() ?>"><i class="bi bi-house"></i> Inicio</a></li>

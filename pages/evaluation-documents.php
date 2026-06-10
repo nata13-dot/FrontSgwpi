@@ -33,6 +33,9 @@ if (!is_authenticated()) {
         .document-actions .form-control {
             max-width: 240px;
         }
+        .delivery-slot { border: 1px solid var(--border-color); border-radius: 10px; padding: 1rem; height: 100%; }
+        .release-student { display: flex; align-items: center; justify-content: space-between; gap: 1rem; padding: .5rem 0; border-bottom: 1px solid var(--border-color); }
+        .release-student:last-child { border-bottom: 0; }
         @media (max-width: 767.98px) {
             .document-actions,
             .document-actions .form-control,
@@ -52,7 +55,7 @@ if (!is_authenticated()) {
             <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3 mb-4">
                 <div>
                     <h1 class="mb-1">Documentos de evaluacion</h1>
-                    <p class="text-muted mb-0">Repositorio privado para desarrollo de proyecto, tesis y residencias.</p>
+                    <p class="text-muted mb-0">Revision de entregas de evaluacion, tesis y residencias.</p>
                 </div>
                 <button class="btn btn-outline-primary" type="button" onclick="loadDocuments(true)">
                     <i class="bi bi-arrow-clockwise"></i> Actualizar
@@ -77,7 +80,7 @@ if (!is_authenticated()) {
 <script src="/assets/js/api.js"></script>
 <script src="/assets/js/app.js"></script>
 <script>
-const state = { projects: [], thesisDocs: [] };
+const state = { projects: [], thesisDocs: [], section: 'evaluations' };
 
 document.addEventListener('DOMContentLoaded', () => {
     if (!auth.isAuthenticated()) {
@@ -109,7 +112,11 @@ function renderDocuments() {
 
     const currentUser = auth.getCurrentUser() || {};
     const canUploadThesis = Number(currentUser.perfil_id) === 3 && Number(currentUser.semestre) === 9;
-    const projectSection = state.projects.length ? state.projects.map(project => `
+    const semesters = [...new Set(state.projects.map(item => Number(item.project.semestre)).filter(Boolean))].sort((a, b) => a - b);
+    const projectSection = semesters.length ? semesters.map(semester => `
+        <div class="mb-4">
+            <h4 class="mb-3">Semestre ${semester}</h4>
+            ${state.projects.filter(item => Number(item.project.semestre) === semester).map(project => `
         <div class="card border-0 shadow-sm document-card mb-3">
             <div class="card-body">
                 <div class="d-flex flex-column flex-lg-row justify-content-between gap-3">
@@ -117,37 +124,41 @@ function renderDocuments() {
                         <h5 class="mb-2">${esc(project.project.title)}</h5>
                         <div class="project-meta">
                             <span class="badge text-bg-light border"><i class="bi bi-people"></i> ${esc(memberNames(project.integrantes))}</span>
-                            <span class="badge text-bg-light border"><i class="bi bi-book"></i> ${esc(subjectNames(project.asignaturas))}</span>
-                            <span class="badge text-bg-info">Taller de investigacion</span>
+                            <span class="badge text-bg-secondary">Semestre ${esc(project.project.semestre)}</span>
                         </div>
-                    </div>
-                    <div class="text-lg-end">
-                        <small class="text-muted d-block">Repositorio privado</small>
-                        <strong>${project.documents.length} documento(s)</strong>
                     </div>
                 </div>
                 <hr>
-                ${renderUploadBox(project)}
-                ${project.documents.length ? project.documents.map(document => renderRepositoryDocument(project, document)).join('') : '<p class="text-muted mb-0">Aun no hay documentos cargados para este proyecto.</p>'}
-            </div>
-        </div>
-    `).join('') : '<div class="card border-0 shadow-sm mb-4"><div class="card-body text-center py-5"><i class="bi bi-file-earmark-ppt display-4 text-muted"></i><h5 class="mt-3">Sin proyectos disponibles</h5><p class="text-muted mb-0">Aun no hay proyectos vinculados a Taller de Investigacion I o II.</p></div></div>';
-
-    container.innerHTML = `
-        <section class="mb-4">
-            <div class="d-flex align-items-center justify-content-between gap-3 mb-3">
-                <div>
-                    <h4 class="mb-1">Desarrollo de proyecto</h4>
-                    <p class="text-muted mb-0">Documentos privados de proyectos con Taller de Investigacion.</p>
+                <div class="row g-3">
+                    <div class="col-xl-6">${renderEvaluationDelivery(project, 'release_sheet')}</div>
+                    <div class="col-xl-6">${renderEvaluationDelivery(project, 'presentation')}</div>
                 </div>
             </div>
+        </div>
+            `).join('')}
+        </div>
+    `).join('') : '<div class="card border-0 shadow-sm mb-4"><div class="card-body text-center py-5"><i class="bi bi-file-earmark-ppt display-4 text-muted"></i><h5 class="mt-3">Sin proyectos disponibles</h5></div></div>';
+
+    container.innerHTML = `
+        <div class="nav nav-pills gap-2 mb-4">
+            <button class="btn ${state.section === 'evaluations' ? 'btn-primary' : 'btn-outline-primary'}" onclick="setDocumentSection('evaluations')">
+                <i class="bi bi-clipboard-check"></i> Entregas de evaluacion
+            </button>
+            <button class="btn ${state.section === 'thesis' ? 'btn-primary' : 'btn-outline-primary'}" onclick="setDocumentSection('thesis')">
+                <i class="bi bi-journal-text"></i> Tesis y residencias
+            </button>
+        </div>
+
+        <section class="${state.section === 'evaluations' ? '' : 'd-none'}">
+            <h3 class="mb-1">Entregas de evaluacion</h3>
+            <p class="text-muted mb-4">Hoja de liberacion y presentacion, organizadas por semestre.</p>
             ${projectSection}
         </section>
 
-        <section>
+        <section class="${state.section === 'thesis' ? '' : 'd-none'}">
             <div class="d-flex align-items-center justify-content-between gap-3 mb-3">
                 <div>
-                    <h4 class="mb-1">Tesis y residencias de 9no</h4>
+                    <h3 class="mb-1">Tesis y residencias de 9no</h3>
                     <p class="text-muted mb-0">Avances privados que docentes pueden revisar y administracion puede publicar.</p>
                 </div>
             </div>
@@ -155,6 +166,78 @@ function renderDocuments() {
             ${state.thesisDocs.length ? state.thesisDocs.map(document => renderThesisDocument(document)).join('') : '<div class="card border-0 shadow-sm"><div class="card-body text-center py-5"><i class="bi bi-journal-text display-4 text-muted"></i><h5 class="mt-3">Sin avances cargados</h5><p class="text-muted mb-0">Cuando un alumno de 9no suba tesis o residencias apareceran aqui.</p></div></div>'}
         </section>
     `;
+}
+
+function setDocumentSection(section) {
+    state.section = section;
+    renderDocuments();
+}
+
+function renderEvaluationDelivery(project, type) {
+    const delivery = type === 'release_sheet' ? project.release_sheet : project.presentation;
+    const title = type === 'release_sheet' ? '1. Hoja de liberacion' : '2. Presentacion';
+    const icon = type === 'release_sheet' ? 'bi-file-earmark-check' : 'bi-file-earmark-slides';
+    const accepted = (delivery.allowed_extensions || []).map(ext => `.${ext}`).join(',');
+    const status = delivery.uploaded
+        ? '<span class="badge text-bg-success">Archivo cargado</span>'
+        : '<span class="badge text-bg-danger">Archivo pendiente</span>';
+    const document = delivery.document;
+
+    return `
+        <div class="delivery-slot">
+            <div class="d-flex justify-content-between align-items-center gap-2 mb-3">
+                <h5 class="mb-0"><i class="bi ${icon}"></i> ${title}</h5>
+                ${status}
+            </div>
+            ${document ? `
+                <div class="small mb-3">
+                    <strong>${esc(document.nombre)}</strong>
+                    <div class="text-muted">${document.created_at ? new Date(document.created_at).toLocaleString('es-MX') : ''}</div>
+                    <button class="btn btn-sm btn-outline-secondary mt-2" onclick="downloadRepositoryDocument(${document.id}, '${escAttr(document.nombre)}')">
+                        <i class="bi bi-download"></i> Descargar
+                    </button>
+                </div>` : ''}
+            ${project.puede_subir ? `
+                <div class="mb-3">
+                    <input class="form-control form-control-sm" type="file" id="${type}-file-${project.project.id}" accept="${accepted}">
+                    <div class="form-text">Formatos: ${(delivery.allowed_extensions || []).join(', ').toUpperCase()}.</div>
+                    <button class="btn btn-sm btn-primary mt-2" onclick="uploadEvaluationDelivery(${project.project.id}, '${type}')">
+                        <i class="bi bi-upload"></i> ${delivery.uploaded ? 'Reemplazar archivo' : 'Subir archivo'}
+                    </button>
+                </div>` : ''}
+            ${type === 'release_sheet' ? renderReleaseReview(project, delivery) : ''}
+        </div>
+    `;
+}
+
+function renderReleaseReview(project, delivery) {
+    if (!delivery.uploaded) {
+        return '<p class="text-muted small mb-0">La revision por alumno estara disponible cuando se cargue la hoja.</p>';
+    }
+
+    return `
+        <div class="mt-3">
+            <h6>Alumnos liberados</h6>
+            ${(delivery.students || []).map(student => `
+                <label class="release-student">
+                    <span>${esc(fullName(student))}</span>
+                    <span class="form-check form-switch mb-0">
+                        <input class="form-check-input release-status-${documentId(delivery)}" type="checkbox"
+                            data-student-id="${escAttr(student.id)}" ${student.released ? 'checked' : ''}
+                            ${project.puede_revisar ? '' : 'disabled'}>
+                    </span>
+                </label>
+            `).join('')}
+            ${project.puede_revisar ? `
+                <button class="btn btn-sm btn-success mt-3" onclick="saveReleaseReview(${documentId(delivery)})">
+                    <i class="bi bi-check2-square"></i> Guardar liberacion
+                </button>` : ''}
+        </div>
+    `;
+}
+
+function documentId(delivery) {
+    return Number(delivery?.document?.id || 0);
 }
 
 function renderThesisUploadBox() {
@@ -226,75 +309,12 @@ function renderThesisDocument(document) {
     `;
 }
 
-function renderUploadBox(project) {
-    if (!project.puede_subir) return '';
-
-    return `
-        <div class="document-row mb-3 bg-light">
-            <h6><i class="bi bi-cloud-arrow-up"></i> Subir documento al repositorio privado</h6>
-            <div class="row g-2">
-                <div class="col-md-4">
-                    <input class="form-control form-control-sm" id="name-${project.project.id}" maxlength="255" placeholder="Nombre del documento">
-                </div>
-                <div class="col-md-4">
-                    <input class="form-control form-control-sm" id="desc-${project.project.id}" maxlength="5000" placeholder="Descripcion breve">
-                </div>
-                <div class="col-md-4">
-                    <input class="form-control form-control-sm" id="authors-${project.project.id}" maxlength="1000" placeholder="Autores">
-                </div>
-                <div class="col-md-8">
-                    <input class="form-control form-control-sm" type="file" id="file-${project.project.id}" accept=".pdf,.doc,.docx">
-                    <div class="form-text">Permitidos: PDF, DOC y DOCX.</div>
-                </div>
-                <div class="col-md-4">
-                    <button type="button" class="btn btn-sm btn-primary w-100" onclick="uploadRepositoryDocument(${Number(project.project.id)})">
-                        <i class="bi bi-upload"></i> Guardar privado
-                    </button>
-                </div>
-            </div>
-        </div>
-    `;
-}
-
-function renderRepositoryDocument(project, document) {
-    const allowed = document.allowed_extensions || ['pdf', 'doc', 'docx'];
-    const accept = allowed.map(ext => `.${ext}`).join(',');
-    const submittedBy = document.uploaded_by ? fullName(document.uploaded_by) : 'Sin carga';
-    const publicBadge = document.is_public
-        ? '<span class="badge text-bg-success">Publicado</span>'
-        : '<span class="badge text-bg-warning">Privado</span>';
-
-    return `
-        <div class="document-row">
-                <div class="d-flex flex-column flex-xl-row justify-content-between gap-3">
-                <div>
-                    <div class="d-flex flex-wrap align-items-center gap-2 mb-1">
-                        <h6 class="mb-0">${esc(document.nombre)}</h6>
-                        ${publicBadge}
-                    </div>
-                    <p class="text-muted mb-2">${esc(document.descripcion || '')}</p>
-                    <small class="text-muted">
-                        <i class="bi bi-person-check"></i> ${esc(submittedBy)}
-                        <span class="mx-2">|</span>
-                        Formatos: ${esc(allowed.join(', ').toUpperCase())}
-                        <span class="mx-2">|</span>
-                        ${document.created_at ? new Date(document.created_at).toLocaleDateString('es-MX') : ''}
-                    </small>
-                </div>
-                <div class="document-actions d-flex flex-wrap justify-content-xl-end align-items-center gap-2">
-                    <button type="button" class="btn btn-sm btn-outline-secondary" onclick="downloadRepositoryDocument(${document.id}, '${escAttr(document.nombre)}')"><i class="bi bi-download"></i> Descargar</button>
-                    ${project.puede_publicar ? `<button type="button" class="btn btn-sm ${document.is_public ? 'btn-outline-warning' : 'btn-success'}" onclick="toggleRepositoryPublication(${document.id}, ${document.is_public ? 'false' : 'true'})"><i class="bi ${document.is_public ? 'bi-eye-slash' : 'bi-globe2'}"></i> ${document.is_public ? 'Privado' : 'Publicar'}</button>` : ''}
-                </div>
-            </div>
-        </div>
-    `;
-}
-
-async function uploadRepositoryDocument(projectId) {
-    const input = document.getElementById(`file-${projectId}`);
+async function uploadEvaluationDelivery(projectId, type) {
+    const input = document.getElementById(`${type}-file-${projectId}`);
     const file = input?.files?.[0];
     const project = state.projects.find(item => Number(item.project.id) === Number(projectId));
-    const allowed = ['pdf', 'doc', 'docx'];
+    const delivery = type === 'release_sheet' ? project?.release_sheet : project?.presentation;
+    const allowed = delivery?.allowed_extensions || [];
 
     if (!file) {
         showAlert('#alertContainer', 'warning', 'Selecciona un archivo antes de guardar.');
@@ -314,29 +334,37 @@ async function uploadRepositoryDocument(projectId) {
 
     const formData = new FormData();
     formData.append('project_id', projectId);
-    formData.append('nombre', document.getElementById(`name-${projectId}`).value.trim() || `Documento de investigacion - ${project?.project?.title || projectId}`);
-    formData.append('descripcion', document.getElementById(`desc-${projectId}`).value.trim() || 'Documento de investigacion para revision.');
-    formData.append('autores', document.getElementById(`authors-${projectId}`).value.trim() || memberNames(project?.integrantes || []));
+    formData.append('document_type', type);
+    formData.append('nombre', type === 'release_sheet' ? 'Hoja de liberacion' : 'Presentacion');
+    formData.append('descripcion', `Entrega de evaluacion: ${type === 'release_sheet' ? 'hoja de liberacion' : 'presentacion'}.`);
+    formData.append('autores', memberNames(project?.integrantes || []));
     formData.append('archivo', file);
 
     try {
-        const response = await fetch(`${API_BASE_URL}/repositorio/evaluation-documents`, {
-            method: 'POST',
-            credentials: 'include',
-            headers: { Authorization: `Bearer ${auth.getToken()}` },
-            body: formData
-        });
-        const result = await response.json().catch(() => ({}));
-
-        if (!response.ok) {
-            throw new Error(result.error || result.message || 'No se pudo guardar el archivo.');
-        }
-
-        api.clearCache();
-        showAlert('#alertContainer', 'success', 'Documento guardado en repositorio privado.');
-        await loadDocuments(true);
+        const result = await api.post('/repositorio/evaluation-documents', formData, { _timeout: 120000 });
+        const projectEntry = state.projects.find(item => String(item.project.id) === String(projectId));
+        if (projectEntry) projectEntry[type === 'release_sheet' ? 'release_sheet' : 'presentation'] = result.document;
+        showAlert('#alertContainer', 'success', 'Entrega guardada correctamente.');
+        renderDocuments();
     } catch (error) {
         showAlert('#alertContainer', 'danger', error.message || 'Error al guardar el documento.');
+    }
+}
+
+async function saveReleaseReview(documentId) {
+    const students = [...document.querySelectorAll(`.release-status-${documentId}`)].map(input => ({
+        student_id: input.dataset.studentId,
+        released: input.checked
+    }));
+
+    try {
+        const result = await api.put(`/repositorio/evaluation-documents/${documentId}/release-status`, { students });
+        const projectEntry = state.projects.find(item => String(item.release_sheet?.document?.id) === String(documentId));
+        if (projectEntry) projectEntry.release_sheet = result.document;
+        showAlert('#alertContainer', 'success', 'Liberacion actualizada.');
+        renderDocuments();
+    } catch (error) {
+        showAlert('#alertContainer', 'danger', error.message || 'No se pudo guardar la liberacion.');
     }
 }
 
@@ -370,21 +398,10 @@ async function uploadThesisDocument() {
     formData.append('archivo', file);
 
     try {
-        const response = await fetch(`${API_BASE_URL}/repositorio/thesis-documents`, {
-            method: 'POST',
-            credentials: 'include',
-            headers: { Authorization: `Bearer ${auth.getToken()}` },
-            body: formData
-        });
-        const result = await response.json().catch(() => ({}));
-
-        if (!response.ok) {
-            throw new Error(result.error || result.message || Object.values(result.errors || {}).flat().join(' ') || 'No se pudo guardar el avance.');
-        }
-
-        api.clearCache();
+        const result = await api.post('/repositorio/thesis-documents', formData, { _timeout: 120000 });
+        state.thesisDocs.unshift(result.document);
         showAlert('#alertContainer', 'success', 'Avance guardado en repositorio privado.');
-        await loadDocuments(true);
+        renderDocuments();
     } catch (error) {
         showAlert('#alertContainer', 'danger', error.message || 'Error al guardar el avance.');
     }
@@ -420,9 +437,18 @@ async function toggleRepositoryPublication(documentId, makePublic) {
     if (!confirmed) return;
 
     try {
-        await api.post(`/repositorio/${documentId}/publish`, { public: makePublic });
+        const result = await api.post(`/repositorio/${documentId}/publish`, { public: makePublic });
+        const thesisIndex = state.thesisDocs.findIndex(document => String(document.id) === String(documentId));
+        if (thesisIndex >= 0) state.thesisDocs[thesisIndex] = result.document;
+        state.projects.forEach(project => {
+            ['release_sheet', 'presentation'].forEach(type => {
+                if (String(project[type]?.document?.id) === String(documentId)) {
+                    project[type].document = { ...project[type].document, ...result.document };
+                }
+            });
+        });
         showAlert('#alertContainer', 'success', makePublic ? 'Documento publicado.' : 'Documento marcado como privado.');
-        await loadDocuments(true);
+        renderDocuments();
     } catch (error) {
         showAlert('#alertContainer', 'danger', error.message || 'No se pudo actualizar la visibilidad.');
     }

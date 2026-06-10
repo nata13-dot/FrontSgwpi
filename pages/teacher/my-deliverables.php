@@ -261,13 +261,33 @@ if (!is_authenticated() || !is_teacher()) {
             }
 
             try {
-                await api.post(`/deliverables/${id}/calificar`, { calificacion: Number(grade) });
+                const response = await api.post(`/deliverables/${id}/calificar`, { calificacion: Number(grade) });
+                replaceDeliverableInMatrix(response.deliverable);
                 gradeModal.hide();
-                await loadDeliverablesMatrix();
+                renderMatrix(lastMatrix);
                 showAlert('#alertContainer', 'success', 'Calificacion guardada.');
             } catch (error) {
                 showAlert('#gradeAlert', 'danger', error.message || 'Error guardando calificacion.');
             }
+        }
+
+        function replaceDeliverableInMatrix(updatedDeliverable) {
+            if (!updatedDeliverable) return;
+            const visit = value => {
+                if (Array.isArray(value)) {
+                    value.forEach(visit);
+                    return;
+                }
+                if (!value || typeof value !== 'object') return;
+                if (Number(value.id) === Number(updatedDeliverable.id) && (
+                    'calificacion' in value || 'fecha_limite' in value || 'estado' in value
+                )) {
+                    Object.assign(value, updatedDeliverable);
+                    return;
+                }
+                Object.values(value).forEach(visit);
+            };
+            visit(lastMatrix);
         }
 
         document.addEventListener('DOMContentLoaded', () => {

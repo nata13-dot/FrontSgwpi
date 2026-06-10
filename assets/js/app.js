@@ -276,20 +276,7 @@ async function subirArchivo(deliverable_id, file) {
         const formData = new FormData();
         formData.append('archivo', file);
 
-        const response = await fetch(`${API_BASE_URL}/deliverables/${deliverable_id}/upload`, {
-            method: 'POST',
-            credentials: 'include',
-            headers: { 'Authorization': `Bearer ${token}` },
-            body: formData
-        });
-
-        if (!response.ok) {
-            const error = await response.json();
-            showAlert('#alertContainer', 'danger', 'Error: ' + (error.error || error.message || response.statusText));
-            return null;
-        }
-
-        const data = await response.json();
+        const data = await api.post(`/deliverables/${deliverable_id}/upload`, formData, { _timeout: 120000 });
         showAlert('#alertContainer', 'success', 'Archivo subido exitosamente.');
         return data;
     } catch (error) {
@@ -315,23 +302,9 @@ async function calificarEntregable(deliverable_id, calificacion) {
             return null;
         }
 
-        const response = await fetch(`${API_BASE_URL}/deliverables/${deliverable_id}/calificar`, {
-            method: 'POST',
-            credentials: 'include',
-            headers: {
-                'Authorization': `Bearer ${token}`,
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({ calificacion: parseFloat(calificacion) })
+        const data = await api.post(`/deliverables/${deliverable_id}/calificar`, {
+            calificacion: parseFloat(calificacion)
         });
-
-        if (!response.ok) {
-            const error = await response.json();
-            showAlert('#alertContainer', 'danger', 'Error: ' + (error.error || error.message || response.statusText));
-            return null;
-        }
-
-        const data = await response.json();
         showAlert('#alertContainer', 'success', 'Entregable calificado exitosamente.');
         return data;
     } catch (error) {

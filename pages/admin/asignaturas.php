@@ -29,6 +29,9 @@ if (!is_authenticated() || !is_admin()) {
                         <button class="btn btn-outline-primary" id="cargas" onclick="openGroupsModal()">
                             <i class="bi bi-collection"></i> Gestionar Cargas
                         </button>
+                        <button class="btn btn-outline-primary" type="button" onclick="openCompetenciasLauncher()">
+                            <i class="bi bi-star"></i> Gestionar Competencias
+                        </button>
                         <button class="btn btn-primary" onclick="openAsignaturaModal()">
                             <i class="bi bi-plus-circle"></i> Nueva Asignatura
                         </button>
@@ -54,6 +57,7 @@ if (!is_authenticated() || !is_admin()) {
                             </table>
                         </div>
                     </div>
+                    <div class="card-footer bg-white border-0 py-3" id="asignaturasPagination"></div>
                 </div>
             </div>
         </div>
@@ -126,6 +130,28 @@ if (!is_authenticated() || !is_admin()) {
         </div>
     </div>
 
+    <div class="modal fade" id="competenciasLauncherModal" tabindex="-1">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <div>
+                        <h5 class="modal-title mb-0">Gestionar competencias</h5>
+                        <small class="text-muted">Selecciona una asignatura para administrar sus competencias y entregables.</small>
+                    </div>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <label class="form-label" for="competenciasSubjectSearch">Buscar asignatura</label>
+                    <input class="form-control mb-3" id="competenciasSubjectSearch" type="search"
+                           placeholder="Clave o nombre de la asignatura" oninput="renderCompetenciasSubjects()">
+                    <div id="competenciasSubjectsList" class="list-group">
+                        <div class="text-center py-4"><div class="spinner-border" role="status"></div></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <div class="modal fade" id="asignaturaModal" tabindex="-1">
         <div class="modal-dialog">
             <form class="modal-content" id="asignaturaForm">
@@ -186,7 +212,7 @@ if (!is_authenticated() || !is_admin()) {
                         </div>
                         <div class="col-md-3">
                             <label for="groupPeriod" class="form-label">Periodo</label>
-                            <input type="text" class="form-control" id="groupPeriod" placeholder="Ej. Ene-Jun 2026">
+                            <input type="text" class="form-control" id="groupPeriod" readonly>
                         </div>
                         <div class="col-md-2 d-flex align-items-end">
                             <button class="btn btn-primary w-100" onclick="saveSubjectGroup()"><i class="bi bi-save"></i> Guardar</button>
@@ -217,13 +243,19 @@ if (!is_authenticated() || !is_admin()) {
     <script src="/assets/js/app.js"></script>
     <script>
         let asignaturas = [];
+        let groupAsignaturas = [];
         let competencias = [];
         let subjectGroups = [];
+        let asignaturasCurrentPage = 1;
+        let asignaturasPerPage = 15;
         let asignaturaModal;
         let structureModal;
         let competenciasModal;
+        let competenciasLauncherModal;
         let groupsModal;
         let currentAsignatura = null;
+        let activeAcademicPeriod = null;
+        let competenciasAsignaturas = [];
 
         function escapeHtml(value) {
             return String(value ?? '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#039;');
@@ -245,13 +277,23 @@ if (!is_authenticated() || !is_admin()) {
 
         async function loadAsignaturas(page = 1) {
             try {
-                const response = await api.get('/asignaturas', { page, _cache_ttl: 30000 });
+                const response = await api.get('/asignaturas', {
+                    page,
+                    per_page: asignaturasPerPage,
+                    _cache_ttl: 30000
+                });
                 asignaturas = response.data || [];
+                asignaturasCurrentPage = Number(response.current_page || page);
                 const tbody = document.getElementById('asignaturasTable');
                 tbody.innerHTML = '';
 
                 if (asignaturas.length === 0) {
+                    if (asignaturasCurrentPage > 1 && Number(response.total || 0) > 0) {
+                        await loadAsignaturas(asignaturasCurrentPage - 1);
+                        return;
+                    }
                     tbody.innerHTML = '<tr><td colspan="5" class="text-center text-muted py-4">No hay asignaturas</td></tr>';
+                    renderAsignaturasPagination(response);
                     return;
                 }
 
@@ -272,9 +314,55 @@ if (!is_authenticated() || !is_admin()) {
                             </td>
                         </tr>`;
                 });
+                renderAsignaturasPagination(response);
             } catch (error) {
                 showAlert('#alertContainer', 'danger', 'Error cargando asignaturas: ' + error.message);
             }
+        }
+
+        function renderAsignaturasPagination(pagination) {
+            const container = document.getElementById('asignaturasPagination');
+            const current = Number(pagination.current_page || 1);
+            const last = Number(pagination.last_page || 1);
+            const total = Number(pagination.total || 0);
+            const from = Number(pagination.from || 0);
+            const to = Number(pagination.to || 0);
+            const start = Math.max(1, current - 2);
+            const end = Math.min(last, current + 2);
+            const pages = [];
+
+            for (let page = start; page <= end; page++) {
+                pages.push(`
+                    <li class="page-item ${page === current ? 'active' : ''}">
+                        <button class="page-link" type="button" onclick="loadAsignaturas(${page})">${page}</button>
+                    </li>`);
+            }
+
+            container.innerHTML = `
+                <div class="d-flex flex-wrap align-items-center justify-content-between gap-3">
+                    <div class="d-flex align-items-center gap-2">
+                        <span class="text-muted small">Mostrando ${from}-${to} de ${total} asignaturas</span>
+                        <select class="form-select form-select-sm" style="width:auto" aria-label="Asignaturas por pagina" onchange="changeAsignaturasPerPage(this.value)">
+                            ${[15, 25, 50, 100].map(value => `<option value="${value}" ${value === asignaturasPerPage ? 'selected' : ''}>${value} por pagina</option>`).join('')}
+                        </select>
+                    </div>
+                    <nav aria-label="Paginacion de asignaturas">
+                        <ul class="pagination pagination-sm mb-0">
+                            <li class="page-item ${current <= 1 ? 'disabled' : ''}">
+                                <button class="page-link" type="button" onclick="loadAsignaturas(${current - 1})" ${current <= 1 ? 'disabled' : ''}>Anterior</button>
+                            </li>
+                            ${pages.join('')}
+                            <li class="page-item ${current >= last ? 'disabled' : ''}">
+                                <button class="page-link" type="button" onclick="loadAsignaturas(${current + 1})" ${current >= last ? 'disabled' : ''}>Siguiente</button>
+                            </li>
+                        </ul>
+                    </nav>
+                </div>`;
+        }
+
+        function changeAsignaturasPerPage(value) {
+            asignaturasPerPage = Number(value) || 15;
+            loadAsignaturas(1);
         }
 
         function openAsignaturaModal(id = null) {
@@ -306,18 +394,73 @@ if (!is_authenticated() || !is_admin()) {
                 else await api.post('/asignaturas', data);
                 asignaturaModal.hide();
                 showAlert('#alertContainer', 'success', 'Asignatura guardada correctamente');
-                loadAsignaturas();
+                loadAsignaturas(id ? asignaturasCurrentPage : 1);
             } catch (error) {
                 showAlert('#alertContainer', 'danger', error.message || 'Error guardando asignatura');
             }
         });
 
         async function openCompetenciasModal(asignaturaId) {
-            currentAsignatura = asignaturas.find(item => Number(item.id) === Number(asignaturaId)) || await api.get(`/asignaturas/${asignaturaId}`);
+            currentAsignatura = competenciasAsignaturas.find(item => Number(item.id) === Number(asignaturaId))
+                || asignaturas.find(item => Number(item.id) === Number(asignaturaId))
+                || await api.get(`/asignaturas/${asignaturaId}`);
             document.getElementById('competenciasTitle').textContent = `Competencias - ${currentAsignatura.nombre}`;
             resetCompetenciaForm();
-            competenciasModal.show();
-            await loadCompetenciasByAsignatura();
+
+            const showManager = async () => {
+                competenciasModal.show();
+                await loadCompetenciasByAsignatura();
+            };
+            const launcherElement = document.getElementById('competenciasLauncherModal');
+            if (launcherElement.classList.contains('show')) {
+                launcherElement.addEventListener('hidden.bs.modal', showManager, { once: true });
+                competenciasLauncherModal.hide();
+                return;
+            }
+            await showManager();
+        }
+
+        async function openCompetenciasLauncher() {
+            window.history.replaceState(null, '', `${window.location.pathname}#competencias`);
+            document.getElementById('competenciasSubjectSearch').value = '';
+            document.getElementById('competenciasSubjectsList').innerHTML =
+                '<div class="text-center py-4"><div class="spinner-border" role="status"></div></div>';
+            competenciasLauncherModal.show();
+
+            try {
+                competenciasAsignaturas = await loadAllAsignaturas();
+                renderCompetenciasSubjects();
+            } catch (error) {
+                document.getElementById('competenciasSubjectsList').innerHTML =
+                    '<div class="alert alert-danger mb-0">No fue posible cargar las asignaturas.</div>';
+            }
+        }
+
+        function renderCompetenciasSubjects() {
+            const query = document.getElementById('competenciasSubjectSearch').value.trim().toLowerCase();
+            const filtered = competenciasAsignaturas.filter(asignatura =>
+                `${asignatura.clave || ''} ${asignatura.nombre || ''}`.toLowerCase().includes(query)
+            );
+            const container = document.getElementById('competenciasSubjectsList');
+
+            if (!filtered.length) {
+                container.innerHTML = '<p class="text-muted text-center py-3 mb-0">No se encontraron asignaturas.</p>';
+                return;
+            }
+
+            container.innerHTML = filtered.map(asignatura => `
+                <button type="button" class="list-group-item list-group-item-action d-flex align-items-center justify-content-between gap-3"
+                        onclick="openCompetenciasModal(${Number(asignatura.id)})">
+                    <span>
+                        <strong>${escapeHtml(asignatura.nombre)}</strong>
+                        <small class="d-block text-muted">${escapeHtml(asignatura.clave || 'Sin clave')}</small>
+                    </span>
+                    <span class="d-flex align-items-center gap-2">
+                        <span class="badge bg-primary rounded-pill">${Number(asignatura.competencias_count || 0)}</span>
+                        <i class="bi bi-chevron-right"></i>
+                    </span>
+                </button>
+            `).join('');
         }
 
         async function loadCompetenciasByAsignatura() {
@@ -383,7 +526,9 @@ if (!is_authenticated() || !is_admin()) {
                 swalToast('success', 'Competencia guardada');
                 resetCompetenciaForm();
                 await loadCompetenciasByAsignatura();
-                await loadAsignaturas();
+                await loadAsignaturas(asignaturasCurrentPage);
+                const catalogItem = competenciasAsignaturas.find(item => Number(item.id) === Number(currentAsignatura.id));
+                if (catalogItem) catalogItem.competencias_count = competencias.length;
             } catch (error) {
                 showAlert('#competenciasAlert', 'danger', error.message || 'Error guardando competencia');
             }
@@ -395,7 +540,9 @@ if (!is_authenticated() || !is_admin()) {
                 await api.delete(`/competencias/${id}`);
                 swalToast('success', 'Competencia eliminada');
                 await loadCompetenciasByAsignatura();
-                await loadAsignaturas();
+                await loadAsignaturas(asignaturasCurrentPage);
+                const catalogItem = competenciasAsignaturas.find(item => Number(item.id) === Number(currentAsignatura.id));
+                if (catalogItem) catalogItem.competencias_count = competencias.length;
             } catch (error) {
                 showAlert('#competenciasAlert', 'danger', error.message || 'Error eliminando competencia');
             }
@@ -405,11 +552,30 @@ if (!is_authenticated() || !is_admin()) {
         function renderSubjectCheckboxes(selectedIds = []) {
             const selected = selectedIds.map(Number);
             const container = document.getElementById('groupSubjects');
-            container.innerHTML = asignaturas.map(asignatura => `
+            container.innerHTML = groupAsignaturas.map(asignatura => `
                 <div class="form-check mb-2">
                     <input class="form-check-input group-subject" type="checkbox" value="${asignatura.id}" id="groupSubject${asignatura.id}" ${selected.includes(Number(asignatura.id)) ? 'checked' : ''}>
                     <label class="form-check-label" for="groupSubject${asignatura.id}">${escapeHtml(asignatura.nombre)}</label>
                 </div>`).join('') || '<p class="text-muted mb-0">Primero registra asignaturas.</p>';
+        }
+
+        async function loadAllAsignaturas() {
+            const catalog = [];
+            let page = 1;
+            let lastPage = 1;
+
+            do {
+                const response = await api.get('/asignaturas', {
+                    page,
+                    per_page: 100,
+                    _cache_ttl: 30000
+                });
+                catalog.push(...(response.data || []));
+                lastPage = Number(response.last_page || 1);
+                page++;
+            } while (page <= lastPage);
+
+            return catalog;
         }
 
         async function openGroupsModal() {
@@ -417,9 +583,26 @@ if (!is_authenticated() || !is_admin()) {
             document.getElementById('groupCode').value = '';
             document.getElementById('groupName').value = '';
             document.getElementById('groupPeriod').value = '';
-            renderSubjectCheckboxes();
-            await loadSubjectGroups();
+            document.getElementById('groupSubjects').innerHTML = '<div class="text-center py-3"><div class="spinner-border spinner-border-sm" role="status"></div></div>';
             groupsModal.show();
+
+            try {
+                const [catalog, settings] = await Promise.all([
+                    loadAllAsignaturas(),
+                    api.get('/settings/public', { _cache_ttl: 60000 })
+                ]);
+                groupAsignaturas = catalog;
+                activeAcademicPeriod = settings.academic_period_info;
+                const semesterSelect = document.getElementById('groupSemestre');
+                semesterSelect.innerHTML = (activeAcademicPeriod?.semesters || []).map(semester =>
+                    `<option value="${semester}">${semester}</option>`
+                ).join('');
+                document.getElementById('groupPeriod').value = activeAcademicPeriod?.code || '';
+                renderSubjectCheckboxes();
+                await loadSubjectGroups();
+            } catch (error) {
+                document.getElementById('groupSubjects').innerHTML = '<p class="text-danger mb-0">Error cargando asignaturas.</p>';
+            }
         }
 
         async function loadSubjectGroups() {
@@ -462,7 +645,7 @@ if (!is_authenticated() || !is_admin()) {
             document.getElementById('groupSemestre').value = group.semestre;
             document.getElementById('groupCode').value = group.grupo || '';
             document.getElementById('groupName').value = group.nombre || '';
-            document.getElementById('groupPeriod').value = group.periodo || '';
+            document.getElementById('groupPeriod').value = activeAcademicPeriod?.code || group.periodo || '';
             renderSubjectCheckboxes((group.asignaturas || []).map(item => item.id));
         }
 
@@ -474,7 +657,7 @@ if (!is_authenticated() || !is_admin()) {
                 nombre: document.getElementById('groupName').value.trim(),
                 semestre: semester,
                 grupo: groupCode,
-                periodo: document.getElementById('groupPeriod').value.trim() || null,
+                periodo: document.getElementById('groupPeriod').value.trim() || activeAcademicPeriod?.code || null,
                 asignatura_ids: [...document.querySelectorAll('.group-subject:checked')].map(input => Number(input.value))
             };
 
@@ -491,7 +674,7 @@ if (!is_authenticated() || !is_admin()) {
                 document.getElementById('groupId').value = '';
                 document.getElementById('groupCode').value = '';
                 document.getElementById('groupName').value = '';
-                document.getElementById('groupPeriod').value = '';
+                document.getElementById('groupPeriod').value = activeAcademicPeriod?.code || '';
                 renderSubjectCheckboxes();
                 loadSubjectGroups();
             } catch (error) {
@@ -520,7 +703,7 @@ if (!is_authenticated() || !is_admin()) {
             try {
                 await api.delete(`/asignaturas/${id}`);
                 showAlert('#alertContainer', 'success', 'Asignatura eliminada');
-                loadAsignaturas();
+                loadAsignaturas(asignaturasCurrentPage);
             } catch (error) {
                 showAlert('#alertContainer', 'danger', error.message || 'Error eliminando asignatura');
             }
@@ -568,8 +751,12 @@ if (!is_authenticated() || !is_admin()) {
             asignaturaModal = new bootstrap.Modal(document.getElementById('asignaturaModal'));
             structureModal = new bootstrap.Modal(document.getElementById('structureModal'));
             competenciasModal = new bootstrap.Modal(document.getElementById('competenciasModal'));
+            competenciasLauncherModal = new bootstrap.Modal(document.getElementById('competenciasLauncherModal'));
             groupsModal = new bootstrap.Modal(document.getElementById('groupsModal'));
             loadAsignaturas();
+            if (window.location.hash === '#competencias') {
+                openCompetenciasLauncher();
+            }
         });
     </script>
 </body>

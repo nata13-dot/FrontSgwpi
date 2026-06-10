@@ -657,16 +657,26 @@ $serverDashboardUrl = dashboard_url();
         document.addEventListener('DOMContentLoaded', () => {
             const cookieNotice = document.getElementById('cookieNotice');
             const cookieNoticeAccept = document.getElementById('cookieNoticeAccept');
+            const cookiesAvailable = auth.cookiesEnabled();
 
             try {
-                if (cookieNotice && localStorage.getItem('sgpi-cookie-notice-seen') !== '1') {
+                if (cookieNotice && (!cookiesAvailable || localStorage.getItem('sgpi-cookie-notice-seen') !== '1')) {
                     cookieNotice.hidden = false;
                 }
             } catch (error) {
                 if (cookieNotice) cookieNotice.hidden = false;
             }
 
+            if (cookieNotice && !cookiesAvailable) {
+                cookieNotice.querySelector('p').innerHTML = '<strong>Las cookies estan bloqueadas.</strong> Habilitalas para este sitio; son necesarias para mantener tu sesion iniciada.';
+                cookieNoticeAccept.textContent = 'Volver a comprobar';
+            }
+
             cookieNoticeAccept?.addEventListener('click', () => {
+                if (!auth.cookiesEnabled()) {
+                    swalToast('warning', 'El navegador sigue bloqueando las cookies para este sitio.');
+                    return;
+                }
                 cookieNotice.hidden = true;
                 try {
                     localStorage.setItem('sgpi-cookie-notice-seen', '1');
@@ -818,11 +828,16 @@ $serverDashboardUrl = dashboard_url();
 
             const id = document.getElementById('loginUserId').value.trim();
             const password = document.getElementById('loginPassword').value;
+            if (!auth.cookiesEnabled()) {
+                loginMessageContainer.innerHTML = modalAlert('warning', 'Habilita las cookies para este sitio antes de iniciar sesion.');
+                return;
+            }
 
             loginSubmitBtn.disabled = true;
             loginSubmitBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Iniciando...';
 
-            const result = await auth.login(id, password);
+            const remember = document.getElementById('rememberCheck')?.checked !== false;
+            const result = await auth.login(id, password, remember);
 
             if (!result.success) {
                 loginMessageContainer.innerHTML = `
@@ -838,7 +853,7 @@ $serverDashboardUrl = dashboard_url();
             await axios.post('/api/set-session.php', {
                 auth_token: auth.getToken(),
                 user: auth.getCurrentUser(),
-                remember: document.getElementById('rememberCheck')?.checked !== false
+                remember
             });
 
             await Swal.fire({

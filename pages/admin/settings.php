@@ -58,7 +58,8 @@ if (!is_authenticated() || !is_admin()) {
                                 </div>
                                 <div class="col-md-6">
                                     <label class="form-label" for="active_academic_period">Periodo academico activo</label>
-                                    <input type="text" class="form-control" id="active_academic_period" maxlength="40" placeholder="Ej. 2026-1" required>
+                                    <select class="form-select" id="active_academic_period" onchange="applyAcademicPeriodSelection()" required></select>
+                                    <div class="form-text" id="academicPeriodSummary"></div>
                                 </div>
                                 <div class="col-md-6">
                                     <label class="form-label" for="font_scale">Tamaño de fuente general</label>
@@ -189,6 +190,7 @@ if (!is_authenticated() || !is_admin()) {
 <script src="/assets/js/app.js"></script>
 <script>
 let semesterStudents = [];
+let academicPeriodOptions = [];
 
 function esc(value) {
     return String(value ?? '').replace(/[&<>'"]/g, char => ({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'}[char]));
@@ -201,9 +203,15 @@ function previewGrayscaleMode() {
 async function loadSettings() {
     try {
         const settings = await api.get('/settings');
+        academicPeriodOptions = settings.academic_period_options || [];
+        const periodSelect = document.getElementById('active_academic_period');
+        periodSelect.innerHTML = academicPeriodOptions.map(period => `
+            <option value="${esc(period.code)}">${esc(period.label)} (${period.semesters.join(' y ')})</option>
+        `).join('');
         ['session_timeout_minutes', 'default_theme', 'active_academic_period', 'font_scale', 'max_file_size_mb', 'max_project_members', 'global_notice'].forEach(id => {
             document.getElementById(id).value = settings[id] ?? '';
         });
+        applyAcademicPeriodSelection();
         document.getElementById('proposal_registration_enabled').checked = Boolean(settings.proposal_registration_enabled);
         document.getElementById('grayscale_mode').checked = Boolean(settings.grayscale_mode);
         previewGrayscaleMode();
@@ -215,13 +223,37 @@ async function loadSettings() {
     }
 }
 
+function replaceSemesterOptions(selectId, semesters, emptyLabel = null) {
+    const select = document.getElementById(selectId);
+    const previous = Number(select.value);
+    select.innerHTML = (emptyLabel ? `<option value="">${emptyLabel}</option>` : '') +
+        semesters.map(semester => `<option value="${semester}">${semester}</option>`).join('');
+    if (semesters.includes(previous)) select.value = String(previous);
+}
+
+function applyAcademicPeriodSelection() {
+    const code = document.getElementById('active_academic_period').value;
+    const selected = academicPeriodOptions.find(period => period.code === code);
+    if (!selected) return;
+
+    const destinationSemesters = selected.half === 1 ? [5, 7, 9] : [6, 8];
+    document.getElementById('academicPeriodSummary').textContent =
+        `Semestres activos: ${selected.semesters.join(', ')}. Siguiente periodo: ${destinationSemesters.join(', ')}.`;
+    replaceSemesterOptions('fromSemester', selected.semesters);
+    replaceSemesterOptions('toSemester', destinationSemesters);
+    semesterStudents = [];
+    document.getElementById('semesterPreviewBox').innerHTML = '<p class="text-muted mb-0">Carga un semestre para preparar excepciones.</p>';
+    loadSemesterGroups('from');
+    loadSemesterGroups('to');
+}
+
 document.getElementById('settingsForm').addEventListener('submit', async event => {
     event.preventDefault();
     const allowed = [...document.querySelectorAll('.allowed-file-type:checked')].map(input => input.value);
     const payload = {
         session_timeout_minutes: Number(document.getElementById('session_timeout_minutes').value),
         default_theme: document.getElementById('default_theme').value,
-        active_academic_period: document.getElementById('active_academic_period').value.trim(),
+        active_academic_period: document.getElementById('active_academic_period').value,
         font_scale: Number(document.getElementById('font_scale').value),
         max_file_size_mb: Number(document.getElementById('max_file_size_mb').value),
         allowed_file_types: allowed,
@@ -263,6 +295,7 @@ async function loadSemesterPreview() {
             return;
         }
 
+        const destinationSemesters = [...document.getElementById('toSemester').options].map(option => Number(option.value));
         box.innerHTML = `
             <div class="table-responsive" style="max-height: 360px;">
                 <table class="table table-sm align-middle">
@@ -278,11 +311,7 @@ async function loadSemesterPreview() {
                                 <td>
                                     <select class="form-select form-select-sm semester-exception" data-user-id="${esc(student.id)}">
                                         <option value="">Sin excepcion</option>
-                                        <option value="5">Enviar a 5</option>
-                                        <option value="6">Enviar a 6</option>
-                                        <option value="7">Enviar a 7</option>
-                                        <option value="8">Enviar a 8</option>
-                                        <option value="9">Enviar a 9</option>
+                                        ${destinationSemesters.map(semester => `<option value="${semester}">Enviar a ${semester}</option>`).join('')}
                                     </select>
                                 </td>
                             </tr>`).join('')}

@@ -16,7 +16,11 @@ if (is_array($data) && !empty($data['auth_token']) && isset($data['user']) && is
     $remember = array_key_exists('remember', $data) ? !empty($data['remember']) : true;
     persist_auth_session($data['auth_token'], $data['user'], $remember);
 
-    echo json_encode(['success' => true]);
+    echo json_encode([
+        'success' => true,
+        'remember' => $remember,
+        'cookies_enabled' => isset($_COOKIE[SGPI_COOKIE_SUPPORT_COOKIE]),
+    ]);
 } else {
     http_response_code(400);
     echo json_encode(['error' => 'Datos invalidos']);
