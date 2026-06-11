@@ -21,11 +21,21 @@ $management_pages = [
         </a>
 
         <?php if (is_authenticated()): ?>
-            <form class="global-search" role="search" action="/pages/repositorio.php" method="get">
-                <i class="bi bi-search"></i>
-                <input type="search" name="q" placeholder="Buscar en el sistema..." aria-label="Buscar en el sistema">
-                <kbd>Ctrl + K</kbd>
-            </form>
+            <div class="global-search-shell" data-global-search data-role="<?= is_admin() ? 'admin' : (is_teacher() ? 'teacher' : 'student') ?>">
+                <form class="global-search" role="search" action="/pages/repositorio.php" method="get" autocomplete="off">
+                    <i class="bi bi-search" aria-hidden="true"></i>
+                    <input
+                        type="search"
+                        name="q"
+                        placeholder="Buscar páginas, opciones o registros..."
+                        aria-label="Buscar páginas, opciones o registros en el sistema"
+                        aria-controls="globalSearchResults"
+                        aria-expanded="false"
+                    >
+                    <kbd>Ctrl + K</kbd>
+                </form>
+                <div class="global-search-results" id="globalSearchResults" role="listbox" hidden></div>
+            </div>
         <?php endif; ?>
         
         <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
@@ -153,11 +163,26 @@ $management_pages = [
                             </div>
                         </div>
                     </li>
-                    <li class="nav-item nav-icon-item">
-                        <a class="nav-link nav-icon-link" href="/pages/evaluation-documents.php" aria-label="Mensajes">
+                    <li class="nav-item nav-icon-item dropdown">
+                        <button class="nav-link nav-icon-link" type="button" id="activityNotificationMenu" data-bs-toggle="dropdown" data-bs-auto-close="outside" aria-expanded="false" aria-label="Actividad reciente">
                             <i class="bi bi-envelope"></i>
-                            <span class="nav-icon-badge">1</span>
-                        </a>
+                            <span class="nav-icon-badge" id="activityNotificationBadge" hidden>0</span>
+                        </button>
+                        <div class="dropdown-menu dropdown-menu-end notification-menu" aria-labelledby="activityNotificationMenu">
+                            <div class="notification-menu-header">
+                                <div>
+                                    <strong>Actividad reciente</strong>
+                                    <small id="activityNotificationSummary">Sin actividad nueva</small>
+                                </div>
+                                <button type="button" class="btn btn-sm btn-outline-primary" id="markAllActivityNotifications">Marcar leídas</button>
+                            </div>
+                            <div class="notification-list" id="activityNotificationList">
+                                <div class="notification-empty">
+                                    <i class="bi bi-envelope-open"></i>
+                                    <span>No hay actividad reciente.</span>
+                                </div>
+                            </div>
+                        </div>
                     </li>
                     <li class="nav-item dropdown">
                         <a class="nav-link dropdown-toggle user-nav-link" href="#" id="userMenu" role="button" data-bs-toggle="dropdown">
@@ -247,3 +272,7 @@ async function logout() {
     window.location.replace('/pages/logout.php');
 }
 </script>
+<?php if (is_authenticated()): ?>
+    <script src="/assets/js/global-search.js"></script>
+    <script src="/assets/js/activity-notifications.js"></script>
+<?php endif; ?>

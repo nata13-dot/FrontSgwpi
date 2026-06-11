@@ -423,6 +423,11 @@
 
         // Cargar al iniciar
         document.addEventListener('DOMContentLoaded', () => {
+            const search = new URLSearchParams(window.location.search).get('q');
+            if (search) {
+                filters.buscar = search;
+                document.getElementById('searchInput').value = search;
+            }
             loadDocumentos(1);
         });
     </script>

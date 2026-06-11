@@ -529,14 +529,17 @@ if (!is_authenticated() || !is_admin()) {
         }
 
         function setRoomView(view) {
-            roomView = view;
-            document.getElementById('roomByRoomView').classList.toggle('d-none', view !== 'rooms');
-            document.getElementById('roomByProjectView').classList.toggle('d-none', view !== 'projects');
-            document.getElementById('roomByTeacherView').classList.toggle('d-none', view !== 'teachers');
-            document.getElementById('viewRoomsBtn').className = view === 'rooms' ? 'btn btn-primary' : 'btn btn-outline-secondary';
-            document.getElementById('viewProjectsBtn').className = view === 'projects' ? 'btn btn-primary' : 'btn btn-outline-secondary';
-            document.getElementById('viewTeachersBtn').className = view === 'teachers' ? 'btn btn-primary' : 'btn btn-outline-secondary';
-            renderCurrentView();
+            if (roomView === view) return;
+            SGPIViewTransition.run(() => {
+                roomView = view;
+                document.getElementById('roomByRoomView').classList.toggle('d-none', view !== 'rooms');
+                document.getElementById('roomByProjectView').classList.toggle('d-none', view !== 'projects');
+                document.getElementById('roomByTeacherView').classList.toggle('d-none', view !== 'teachers');
+                document.getElementById('viewRoomsBtn').className = view === 'rooms' ? 'btn btn-primary' : 'btn btn-outline-secondary';
+                document.getElementById('viewProjectsBtn').className = view === 'projects' ? 'btn btn-primary' : 'btn btn-outline-secondary';
+                document.getElementById('viewTeachersBtn').className = view === 'teachers' ? 'btn btn-primary' : 'btn btn-outline-secondary';
+                renderCurrentView();
+            });
         }
 
         function renderCurrentView() {

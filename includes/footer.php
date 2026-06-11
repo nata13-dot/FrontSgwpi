@@ -645,4 +645,6 @@ window.promptAdminAction = async function () {
         </div>
     </div>
 </footer>
+<script src="/assets/js/skeleton-loader.js"></script>
+<script src="/assets/js/view-transitions.js"></script>
 <script src="/assets/js/responsive.js"></script>

@@ -85,7 +85,7 @@ $section = isset($_GET['section']) ? $_GET['section'] : '';
         <img src="/assets/img/ITSSMT/ITSSMT.webp" alt="ITSSMT">
         <div>
             <strong>Gestión de Proyectos Integradores ITSSMT</strong>
-            <small>Versión BETA 2.0.0</small>
+            <small>Versión BETA 2.0.10</small>
         </div>
     </div>
 </nav>

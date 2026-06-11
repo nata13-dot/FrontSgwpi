@@ -99,7 +99,10 @@ async function loadDocuments(forceFresh = false) {
             api.get('/repositorio/evaluation-documents', forceFresh ? { _fresh: true } : {}),
             api.get('/repositorio/thesis-documents', forceFresh ? { _fresh: true } : {})
         ]);
-        state.projects = projectResponse.data || [];
+        state.projects = (projectResponse.data || []).filter(item => {
+            const semester = Number(item?.project?.semestre);
+            return Number.isInteger(semester) && semester >= 5 && semester <= 9;
+        });
         state.thesisDocs = thesisResponse.data?.data || thesisResponse.data || [];
         renderDocuments();
     } catch (error) {
@@ -112,7 +115,10 @@ function renderDocuments() {
 
     const currentUser = auth.getCurrentUser() || {};
     const canUploadThesis = Number(currentUser.perfil_id) === 3 && Number(currentUser.semestre) === 9;
-    const semesters = [...new Set(state.projects.map(item => Number(item.project.semestre)).filter(Boolean))].sort((a, b) => a - b);
+    const semesters = [...new Set(state.projects
+        .map(item => Number(item.project.semestre))
+        .filter(semester => Number.isInteger(semester) && semester >= 5 && semester <= 9))]
+        .sort((a, b) => a - b);
     const projectSection = semesters.length ? semesters.map(semester => `
         <div class="mb-4">
             <h4 class="mb-3">Semestre ${semester}</h4>
@@ -169,8 +175,11 @@ function renderDocuments() {
 }
 
 function setDocumentSection(section) {
-    state.section = section;
-    renderDocuments();
+    if (state.section === section) return;
+    SGPIViewTransition.run(() => {
+        state.section = section;
+        renderDocuments();
+    }, document.getElementById('documentsContainer'));
 }
 
 function renderEvaluationDelivery(project, type) {

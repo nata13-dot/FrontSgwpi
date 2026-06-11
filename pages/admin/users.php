@@ -1323,7 +1323,11 @@ if (!is_authenticated() || !is_admin()) {
                 </div>`;
         }
 
-        document.addEventListener('DOMContentLoaded', () => loadUsers());
+        document.addEventListener('DOMContentLoaded', () => {
+            const search = new URLSearchParams(window.location.search).get('q');
+            if (search) document.getElementById('userSearchInput').value = search;
+            loadUsers();
+        });
     </script>
 </body>
 </html>

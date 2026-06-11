@@ -61,6 +61,7 @@ if (!is_authenticated()) {
                             <option value="6">6 - Avance</option>
                             <option value="7">7 - Avance</option>
                             <option value="8">8 - Titulacion</option>
+                            <option value="9">9 - Titulacion</option>
                         </select>
                     </div>
                     <div class="col-md-8">
@@ -201,6 +202,7 @@ if (!is_authenticated()) {
                                     <option value="6">6 - Avance</option>
                                     <option value="7">7 - Avance</option>
                                     <option value="8">8 - Titulacion</option>
+                                    <option value="9">9 - Titulacion</option>
                                 </select>
                             </div>
                             <div class="col-md-4">
@@ -324,24 +326,27 @@ if (!is_authenticated()) {
         }
 
         function setProjectManagementView(view) {
-            projectManagementView = view;
-            document.getElementById('projectManagementView').classList.toggle('d-none', view !== 'projects');
-            document.getElementById('thesisManagementView').classList.toggle('d-none', view !== 'thesis');
-            document.getElementById('projectsPagination').classList.toggle('d-none', view !== 'projects');
-            document.getElementById('projectViewBtn').className = view === 'projects' ? 'btn btn-primary' : 'btn btn-outline-secondary';
-            document.getElementById('thesisViewBtn').className = view === 'thesis' ? 'btn btn-success' : 'btn btn-outline-secondary';
-            const newButton = document.getElementById('newProjectBtn');
-            if (newButton) {
-                newButton.innerHTML = view === 'thesis'
-                    ? '<i class="bi bi-plus-circle"></i> Nueva Tesis'
-                    : '<i class="bi bi-plus-circle"></i> Nuevo Proyecto';
-            }
-            const searchLabel = document.querySelector('label[for="projectSearchInput"]');
-            const searchInput = document.getElementById('projectSearchInput');
-            if (searchLabel) searchLabel.textContent = view === 'thesis' ? 'Buscar tesis' : 'Buscar proyecto';
-            if (searchInput) searchInput.placeholder = view === 'thesis'
-                ? 'Tesis, estudiante, asesor, empresa o año'
-                : 'Proyecto, estudiante, asesor, empresa o año';
+            if (projectManagementView === view) return;
+            SGPIViewTransition.run(() => {
+                projectManagementView = view;
+                document.getElementById('projectManagementView').classList.toggle('d-none', view !== 'projects');
+                document.getElementById('thesisManagementView').classList.toggle('d-none', view !== 'thesis');
+                document.getElementById('projectsPagination').classList.toggle('d-none', view !== 'projects');
+                document.getElementById('projectViewBtn').className = view === 'projects' ? 'btn btn-primary' : 'btn btn-outline-secondary';
+                document.getElementById('thesisViewBtn').className = view === 'thesis' ? 'btn btn-success' : 'btn btn-outline-secondary';
+                const newButton = document.getElementById('newProjectBtn');
+                if (newButton) {
+                    newButton.innerHTML = view === 'thesis'
+                        ? '<i class="bi bi-plus-circle"></i> Nueva Tesis'
+                        : '<i class="bi bi-plus-circle"></i> Nuevo Proyecto';
+                }
+                const searchLabel = document.querySelector('label[for="projectSearchInput"]');
+                const searchInput = document.getElementById('projectSearchInput');
+                if (searchLabel) searchLabel.textContent = view === 'thesis' ? 'Buscar tesis' : 'Buscar proyecto';
+                if (searchInput) searchInput.placeholder = view === 'thesis'
+                    ? 'Tesis, estudiante, asesor, empresa o año'
+                    : 'Proyecto, estudiante, asesor, empresa o año';
+            });
         }
 
         function renderThesisTable(projects) {
@@ -360,9 +365,9 @@ if (!is_authenticated()) {
                     const advisor = advisorByThesisRole(project, role.key);
                     return `<div><span class="badge bg-light text-dark border">${role.label}</span> ${escapeHtml(advisor ? advisorName(advisor) : 'Sin asignar')}</div>`;
                 }).join('');
-                const status = project.proposal_status
+                const status = project.is_proposal && project.proposal_status
                     ? `<span class="badge bg-info text-dark">${escapeHtml(project.proposal_status)}</span>`
-                    : '<span class="badge bg-secondary">Sin estado</span>';
+                    : '<span class="badge bg-secondary">Proyecto directo</span>';
 
                 return `
                     <tr>
@@ -687,14 +692,16 @@ if (!is_authenticated()) {
                 const project = await api.get(`/projects/${projectId}`);
                 const advisors = (project.advisors || []).map(advisor => `${escapeHtml(advisor.nombres || '')} ${escapeHtml(advisor.apa || '')} <span class="badge bg-secondary">${escapeHtml(thesisRoleLabel(advisor.pivot?.rol_asesor || ''))}</span>`).join('<br>') || '<span class="text-muted">Sin asesores</span>';
                 const subjects = (project.asignaturas || []).map(subject => `<span class="badge bg-primary me-1 mb-1">${escapeHtml(subject.nombre || subject.name || '')}</span>`).join('') || '<span class="text-muted">Sin asignaturas</span>';
-                const status = project.proposal_status ? `<span class="badge bg-info text-dark">${escapeHtml(project.proposal_status)}</span>` : '<span class="text-muted">Sin estado</span>';
+                const status = project.is_proposal && project.proposal_status
+                    ? `<span class="badge bg-info text-dark">${escapeHtml(project.proposal_status)}</span>`
+                    : '<span class="badge bg-secondary">Proyecto directo</span>';
 
                 Swal.fire({
                     title: escapeHtml(project.title),
                     html: `
                         <div class="text-start">
                             <p class="text-muted">${escapeHtml(project.description || 'Sin descripcion')}</p>
-                            <p><strong>Estado de propuesta:</strong> ${status}</p>
+                            <p><strong>Tipo de registro:</strong> ${status}</p>
                             <p><strong>Integrantes:</strong><br>${escapeHtml(projectActiveAuthors(project))}</p>
                             <p><strong>Grupo / carga:</strong><br>${escapeHtml(project.subject_group?.nombre || '-')}</p>
                             <p><strong>Asignaturas:</strong><br>${subjects}</p>
@@ -869,8 +876,10 @@ if (!is_authenticated()) {
         }
 
         document.addEventListener('DOMContentLoaded', async () => {
-            await loadProjects();
             const params = new URLSearchParams(window.location.search);
+            const search = params.get('q');
+            if (search) document.getElementById('projectSearchInput').value = search;
+            await loadProjects();
             if (params.get('edit') && auth.getCurrentUser()?.perfil_id === 1) openProjectModal(params.get('edit'));
             if (params.get('id')) showProjectDetails(params.get('id'));
         });

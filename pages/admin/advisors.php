@@ -239,16 +239,19 @@ if (!is_authenticated() || !is_admin()) {
         }
 
         function setAdvisorView(view) {
-            advisorView = view;
-            document.getElementById('projectAssignmentView').classList.toggle('d-none', view !== 'projects');
-            document.getElementById('thesisCommitteeView').classList.toggle('d-none', view !== 'thesis');
-            document.getElementById('teacherAdvisorView').classList.toggle('d-none', view !== 'teachers');
-            document.getElementById('viewByProjectBtn').className = view === 'projects' ? 'btn btn-primary' : 'btn btn-outline-secondary';
-            document.getElementById('viewThesisCommitteeBtn').className = view === 'thesis' ? 'btn btn-primary' : 'btn btn-outline-secondary';
-            document.getElementById('viewByTeacherBtn').className = view === 'teachers' ? 'btn btn-primary' : 'btn btn-outline-secondary';
-            document.getElementById('saveAllAdvisorsBtn').classList.toggle('d-none', view === 'teachers');
-            if (view === 'teachers') renderTeacherAdvisorView();
-            updateSaveAllButton();
+            if (advisorView === view) return;
+            SGPIViewTransition.run(() => {
+                advisorView = view;
+                document.getElementById('projectAssignmentView').classList.toggle('d-none', view !== 'projects');
+                document.getElementById('thesisCommitteeView').classList.toggle('d-none', view !== 'thesis');
+                document.getElementById('teacherAdvisorView').classList.toggle('d-none', view !== 'teachers');
+                document.getElementById('viewByProjectBtn').className = view === 'projects' ? 'btn btn-primary' : 'btn btn-outline-secondary';
+                document.getElementById('viewThesisCommitteeBtn').className = view === 'thesis' ? 'btn btn-primary' : 'btn btn-outline-secondary';
+                document.getElementById('viewByTeacherBtn').className = view === 'teachers' ? 'btn btn-primary' : 'btn btn-outline-secondary';
+                document.getElementById('saveAllAdvisorsBtn').classList.toggle('d-none', view === 'teachers');
+                if (view === 'teachers') renderTeacherAdvisorView();
+                updateSaveAllButton();
+            });
         }
 
         function teacherOptions(selectedId, blockedIds = []) {

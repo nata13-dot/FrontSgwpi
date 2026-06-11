@@ -192,6 +192,9 @@ class ApiClient {
             return result;
         };
 
+        document.dispatchEvent(new CustomEvent('sgpi:request-start', {
+            detail: { method, endpoint }
+        }));
         try {
             if (method === 'GET') {
                 const pendingRequest = executeRequest().finally(() => this.pending.delete(cacheKey));
@@ -211,6 +214,10 @@ class ApiClient {
             }
             console.error('Error en la solicitud:', error);
             throw error;
+        } finally {
+            document.dispatchEvent(new CustomEvent('sgpi:request-end', {
+                detail: { method, endpoint }
+            }));
         }
     }
 
