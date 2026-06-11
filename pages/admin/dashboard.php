@@ -26,35 +26,24 @@ if (!is_authenticated() || !is_admin()) {
 
         <div class="main-content flex-grow-1">
             <!-- Page Header -->
-            <div class="page-image-header" style="background: url('/assets/img/ITSSMT/fondochido2.webp'); background-size: cover; background-position: center; padding: 80px 0; position: relative;">
+            <div class="page-image-header dashboard-hero" style="background: url('/assets/img/ITSSMT/fondochido2.webp'); background-size: cover; background-position: center; position: relative;">
                 <div class="overlay"></div>
                 <div class="container-xl" style="position: relative; z-index: 1;">
-                    <!-- Logo y Título -->
-                    <div class="d-flex align-items-center gap-3 mb-2">
-                        <img src="/assets/img/ITSSMT/ITSSMT.webp" alt="ITSSMT" style="height: 50px;">
-                        <h1 class="display-4 fw-bold text-white mb-0">Panel de Administrador</h1>
-                    </div>
-                    
-                    <!-- Subtítulo -->
-                    <p class="text-white opacity-90 mb-3" style="font-size: 1.1rem;">
+                    <h1 class="display-4 fw-bold text-white mb-3">Panel Administrativo</h1>
+                    <p class="text-white opacity-90 mb-0 dashboard-hero-subtitle">
                         <strong>Bienvenido, <?= htmlspecialchars($current_user['nombres']) ?></strong> | Gestión integral del sistema
                     </p>
-                    
-                    <!-- Breadcrumb -->
-                    <nav aria-label="breadcrumb">
-                        <ol class="breadcrumb" style="background: rgba(255,255,255,0.15); border-radius: 5px; padding: 8px 12px; margin: 0;">
-                            <li class="breadcrumb-item"><a href="/index.php" class="text-white text-decoration-none">Inicio</a></li>
-                            <li class="breadcrumb-item active text-white opacity-75">Panel Administrativo</li>
-                        </ol>
-                    </nav>
+                    <span class="dashboard-hero-line"></span>
+                    <p class="dashboard-hero-tag">#OrgulloHalcón</p>
                 </div>
             </div>
 
     <!-- Stats Section -->
     <div class="container-xl mt-5 mb-5">
         <section class="dashboard-action-panel" aria-live="polite">
+            <span class="dashboard-action-icon"><i class="bi bi-person"></i><b>!</b></span>
             <div>
-                <div class="dashboard-action-kicker">Siguiente acción sugerida</div>
+                <div class="dashboard-action-kicker">Acción sugerida</div>
                 <div class="dashboard-action-title" id="adminNextActionTitle">Revisa la actividad del sistema</div>
                 <p class="dashboard-action-text" id="adminNextActionText">Cuando carguen los datos te mostraremos el punto que necesita más atención.</p>
             </div>
@@ -69,13 +58,13 @@ if (!is_authenticated() || !is_admin()) {
                 <a href="/pages/admin/users.php" class="text-decoration-none d-block dashboard-stat-link" aria-label="Ir a gestion de usuarios">
                     <div class="card dashboard-stat-card border-0 shadow-sm" style="cursor: pointer;">
                         <div class="card-body">
-                            <div class="d-flex justify-content-between align-items-start gap-3">
+                            <div class="dashboard-stat-layout">
+                                <span class="dashboard-stat-icon dashboard-stat-icon-users"><i class="bi bi-people"></i></span>
                                 <div>
                                     <div class="dashboard-stat-label">Total de usuarios</div>
                                     <div class="dashboard-stat-value mt-2" id="totalUsers">0</div>
                                     <div class="dashboard-stat-note mt-2"><span id="inactiveUsers">0</span> inactivos</div>
                                 </div>
-                                <span class="dashboard-stat-icon"><i class="bi bi-people"></i></span>
                             </div>
                         </div>
                     </div>
@@ -86,13 +75,13 @@ if (!is_authenticated() || !is_admin()) {
                 <a href="/pages/admin/users.php" class="text-decoration-none d-block dashboard-stat-link" aria-label="Ir a usuarios activos">
                     <div class="card dashboard-stat-card border-0 shadow-sm" style="cursor: pointer;">
                         <div class="card-body">
-                            <div class="d-flex justify-content-between align-items-start gap-3">
+                            <div class="dashboard-stat-layout">
+                                <span class="dashboard-stat-icon dashboard-stat-icon-active"><i class="bi bi-person-check"></i></span>
                                 <div class="w-100">
                                     <div class="dashboard-stat-label">Usuarios activos</div>
                                     <div class="dashboard-stat-value mt-2" id="activeUsers">0</div>
                                     <div class="dashboard-progress-track mt-3"><div class="dashboard-progress-fill" id="activeUsersProgress" style="width: 0%;"></div></div>
                                 </div>
-                                <span class="dashboard-stat-icon" style="color: #218838;"><i class="bi bi-check-circle"></i></span>
                             </div>
                         </div>
                     </div>
@@ -103,13 +92,14 @@ if (!is_authenticated() || !is_admin()) {
                 <a href="/pages/admin/projects.php" class="text-decoration-none d-block dashboard-stat-link" aria-label="Ir a gestion de proyectos">
                     <div class="card dashboard-stat-card border-0 shadow-sm" style="cursor: pointer;">
                         <div class="card-body">
-                            <div class="d-flex justify-content-between align-items-start gap-3">
+                            <div class="dashboard-stat-layout">
+                                <span class="dashboard-stat-icon dashboard-stat-icon-projects"><i class="bi bi-folder2-open"></i></span>
                                 <div>
                                     <div class="dashboard-stat-label">Proyectos</div>
                                     <div class="dashboard-stat-value mt-2" id="totalProjects">0</div>
                                     <div class="dashboard-stat-note mt-2"><span id="pendingProposals">0</span> propuestas pendientes</div>
                                 </div>
-                                <span class="dashboard-stat-icon"><i class="bi bi-folder2-open"></i></span>
+                                <i class="bi bi-chevron-right dashboard-stat-arrow"></i>
                             </div>
                         </div>
                     </div>
@@ -120,13 +110,14 @@ if (!is_authenticated() || !is_admin()) {
                 <a href="/pages/admin/asignaturas.php" class="text-decoration-none d-block dashboard-stat-link" aria-label="Ir a gestion de asignaturas">
                     <div class="card dashboard-stat-card border-0 shadow-sm" style="cursor: pointer;">
                         <div class="card-body">
-                            <div class="d-flex justify-content-between align-items-start gap-3">
+                            <div class="dashboard-stat-layout">
+                                <span class="dashboard-stat-icon dashboard-stat-icon-subjects"><i class="bi bi-mortarboard"></i></span>
                                 <div>
                                     <div class="dashboard-stat-label">Asignaturas</div>
                                     <div class="dashboard-stat-value mt-2" id="totalAsignaturas">0</div>
                                     <div class="dashboard-stat-note mt-2">Catálogo académico</div>
                                 </div>
-                                <span class="dashboard-stat-icon"><i class="bi bi-mortarboard"></i></span>
+                                <i class="bi bi-chevron-right dashboard-stat-arrow dashboard-stat-arrow-purple"></i>
                             </div>
                         </div>
                     </div>

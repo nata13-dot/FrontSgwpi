@@ -52,12 +52,67 @@
         document.documentElement.classList.toggle('is-mobile-layout', isMobile());
     }
 
+    function initSidebarShell() {
+        if (window.SGPI_SIDEBAR_READY) return;
+
+        const sidebar = document.getElementById('appSidebar');
+        if (!sidebar) return;
+
+        window.SGPI_SIDEBAR_READY = true;
+        const desktopQuery = window.matchMedia('(min-width: 769px)');
+        const toggleButtons = document.querySelectorAll('[data-sidebar-toggle]');
+
+        const expand = () => {
+            sidebar.classList.remove('sidebar-collapsed');
+            sidebar.classList.add('sidebar-expanded');
+            document.documentElement.classList.remove('sgpi-sidebar-collapsed');
+            localStorage.setItem('sgpi-sidebar-collapsed', '0');
+        };
+
+        const collapse = () => {
+            sidebar.classList.add('sidebar-collapsed');
+            sidebar.classList.remove('sidebar-expanded');
+            document.documentElement.classList.add('sgpi-sidebar-collapsed');
+            localStorage.setItem('sgpi-sidebar-collapsed', '1');
+        };
+
+        const sync = () => {
+            if (!desktopQuery.matches) {
+                sidebar.classList.remove('sidebar-collapsed', 'sidebar-expanded');
+                document.documentElement.classList.remove('sgpi-sidebar-collapsed');
+                return;
+            }
+
+            localStorage.getItem('sgpi-sidebar-collapsed') === '1' ? collapse() : expand();
+        };
+
+        toggleButtons.forEach(button => {
+            button.addEventListener('click', () => {
+                if (!desktopQuery.matches) {
+                    sidebar.classList.toggle('show');
+                    return;
+                }
+
+                sidebar.classList.contains('sidebar-collapsed') ? expand() : collapse();
+            });
+        });
+
+        if (desktopQuery.addEventListener) {
+            desktopQuery.addEventListener('change', sync);
+        } else {
+            desktopQuery.addListener(sync);
+        }
+
+        sync();
+    }
+
     function initResponsiveHelpers() {
         wrapTables();
         closeNavbarOnSelection();
         improveMobileDialogs();
         markWideContent();
         syncMobileClass();
+        initSidebarShell();
     }
 
     document.addEventListener('DOMContentLoaded', initResponsiveHelpers);

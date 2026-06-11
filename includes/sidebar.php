@@ -4,12 +4,21 @@ $section = isset($_GET['section']) ? $_GET['section'] : '';
 ?>
 
 <nav class="sidebar" id="appSidebar">
+    <a href="<?= htmlspecialchars(dashboard_url()) ?>" class="sidebar-brand">
+        <img src="/assets/img/ITSSMT/ITSSMT.webp" alt="ITSSMT">
+        <div>
+            <strong>Gestión de Proyectos</strong>
+            <strong>Integradores ITSSMT</strong>
+            <small>Sistema Institucional</small>
+        </div>
+    </a>
     <?php if (is_authenticated()): ?>
         <div class="sidebar-profile">
             <img src="<?= htmlspecialchars(profile_photo_url($current_user ?? null)) ?>" class="sidebar-profile-photo" alt="Perfil">
             <div>
                 <strong><?= htmlspecialchars($current_user['nombres'] ?? 'Usuario') ?></strong>
                 <small><?= is_admin() ? 'Administrador' : (is_teacher() ? 'Docente' : 'Estudiante') ?></small>
+                <span class="sidebar-online"><i></i> En línea</span>
             </div>
         </div>
     <?php endif; ?>
@@ -86,7 +95,10 @@ $section = isset($_GET['section']) ? $_GET['section'] : '';
         <img src="/assets/img/ITSSMT/ITSSMT.webp" alt="ITSSMT">
         <div>
             <strong>Gestión de Proyectos Integradores ITSSMT</strong>
-            <small>Versión BETA 2.0.10</small>
+            <small>Versión BETA 2.1.5</small>
         </div>
     </div>
+    <button type="button" class="sidebar-collapse-control" data-sidebar-toggle aria-label="Contraer menú lateral">
+        <i class="bi bi-chevron-double-left"></i>
+    </button>
 </nav>

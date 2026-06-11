@@ -83,9 +83,22 @@
         layer.setAttribute('aria-hidden', 'true');
         layer.innerHTML = `
             <div class="sgpi-page-transition-panel">
-                <span class="sgpi-page-transition-mark"><i class="bi bi-grid-3x3-gap-fill"></i></span>
+                <span class="sgpi-page-transition-mark">
+                    <span class="sgpi-page-transition-orbit sgpi-page-transition-orbit-outer"></span>
+                    <span class="sgpi-page-transition-orbit sgpi-page-transition-orbit-inner"></span>
+                    <span class="sgpi-page-transition-logo">
+                        <img src="/assets/img/ITSSMT/ITSSMT.webp" alt="">
+                    </span>
+                    <i class="sgpi-page-transition-spark sgpi-page-transition-spark-one"></i>
+                    <i class="sgpi-page-transition-spark sgpi-page-transition-spark-two"></i>
+                    <i class="sgpi-page-transition-spark sgpi-page-transition-spark-three"></i>
+                </span>
                 <div class="sgpi-page-transition-copy">
-                    <span></span><span></span><span></span>
+                    <span class="sgpi-page-transition-eyebrow">SGPI · ITSSMT</span>
+                    <strong>Preparando tu espacio</strong>
+                    <small>Cargando información y herramientas del sistema</small>
+                    <span class="sgpi-page-transition-progress"><i></i></span>
+                    <span class="sgpi-page-transition-dots"><i></i><i></i><i></i></span>
                 </div>
             </div>`;
         document.body.appendChild(layer);
