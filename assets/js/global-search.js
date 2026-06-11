@@ -28,6 +28,7 @@
             item('Evaluaciones', 'Gestionar evaluaciones y salas', '/pages/admin/evaluations.php', 'bi-clipboard-check', ['rubricas', 'salas', 'calificaciones']),
             item('Evaluaciones archivadas', 'Consultar evaluaciones finalizadas', '/pages/admin/evaluations-archived.php', 'bi-archive-fill', ['historial', 'archivadas']),
             item('Asignaturas', 'Gestionar asignaturas, cargas y competencias', '/pages/admin/asignaturas.php', 'bi-book', ['materias', 'competencias', 'carga academica']),
+            item('Semestres y periodos', 'Gestionar ciclos, promociones y presentaciones especiales', '/pages/admin/semesters.php', 'bi-calendar3', ['periodos', 'promocion', 'cambio de semestre', 'excepciones']),
             item('Competencias', 'Ir a la gestión de competencias', '/pages/admin/asignaturas.php#competencias', 'bi-star', ['criterios academicos']),
             item('Etiquetas', 'Administrar etiquetas de documentos', '/pages/admin/document-tags.php', 'bi-tags', ['colores', 'categorias']),
             item('Avisos', 'Crear y administrar avisos del sistema', '/pages/admin/notices.php', 'bi-megaphone', ['notificaciones', 'anuncios', 'mensajes']),

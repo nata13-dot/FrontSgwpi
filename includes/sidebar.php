@@ -30,10 +30,11 @@ $section = isset($_GET['section']) ? $_GET['section'] : '';
             <a href="/pages/admin/evaluations-archived.php" class="sidebar-item sidebar-subitem <?= $current_page == 'evaluations-archived.php' ? 'active' : '' ?>"><i class="bi bi-archive"></i><span>Evaluaciones archivadas</span></a>
             <a href="/pages/evaluation-documents.php" class="sidebar-item sidebar-subitem <?= $current_page == 'evaluation-documents.php' ? 'active' : '' ?>"><i class="bi bi-file-earmark-ppt"></i><span>Documentos de evaluación</span></a>
         </details>
-        <details class="sidebar-group" <?= in_array($current_page, ['asignaturas.php']) ? 'open' : '' ?>>
+        <details class="sidebar-group" <?= in_array($current_page, ['asignaturas.php', 'semesters.php']) ? 'open' : '' ?>>
             <summary><i class="bi bi-book"></i><span>Académico</span><i class="bi bi-chevron-down ms-auto"></i></summary>
             <a href="/pages/admin/asignaturas.php" class="sidebar-item sidebar-subitem <?= $current_page == 'asignaturas.php' ? 'active' : '' ?>"><i class="bi bi-journal-bookmark"></i><span>Asignaturas</span></a>
             <a href="/pages/admin/asignaturas.php#competencias" class="sidebar-item sidebar-subitem"><i class="bi bi-star"></i><span>Competencias</span></a>
+            <a href="/pages/admin/semesters.php" class="sidebar-item sidebar-subitem <?= $current_page == 'semesters.php' ? 'active' : '' ?>"><i class="bi bi-calendar3"></i><span>Semestres y periodos</span></a>
         </details>
         <details class="sidebar-group" <?= in_array($current_page, ['document-tags.php', 'notices.php', 'settings.php', 'repositorio.php']) ? 'open' : '' ?>>
             <summary><i class="bi bi-sliders"></i><span>Sistema</span><i class="bi bi-chevron-down ms-auto"></i></summary>

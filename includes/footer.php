@@ -8,8 +8,9 @@ window.SGPI_SESSION = <?= json_encode([
     'user' => $current_user,
     'remember' => $auth_remember
 ], JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES) ?>;
-window.SGPI_SETTINGS_SYNC_INTERVAL = window.SGPI_SETTINGS_SYNC_INTERVAL || 5000;
+window.SGPI_SETTINGS_SYNC_INTERVAL = window.SGPI_SETTINGS_SYNC_INTERVAL || 60000;
 window.SGPI_SETTINGS_SIGNATURE = null;
+window.SGPI_SETTINGS_LAST_SYNC = 0;
 
 async function loadPublicSettings(options = {}) {
     const force = Boolean(options.force);
@@ -28,6 +29,7 @@ async function loadPublicSettings(options = {}) {
         if (signature === window.SGPI_SETTINGS_SIGNATURE) return;
         window.SGPI_SETTINGS = settings;
         window.SGPI_SETTINGS_SIGNATURE = signature;
+        window.SGPI_SETTINGS_LAST_SYNC = Date.now();
         applySystemSettings(window.SGPI_SETTINGS);
     } catch (error) {
         console.warn('No se pudieron cargar los ajustes generales', error);
@@ -127,9 +129,14 @@ function startSystemSettingsSync() {
         loadPublicSettings({ force: true });
     });
 
-    window.addEventListener('focus', () => loadPublicSettings({ force: true }), { passive: true });
+    const refreshIfStale = () => {
+        if (Date.now() - window.SGPI_SETTINGS_LAST_SYNC >= window.SGPI_SETTINGS_SYNC_INTERVAL) {
+            loadPublicSettings({ force: true });
+        }
+    };
+    window.addEventListener('focus', refreshIfStale, { passive: true });
     document.addEventListener('visibilitychange', () => {
-        if (!document.hidden) loadPublicSettings({ force: true });
+        if (!document.hidden) refreshIfStale();
     });
 
     setInterval(() => {

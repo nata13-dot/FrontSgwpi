@@ -5,7 +5,7 @@ $home_url = is_authenticated() ? dashboard_url() : '/index.php';
 $management_pages = [
     'users.php', 'advisors.php', 'projects.php', 'project-create.php', 'project-edit.php',
     'proposal-config.php', 'deliverables.php', 'evaluations.php', 'asignaturas.php',
-    'document-tags.php', 'notices.php', 'settings.php', 'my-projects.php',
+    'document-tags.php', 'notices.php', 'settings.php', 'semesters.php', 'my-projects.php',
     'proposal-review.php', 'proposal-register.php', 'my-deliverables.php', 'evaluation-documents.php', 'repositorio.php'
 ];
 ?>
@@ -79,6 +79,7 @@ $management_pages = [
                                     <div>
                                         <h6 class="dropdown-header">Académico</h6>
                                         <a class="dropdown-item <?= $current_page == 'asignaturas.php' ? 'active' : '' ?>" href="/pages/admin/asignaturas.php"><i class="bi bi-book"></i> Asignaturas, cargas y competencias</a>
+                                        <a class="dropdown-item <?= $current_page == 'semesters.php' ? 'active' : '' ?>" href="/pages/admin/semesters.php"><i class="bi bi-calendar3"></i> Semestres y periodos</a>
                                     </div>
                                     <div>
                                         <h6 class="dropdown-header">Sistema</h6>

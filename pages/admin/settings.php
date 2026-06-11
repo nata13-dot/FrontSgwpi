@@ -26,7 +26,7 @@ if (!is_authenticated() || !is_admin()) {
             <div class="d-flex flex-wrap justify-content-between align-items-center gap-3 mb-4">
                 <div>
                     <h1 class="mb-1">Ajustes Generales</h1>
-                    <p class="text-muted mb-0">Configura reglas globales, apariencia y ciclos academicos.</p>
+                    <p class="text-muted mb-0">Configura reglas globales, seguridad y apariencia.</p>
                 </div>
                 <button class="btn btn-outline-primary" onclick="loadSettings()"><i class="bi bi-arrow-clockwise"></i></button>
             </div>
@@ -34,7 +34,7 @@ if (!is_authenticated() || !is_admin()) {
             <div id="alertContainer"></div>
 
             <div class="row g-4">
-                <div class="col-xl-7">
+                <div class="col-12">
                     <form class="card border-0 shadow-sm" id="settingsForm">
                         <div class="card-header">
                             <h5 class="mb-0"><i class="bi bi-sliders"></i> Configuracion del sistema</h5>
@@ -55,11 +55,6 @@ if (!is_authenticated() || !is_admin()) {
                                         <option value="light">Claro</option>
                                         <option value="dark">Oscuro</option>
                                     </select>
-                                </div>
-                                <div class="col-md-6">
-                                    <label class="form-label" for="active_academic_period">Periodo academico activo</label>
-                                    <select class="form-select" id="active_academic_period" onchange="applyAcademicPeriodSelection()" required></select>
-                                    <div class="form-text" id="academicPeriodSummary"></div>
                                 </div>
                                 <div class="col-md-6">
                                     <label class="form-label" for="font_scale">Tamaño de fuente general</label>
@@ -115,69 +110,6 @@ if (!is_authenticated() || !is_admin()) {
                     </form>
                 </div>
 
-                <div class="col-xl-5">
-                    <div class="card border-0 shadow-sm">
-                        <div class="card-header">
-                            <h5 class="mb-0"><i class="bi bi-arrow-up-right-circle"></i> Cambio de semestre</h5>
-                        </div>
-                        <div class="card-body">
-                            <div class="alert alert-warning">
-                                <i class="bi bi-exclamation-triangle"></i>
-                                Este proceso actualiza el semestre de alumnos activos. Agrega excepciones para alumnos que deban quedarse o moverse a otro semestre.
-                            </div>
-                            <div class="row g-3">
-                                <div class="col-md-6">
-                                    <label class="form-label" for="fromSemester">Semestre origen</label>
-                                    <select class="form-select" id="fromSemester" onchange="loadSemesterGroups('from')">
-                                        <option value="5">5</option>
-                                        <option value="6">6</option>
-                                        <option value="7">7</option>
-                                        <option value="8">8</option>
-                                        <option value="9">9</option>
-                                    </select>
-                                </div>
-                                <div class="col-md-6">
-                                    <label class="form-label" for="fromGroup">Grupo origen</label>
-                                    <select class="form-select" id="fromGroup">
-                                        <option value="">Todos</option>
-                                    </select>
-                                </div>
-                                <div class="col-md-6">
-                                    <label class="form-label" for="toSemester">Semestre destino</label>
-                                    <select class="form-select" id="toSemester" onchange="loadSemesterGroups('to')">
-                                        <option value="6">6</option>
-                                        <option value="7">7</option>
-                                        <option value="8">8</option>
-                                        <option value="9">9</option>
-                                        <option value="5">5</option>
-                                    </select>
-                                </div>
-                                <div class="col-md-6">
-                                    <label class="form-label" for="toGroup">Grupo destino</label>
-                                    <select class="form-select" id="toGroup">
-                                        <option value="">Conservar grupo actual</option>
-                                    </select>
-                                </div>
-                                <div class="col-12">
-                                    <div class="form-check">
-                                        <input class="form-check-input" type="checkbox" id="updateSubjectGroups">
-                                        <label class="form-check-label" for="updateSubjectGroups">Actualizar tambien las cargas/grupos del semestre origen</label>
-                                    </div>
-                                </div>
-                                <div class="col-12 d-grid">
-                                    <button class="btn btn-outline-primary" onclick="loadSemesterPreview()"><i class="bi bi-search"></i> Cargar alumnos</button>
-                                </div>
-                            </div>
-
-                            <div class="mt-4" id="semesterPreviewBox">
-                                <p class="text-muted mb-0">Carga un semestre para preparar excepciones.</p>
-                            </div>
-                        </div>
-                        <div class="card-footer text-end">
-                            <button class="btn btn-warning" onclick="applySemesterChange()"><i class="bi bi-check2-circle"></i> Aplicar cambio</button>
-                        </div>
-                    </div>
-                </div>
             </div>
         </div>
     </main>
@@ -189,9 +121,6 @@ if (!is_authenticated() || !is_admin()) {
 <script src="/assets/js/api.js"></script>
 <script src="/assets/js/app.js"></script>
 <script>
-let semesterStudents = [];
-let academicPeriodOptions = [];
-
 function esc(value) {
     return String(value ?? '').replace(/[&<>'"]/g, char => ({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'}[char]));
 }
@@ -203,15 +132,9 @@ function previewGrayscaleMode() {
 async function loadSettings() {
     try {
         const settings = await api.get('/settings');
-        academicPeriodOptions = settings.academic_period_options || [];
-        const periodSelect = document.getElementById('active_academic_period');
-        periodSelect.innerHTML = academicPeriodOptions.map(period => `
-            <option value="${esc(period.code)}">${esc(period.label)} (${period.semesters.join(' y ')})</option>
-        `).join('');
-        ['session_timeout_minutes', 'default_theme', 'active_academic_period', 'font_scale', 'max_file_size_mb', 'max_project_members', 'global_notice'].forEach(id => {
+        ['session_timeout_minutes', 'default_theme', 'font_scale', 'max_file_size_mb', 'max_project_members', 'global_notice'].forEach(id => {
             document.getElementById(id).value = settings[id] ?? '';
         });
-        applyAcademicPeriodSelection();
         document.getElementById('proposal_registration_enabled').checked = Boolean(settings.proposal_registration_enabled);
         document.getElementById('grayscale_mode').checked = Boolean(settings.grayscale_mode);
         previewGrayscaleMode();
@@ -223,37 +146,12 @@ async function loadSettings() {
     }
 }
 
-function replaceSemesterOptions(selectId, semesters, emptyLabel = null) {
-    const select = document.getElementById(selectId);
-    const previous = Number(select.value);
-    select.innerHTML = (emptyLabel ? `<option value="">${emptyLabel}</option>` : '') +
-        semesters.map(semester => `<option value="${semester}">${semester}</option>`).join('');
-    if (semesters.includes(previous)) select.value = String(previous);
-}
-
-function applyAcademicPeriodSelection() {
-    const code = document.getElementById('active_academic_period').value;
-    const selected = academicPeriodOptions.find(period => period.code === code);
-    if (!selected) return;
-
-    const destinationSemesters = selected.half === 1 ? [5, 7, 9] : [6, 8];
-    document.getElementById('academicPeriodSummary').textContent =
-        `Semestres activos: ${selected.semesters.join(', ')}. Siguiente periodo: ${destinationSemesters.join(', ')}.`;
-    replaceSemesterOptions('fromSemester', selected.semesters);
-    replaceSemesterOptions('toSemester', destinationSemesters);
-    semesterStudents = [];
-    document.getElementById('semesterPreviewBox').innerHTML = '<p class="text-muted mb-0">Carga un semestre para preparar excepciones.</p>';
-    loadSemesterGroups('from');
-    loadSemesterGroups('to');
-}
-
 document.getElementById('settingsForm').addEventListener('submit', async event => {
     event.preventDefault();
     const allowed = [...document.querySelectorAll('.allowed-file-type:checked')].map(input => input.value);
     const payload = {
         session_timeout_minutes: Number(document.getElementById('session_timeout_minutes').value),
         default_theme: document.getElementById('default_theme').value,
-        active_academic_period: document.getElementById('active_academic_period').value,
         font_scale: Number(document.getElementById('font_scale').value),
         max_file_size_mb: Number(document.getElementById('max_file_size_mb').value),
         allowed_file_types: allowed,
@@ -279,101 +177,7 @@ document.getElementById('settingsForm').addEventListener('submit', async event =
     }
 });
 
-async function loadSemesterPreview() {
-    const fromSemester = document.getElementById('fromSemester').value;
-    const fromGroup = document.getElementById('fromGroup').value;
-    const box = document.getElementById('semesterPreviewBox');
-    box.innerHTML = '<div class="text-center py-3"><div class="spinner-border" role="status"></div></div>';
-
-    try {
-        const params = { from_semester: fromSemester };
-        if (fromGroup) params.from_group = fromGroup;
-        const response = await api.get('/settings/semester-preview', params);
-        semesterStudents = response.students || [];
-        if (!semesterStudents.length) {
-            box.innerHTML = '<p class="text-muted mb-0">No hay alumnos activos en ese semestre.</p>';
-            return;
-        }
-
-        const destinationSemesters = [...document.getElementById('toSemester').options].map(option => Number(option.value));
-        box.innerHTML = `
-            <div class="table-responsive" style="max-height: 360px;">
-                <table class="table table-sm align-middle">
-                    <thead><tr><th>Alumno</th><th>Grupo</th><th>Excepcion</th></tr></thead>
-                    <tbody>
-                        ${semesterStudents.map(student => `
-                            <tr>
-                                <td>
-                                    <strong>${esc(student.id)}</strong>
-                                    <div class="small text-muted">${esc([student.nombres, student.apa, student.ama].filter(Boolean).join(' '))}</div>
-                                </td>
-                                <td>${esc(student.grupo || '-')}</td>
-                                <td>
-                                    <select class="form-select form-select-sm semester-exception" data-user-id="${esc(student.id)}">
-                                        <option value="">Sin excepcion</option>
-                                        ${destinationSemesters.map(semester => `<option value="${semester}">Enviar a ${semester}</option>`).join('')}
-                                    </select>
-                                </td>
-                            </tr>`).join('')}
-                    </tbody>
-                </table>
-            </div>`;
-    } catch (error) {
-        box.innerHTML = '<p class="text-danger mb-0">Error cargando alumnos.</p>';
-    }
-}
-
-async function applySemesterChange() {
-    if (!semesterStudents.length) {
-        showAlert('#alertContainer', 'danger', 'Primero carga los alumnos del semestre origen.');
-        return;
-    }
-
-    const confirmed = await confirmAction({
-        title: 'Aplicar cambio de semestre',
-        text: 'Esta accion modificara el semestre de los alumnos seleccionados. Revisa las excepciones antes de continuar.',
-        confirmButtonText: 'Si, aplicar'
-    });
-    if (!confirmed) return;
-
-    const exceptions = [...document.querySelectorAll('.semester-exception')]
-        .filter(select => select.value)
-        .map(select => ({ user_id: select.dataset.userId, semester: Number(select.value) }));
-
-    try {
-        const response = await api.post('/settings/apply-semester-change', {
-            from_semester: Number(document.getElementById('fromSemester').value),
-            from_group: document.getElementById('fromGroup').value || null,
-            to_semester: Number(document.getElementById('toSemester').value),
-            to_group: document.getElementById('toGroup').value || null,
-            update_subject_groups: document.getElementById('updateSubjectGroups').checked,
-            exceptions
-        });
-
-        const s = response.summary;
-        showAlert('#alertContainer', 'success', `${response.message}. Alumnos revisados: ${s.students_reviewed}, actualizados: ${s.students_updated}, excepciones: ${s.exceptions_applied}, cargas/grupos: ${s.subject_groups_updated}.`, 9000);
-        semesterStudents = [];
-        document.getElementById('semesterPreviewBox').innerHTML = '<p class="text-muted mb-0">Cambio aplicado. Vuelve a cargar para preparar otro movimiento.</p>';
-    } catch (error) {
-        showAlert('#alertContainer', 'danger', error.message || 'Error aplicando cambio de semestre');
-    }
-}
-
 document.addEventListener('DOMContentLoaded', loadSettings);
-async function loadSemesterGroups(kind) {
-    const semester = document.getElementById(kind === 'from' ? 'fromSemester' : 'toSemester').value;
-    const select = document.getElementById(kind === 'from' ? 'fromGroup' : 'toGroup');
-    select.innerHTML = kind === 'from' ? '<option value="">Todos</option>' : '<option value="">Conservar grupo actual</option>';
-    const groups = await api.get('/subject-groups', { semestre: semester, _cache_ttl: 60000 });
-    groups.forEach(group => {
-        select.innerHTML += `<option value="${esc(group.grupo)}">${esc(group.semestre)} ${esc(group.grupo)} - ${esc(group.nombre)}</option>`;
-    });
-}
-
-document.addEventListener('DOMContentLoaded', () => {
-    loadSemesterGroups('from');
-    loadSemesterGroups('to');
-});
 </script>
 </body>
 </html>

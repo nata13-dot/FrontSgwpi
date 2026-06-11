@@ -448,6 +448,10 @@ $is_archived_view = basename($_SERVER['PHP_SELF']) === 'evaluations-archived.php
             return String(value ?? '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#039;');
         }
 
+        function projectSemester(project) {
+            return Number(project?.presentation_semester ?? project?.semestre ?? 0);
+        }
+
         function fullName(user) {
             return [user?.nombres, user?.apa, user?.ama].filter(Boolean).join(' ') || user?.id || '';
         }
@@ -710,7 +714,7 @@ $is_archived_view = basename($_SERVER['PHP_SELF']) === 'evaluations-archived.php
                 const option = `<option value="${project.id}">${escapeHtml(project.title)}</option>`;
                 projectFilter.innerHTML += option;
                 projectSelect.innerHTML += option;
-                if (rubricProjectSelect && Number(project.semestre) === 8) rubricProjectSelect.innerHTML += option;
+                if (rubricProjectSelect && projectSemester(project) === 8) rubricProjectSelect.innerHTML += option;
             });
             renderRoomOptions();
         }

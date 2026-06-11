@@ -397,6 +397,10 @@ if (!is_authenticated() || !is_admin()) {
             return String(value ?? '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#039;');
         }
 
+        function projectSemester(project) {
+            return Number(project?.presentation_semester ?? project?.semestre ?? 0);
+        }
+
         function fullName(user) {
             return [user?.nombres, user?.apa, user?.ama, user?.apellido_paterno, user?.apellido_materno].filter(Boolean).join(' ') || user?.id || '';
         }
@@ -490,7 +494,7 @@ if (!is_authenticated() || !is_admin()) {
             const semester = currentSemesterFilter();
             const search = searchText();
             return projects.filter(project => {
-                if (semester && String(project.semestre) !== String(semester)) return false;
+                if (semester && String(projectSemester(project)) !== String(semester)) return false;
                 if (!search) return true;
                 const currentRoom = roomForProject(project.id);
                 const haystack = `${project.title} ${projectActiveAuthors(project)} ${projectCompany(project)} ${currentRoom?.nombre || ''}`.toLowerCase();
@@ -605,7 +609,7 @@ if (!is_authenticated() || !is_admin()) {
             const rows = filteredProjects();
             document.getElementById('projectRoomTable').innerHTML = rows.map(project => {
                 const currentRoom = roomForProject(project.id);
-                const availableRooms = rooms.filter(room => String(room.semestre) === String(project.semestre));
+                const availableRooms = rooms.filter(room => String(room.semestre) === String(projectSemester(project)));
                 const currentOrder = currentRoom ? (orderedRoomProjects(currentRoom).find(item => Number(item.id) === Number(project.id))?.presentation_order || '') : '';
                 return `
                     <tr>
@@ -613,7 +617,7 @@ if (!is_authenticated() || !is_admin()) {
                             <strong>${escapeHtml(project.title)}</strong>
                             <div class="small text-muted">${escapeHtml(projectActiveAuthors(project) || 'Sin integrantes registrados')}</div>
                         </td>
-                        <td>${escapeHtml(project.semestre || '-')}</td>
+                        <td>${escapeHtml(projectSemester(project) || '-')}</td>
                         <td>${currentRoom ? `<span class="badge bg-primary">${escapeHtml(currentRoom.nombre)}</span><div class="small text-muted">${escapeHtml(currentRoom.salon || '')}</div>` : '<span class="text-muted">Sin sala</span>'}</td>
                         <td>
                             <select class="form-select form-select-sm" id="projectRoom${project.id}">
@@ -767,7 +771,7 @@ if (!is_authenticated() || !is_admin()) {
             const currentRoomId = Number(document.getElementById('roomId').value || 0);
             roomProjects = projects.filter(project => {
                 const assignedRoomId = Number(project.assigned_room_id || 0);
-                return String(project.semestre || '') === String(semester)
+                return String(projectSemester(project) || '') === String(semester)
                     && (!assignedRoomId || assignedRoomId === currentRoomId);
             });
             const selectedIds = selected.map(Number);

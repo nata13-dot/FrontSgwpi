@@ -3780,6 +3780,68 @@ html.sgpi-page-entering.sgpi-page-entered .sgpi-page-transition {
     transition-delay: 80ms;
 }
 
+/* Gestion de semestres */
+.semester-stat-icon {
+    align-items: center;
+    background: rgba(27, 57, 106, 0.1);
+    border-radius: 13px;
+    color: var(--primary-blue);
+    display: inline-flex;
+    font-size: 1.25rem;
+    height: 48px;
+    justify-content: center;
+    width: 48px;
+}
+
+.semester-movement {
+    align-items: center;
+    background: var(--soft-bg);
+    border: 1px solid var(--border-color);
+    border-radius: 12px;
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 10px;
+    padding: 14px 16px;
+}
+
+.semester-search-results {
+    background: var(--surface-bg);
+    border: 1px solid var(--border-color);
+    border-radius: 10px;
+    box-shadow: 0 12px 26px rgba(15, 35, 65, 0.12);
+    max-height: 270px;
+    overflow-y: auto;
+}
+
+.semester-search-results:empty {
+    display: none;
+}
+
+.semester-search-result {
+    background: transparent;
+    border: 0;
+    border-bottom: 1px solid var(--border-color);
+    color: var(--text-dark);
+    display: block;
+    padding: 11px 13px;
+    text-align: left;
+    width: 100%;
+}
+
+.semester-search-result:last-child {
+    border-bottom: 0;
+}
+
+.semester-search-result:hover {
+    background: rgba(27, 57, 106, 0.07);
+}
+
+.semester-search-result small {
+    color: var(--text-muted);
+    display: block;
+    margin-top: 2px;
+}
+
 ::view-transition-old(root) {
     animation: sgpi-view-out 110ms ease-out both;
 }

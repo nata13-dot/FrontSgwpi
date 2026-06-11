@@ -29,6 +29,7 @@ class ApiClient {
             '/projects',
             '/notices',
             '/settings',
+            '/semester-management',
             '/profile',
             '/users'
         ];
@@ -39,6 +40,7 @@ class ApiClient {
             { pattern: /^\/student\/evaluation-schedule$/, ttl: 30000 },
             { pattern: /^\/settings\/public$/, ttl: 300000 },
             { pattern: /^\/settings$/, ttl: 60000 },
+            { pattern: /^\/semester-management$/, ttl: 45000 },
             { pattern: /^\/proposal\/config$/, ttl: 30000 }
         ];
     }
@@ -336,7 +338,7 @@ class ApiClient {
         const preferredKeys = [
             'user', 'project', 'deliverable', 'evaluation', 'room', 'group',
             'asignatura', 'competencia', 'tag', 'document', 'notice',
-            'exception', 'assignment', 'window', 'criterion'
+            'exception', 'assignment', 'window', 'criterion', 'period'
         ];
         for (const key of preferredKeys) {
             if (result?.[key] && typeof result[key] === 'object' && !Array.isArray(result[key])) {
