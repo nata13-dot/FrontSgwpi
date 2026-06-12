@@ -23,12 +23,12 @@ if (!is_authenticated() || !is_admin()) {
         <?php require_once $_SERVER['DOCUMENT_ROOT'] . '/includes/sidebar.php'; ?>
         <div class="main-content flex-grow-1">
             <div class="container-xl mt-5 mb-5">
-                <div class="d-flex align-items-center justify-content-between mb-4">
+                <div class="d-flex align-items-center justify-content-between mb-3">
                     <div>
                         <h1 class="mb-1">Gestion de Usuarios</h1>
                         <p class="text-muted mb-0" id="statusDescription">Mostrando perfiles activos</p>
                     </div>
-                    <div class="d-flex gap-2">
+                    <div class="d-flex gap-2 users-desktop-actions">
                         <button type="button" class="btn btn-outline-primary" onclick="downloadUsersExcelTemplate()">
                             <i class="bi bi-file-earmark-spreadsheet"></i> Plantilla Excel
                         </button>
@@ -44,17 +44,57 @@ if (!is_authenticated() || !is_admin()) {
                     </div>
                 </div>
 
-                <div class="d-flex flex-wrap gap-2 mb-3" role="group" aria-label="Filtro de estado de usuarios">
-                    <button type="button" class="btn btn-primary" id="filterActive" onclick="setStatusFilter('active')"><i class="bi bi-check-circle"></i> Activos</button>
-                    <button type="button" class="btn btn-outline-secondary" id="filterInactive" onclick="setStatusFilter('inactive')"><i class="bi bi-pause-circle"></i> Inactivos</button>
-                    <button type="button" class="btn btn-outline-secondary" id="filterAll" onclick="setStatusFilter('all')"><i class="bi bi-list-ul"></i> Todos</button>
-                </div>
+                <button
+                    type="button"
+                    class="users-mobile-options-toggle"
+                    id="usersMobileOptionsToggle"
+                    aria-controls="usersMobileOptions"
+                    aria-expanded="false"
+                >
+                    <span>
+                        <i class="bi bi-sliders"></i>
+                        <span>
+                            <strong>Opciones y filtros</strong>
+                            <small id="usersMobileFilterSummary">Activos · Todos los perfiles</small>
+                        </span>
+                    </span>
+                    <i class="bi bi-chevron-down users-mobile-options-chevron" aria-hidden="true"></i>
+                </button>
 
-                <div class="d-flex flex-wrap gap-2 mb-3" role="group" aria-label="Filtro de perfil de usuarios">
-                    <button type="button" class="btn btn-primary" id="profileAll" onclick="setProfileFilter('all')"><i class="bi bi-list-ul"></i> Todos los perfiles</button>
-                    <button type="button" class="btn btn-outline-secondary" id="profileStudents" onclick="setProfileFilter('3')"><i class="bi bi-mortarboard"></i> Estudiantes</button>
-                    <button type="button" class="btn btn-outline-secondary" id="profileTeachers" onclick="setProfileFilter('2')"><i class="bi bi-person-workspace"></i> Docentes</button>
-                    <button type="button" class="btn btn-outline-secondary" id="profileAdmins" onclick="setProfileFilter('1')"><i class="bi bi-shield-lock"></i> Administrativos</button>
+                <div class="users-mobile-options" id="usersMobileOptions">
+                    <div class="users-mobile-actions">
+                        <button type="button" class="btn btn-outline-primary" onclick="downloadUsersExcelTemplate()">
+                            <i class="bi bi-file-earmark-spreadsheet"></i> Plantilla Excel
+                        </button>
+                        <button type="button" class="btn btn-outline-success" onclick="openUsersImportModal()">
+                            <i class="bi bi-upload"></i> Cargar Excel
+                        </button>
+                        <button type="button" class="btn btn-outline-warning" onclick="openCredentialEmailModal()">
+                            <i class="bi bi-envelope-lock"></i> Credenciales
+                        </button>
+                        <button type="button" class="btn btn-primary" onclick="openUserModal()">
+                            <i class="bi bi-plus-circle"></i> Nuevo Usuario
+                        </button>
+                    </div>
+
+                    <div class="users-filter-section">
+                        <span class="users-filter-label">Estado</span>
+                        <div class="d-flex flex-wrap gap-2" role="group" aria-label="Filtro de estado de usuarios">
+                            <button type="button" class="btn btn-primary" id="filterActive" onclick="setStatusFilter('active')"><i class="bi bi-check-circle"></i> Activos</button>
+                            <button type="button" class="btn btn-outline-secondary" id="filterInactive" onclick="setStatusFilter('inactive')"><i class="bi bi-pause-circle"></i> Inactivos</button>
+                            <button type="button" class="btn btn-outline-secondary" id="filterAll" onclick="setStatusFilter('all')"><i class="bi bi-list-ul"></i> Todos</button>
+                        </div>
+                    </div>
+
+                    <div class="users-filter-section">
+                        <span class="users-filter-label">Perfil</span>
+                        <div class="d-flex flex-wrap gap-2" role="group" aria-label="Filtro de perfil de usuarios">
+                            <button type="button" class="btn btn-primary" id="profileAll" onclick="setProfileFilter('all')"><i class="bi bi-list-ul"></i> Todos los perfiles</button>
+                            <button type="button" class="btn btn-outline-secondary" id="profileStudents" onclick="setProfileFilter('3')"><i class="bi bi-mortarboard"></i> Estudiantes</button>
+                            <button type="button" class="btn btn-outline-secondary" id="profileTeachers" onclick="setProfileFilter('2')"><i class="bi bi-person-workspace"></i> Docentes</button>
+                            <button type="button" class="btn btn-outline-secondary" id="profileAdmins" onclick="setProfileFilter('1')"><i class="bi bi-shield-lock"></i> Administrativos</button>
+                        </div>
+                    </div>
                 </div>
 
                 <div class="row g-3 mb-3">
@@ -676,11 +716,13 @@ if (!is_authenticated() || !is_admin()) {
         }
         function setStatusFilter(status) {
             currentStatus = status;
+            updateUsersMobileFilterSummary();
             loadUsers(1);
         }
 
         function setProfileFilter(profile) {
             currentProfile = profile;
+            updateUsersMobileFilterSummary();
             if (profile === '3') loadGroupsForFilter();
             loadUsers(1);
         }
@@ -1324,10 +1366,32 @@ if (!is_authenticated() || !is_admin()) {
         }
 
         document.addEventListener('DOMContentLoaded', () => {
+            initUsersMobileOptions();
             const search = new URLSearchParams(window.location.search).get('q');
             if (search) document.getElementById('userSearchInput').value = search;
             loadUsers();
         });
+
+        function initUsersMobileOptions() {
+            const toggle = document.getElementById('usersMobileOptionsToggle');
+            const panel = document.getElementById('usersMobileOptions');
+            if (!toggle || !panel || toggle.dataset.ready) return;
+            toggle.dataset.ready = '1';
+            updateUsersMobileFilterSummary();
+
+            toggle.addEventListener('click', () => {
+                const expanded = panel.classList.toggle('show');
+                toggle.setAttribute('aria-expanded', String(expanded));
+            });
+        }
+
+        function updateUsersMobileFilterSummary() {
+            const summary = document.getElementById('usersMobileFilterSummary');
+            if (!summary) return;
+            const statusLabels = { active: 'Activos', inactive: 'Inactivos', all: 'Todos los estados' };
+            const profileLabels = { all: 'Todos los perfiles', 1: 'Administrativos', 2: 'Docentes', 3: 'Estudiantes' };
+            summary.textContent = `${statusLabels[currentStatus] || 'Activos'} · ${profileLabels[currentProfile] || 'Todos los perfiles'}`;
+        }
     </script>
 </body>
 </html>

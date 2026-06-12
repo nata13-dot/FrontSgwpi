@@ -40,6 +40,50 @@ if (!is_authenticated() || !is_admin()) {
 
     <!-- Stats Section -->
     <div class="container-xl mt-5 mb-5">
+        <section class="dashboard-mobile-shortcuts" aria-labelledby="mobileShortcutsTitle">
+            <div class="dashboard-mobile-shortcuts-heading">
+                <div>
+                    <span>Acceso directo</span>
+                    <h2 id="mobileShortcutsTitle">Gestiones del sistema</h2>
+                </div>
+                <i class="bi bi-grid"></i>
+            </div>
+            <div class="dashboard-mobile-shortcuts-grid">
+                <a href="/pages/admin/users.php" class="dashboard-mobile-shortcut">
+                    <i class="bi bi-people"></i>
+                    <span>Usuarios</span>
+                </a>
+                <a href="/pages/admin/projects.php" class="dashboard-mobile-shortcut">
+                    <i class="bi bi-mortarboard"></i>
+                    <span>Proyectos y tesis</span>
+                </a>
+                <a href="/pages/admin/proposal-config.php" class="dashboard-mobile-shortcut">
+                    <i class="bi bi-calendar-check"></i>
+                    <span>Propuestas</span>
+                </a>
+                <a href="/pages/admin/deliverables.php" class="dashboard-mobile-shortcut">
+                    <i class="bi bi-file-earmark-check"></i>
+                    <span>Entregables</span>
+                </a>
+                <a href="/pages/admin/evaluations.php" class="dashboard-mobile-shortcut">
+                    <i class="bi bi-clipboard-check"></i>
+                    <span>Evaluaciones</span>
+                </a>
+                <a href="/pages/admin/asignaturas.php" class="dashboard-mobile-shortcut">
+                    <i class="bi bi-book"></i>
+                    <span>Académico</span>
+                </a>
+                <a href="/pages/admin/semesters.php" class="dashboard-mobile-shortcut">
+                    <i class="bi bi-calendar3"></i>
+                    <span>Semestres</span>
+                </a>
+                <a href="/pages/repositorio.php" class="dashboard-mobile-shortcut">
+                    <i class="bi bi-archive"></i>
+                    <span>Repositorio</span>
+                </a>
+            </div>
+        </section>
+
         <section class="dashboard-action-panel" aria-live="polite">
             <span class="dashboard-action-icon"><i class="bi bi-person"></i><b>!</b></span>
             <div>

@@ -24,6 +24,9 @@ $management_pages = [
             <button type="button" class="navbar-sidebar-toggle" data-sidebar-toggle aria-label="Alternar menú lateral">
                 <i class="bi bi-list"></i>
             </button>
+            <a href="<?= $home_url ?>" class="navbar-mobile-emblem" aria-label="Ir al inicio">
+                <img src="/assets/img/ITSSMT/ITSSMT.webp" alt="ITSSMT">
+            </a>
             <div class="global-search-shell" data-global-search data-role="<?= is_admin() ? 'admin' : (is_teacher() ? 'teacher' : 'student') ?>">
                 <form class="global-search" role="search" action="/pages/repositorio.php" method="get" autocomplete="off">
                     <i class="bi bi-search" aria-hidden="true"></i>
