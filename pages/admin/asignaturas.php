@@ -282,6 +282,11 @@ if (!is_authenticated() || !is_admin()) {
                     per_page: asignaturasPerPage,
                     _cache_ttl: 30000
                 });
+                api.prefetchNextPage('/asignaturas', {
+                    page,
+                    per_page: asignaturasPerPage,
+                    _cache_ttl: 30000
+                }, response);
                 asignaturas = response.data || [];
                 asignaturasCurrentPage = Number(response.current_page || page);
                 const tbody = document.getElementById('asignaturasTable');

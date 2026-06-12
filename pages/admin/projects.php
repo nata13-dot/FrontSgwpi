@@ -406,6 +406,7 @@ if (!is_authenticated()) {
                 if (search) params.q = search;
 
                 const response = await api.get('/projects', params);
+                api.prefetchNextPage('/projects', params, response);
                 projectsCurrentPage = Number(response.current_page || page);
                 projectsLastPage = Number(response.last_page || 1);
                 projectsTotal = Number(response.total || 0);

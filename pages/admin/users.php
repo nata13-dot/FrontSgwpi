@@ -514,6 +514,7 @@ if (!is_authenticated() || !is_admin()) {
                 }
 
                 const response = await api.get('/users', params);
+                api.prefetchNextPage('/users', params, response);
                 const users = response.data || [];
                 visibleUserIds = users.map(user => String(user.id));
                 tbody.innerHTML = '';

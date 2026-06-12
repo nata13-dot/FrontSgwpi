@@ -263,6 +263,7 @@ if (!is_authenticated() || !is_admin()) {
                 };
                 if (forceFresh) params._fresh = true;
                 const response = await api.get('/document-tags', params);
+                api.prefetchNextPage('/document-tags', params, response);
                 currentTags = response.data || [];
                 currentPage = Number(response.current_page || page);
                 lastPage = Number(response.last_page || 1);

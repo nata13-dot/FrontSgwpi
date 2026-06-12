@@ -11,6 +11,7 @@ class ApiClient {
         this.pending = new Map();
         this.refreshPromise = null;
         this.localMutationWindow = 10000;
+        this.maxStoredCacheEntries = 50;
         this.resourceEndpoints = [
             '/evaluations/rubric-criteria',
             '/evaluations/rooms',
@@ -33,9 +34,18 @@ class ApiClient {
             '/profile',
             '/users'
         ];
-        this.cachePrefix = `sgpi-api-cache:${this.baseURL}:`;
+        this.cachePrefix = `sgpi-api-cache:v2:${this.baseURL}:`;
         this.defaultCacheTtls = [
             { pattern: /^\/dashboard\/(stats|teacher|student)$/, ttl: 20000 },
+            { pattern: /^\/users(?:\/[^/]+)?$/, ttl: 30000 },
+            { pattern: /^\/projects(?:\/[^/]+)?$/, ttl: 30000 },
+            { pattern: /^\/asignaturas(?:\/[^/]+)?$/, ttl: 120000 },
+            { pattern: /^\/competencias(?:\/[^/]+)?$/, ttl: 60000 },
+            { pattern: /^\/subject-groups(?:\/[^/]+)?$/, ttl: 120000 },
+            { pattern: /^\/document-tags(?:\/[^/]+)?$/, ttl: 60000 },
+            { pattern: /^\/repositorio(?:\/[^/]+)?$/, ttl: 30000 },
+            { pattern: /^\/deliverables(?:\/[^/]+)?$/, ttl: 20000 },
+            { pattern: /^\/evaluations(?:\/.*)?$/, ttl: 20000 },
             { pattern: /^\/proposal\/student-status$/, ttl: 20000 },
             { pattern: /^\/student\/evaluation-schedule$/, ttl: 30000 },
             { pattern: /^\/settings\/public$/, ttl: 300000 },
@@ -50,6 +60,28 @@ class ApiClient {
      */
     async get(endpoint, params = {}) {
         return this.request('GET', endpoint, null, params);
+    }
+
+    /**
+     * Precarga la siguiente pagina de una respuesta paginada.
+     */
+    prefetchNextPage(endpoint, params = {}, pagination = {}) {
+        const currentPage = Number(pagination.current_page || params.page || 1);
+        const lastPage = Number(pagination.last_page || 1);
+        if (currentPage >= lastPage) return;
+
+        const nextParams = {
+            ...params,
+            page: currentPage + 1,
+            _silent: true
+        };
+        if (nextParams._cache_ttl === undefined) {
+            nextParams._cache_ttl = this.defaultCacheTtl(endpoint);
+        }
+
+        this.get(endpoint, nextParams).catch(() => {
+            // La precarga es opcional; la pagina se solicitara normalmente si falla.
+        });
     }
 
     /**
@@ -83,9 +115,11 @@ class ApiClient {
         const requestTimeout = Number(normalizedParams._timeout || this.timeout);
         const cacheTtl = Number(requestedCacheTtl ?? (method === 'GET' ? this.defaultCacheTtl(endpoint) : 0));
         const forceFresh = Boolean(normalizedParams._fresh);
+        const silent = Boolean(normalizedParams._silent);
         delete normalizedParams._cache_ttl;
         delete normalizedParams._fresh;
         delete normalizedParams._timeout;
+        delete normalizedParams._silent;
 
         // Agregar parámetros
         Object.keys(normalizedParams).forEach(key => {
@@ -181,7 +215,8 @@ class ApiClient {
                     value: result,
                     expiresAt: cacheTtl > 0 ? Date.now() + cacheTtl : 0,
                     locallyUpdatedUntil: 0,
-                    endpoint: this.normalizeEndpoint(endpoint)
+                    endpoint: this.normalizeEndpoint(endpoint),
+                    storedAt: Date.now()
                 };
                 this.cache.set(cacheKey, cachedValue);
                 if (cacheTtl > 0) {
@@ -194,9 +229,11 @@ class ApiClient {
             return result;
         };
 
-        document.dispatchEvent(new CustomEvent('sgpi:request-start', {
-            detail: { method, endpoint }
-        }));
+        if (!silent) {
+            document.dispatchEvent(new CustomEvent('sgpi:request-start', {
+                detail: { method, endpoint }
+            }));
+        }
         try {
             if (method === 'GET') {
                 const pendingRequest = executeRequest().finally(() => this.pending.delete(cacheKey));
@@ -214,12 +251,16 @@ class ApiClient {
                 timeoutError.name = 'AbortError';
                 error = timeoutError;
             }
-            console.error('Error en la solicitud:', error);
+            if (!silent) {
+                console.error('Error en la solicitud:', error);
+            }
             throw error;
         } finally {
-            document.dispatchEvent(new CustomEvent('sgpi:request-end', {
-                detail: { method, endpoint }
-            }));
+            if (!silent) {
+                document.dispatchEvent(new CustomEvent('sgpi:request-end', {
+                    detail: { method, endpoint }
+                }));
+            }
         }
     }
 
@@ -240,6 +281,7 @@ class ApiClient {
         const mutationId = this.endpointId(endpoint);
         const entity = this.mutationEntity(result, requestData, mutationId);
         const now = Date.now();
+        const retained = [];
 
         this.cache.forEach((cached, cacheKey) => {
             if (!cached || !this.cacheMatchesResource(cached.endpoint, resource)) return;
@@ -252,12 +294,18 @@ class ApiClient {
                 this.isCollectionMutation(endpoint, resource)
                     && this.cacheAcceptsCreatedEntity(cacheKey)
             );
-            if (!patched.changed) return;
+            if (!patched.changed) {
+                this.cache.delete(cacheKey);
+                return;
+            }
 
             cached.value = patched.value;
             cached.locallyUpdatedUntil = now + this.localMutationWindow;
             this.cache.set(cacheKey, cached);
+            retained.push([cacheKey, cached]);
         });
+        this.removeStoredResource(resource);
+        retained.forEach(([cacheKey, cached]) => this.writeStoredCache(cacheKey, cached));
 
         window.dispatchEvent(new CustomEvent('sgpi:api-mutated', {
             detail: {
@@ -452,7 +500,17 @@ class ApiClient {
 
     storageKey(cacheKey) {
         const token = auth.getToken() || 'guest';
-        return `${this.cachePrefix}${token.slice(0, 18)}:${cacheKey}`;
+        return `${this.cachePrefix}${this.cacheScope(token)}:${cacheKey}`;
+    }
+
+    cacheScope(value) {
+        let hash = 2166136261;
+        const input = String(value || 'guest');
+        for (let index = 0; index < input.length; index++) {
+            hash ^= input.charCodeAt(index);
+            hash = Math.imul(hash, 16777619);
+        }
+        return (hash >>> 0).toString(36);
     }
 
     readStoredCache(cacheKey) {
@@ -471,8 +529,55 @@ class ApiClient {
     writeStoredCache(cacheKey, value) {
         try {
             sessionStorage.setItem(this.storageKey(cacheKey), JSON.stringify(value));
+            this.pruneStoredCache();
         } catch (error) {
-            // Si el navegador no permite storage, la cache en memoria sigue funcionando.
+            this.pruneStoredCache(true);
+            try {
+                sessionStorage.setItem(this.storageKey(cacheKey), JSON.stringify(value));
+            } catch (retryError) {
+                // Si el navegador no permite storage, la cache en memoria sigue funcionando.
+            }
+        }
+    }
+
+    removeStoredResource(resource) {
+        try {
+            Object.keys(sessionStorage)
+                .filter(key => key.startsWith(this.cachePrefix))
+                .forEach(key => {
+                    const cached = JSON.parse(sessionStorage.getItem(key) || 'null');
+                    if (this.cacheMatchesResource(cached?.endpoint, resource)) {
+                        sessionStorage.removeItem(key);
+                    }
+                });
+        } catch (error) {
+            // La invalidacion en memoria sigue activa aunque storage no este disponible.
+        }
+    }
+
+    pruneStoredCache(force = false) {
+        try {
+            const now = Date.now();
+            const entries = Object.keys(sessionStorage)
+                .filter(key => key.startsWith(this.cachePrefix))
+                .map(key => {
+                    const value = JSON.parse(sessionStorage.getItem(key) || 'null');
+                    return { key, value };
+                })
+                .filter(entry => entry.value);
+
+            entries
+                .filter(entry => entry.value.expiresAt <= now)
+                .forEach(entry => sessionStorage.removeItem(entry.key));
+
+            const active = entries
+                .filter(entry => entry.value.expiresAt > now)
+                .sort((a, b) => Number(a.value.storedAt || 0) - Number(b.value.storedAt || 0));
+            const keep = force ? Math.floor(this.maxStoredCacheEntries / 2) : this.maxStoredCacheEntries;
+            active.slice(0, Math.max(0, active.length - keep))
+                .forEach(entry => sessionStorage.removeItem(entry.key));
+        } catch (error) {
+            // No es necesario interrumpir una solicitud por mantenimiento de cache.
         }
     }
 
