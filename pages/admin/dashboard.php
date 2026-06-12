@@ -303,6 +303,8 @@ if (!is_authenticated() || !is_admin()) {
 
         function renderBarChart(containerId, data) {
             const container = document.getElementById(containerId);
+            if (!container) return;
+
             const entries = Object.entries(data || {});
             const total = entries.reduce((sum, [, value]) => sum + Number(value || 0), 0);
             if (!entries.length || total === 0) {
@@ -323,6 +325,8 @@ if (!is_authenticated() || !is_admin()) {
 
         function renderStatusGrid(containerId, data) {
             const container = document.getElementById(containerId);
+            if (!container) return;
+
             const entries = Object.entries(data || {});
             if (!entries.length) {
                 container.innerHTML = '<p class="dashboard-empty"><i class="bi bi-inbox"></i> Sin datos para mostrar.</p>';
@@ -340,6 +344,8 @@ if (!is_authenticated() || !is_admin()) {
             const title = document.getElementById('adminNextActionTitle');
             const text = document.getElementById('adminNextActionText');
             const link = document.getElementById('adminNextActionLink');
+            if (!title || !text || !link) return;
+
             if ((stats.pending_proposals || 0) > 0) {
                 title.textContent = `${stats.pending_proposals} propuestas pendientes`;
                 text.textContent = 'Empieza por revisar las propuestas para mantener el flujo académico en movimiento.';
@@ -360,28 +366,41 @@ if (!is_authenticated() || !is_admin()) {
             link.innerHTML = '<i class="bi bi-diagram-3"></i><span>Ver proyectos</span>';
         }
 
+        function setDashboardText(id, value) {
+            const element = document.getElementById(id);
+            if (element) element.textContent = value;
+        }
+
+        function setDashboardWidth(id, value) {
+            const element = document.getElementById(id);
+            if (element) element.style.width = value;
+        }
+
         async function loadDashboard() {
             try {
                 const response = await api.get('/dashboard/stats');
-                
-                document.getElementById('totalUsers').textContent = response.stats.total_users;
-                document.getElementById('activeUsers').textContent = response.stats.active_users;
-                document.getElementById('inactiveUsers').textContent = response.stats.inactive_users || 0;
-                document.getElementById('totalProjects').textContent = response.stats.total_projects;
-                document.getElementById('totalAsignaturas').textContent = response.stats.total_asignaturas;
-                document.getElementById('pendingProposals').textContent = response.stats.pending_proposals || 0;
-                updateAdminNextAction(response.stats);
-                const activeRate = percent(response.stats.active_users, response.stats.total_users);
-                document.getElementById('activeUsersProgress').style.width = `${activeRate}%`;
-                const completionRate = response.stats.deliverable_completion_rate || 0;
-                document.getElementById('globalCompletionBadge').textContent = `${completionRate}%`;
-                document.getElementById('globalCompletionProgress').style.width = `${completionRate}%`;
+
+                const stats = response.stats || {};
+                setDashboardText('totalUsers', stats.total_users || 0);
+                setDashboardText('activeUsers', stats.active_users || 0);
+                setDashboardText('inactiveUsers', stats.inactive_users || 0);
+                setDashboardText('totalProjects', stats.total_projects || 0);
+                setDashboardText('totalAsignaturas', stats.total_asignaturas || 0);
+                setDashboardText('pendingProposals', stats.pending_proposals || 0);
+                updateAdminNextAction(stats);
+                const activeRate = percent(stats.active_users, stats.total_users);
+                setDashboardWidth('activeUsersProgress', `${activeRate}%`);
+                const completionRate = stats.deliverable_completion_rate || 0;
+                setDashboardText('globalCompletionBadge', `${completionRate}%`);
+                setDashboardWidth('globalCompletionProgress', `${completionRate}%`);
                 renderBarChart('usersRoleChart', response.charts?.users_by_role || {});
                 renderBarChart('proposalStatusChart', response.charts?.projects_by_proposal_status || {});
                 renderStatusGrid('deliverableStatusGrid', response.charts?.deliverables_by_status || {});
 
                 // Cargar proyectos recientes
                 const projectsList = document.getElementById('recentProjectsList');
+                if (!projectsList) return;
+
                 projectsList.innerHTML = '';
 
                 if (response.recent_projects && response.recent_projects.length > 0) {
