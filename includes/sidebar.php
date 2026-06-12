@@ -95,7 +95,7 @@ $section = isset($_GET['section']) ? $_GET['section'] : '';
         <img src="/assets/img/ITSSMT/ITSSMT.webp" alt="ITSSMT">
         <div>
             <strong>Gestión de Proyectos Integradores ITSSMT</strong>
-            <small>Versión BETA 2.1.5</small>
+            <small>Versión BETA 2.1.15</small>
         </div>
     </div>
     <button type="button" class="sidebar-collapse-control" data-sidebar-toggle aria-label="Contraer menú lateral">

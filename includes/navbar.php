@@ -10,7 +10,7 @@ $management_pages = [
 ];
 ?>
 
-<nav class="navbar navbar-expand-lg navbar-dark sticky-top">
+<nav class="navbar navbar-expand-lg navbar-dark sticky-top <?= is_authenticated() ? 'navbar-authenticated' : '' ?>">
     <div class="container-xl">
         <a href="<?= $home_url ?>" class="navbar-brand">
             <img src="/assets/img/ITSSMT/ITSSMT.webp" alt="ITSSMT">

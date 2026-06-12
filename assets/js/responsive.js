@@ -61,29 +61,50 @@
         window.SGPI_SIDEBAR_READY = true;
         const desktopQuery = window.matchMedia('(min-width: 769px)');
         const toggleButtons = document.querySelectorAll('[data-sidebar-toggle]');
+        let collapseTimer = null;
+
+        sidebar.querySelectorAll('.sidebar-item, .sidebar-group summary').forEach(item => {
+            const label = item.querySelector('span')?.textContent?.trim();
+            if (label && !item.title) item.title = label;
+        });
+
+        const clearCollapseTimer = () => {
+            if (!collapseTimer) return;
+            window.clearTimeout(collapseTimer);
+            collapseTimer = null;
+        };
 
         const expand = () => {
+            if (!desktopQuery.matches) return;
+            clearCollapseTimer();
             sidebar.classList.remove('sidebar-collapsed');
             sidebar.classList.add('sidebar-expanded');
             document.documentElement.classList.remove('sgpi-sidebar-collapsed');
-            localStorage.setItem('sgpi-sidebar-collapsed', '0');
         };
 
         const collapse = () => {
+            if (!desktopQuery.matches) return;
+            clearCollapseTimer();
             sidebar.classList.add('sidebar-collapsed');
             sidebar.classList.remove('sidebar-expanded');
             document.documentElement.classList.add('sgpi-sidebar-collapsed');
-            localStorage.setItem('sgpi-sidebar-collapsed', '1');
+        };
+
+        const scheduleCollapse = (delay = 1400) => {
+            if (!desktopQuery.matches) return;
+            clearCollapseTimer();
+            collapseTimer = window.setTimeout(collapse, delay);
         };
 
         const sync = () => {
+            clearCollapseTimer();
             if (!desktopQuery.matches) {
                 sidebar.classList.remove('sidebar-collapsed', 'sidebar-expanded');
                 document.documentElement.classList.remove('sgpi-sidebar-collapsed');
                 return;
             }
 
-            localStorage.getItem('sgpi-sidebar-collapsed') === '1' ? collapse() : expand();
+            collapse();
         };
 
         toggleButtons.forEach(button => {
@@ -93,9 +114,24 @@
                     return;
                 }
 
-                sidebar.classList.contains('sidebar-collapsed') ? expand() : collapse();
+                if (sidebar.classList.contains('sidebar-collapsed')) {
+                    expand();
+                    scheduleCollapse(4500);
+                } else {
+                    collapse();
+                }
             });
         });
+
+        sidebar.addEventListener('mouseenter', expand, { passive: true });
+        sidebar.addEventListener('mousemove', () => {
+            if (sidebar.classList.contains('sidebar-expanded')) scheduleCollapse(4500);
+        }, { passive: true });
+        sidebar.addEventListener('focusin', () => {
+            expand();
+            scheduleCollapse(4500);
+        });
+        sidebar.addEventListener('mouseleave', () => scheduleCollapse(900), { passive: true });
 
         if (desktopQuery.addEventListener) {
             desktopQuery.addEventListener('change', sync);

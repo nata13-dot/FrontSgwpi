@@ -81,25 +81,17 @@
         layer.id = 'sgpiPageTransition';
         layer.className = 'sgpi-page-transition';
         layer.setAttribute('aria-hidden', 'true');
+        layer.setAttribute('data-skeleton-disabled', '');
         layer.innerHTML = `
-            <div class="sgpi-page-transition-panel">
+            <div class="sgpi-page-transition-panel" data-skeleton-disabled>
                 <span class="sgpi-page-transition-mark">
                     <span class="sgpi-page-transition-orbit sgpi-page-transition-orbit-outer"></span>
                     <span class="sgpi-page-transition-orbit sgpi-page-transition-orbit-inner"></span>
                     <span class="sgpi-page-transition-logo">
                         <img src="/assets/img/ITSSMT/ITSSMT.webp" alt="">
                     </span>
-                    <i class="sgpi-page-transition-spark sgpi-page-transition-spark-one"></i>
-                    <i class="sgpi-page-transition-spark sgpi-page-transition-spark-two"></i>
-                    <i class="sgpi-page-transition-spark sgpi-page-transition-spark-three"></i>
                 </span>
-                <div class="sgpi-page-transition-copy">
-                    <span class="sgpi-page-transition-eyebrow">SGPI · ITSSMT</span>
-                    <strong>Preparando tu espacio</strong>
-                    <small>Cargando información y herramientas del sistema</small>
-                    <span class="sgpi-page-transition-progress"><i></i></span>
-                    <span class="sgpi-page-transition-dots"><i></i><i></i><i></i></span>
-                </div>
+                <strong class="sgpi-page-transition-label">Cargando...</strong>
             </div>`;
         document.body.appendChild(layer);
         return layer;
@@ -136,6 +128,13 @@
         window.setTimeout(() => window.location.assign(destination.href), 170);
     }
 
+    function showGlobalNavigationLoader() {
+        if (reducedMotion()) return;
+        sessionStorage.setItem('sgpi-page-transition', '1');
+        transitionLayer();
+        document.documentElement.classList.add('sgpi-page-leaving');
+    }
+
     function preparePageEntry() {
         transitionLayer();
         const fromInternalNavigation = sessionStorage.getItem('sgpi-page-transition') === '1';
@@ -164,6 +163,7 @@
     });
 
     preparePageEntry();
+    window.addEventListener('beforeunload', showGlobalNavigationLoader);
     window.addEventListener('pageshow', () => {
         navigating = false;
         document.documentElement.classList.remove('sgpi-page-leaving');

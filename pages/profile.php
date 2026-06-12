@@ -65,11 +65,27 @@ async function loadProfile() {
     currentUser = await api.get('/profile');
     ['nombres','apa','ama','email','semestre','grupo','telefonos','direccion'].forEach(id => { const el = document.getElementById(id); if (el) el.value = currentUser[id] || ''; });
     document.getElementById('profilePhoto').src = photoUrl(currentUser.photo_path);
-    document.querySelectorAll('.student-only').forEach(el => el.style.display = Number(currentUser.perfil_id) === 3 ? '' : 'none');
+    const isStudent = Number(currentUser.perfil_id) === 3;
+    document.querySelectorAll('.student-only').forEach(el => el.style.display = isStudent ? '' : 'none');
+    ['semestre', 'grupo'].forEach(id => {
+        const field = document.getElementById(id);
+        if (field) field.disabled = !isStudent;
+    });
 }
 document.getElementById('profileForm').addEventListener('submit', async e => {
     e.preventDefault();
     const data = new FormData(e.target);
+    if (Number(currentUser?.perfil_id) !== 3) {
+        data.delete('semestre');
+        data.delete('grupo');
+    } else {
+        ['semestre', 'grupo'].forEach(field => {
+            if (!String(data.get(field) || '').trim()) data.delete(field);
+        });
+    }
+    ['current_password', 'password', 'password_confirmation'].forEach(field => {
+        if (!String(data.get(field) || '').trim()) data.delete(field);
+    });
     try {
         const res = await api.post('/profile', data);
         await fetch('/api/set-session.php', {

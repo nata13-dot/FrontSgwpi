@@ -92,6 +92,7 @@
 
     function scan(root = document) {
         if (!(root instanceof Document || root instanceof Element)) return;
+        if (root instanceof Element && root.closest('[data-skeleton-disabled]')) return;
 
         const processed = [
             ...(root instanceof Element && root.hasAttribute(processedAttribute) ? [root] : []),
