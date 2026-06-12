@@ -33,24 +33,42 @@ $serverDashboardUrl = dashboard_url();
         }
 
         .index-hero {
-            background: url('/assets/img/ITSSMT/fondo.webp');
+            background-color: #0b2548;
+            background-image: url('/assets/img/ITSSMT/fondo.webp');
             background-size: cover;
-            background-position: center;
-            min-height: 540px;
-            padding: 96px 0 72px;
+            background-position: center 42%;
+            min-height: min(660px, calc(100svh - 82px));
+            padding: 72px 0;
             position: relative;
             display: flex;
             align-items: center;
+            overflow: hidden;
         }
 
         .index-hero .overlay {
-            background: linear-gradient(90deg, rgba(8, 26, 54, 0.88), rgba(8, 26, 54, 0.55), rgba(8, 26, 54, 0.22));
+            background:
+                linear-gradient(90deg, rgba(5, 23, 49, 0.94) 0%, rgba(7, 30, 61, 0.82) 38%, rgba(8, 31, 59, 0.35) 68%, rgba(8, 26, 54, 0.16) 100%),
+                linear-gradient(0deg, rgba(5, 20, 42, 0.2), transparent 45%);
         }
 
         .index-hero-content {
             position: relative;
             z-index: 1;
+            max-width: 900px;
+        }
+
+        .index-hero h1 {
+            font-size: clamp(3rem, 4.3vw, 4.65rem);
+            letter-spacing: -0.045em;
+            line-height: 1.03;
+            text-wrap: balance;
+        }
+
+        .index-hero .lead {
+            font-size: clamp(1.05rem, 1.35vw, 1.28rem);
+            line-height: 1.6;
             max-width: 760px;
+            text-wrap: pretty;
         }
 
         .repository-hero-kicker {
@@ -70,6 +88,17 @@ $serverDashboardUrl = dashboard_url();
             display: flex;
             flex-wrap: wrap;
             gap: 0.75rem;
+        }
+
+        .hero-actions .btn {
+            align-items: center;
+            display: inline-flex;
+            font-weight: 700;
+            gap: 0.45rem;
+            justify-content: center;
+            min-height: 54px;
+            padding-left: 1.35rem;
+            padding-right: 1.35rem;
         }
 
         .repository-spotlight {
@@ -264,8 +293,17 @@ $serverDashboardUrl = dashboard_url();
 
         @media (max-width: 991.98px) {
             .index-hero {
-                min-height: 480px;
-                padding: 76px 0 56px;
+                background-position: 58% center;
+                min-height: 560px;
+                padding: 64px 0;
+            }
+
+            .index-hero-content {
+                max-width: 720px;
+            }
+
+            .index-hero h1 {
+                font-size: clamp(2.7rem, 7vw, 4rem);
             }
 
             .repository-showcase-body {
@@ -280,12 +318,24 @@ $serverDashboardUrl = dashboard_url();
 
         @media (max-width: 575.98px) {
             .index-hero {
-                min-height: auto;
-                padding: 64px 0 48px;
+                background-position: 62% center;
+                min-height: calc(100svh - 72px);
+                padding: 52px 0 44px;
             }
 
             .index-hero h1 {
-                font-size: 2.35rem;
+                font-size: clamp(2.35rem, 11vw, 3.15rem);
+                letter-spacing: -0.035em;
+                line-height: 1.06;
+            }
+
+            .index-hero .lead {
+                font-size: 1rem;
+                line-height: 1.55;
+            }
+
+            .repository-hero-kicker {
+                font-size: 0.78rem;
             }
 
             .hero-actions .btn {

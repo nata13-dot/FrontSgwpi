@@ -10,7 +10,7 @@ $management_pages = [
 ];
 ?>
 
-<nav class="navbar navbar-expand-lg navbar-dark sticky-top <?= is_authenticated() ? 'navbar-authenticated' : '' ?>">
+<nav class="navbar navbar-expand-lg navbar-dark sticky-top <?= is_authenticated() ? 'navbar-authenticated' : 'navbar-public' ?>">
     <div class="container-xl">
         <a href="<?= $home_url ?>" class="navbar-brand">
             <img src="/assets/img/ITSSMT/ITSSMT.webp" alt="ITSSMT">
@@ -44,7 +44,7 @@ $management_pages = [
             </div>
         <?php endif; ?>
         
-        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Abrir navegación">
             <span class="navbar-toggler-icon"></span>
         </button>
         
