@@ -683,16 +683,19 @@ $is_archived_view = basename($_SERVER['PHP_SELF']) === 'evaluations-archived.php
             }
 
             if (CAN_MANAGE_EVALUATIONS) {
-                const [adminsResult, teachersResult] = await Promise.allSettled([
-                    api.get('/users', { perfil_id: 1, status: 'active', compact: 1, per_page: 500, _cache_ttl: 60000, _timeout: 45000 }),
-                    api.get('/users', { perfil_id: 2, status: 'active', compact: 1, per_page: 500, _cache_ttl: 60000, _timeout: 45000 })
-                ]);
-                const adminsResponse = adminsResult.status === 'fulfilled' ? adminsResult.value : { data: [] };
-                const teachersResponse = teachersResult.status === 'fulfilled' ? teachersResult.value : { data: [] };
-                teachers = [...(adminsResponse.data || []), ...(teachersResponse.data || [])]
-                    .sort((a, b) => fullName(a).localeCompare(fullName(b)));
-
-                if (adminsResult.status === 'rejected' || teachersResult.status === 'rejected') {
+                try {
+                    const staffResponse = await api.get('/users', {
+                        perfil_ids: '1,2',
+                        status: 'active',
+                        compact: 1,
+                        per_page: 500,
+                        _cache_ttl: 60000,
+                        _timeout: 45000
+                    });
+                    teachers = (staffResponse.data || [])
+                        .sort((a, b) => fullName(a).localeCompare(fullName(b)));
+                } catch (error) {
+                    teachers = [];
                     showAlert('#alertContainer', 'warning', 'No se pudieron cargar todos los docentes. Algunas opciones de salas o responsables podrian aparecer incompletas.');
                 }
             }
