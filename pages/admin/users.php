@@ -11,7 +11,7 @@ if (!is_authenticated() || !is_admin()) {
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Gestion de Usuarios - <?= APP_NAME ?></title>
+    <title>Gestión de Usuarios - <?= APP_NAME ?></title>
     <?php require_once $_SERVER['DOCUMENT_ROOT'] . '/includes/visual-preferences.php'; ?>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
@@ -25,7 +25,7 @@ if (!is_authenticated() || !is_admin()) {
             <div class="container-xl mt-5 mb-5">
                 <div class="d-flex align-items-center justify-content-between mb-3">
                     <div>
-                        <h1 class="mb-1">Gestion de Usuarios</h1>
+                        <h1 class="mb-1">Gestión de Usuarios</h1>
                         <p class="text-muted mb-0" id="statusDescription">Mostrando perfiles activos</p>
                     </div>
                     <div class="d-flex gap-2 users-desktop-actions">
@@ -102,8 +102,8 @@ if (!is_authenticated() || !is_admin()) {
                         <label class="form-label" for="userSearchInput">Buscar usuario</label>
                         <div class="input-group">
                             <span class="input-group-text"><i class="bi bi-search"></i></span>
-                            <input type="search" class="form-control" id="userSearchInput" placeholder="No. de Control, No. de empleado, nombre, correo o telefono" oninput="scheduleUsersSearch()">
-                            <button type="button" class="btn btn-outline-secondary" onclick="clearUsersSearch()" title="Limpiar busqueda"><i class="bi bi-x-lg"></i></button>
+                            <input type="search" class="form-control" id="userSearchInput" placeholder="No. de Control, No. de empleado, nombre, correo o teléfono" oninput="scheduleUsersSearch()">
+                            <button type="button" class="btn btn-outline-secondary" onclick="clearUsersSearch()" title="Limpiar búsqueda"><i class="bi bi-x-lg"></i></button>
                         </div>
                     </div>
                 </div>
@@ -138,10 +138,10 @@ if (!is_authenticated() || !is_admin()) {
                         <div class="small text-muted" id="selectedUsersCount">0 usuarios seleccionados</div>
                         <div class="btn-group btn-group-sm" role="group" aria-label="Seleccion de usuarios">
                             <button type="button" class="btn btn-outline-secondary" onclick="selectVisibleUsers()">
-                                <i class="bi bi-check2-square"></i> Seleccionar pagina
+                                <i class="bi bi-check2-square"></i> Seleccionar página
                             </button>
                             <button type="button" class="btn btn-outline-secondary" onclick="clearSelectedUsers()">
-                                <i class="bi bi-x-square"></i> Limpiar seleccion
+                                <i class="bi bi-x-square"></i> Limpiar selección
                             </button>
                             <button type="button" class="btn btn-outline-secondary" onclick="cancelCredentialSelectionMode()">
                                 <i class="bi bi-x-lg"></i> Cancelar

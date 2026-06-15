@@ -40,8 +40,8 @@ if (!is_authenticated()) { header('Location: /index.php'); exit; }
                                 <div class="col-md-6"><label class="form-label">Correo</label><input class="form-control" id="email" disabled></div>
                                 <div class="col-md-3 student-only"><label class="form-label">Semestre</label><select class="form-select" name="semestre" id="semestre"><option value="">-</option><option>5</option><option>6</option><option>7</option><option>8</option><option>9</option></select></div>
                                 <div class="col-md-3 student-only"><label class="form-label">Grupo</label><input class="form-control" name="grupo" id="grupo"></div>
-                                <div class="col-md-6"><label class="form-label">Telefono</label><input class="form-control" name="telefonos" id="telefonos"></div>
-                                <div class="col-md-6"><label class="form-label">Direccion</label><input class="form-control" name="direccion" id="direccion"></div>
+                                <div class="col-md-6"><label class="form-label">Teléfono</label><input class="form-control" name="telefonos" id="telefonos"></div>
+                                <div class="col-md-6"><label class="form-label">Dirección</label><input class="form-control" name="direccion" id="direccion"></div>
                                 <div class="col-md-4"><label class="form-label">Contraseña actual</label><input type="password" class="form-control" name="current_password"></div>
                                 <div class="col-md-4"><label class="form-label">Nueva contraseña</label><input type="password" class="form-control" name="password"></div>
                                 <div class="col-md-4"><label class="form-label">Confirmar contraseña</label><input type="password" class="form-control" name="password_confirmation"></div>

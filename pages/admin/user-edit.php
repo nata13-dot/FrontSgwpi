@@ -40,10 +40,10 @@ if (!$userId) {
                         <form id="userForm" class="needs-validation" novalidate>
                             <div class="row">
                                 <div class="col-12 mb-3">
-                                    <label for="direccion" class="form-label">Direccion</label>
-                                    <input type="text" class="form-control" id="direccion" name="direccion" minlength="10" pattern="(?=.*\d)[A-Za-zÁÉÍÓÚÜÑáéíóúüñ0-9\s#.,\-\/]+" placeholder="Calle, numero, colonia, municipio">
-                                    <div class="form-text">Debe incluir calle y numero. Ej. Av. Reforma 123, Col. Centro.</div>
-                                    <div class="invalid-feedback">Ingresa un domicilio valido con al menos un numero.</div>
+                                    <label for="direccion" class="form-label">Dirección</label>
+                                    <input type="text" class="form-control" id="direccion" name="direccion" minlength="10" pattern="(?=.*\d)[A-Za-zÁÉÍÓÚbÜñáéíóúüñ0-9\s#.,\-\/]+" placeholder="Calle, número, colonia, municipio">
+                                    <div class="form-text">Debe incluir calle y número. Ej. Av. Reforma 123, Col. Centro.</div>
+                                    <div class="invalid-feedback">Ingresa un domicilio válido con al menos un número.</div>
                                 </div>
                             </div>
 
@@ -77,7 +77,7 @@ if (!$userId) {
                                     <input type="email" class="form-control" id="email" name="email" required>
                                 </div>
                                 <div class="col-md-4 mb-3">
-                                    <label for="telefonos" class="form-label">Telefono</label>
+                                    <label for="telefonos" class="form-label">Teléfono</label>
                                     <input type="tel" class="form-control" id="telefonos" name="telefonos" maxlength="200" required>
                                 </div>
                                 <div class="col-md-4 mb-3">

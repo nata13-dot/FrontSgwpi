@@ -7,7 +7,7 @@ if (!is_authenticated() || !is_teacher()) { header('Location: /index.php'); exit
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Revision de Propuestas - <?= APP_NAME ?></title>
+    <title>Revisión de Propuestas - <?= APP_NAME ?></title>
     <?php require_once $_SERVER['DOCUMENT_ROOT'] . '/includes/visual-preferences.php'; ?>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
@@ -21,7 +21,7 @@ if (!is_authenticated() || !is_teacher()) { header('Location: /index.php'); exit
         <div class="container-xl mt-5 mb-5">
             <div class="d-flex justify-content-between align-items-center mb-4">
                 <div>
-                    <h1 class="mb-1">Revision de Propuestas</h1>
+                    <h1 class="mb-1">Revisión de Propuestas</h1>
                     <p class="text-muted mb-0">Fundamentos de Ingenieria de Software</p>
                 </div>
                 <button class="btn btn-primary" onclick="loadPage()"><i class="bi bi-arrow-clockwise"></i></button>
@@ -78,7 +78,7 @@ function renderProjects() {
                         <h5>${esc(project.title)}</h5>
                         <span class="badge ${badge(project.proposal_status)}">${esc(project.proposal_status)}</span>
                     </div>
-                    <p class="text-muted">${esc(project.description || 'Sin descripcion')}</p>
+                    <p class="text-muted">${esc(project.description || 'Sin descripción')}</p>
                     <small class="d-block"><i class="bi bi-people"></i> ${esc(activeAuthors(project))}</small>
                     <small class="d-block"><i class="bi bi-collection"></i> ${esc(project.subject_group?.nombre || '-')}</small>
                     <hr>

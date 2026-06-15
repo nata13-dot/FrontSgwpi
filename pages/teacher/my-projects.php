@@ -108,7 +108,7 @@ if (!is_authenticated() || !is_teacher()) {
                                         <span class="badge bg-primary">${project.year || '-'}</span>
                                     </div>
                                     
-                                    <p class="card-text text-muted mb-3">${escapeHtml(project.descripcion || project.description || 'Sin descripcion')}</p>
+                                    <p class="card-text text-muted mb-3">${escapeHtml(project.descripcion || project.description || 'Sin descripción')}</p>
                                     
                                     <div class="mb-3 pb-3 border-bottom">
                                         <small class="text-muted d-block mb-2">

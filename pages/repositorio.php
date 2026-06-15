@@ -42,7 +42,7 @@
             </div>
             <div class="col-lg-3 col-md-6">
                 <select class="form-select form-select-lg" id="categoryFilter">
-                    <option value="">Todas las categorias</option>
+                    <option value="">Todas las categorías</option>
                     <option value="general">General</option>
                     <option value="desarrollo">Desarrollo de proyecto</option>
                     <option value="tesis">Tesis</option>

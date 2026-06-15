@@ -37,12 +37,12 @@ if (!is_authenticated() || !is_admin()) {
                 <div class="col-12">
                     <form class="card border-0 shadow-sm" id="settingsForm">
                         <div class="card-header">
-                            <h5 class="mb-0"><i class="bi bi-sliders"></i> Configuracion del sistema</h5>
+                            <h5 class="mb-0"><i class="bi bi-sliders"></i> Configuración del sistema</h5>
                         </div>
                         <div class="card-body">
                             <div class="row g-3">
                                 <div class="col-md-6">
-                                    <label class="form-label" for="session_timeout_minutes">Inactividad antes de cerrar sesion</label>
+                                    <label class="form-label" for="session_timeout_minutes">Inactividad antes de cerrar sesión</label>
                                     <div class="input-group">
                                         <input type="number" class="form-control" id="session_timeout_minutes" min="1" max="480" required>
                                         <span class="input-group-text">min</span>
@@ -64,14 +64,14 @@ if (!is_authenticated() || !is_admin()) {
                                     </div>
                                 </div>
                                 <div class="col-md-6">
-                                    <label class="form-label" for="max_file_size_mb">Tamaño maximo de archivo</label>
+                                    <label class="form-label" for="max_file_size_mb">Tamaño máximo de archivo</label>
                                     <div class="input-group">
                                         <input type="number" class="form-control" id="max_file_size_mb" min="1" max="200" required>
                                         <span class="input-group-text">MB</span>
                                     </div>
                                 </div>
                                 <div class="col-md-6">
-                                    <label class="form-label" for="max_project_members">Maximo de integrantes por proyecto</label>
+                                    <label class="form-label" for="max_project_members">Máximo de integrantes por proyecto</label>
                                     <input type="number" class="form-control" id="max_project_members" min="1" max="10" required>
                                 </div>
                                 <div class="col-12">

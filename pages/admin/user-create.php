@@ -56,17 +56,17 @@ if (!is_authenticated() || !is_admin()) {
                                 <div class="col-md-4 mb-3">
                                     <label for="id" class="form-label">No. de Control, No. de empleado</label>
                                     <input type="text" class="form-control" id="id" name="id" required>
-                                    <div class="invalid-feedback">La matricula o nomina es obligatoria.</div>
+                                    <div class="invalid-feedback">La matrícula o nómina es obligatoria.</div>
                                 </div>
                                 <div class="col-md-4 mb-3">
                                     <label for="email" class="form-label">Email</label>
                                     <input type="email" class="form-control" id="email" name="email" required>
-                                    <div class="invalid-feedback">Ingresa un correo valido.</div>
+                                    <div class="invalid-feedback">Ingresa un correo válido.</div>
                                 </div>
                                 <div class="col-md-4 mb-3">
-                                    <label for="telefonos" class="form-label">Telefono</label>
+                                    <label for="telefonos" class="form-label">Teléfono</label>
                                     <input type="tel" class="form-control" id="telefonos" name="telefonos" maxlength="200" required>
-                                    <div class="invalid-feedback">Ingresa un telefono.</div>
+                                    <div class="invalid-feedback">Ingresa un teléfono.</div>
                                 </div>
                                 <div class="col-md-4 mb-3">
                                     <label for="perfil_id" class="form-label">Perfil</label>

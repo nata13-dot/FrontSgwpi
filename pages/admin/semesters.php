@@ -11,7 +11,7 @@ if (!is_authenticated() || !is_admin()) {
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Gestion de semestres - <?= APP_NAME ?></title>
+    <title>Gestión de semestres - <?= APP_NAME ?></title>
     <?php require_once $_SERVER['DOCUMENT_ROOT'] . '/includes/visual-preferences.php'; ?>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
@@ -25,11 +25,11 @@ if (!is_authenticated() || !is_admin()) {
         <div class="container-xl mt-5 mb-5">
             <div class="d-flex flex-wrap justify-content-between align-items-center gap-3 mb-4">
                 <div>
-                    <h1 class="mb-1">Gestion de semestres</h1>
-                    <p class="text-muted mb-0">Controla periodos, promociones y presentaciones en semestres distintos.</p>
+                    <h1 class="mb-1">Gestión de semestres</h1>
+                    <p class="text-muted mb-0">Controla períodos, promociones y presentaciones en semestres distintos.</p>
                 </div>
                 <button class="btn btn-primary" type="button" onclick="openPeriodForm()">
-                    <i class="bi bi-calendar-plus"></i> Nuevo periodo
+                    <i class="bi bi-calendar-plus"></i> Nuevo período
                 </button>
             </div>
 
@@ -37,13 +37,13 @@ if (!is_authenticated() || !is_admin()) {
             <div class="row g-3 mb-4" id="semesterStats"></div>
 
             <div class="view-switcher mb-4" role="tablist">
-                <button class="btn btn-primary active" data-semester-view="periods" onclick="setSemesterView('periods')"><i class="bi bi-calendar3"></i> Periodos</button>
-                <button class="btn btn-outline-primary" data-semester-view="promotion" onclick="setSemesterView('promotion')"><i class="bi bi-arrow-up-right-circle"></i> Promocion</button>
+                <button class="btn btn-primary active" data-semester-view="periods" onclick="setSemesterView('periods')"><i class="bi bi-calendar3"></i> Períodos</button>
+                <button class="btn btn-outline-primary" data-semester-view="promotion" onclick="setSemesterView('promotion')"><i class="bi bi-arrow-up-right-circle"></i> Promoción</button>
                 <button class="btn btn-outline-primary" data-semester-view="exceptions" onclick="setSemesterView('exceptions')"><i class="bi bi-shuffle"></i> Presentaciones especiales</button>
             </div>
 
             <section id="semesterViewContent">
-                <div class="text-center py-5"><div class="spinner-border" role="status"></div><p class="text-muted mt-3">Cargando gestion academica...</p></div>
+                <div class="text-center py-5"><div class="spinner-border" role="status"></div><p class="text-muted mt-3">Cargando gestión académica...</p></div>
             </section>
         </div>
     </main>
@@ -53,7 +53,7 @@ if (!is_authenticated() || !is_admin()) {
     <div class="modal-dialog modal-dialog-centered">
         <form class="modal-content" id="periodForm">
             <div class="modal-header">
-                <h5 class="modal-title" id="periodModalTitle">Nuevo periodo</h5>
+                <h5 class="modal-title" id="periodModalTitle">Nuevo período</h5>
                 <button class="btn-close" type="button" data-bs-dismiss="modal"></button>
             </div>
             <div class="modal-body">
@@ -74,7 +74,7 @@ if (!is_authenticated() || !is_admin()) {
                 </div>
                 <div class="form-check form-switch mt-3">
                     <input class="form-check-input" type="checkbox" id="periodAutomaticPromotion">
-                    <label class="form-check-label" for="periodAutomaticPromotion">Promover alumnos automaticamente al iniciar</label>
+                    <label class="form-check-label" for="periodAutomaticPromotion">Promover alumnos automáticamente al iniciar</label>
                 </div>
             </div>
             <div class="modal-footer">
