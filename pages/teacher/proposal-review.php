@@ -22,7 +22,7 @@ if (!is_authenticated() || !is_teacher()) { header('Location: /index.php'); exit
             <div class="d-flex justify-content-between align-items-center mb-4">
                 <div>
                     <h1 class="mb-1">Revisión de Propuestas</h1>
-                    <p class="text-muted mb-0">Fundamentos de Ingenieria de Software</p>
+                    <p class="text-muted mb-0">Fundamentos de Ingeniería de Software</p>
                 </div>
                 <button class="btn btn-primary" onclick="loadPage()"><i class="bi bi-arrow-clockwise"></i></button>
             </div>
@@ -177,7 +177,7 @@ async function review(id, status) {
     let until = null;
     if (status === 'requiere_cambios') {
         const dateResult = await stableSwalFire({
-            title: 'Permitir correccion hasta',
+            title: 'Permitir corrección hasta',
             input: 'datetime-local',
             showCancelButton: true,
             confirmButtonText: 'Guardar'
@@ -195,7 +195,7 @@ async function review(id, status) {
         const index = proposalProjects.findIndex(project => Number(project.id) === Number(id));
         if (index >= 0) proposalProjects[index] = response.project;
         renderProjects();
-        swalToast('Revision registrada', 'success');
+        swalToast('Revisión registrada', 'success');
     } catch (error) {
         Swal.fire('Error', error.message, 'error');
     }

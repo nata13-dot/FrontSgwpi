@@ -11,7 +11,7 @@ if (!is_authenticated() || !is_admin()) {
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Gestion de Salas - <?= APP_NAME ?></title>
+    <title>Gestión de Salas - <?= APP_NAME ?></title>
     <?php require_once $_SERVER['DOCUMENT_ROOT'] . '/includes/visual-preferences.php'; ?>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
@@ -184,8 +184,8 @@ if (!is_authenticated() || !is_admin()) {
             <div class="container-xl mt-5 mb-5">
                 <div class="d-flex align-items-center justify-content-between mb-4">
                     <div>
-                        <h1 class="mb-1">Salas de evaluacion</h1>
-                        <p class="text-muted mb-0">Funcion de evaluaciones para programar salas, responsables, docentes y orden de proyectos.</p>
+                        <h1 class="mb-1">Salas de evaluación</h1>
+                        <p class="text-muted mb-0">Función de evaluaciones para programar salas, responsables, docentes y orden de proyectos.</p>
                     </div>
                     <a class="btn btn-outline-secondary" href="/pages/admin/evaluations.php">
                         <i class="bi bi-arrow-left"></i> Volver a evaluaciones
@@ -221,7 +221,7 @@ if (!is_authenticated() || !is_admin()) {
                     </div>
                 </div>
 
-                <div class="d-flex flex-wrap gap-2 mb-3" role="group" aria-label="Vista de gestion de salas">
+                <div class="d-flex flex-wrap gap-2 mb-3" role="group" aria-label="Vista de gestión de salas">
                     <button type="button" class="btn btn-primary" id="viewRoomsBtn" onclick="setRoomView('rooms')">
                         <i class="bi bi-door-open"></i> Por sala
                     </button>
@@ -248,7 +248,7 @@ if (!is_authenticated() || !is_admin()) {
                         <div class="col-xl-5">
                             <div class="room-work-panel" id="roomFormPanel">
                                 <div class="room-work-panel-header">
-                                    <h5 class="mb-0"><i class="bi bi-sliders"></i> Configuracion de sala</h5>
+                                    <h5 class="mb-0"><i class="bi bi-sliders"></i> Configuración de sala</h5>
                                 </div>
                                 <div class="room-work-panel-body">
                                     <div class="room-form-help">
@@ -267,7 +267,7 @@ if (!is_authenticated() || !is_admin()) {
                                         <div class="col-md-6">
                                             <label class="form-label" for="roomName">Sala</label>
                                             <input class="form-control" id="roomName" placeholder="Sala 1">
-                                            <div class="room-inline-hint">Se normaliza automaticamente, por ejemplo: SALA 1.</div>
+                                            <div class="room-inline-hint">Se normaliza automáticamente, por ejemplo: SALA 1.</div>
                                         </div>
                                         <div class="col-md-6">
                                             <label class="form-label" for="roomClassroom">Salon</label>
@@ -300,7 +300,7 @@ if (!is_authenticated() || !is_admin()) {
                                             <input type="number" class="form-control" id="teacherMinutes" min="1" max="240" value="15">
                                         </div>
                                         <div class="col-md-4">
-                                            <label class="form-label" for="presentationMinutes">Presentacion</label>
+                                            <label class="form-label" for="presentationMinutes">Presentación</label>
                                             <input type="number" class="form-control" id="presentationMinutes" min="1" max="240" value="20">
                                         </div>
                                         <div class="col-md-4">
@@ -320,7 +320,7 @@ if (!is_authenticated() || !is_admin()) {
                                         </div>
                                         <div class="col-12">
                                             <div class="room-section-title">Proyectos y orden</div>
-                                            <div class="room-inline-hint mb-2">Marca los proyectos y ajusta su orden de presentacion.</div>
+                                            <div class="room-inline-hint mb-2">Marca los proyectos y ajusta su orden de presentación.</div>
                                             <div class="room-scroll-list" id="roomProjects"></div>
                                         </div>
                                         <div class="col-12">
@@ -583,7 +583,7 @@ if (!is_authenticated() || !is_admin()) {
                                     <div class="room-meta-item"><span class="text-muted d-block">Lugar</span>${escapeHtml(room.salon || 'Sin salon')}</div>
                                     <div class="room-meta-item"><span class="text-muted d-block">Horario</span>${room.fecha_evaluacion ? new Date(room.fecha_evaluacion).toLocaleString('es-MX') : 'Sin inicio'}${room.fecha_fin_evaluacion ? ` - ${new Date(room.fecha_fin_evaluacion).toLocaleTimeString('es-MX', { hour: '2-digit', minute: '2-digit' })}` : ''}</div>
                                     <div class="room-meta-item"><span class="text-muted d-block">Responsable</span>${escapeHtml(fullName(room.responsible_teacher) || '-')}</div>
-                                    <div class="room-meta-item"><span class="text-muted d-block">Tiempos</span>${room.project_presentation_minutes} min exposicion / ${room.teacher_evaluation_minutes} min evaluacion</div>
+                                    <div class="room-meta-item"><span class="text-muted d-block">Tiempos</span>${room.project_presentation_minutes} min exposición / ${room.teacher_evaluation_minutes} min evaluación</div>
                                 </div>
                                 <div class="small mb-2"><span class="fw-semibold">Evaluadores:</span> ${(room.teachers || []).map(teacher => escapeHtml(fullName(teacher))).filter(Boolean).join(', ') || '-'}</div>
                                 <div class="small fw-semibold mb-1">Proyectos (${(room.projects || []).length})</div>
@@ -904,7 +904,7 @@ if (!is_authenticated() || !is_admin()) {
             });
             const selectedOrders = Object.values(projectOrder).filter(order => order > 0);
             if (selectedOrders.some((order, index) => selectedOrders.indexOf(order) !== index)) {
-                showAlert('#alertContainer', 'danger', 'No repitas el orden de presentacion entre proyectos.');
+                showAlert('#alertContainer', 'danger', 'No repitas el orden de presentación entre proyectos.');
                 return;
             }
             const payload = {
@@ -922,7 +922,7 @@ if (!is_authenticated() || !is_admin()) {
                 project_order: projectOrder
             };
             if (!payload.nombre || !payload.fecha_evaluacion) {
-                showAlert('#alertContainer', 'danger', 'Indica el nombre de la sala y la fecha de evaluacion.');
+                showAlert('#alertContainer', 'danger', 'Indica el nombre de la sala y la fecha de evaluación.');
                 return;
             }
             if (new Date(payload.fecha_evaluacion) <= new Date()) {
@@ -973,7 +973,7 @@ if (!is_authenticated() || !is_admin()) {
         }
 
         async function deleteRoom(id) {
-            if (!await confirmAction({ title: 'Eliminar sala', text: 'Se eliminaran tambien evaluaciones, puntajes e intentos vinculados.', confirmButtonText: 'Si, eliminar' })) return;
+            if (!await confirmAction({ title: 'Eliminar sala', text: 'Se eliminarán también evaluaciones, puntajes e intentos vinculados.', confirmButtonText: 'Sí, eliminar' })) return;
             try {
                 const response = await api.delete(`/evaluations/rooms/${id}`);
                 rooms = rooms.filter(room => Number(room.id) !== Number(id));
@@ -986,7 +986,7 @@ if (!is_authenticated() || !is_admin()) {
         }
 
         async function archiveRoom(id) {
-            if (!await confirmAction({ title: 'Archivar sala', text: 'Todas las evaluaciones de esta sala dejaran la vista principal.', confirmButtonText: 'Si, archivar sala' })) return;
+            if (!await confirmAction({ title: 'Archivar sala', text: 'Todas las evaluaciones de esta sala dejarán la vista principal.', confirmButtonText: 'Sí, archivar sala' })) return;
             await api.post(`/evaluations/rooms/${id}/archive`, {});
             rooms = rooms.filter(room => Number(room.id) !== Number(id));
             syncProjectRoomAssignments();
@@ -995,7 +995,7 @@ if (!is_authenticated() || !is_admin()) {
         }
 
         async function unarchiveRoom(id) {
-            if (!await confirmAction({ title: 'Restaurar sala', text: 'Todas las evaluaciones de esta sala volveran a la vista principal.', confirmButtonText: 'Si, restaurar sala' })) return;
+            if (!await confirmAction({ title: 'Restaurar sala', text: 'Todas las evaluaciones de esta sala volverán a la vista principal.', confirmButtonText: 'Sí, restaurar sala' })) return;
             await api.post(`/evaluations/rooms/${id}/unarchive`, {});
             rooms = rooms.filter(room => Number(room.id) !== Number(id));
             syncProjectRoomAssignments();
@@ -1072,7 +1072,7 @@ if (!is_authenticated() || !is_admin()) {
             try {
                 await loadInitialData();
             } catch (error) {
-                showAlert('#alertContainer', 'danger', error.message || 'No se pudo cargar la gestion de salas.');
+                showAlert('#alertContainer', 'danger', error.message || 'No se pudo cargar la gestión de salas.');
             }
         });
     </script>

@@ -358,16 +358,16 @@ $serverDashboardUrl = dashboard_url();
             <div class="index-hero-content">
                 <div class="repository-hero-kicker">
                     <i class="bi bi-archive"></i>
-                    Repositorio academico del instituto
+                    Repositorio académico del instituto
                 </div>
-                <h1 class="display-3 fw-bold text-white mb-4">Explora los trabajos y evidencias academicas desarrolladas en el instituto</h1>
-                <p class="lead text-white mb-4">Consulta proyectos integradores, documentos y materiales seleccionados como parte de la memoria academica institucional.</p>
+                <h1 class="display-3 fw-bold text-white mb-4">Explora los trabajos y evidencias académicas desarrolladas en el instituto</h1>
+                <p class="lead text-white mb-4">Consulta proyectos integradores, documentos y materiales seleccionados como parte de la memoria académica institucional.</p>
                 <div class="hero-actions">
                     <a href="/pages/repositorio.php" class="btn btn-light btn-lg">
                         <i class="bi bi-search"></i> Explorar repositorio
                     </a>
                     <button type="button" class="btn btn-outline-light btn-lg" data-bs-toggle="modal" data-bs-target="#loginModal">
-                        <i class="bi bi-box-arrow-in-right"></i> Iniciar sesion
+                        <i class="bi bi-box-arrow-in-right"></i> Iniciar sesión
                     </button>
                 </div>
             </div>
@@ -379,27 +379,27 @@ $serverDashboardUrl = dashboard_url();
             <div class="row g-5 align-items-center">
                 <div class="col-lg-5">
                     <h2 class="section-title mb-3">Repositorio Digital</h2>
-                    <p class="section-subtitle mb-4">Un espacio para encontrar proyectos, revisar entregables y mantener disponible la memoria academica del instituto.</p>
+                    <p class="section-subtitle mb-4">Un espacio para encontrar proyectos, revisar entregables y mantener disponible la memoria académica del instituto.</p>
                     <div class="d-grid gap-3 mb-4">
                         <div class="repository-benefit">
                             <i class="bi bi-file-earmark-text"></i>
                             <div>
                                 <h5 class="mb-1">Documentos organizados</h5>
-                                <p class="text-muted mb-0">Consulta archivos por proyecto, categoria, periodo y datos clave.</p>
+                                <p class="text-muted mb-0">Consulta archivos por proyecto, categoría, periodo y datos clave.</p>
                             </div>
                         </div>
                         <div class="repository-benefit">
                             <i class="bi bi-eye"></i>
                             <div>
-                                <h5 class="mb-1">Lectura rapida</h5>
+                                <h5 class="mb-1">Lectura rápida</h5>
                                 <p class="text-muted mb-0">Previsualiza evidencias y materiales sin perder el contexto del sistema.</p>
                             </div>
                         </div>
                         <div class="repository-benefit">
                             <i class="bi bi-mortarboard"></i>
                             <div>
-                                <h5 class="mb-1">Referencia academica</h5>
-                                <p class="text-muted mb-0">Facilita que nuevas generaciones conozcan proyectos previos y buenas practicas.</p>
+                                <h5 class="mb-1">Referencia académica</h5>
+                                <p class="text-muted mb-0">Facilita que nuevas generaciones conozcan proyectos previos y buenas prácticas.</p>
                             </div>
                         </div>
                     </div>
@@ -422,21 +422,21 @@ $serverDashboardUrl = dashboard_url();
                                     <span class="repository-file-icon"><i class="bi bi-file-earmark-pdf"></i></span>
                                     <div>
                                         <div class="fw-semibold">Proyecto integrador</div>
-                                        <div class="text-muted small">Reporte final · Evidencia academica</div>
+                                        <div class="text-muted small">Reporte final · Evidencia académica</div>
                                     </div>
                                 </div>
                                 <div class="repository-file-row">
                                     <span class="repository-file-icon"><i class="bi bi-file-earmark-slides"></i></span>
                                     <div>
-                                        <div class="fw-semibold">Presentacion</div>
-                                        <div class="text-muted small">Material de exposicion</div>
+                                        <div class="fw-semibold">Presentación</div>
+                                        <div class="text-muted small">Material de exposición</div>
                                     </div>
                                 </div>
                                 <div class="repository-file-row">
                                     <span class="repository-file-icon"><i class="bi bi-tags"></i></span>
                                     <div>
-                                        <div class="fw-semibold">Etiquetas y categorias</div>
-                                        <div class="text-muted small">Busqueda por areas y entregables</div>
+                                        <div class="fw-semibold">Etiquetas y categorías</div>
+                                        <div class="text-muted small">Búsqueda por áreas y entregables</div>
                                     </div>
                                 </div>
                             </div>
@@ -468,14 +468,14 @@ $serverDashboardUrl = dashboard_url();
 
     <div class="section">
         <div class="container-xl">
-            <h2 class="section-title text-center mb-5">Gestion academica conectada al repositorio</h2>
+            <h2 class="section-title text-center mb-5">Gestión académica conectada al repositorio</h2>
             
             <div class="row g-4">
                 <div class="col-lg-4">
                     <div class="card h-100">
                         <div class="card-body text-center">
                             <i class="bi bi-folder2" style="font-size: 3rem; color: #1B396A;"></i>
-                            <h5 class="mt-3">Gestion de proyectos</h5>
+                            <h5 class="mt-3">Gestión de proyectos</h5>
                             <p class="text-muted">Administra proyectos integradores y conserva sus evidencias en un mismo flujo.</p>
                         </div>
                     </div>
@@ -485,8 +485,8 @@ $serverDashboardUrl = dashboard_url();
                     <div class="card h-100">
                         <div class="card-body text-center">
                             <i class="bi bi-clipboard-check" style="font-size: 3rem; color: #1B396A;"></i>
-                            <h5 class="mt-3">Evaluacion documentada</h5>
-                            <p class="text-muted">Relaciona entregables, rubricas y resultados para dar seguimiento academico.</p>
+                            <h5 class="mt-3">Evaluación documentada</h5>
+                            <p class="text-muted">Relaciona entregables, rúbricas y resultados para dar seguimiento académico.</p>
                         </div>
                     </div>
                 </div>
@@ -496,7 +496,7 @@ $serverDashboardUrl = dashboard_url();
                         <div class="card-body text-center">
                             <i class="bi bi-people" style="font-size: 3rem; color: #1B396A;"></i>
                             <h5 class="mt-3">Colaboracion</h5>
-                            <p class="text-muted">Facilita el trabajo entre estudiantes, docentes y responsables de evaluacion.</p>
+                            <p class="text-muted">Facilita el trabajo entre estudiantes, docentes y responsables de evaluación.</p>
                         </div>
                     </div>
                 </div>
@@ -506,7 +506,7 @@ $serverDashboardUrl = dashboard_url();
 
     <div class="cookie-notice" id="cookieNotice" role="status" aria-live="polite" hidden>
         <p class="small">
-            Este sistema usa cookies necesarias para mantener tu sesion iniciada y proteger el acceso a tu cuenta.
+            Este sistema usa cookies necesarias para mantener tu sesión iniciada y proteger el acceso a tu cuenta.
         </p>
         <button type="button" class="btn btn-primary btn-sm mt-3 mt-md-0" id="cookieNoticeAccept">
             Entendido
@@ -529,8 +529,8 @@ $serverDashboardUrl = dashboard_url();
                     <form id="loginForm" class="needs-validation" novalidate>
                         <div class="mb-3 form-floating">
                             <input type="text" class="form-control" id="loginUserId" name="id" placeholder="No. de Control, No. de empleado" required autocomplete="username">
-                            <label for="loginUserId">Numero de control / empleado</label>
-                            <div class="invalid-feedback">Ingresa tu numero de control o empleado.</div>
+                            <label for="loginUserId">Número de control / empleado</label>
+                            <div class="invalid-feedback">Ingresa tu número de control o empleado.</div>
                         </div>
 
                         <div class="mb-3 form-floating">
@@ -581,7 +581,7 @@ $serverDashboardUrl = dashboard_url();
                         <div class="mb-3 form-floating">
                             <input type="email" class="form-control" id="recoveryEmail" placeholder="correo@dominio.com" required autocomplete="email">
                             <label for="recoveryEmail">Correo registrado</label>
-                            <div class="invalid-feedback">Ingresa un correo valido.</div>
+                            <div class="invalid-feedback">Ingresa un correo válido.</div>
                         </div>
                         <div class="d-grid">
                             <button type="submit" class="btn btn-primary btn-lg" id="passwordRecoverySubmitBtn">
@@ -718,7 +718,7 @@ $serverDashboardUrl = dashboard_url();
             }
 
             if (cookieNotice && !cookiesAvailable) {
-                cookieNotice.querySelector('p').innerHTML = '<strong>Las cookies estan bloqueadas.</strong> Habilitalas para este sitio; son necesarias para mantener tu sesion iniciada.';
+                cookieNotice.querySelector('p').innerHTML = '<strong>Las cookies están bloqueadas.</strong> Habilítalas para este sitio; son necesarias para mantener tu sesión iniciada.';
                 cookieNoticeAccept.textContent = 'Volver a comprobar';
             }
 
@@ -731,7 +731,7 @@ $serverDashboardUrl = dashboard_url();
                 try {
                     localStorage.setItem('sgpi-cookie-notice-seen', '1');
                 } catch (error) {
-                    // El aviso ya quedo cerrado en la pagina actual.
+                    // El aviso ya quedó cerrado en la página actual.
                 }
             });
 
@@ -809,7 +809,7 @@ $serverDashboardUrl = dashboard_url();
                 document.getElementById('passwordResetMessage').innerHTML = '';
                 passwordResetModal.show();
             } catch (error) {
-                message.innerHTML = modalAlert('danger', error.message || 'Token no valido.');
+                message.innerHTML = modalAlert('danger', error.message || 'Token no válido.');
             } finally {
                 restoreButton(button);
             }
@@ -831,7 +831,7 @@ $serverDashboardUrl = dashboard_url();
             const confirmation = document.getElementById('newRecoveryPasswordConfirmation').value;
 
             if (password !== confirmation) {
-                message.innerHTML = modalAlert('danger', 'La nueva contraseña y su confirmacion deben ser identicas.');
+                message.innerHTML = modalAlert('danger', 'La nueva contraseña y su confirmación deben ser idénticas.');
                 return;
             }
 
@@ -879,7 +879,7 @@ $serverDashboardUrl = dashboard_url();
             const id = document.getElementById('loginUserId').value.trim();
             const password = document.getElementById('loginPassword').value;
             if (!auth.cookiesEnabled()) {
-                loginMessageContainer.innerHTML = modalAlert('warning', 'Habilita las cookies para este sitio antes de iniciar sesion.');
+                loginMessageContainer.innerHTML = modalAlert('warning', 'Habilita las cookies para este sitio antes de iniciar sesión.');
                 return;
             }
 
@@ -909,7 +909,7 @@ $serverDashboardUrl = dashboard_url();
             await Swal.fire({
                 icon: 'success',
                 title: 'Bienvenido',
-                text: 'Sesion iniciada correctamente',
+                text: 'Sesión iniciada correctamente',
                 timer: 900,
                 showConfirmButton: false
             });

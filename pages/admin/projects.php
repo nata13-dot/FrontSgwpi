@@ -12,7 +12,7 @@ if (!is_authenticated()) {
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Gestion de Proyectos y Tesis - <?= APP_NAME ?></title>
+    <title>Gestión de Proyectos y Tesis - <?= APP_NAME ?></title>
     <?php require_once $_SERVER['DOCUMENT_ROOT'] . '/includes/visual-preferences.php'; ?>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
@@ -25,7 +25,7 @@ if (!is_authenticated()) {
         <div class="main-content flex-grow-1">
             <div class="container-xl mt-5 mb-5">
                 <div class="d-flex align-items-center justify-content-between mb-4">
-                    <div><h1 class="mb-1">Gestion de Proyectos y Tesis</h1><span class="badge bg-primary"><i class="bi bi-table"></i> Vista resumida de proyectos y tesis</span></div>
+                    <div><h1 class="mb-1">Gestión de Proyectos y Tesis</h1><span class="badge bg-primary"><i class="bi bi-table"></i> Vista resumida de proyectos y tesis</span></div>
                     <?php if (is_admin()): ?>
                     <div class="d-flex flex-wrap gap-2">
                         <button type="button" class="btn btn-outline-primary" onclick="downloadProjectsExcelTemplate()">
@@ -43,7 +43,7 @@ if (!is_authenticated()) {
 
                 <div id="alertContainer" class="mb-3"></div>
 
-                <div class="d-flex flex-wrap gap-2 mb-3" role="group" aria-label="Vista de gestion de proyectos y tesis">
+                <div class="d-flex flex-wrap gap-2 mb-3" role="group" aria-label="Vista de gestión de proyectos y tesis">
                     <button type="button" class="btn btn-primary" id="projectViewBtn" onclick="setProjectManagementView('projects')">
                         <i class="bi bi-folder2-open"></i> Proyectos
                     </button>
@@ -69,13 +69,13 @@ if (!is_authenticated()) {
                         <div class="input-group">
                             <span class="input-group-text"><i class="bi bi-search"></i></span>
                             <input type="search" class="form-control" id="projectSearchInput" placeholder="Proyecto, estudiante, asesor, empresa o año" oninput="scheduleProjectsSearch()">
-                            <button type="button" class="btn btn-outline-secondary" onclick="clearProjectsSearch()" title="Limpiar busqueda"><i class="bi bi-x-lg"></i></button>
+                            <button type="button" class="btn btn-outline-secondary" onclick="clearProjectsSearch()" title="Limpiar búsqueda"><i class="bi bi-x-lg"></i></button>
                         </div>
                     </div>
                 </div>
                 <div class="card border-0 shadow-sm border-start border-4 border-success d-none" id="thesisManagementView">
                     <div class="card-header d-flex flex-wrap align-items-center justify-content-between gap-2">
-                        <span><i class="bi bi-mortarboard"></i> Gestion de tesis</span>
+                        <span><i class="bi bi-mortarboard"></i> Gestión de tesis</span>
                         <span class="badge bg-light text-success" id="thesisCountInfo">Cargando...</span>
                     </div>
                     <div class="card-body p-0">
@@ -170,7 +170,7 @@ if (!is_authenticated()) {
                                 <input type="text" class="form-control" id="projectTitle" required>
                             </div>
                             <div class="col-12">
-                                <label class="form-label" for="projectDescription">Descripcion</label>
+                                <label class="form-label" for="projectDescription">Descripción</label>
                                 <textarea class="form-control" id="projectDescription" rows="4" required></textarea>
                             </div>
                             <div class="col-md-6">
@@ -190,9 +190,9 @@ if (!is_authenticated()) {
                                 <input type="text" class="form-control" id="projectCompanyPosition" maxlength="255" required>
                             </div>
                             <div class="col-12">
-                                <label class="form-label" for="projectCompanyAddress">Direccion de empresa</label>
+                                <label class="form-label" for="projectCompanyAddress">Dirección de empresa</label>
                                 <textarea class="form-control" id="projectCompanyAddress" rows="2" maxlength="1000" required></textarea>
-                                <div class="form-text">Separa calle, numero, colonia y municipio con comas (,).</div>
+                                <div class="form-text">Separa calle, número, colonia y municipio con comas (,).</div>
                             </div>
                             <div class="col-md-4">
                                 <label class="form-label" for="projectSemester">Semestre</label>
@@ -247,7 +247,7 @@ if (!is_authenticated()) {
                 <div class="modal-body">
                     <input type="hidden" id="projectSubjectsId">
                     <div class="alert alert-info">
-                        Las materias del grupo se copian automaticamente al proyecto. Usa esta opcion para ajustar casos especiales sin ligar entregables uno por uno.
+                        Las materias del grupo se copian automáticamente al proyecto. Usa esta opción para ajustar casos especiales sin ligar entregables uno por uno.
                     </div>
                     <div id="projectSubjectsList" class="row g-2"></div>
                 </div>
@@ -380,7 +380,7 @@ if (!is_authenticated()) {
                         <td>
                             <div class="btn-group btn-group-sm" role="group">
                                 <button class="btn btn-outline-secondary" onclick="showProjectDetails(${project.id})" title="Ver detalles"><i class="bi bi-eye"></i></button>
-                                ${isAdmin ? `<a class="btn btn-outline-success" href="/pages/admin/advisors.php?project=${project.id}&view=thesis" title="Asignar comite"><i class="bi bi-person-check"></i></a>
+                                ${isAdmin ? `<a class="btn btn-outline-success" href="/pages/admin/advisors.php?project=${project.id}&view=thesis" title="Asignar comité"><i class="bi bi-person-check"></i></a>
                                 <button type="button" class="btn btn-outline-info" onclick="openProjectSubjectsModal(${project.id})" title="Materias"><i class="bi bi-book"></i></button>
                                 <button type="button" class="btn btn-outline-primary" onclick="openProjectModal(${project.id}, true)" title="Editar tesis"><i class="bi bi-pencil"></i></button>
                                 <button type="button" class="btn btn-outline-warning" onclick="toggleProjectThesis(${project.id}, false)" title="Quitar de tesis"><i class="bi bi-mortarboard-fill"></i></button>
@@ -701,7 +701,7 @@ if (!is_authenticated()) {
                     title: escapeHtml(project.title),
                     html: `
                         <div class="text-start">
-                            <p class="text-muted">${escapeHtml(project.description || 'Sin descripcion')}</p>
+                            <p class="text-muted">${escapeHtml(project.description || 'Sin descripción')}</p>
                             <p><strong>Tipo de registro:</strong> ${status}</p>
                             <p><strong>Integrantes:</strong><br>${escapeHtml(projectActiveAuthors(project))}</p>
                             <p><strong>Grupo / carga:</strong><br>${escapeHtml(project.subject_group?.nombre || '-')}</p>
@@ -766,8 +766,8 @@ if (!is_authenticated()) {
             const confirmed = await confirmAction({
                 title: isThesis ? 'Marcar como tesis' : 'Quitar de tesis',
                 text: isThesis
-                    ? 'El proyecto pasara al apartado aislado de gestion de tesis.'
-                    : 'La tesis volvera a gestionarse solo como proyecto integrador y se limpiara su comite de tesis.',
+                    ? 'El proyecto pasará al apartado aislado de gestión de tesis.'
+                    : 'La tesis volverá a gestionarse solo como proyecto integrador y se limpiará su comité de tesis.',
                 confirmButtonText: isThesis ? 'Si, marcar' : 'Si, quitar'
             });
             if (!confirmed) return;
@@ -784,7 +784,7 @@ if (!is_authenticated()) {
         async function deleteProject(projectId) {
             const confirmed = await confirmAction({
                 title: 'Eliminar proyecto',
-                text: '¿Estas seguro de que deseas eliminar este proyecto?',
+                text: '¿Estás seguro de que deseas eliminar este proyecto?',
                 confirmButtonText: 'Si, eliminar'
             });
             if (!confirmed) return;

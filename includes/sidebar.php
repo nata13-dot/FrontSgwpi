@@ -23,7 +23,7 @@ $section = isset($_GET['section']) ? $_GET['section'] : '';
         </div>
     <?php endif; ?>
     <?php if (is_admin()): ?>
-        <div class="sidebar-section-title" style="padding: 0 20px; margin-bottom: 20px;"><h6 class="text-muted text-uppercase" style="font-size: 0.85rem;">Administracion</h6></div>
+        <div class="sidebar-section-title" style="padding: 0 20px; margin-bottom: 20px;"><h6 class="text-muted text-uppercase" style="font-size: 0.85rem;">Administración</h6></div>
         <a href="/pages/admin/dashboard.php" class="sidebar-item <?= $current_page == 'dashboard.php' ? 'active' : '' ?>"><i class="bi bi-speedometer2"></i><span>Inicio</span></a>
         <details class="sidebar-group" <?= in_array($current_page, ['users.php', 'advisors.php']) ? 'open' : '' ?>>
             <summary><i class="bi bi-people"></i><span>Personas</span><i class="bi bi-chevron-down ms-auto"></i></summary>
@@ -32,7 +32,7 @@ $section = isset($_GET['section']) ? $_GET['section'] : '';
         </details>
         <details class="sidebar-group" <?= in_array($current_page, ['projects.php', 'project-create.php', 'project-edit.php', 'proposal-config.php', 'deliverables.php', 'evaluations.php', 'evaluations-archived.php', 'evaluation-rooms.php', 'evaluation-documents.php']) ? 'open' : '' ?>>
             <summary><i class="bi bi-mortarboard"></i><span>Proyectos y tesis</span><i class="bi bi-chevron-down ms-auto"></i></summary>
-            <a href="/pages/admin/projects.php" class="sidebar-item sidebar-subitem <?= in_array($current_page, ['projects.php', 'project-create.php', 'project-edit.php']) ? 'active' : '' ?>"><i class="bi bi-mortarboard"></i><span>Gestion de tesis</span></a>
+            <a href="/pages/admin/projects.php" class="sidebar-item sidebar-subitem <?= in_array($current_page, ['projects.php', 'project-create.php', 'project-edit.php']) ? 'active' : '' ?>"><i class="bi bi-mortarboard"></i><span>Gestión de Proyectos/Tesis</span></a>
             <a href="/pages/admin/proposal-config.php" class="sidebar-item sidebar-subitem <?= $current_page == 'proposal-config.php' ? 'active' : '' ?>"><i class="bi bi-calendar-check"></i><span>Propuestas</span></a>
             <a href="/pages/admin/deliverables.php" class="sidebar-item sidebar-subitem <?= $current_page == 'deliverables.php' ? 'active' : '' ?>"><i class="bi bi-file-earmark"></i><span>Entregables</span></a>
             <a href="/pages/admin/evaluations.php" class="sidebar-item sidebar-subitem <?= in_array($current_page, ['evaluations.php', 'evaluation-rooms.php']) ? 'active' : '' ?>"><i class="bi bi-clipboard-check"></i><span>Evaluaciones</span></a>
@@ -95,7 +95,7 @@ $section = isset($_GET['section']) ? $_GET['section'] : '';
         <img src="/assets/img/ITSSMT/ITSSMT.webp" alt="ITSSMT">
         <div>
             <strong>Gestión de Proyectos Integradores ITSSMT</strong>
-            <small>Versión BETA 2.1.15</small>
+            <small>Versión BETA 2.1.17</small>
         </div>
     </div>
     <button type="button" class="sidebar-collapse-control" data-sidebar-toggle aria-label="Contraer menú lateral">

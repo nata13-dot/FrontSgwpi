@@ -225,7 +225,7 @@ if (!$userId) {
             // Incluir contraseña solo si está llena
             if (document.getElementById('password').value) {
                 if (document.getElementById('password').value !== document.getElementById('password_confirmation').value) {
-                    swalToast('danger', 'La nueva contraseña y su confirmacion no coinciden');
+                    swalToast('danger', 'La nueva contraseña y su confirmación no coinciden');
                     return;
                 }
                 formData.password = document.getElementById('password').value;

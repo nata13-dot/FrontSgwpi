@@ -85,7 +85,7 @@ if (!is_authenticated() || !is_admin()) {
                         <select class="form-select" id="noticeAudience" required>
                             <option value="all">Todo el sistema</option>
                             <option value="index">Solo index publico</option>
-                            <option value="authenticated">Solo inicio de sesion</option>
+                            <option value="authenticated">Solo inicio de sesión</option>
                             <option value="academic">Estudiantes y docentes</option>
                             <option value="teacher">Solo docentes</option>
                             <option value="student">Solo estudiantes</option>
@@ -121,12 +121,12 @@ if (!is_authenticated() || !is_admin()) {
                     <div class="col-md-6">
                         <label class="form-label" for="noticeEndsAt">Eliminar despues de</label>
                         <input type="date" class="form-control" id="noticeEndsAt">
-                        <div class="form-text">Al pasar esta fecha, el aviso se elimina automaticamente.</div>
+                        <div class="form-text">Al pasar esta fecha, el aviso se elimina automáticamente.</div>
                     </div>
                     <div class="col-12">
                         <label class="form-label" for="noticeMessage">Mensaje</label>
                         <textarea class="form-control" id="noticeMessage" rows="4" maxlength="500" required></textarea>
-                        <div class="form-text">Maximo 500 caracteres. El toast se cerrara automaticamente.</div>
+                        <div class="form-text">Máximo 500 caracteres. El toast se cerrará automáticamente.</div>
                     </div>
                 </div>
             </div>
@@ -151,7 +151,7 @@ let noticeModal = null;
 const audienceLabels = {
     all: 'Todo',
     index: 'Index publico',
-    authenticated: 'Inicio de sesion',
+    authenticated: 'Inicio de sesión',
     academic: 'Estudiantes y docentes',
     teacher: 'Docentes',
     student: 'Estudiantes',
@@ -299,7 +299,7 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 function formatValidity(notice) {
-    if (!notice.starts_at && !notice.ends_at) return '<span class="text-muted small">Sin limite</span>';
+    if (!notice.starts_at && !notice.ends_at) return '<span class="text-muted small">Sin límite</span>';
     const start = notice.starts_at ? esc(notice.starts_at) : 'Hoy';
     const end = notice.ends_at ? esc(notice.ends_at) : 'Sin fin';
     return `<span class="small">${start}<br>${end}</span>`;

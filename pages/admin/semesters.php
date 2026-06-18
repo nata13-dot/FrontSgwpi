@@ -114,7 +114,7 @@ async function loadSemesterManagement(force = false) {
         renderSemesterStats();
         renderSemesterView();
     } catch (error) {
-        document.getElementById('semesterViewContent').innerHTML = `<div class="alert alert-danger">${esc(error.message || 'No se pudo cargar la gestion.')}</div>`;
+        document.getElementById('semesterViewContent').innerHTML = `<div class="alert alert-danger">${esc(error.message || 'No se pudo cargar la gestión.')}</div>`;
     }
 }
 
@@ -154,14 +154,14 @@ function renderSemesterView() {
 function renderPeriods() {
     document.getElementById('semesterViewContent').innerHTML = `
         <div class="card border-0 shadow-sm">
-            <div class="card-header d-flex justify-content-between align-items-center"><strong>Periodos academicos</strong><span class="text-muted small">La fecha vigente puede activar el periodo automaticamente.</span></div>
+            <div class="card-header d-flex justify-content-between align-items-center"><strong>Periodos académicos</strong><span class="text-muted small">La fecha vigente puede activar el periodo automáticamente.</span></div>
             <div class="table-responsive"><table class="table align-middle mb-0">
                 <thead><tr><th>Periodo</th><th>Fechas</th><th>Promocion</th><th>Cargas</th><th>Estado</th><th>Acciones</th></tr></thead>
                 <tbody>${semesterState.periods.map(period => `
                     <tr>
                         <td><strong>${esc(period.nombre)}</strong></td>
                         <td>${localDate(period.fecha_inicio)}<div class="small text-muted">hasta ${localDate(period.fecha_fin)}</div></td>
-                        <td>${period.promocion_automatica ? '<span class="badge bg-success-subtle text-success">Automatica</span>' : '<span class="badge bg-light text-dark">Manual</span>'}</td>
+                        <td>${period.promocion_automatica ? '<span class="badge bg-success-subtle text-success">Automática</span>' : '<span class="badge bg-light text-dark">Manual</span>'}</td>
                         <td>${esc(period.subject_groups_count || 0)}</td>
                         <td>${period.activo ? '<span class="badge bg-primary">Activo</span>' : '<span class="badge bg-secondary">Inactivo</span>'}</td>
                         <td><div class="btn-group btn-group-sm">
@@ -179,13 +179,13 @@ function renderPromotion() {
     document.getElementById('semesterViewContent').innerHTML = `
         <div class="row g-4">
             <div class="col-lg-5"><div class="card border-0 shadow-sm h-100"><div class="card-body">
-                <h4>Promocion academica</h4>
-                <p class="text-muted">Actualiza el semestre cursado. Las excepciones de presentacion no modifican este dato.</p>
+                <h4>Promoción académica</h4>
+                <p class="text-muted">Actualiza el semestre cursado. Las excepciones de presentación no modifican este dato.</p>
                 <label class="form-label" for="promotionPeriod">Periodo destino</label>
                 <select class="form-select mb-3" id="promotionPeriod">${options}</select>
                 <div class="d-grid gap-2">
                     <button class="btn btn-outline-primary" onclick="previewPromotion()"><i class="bi bi-search"></i> Vista previa</button>
-                    <button class="btn btn-warning" onclick="applyPromotion()"><i class="bi bi-arrow-up-right-circle"></i> Aplicar promocion</button>
+                    <button class="btn btn-warning" onclick="applyPromotion()"><i class="bi bi-arrow-up-right-circle"></i> Aplicar promoción</button>
                 </div>
             </div></div></div>
             <div class="col-lg-7"><div class="card border-0 shadow-sm h-100"><div class="card-header"><strong>Movimientos previstos</strong></div><div class="card-body" id="promotionPreview">
@@ -199,8 +199,8 @@ function renderExceptions() {
     document.getElementById('semesterViewContent').innerHTML = `
         <div class="row g-4">
             <div class="col-lg-5"><div class="card border-0 shadow-sm"><div class="card-body">
-                <h4>Nueva presentacion especial</h4>
-                <p class="text-muted small">Busca un alumno o proyecto. Su semestre academico permanece sin cambios.</p>
+                <h4>Nueva presentación especial</h4>
+                <p class="text-muted small">Busca un alumno o proyecto. Su semestre académico permanece sin cambios.</p>
                 <label class="form-label" for="exceptionPeriod">Periodo</label>
                 <select class="form-select mb-3" id="exceptionPeriod">${periodOptions}</select>
                 <label class="form-label" for="exceptionSearch">Alumno o proyecto</label>
@@ -208,11 +208,11 @@ function renderExceptions() {
                 <div class="semester-search-results mt-2" id="exceptionSearchResults"></div>
                 <input type="hidden" id="exceptionTargetType"><input type="hidden" id="exceptionTargetId">
                 <div class="mt-3">
-                    <label class="form-label" for="exceptionSemester">Semestre de presentacion</label>
+                    <label class="form-label" for="exceptionSemester">Semestre de presentación</label>
                     <select class="form-select" id="exceptionSemester">${[5,6,7,8,9].map(item => `<option value="${item}">${item}</option>`).join('')}</select>
                 </div>
                 <div class="mt-3"><label class="form-label" for="exceptionReason">Motivo</label><textarea class="form-control" id="exceptionReason" rows="2" maxlength="500"></textarea></div>
-                <button class="btn btn-primary w-100 mt-3" onclick="saveException()"><i class="bi bi-save"></i> Guardar excepcion</button>
+                <button class="btn btn-primary w-100 mt-3" onclick="saveException()"><i class="bi bi-save"></i> Guardar excepción</button>
             </div></div></div>
             <div class="col-lg-7"><div class="card border-0 shadow-sm"><div class="card-header"><strong>Excepciones activas</strong></div>
                 <div class="table-responsive"><table class="table align-middle mb-0"><thead><tr><th>Periodo</th><th>Alumno o proyecto</th><th>Presenta en</th><th></th></tr></thead>
@@ -223,7 +223,7 @@ function renderExceptions() {
                         ? `${[student.nombres, student.apellido_paterno, student.apellido_materno].filter(Boolean).join(' ')} (${student.id})`
                         : project?.title || project?.titulo || 'Proyecto';
                     const origin = student?.semestre || project?.subject_group?.semestre || '-';
-                    return `<tr><td>${esc(exception.period?.nombre || '-')}</td><td><strong>${esc(target)}</strong><div class="small text-muted">Semestre academico ${esc(origin)}</div></td><td><span class="badge bg-primary">${esc(exception.semestre_presentacion)}</span></td><td><button class="btn btn-sm btn-outline-danger" onclick="deleteException(${exception.id})"><i class="bi bi-trash"></i></button></td></tr>`;
+                    return `<tr><td>${esc(exception.period?.nombre || '-')}</td><td><strong>${esc(target)}</strong><div class="small text-muted">Semestre académico ${esc(origin)}</div></td><td><span class="badge bg-primary">${esc(exception.semestre_presentacion)}</span></td><td><button class="btn btn-sm btn-outline-danger" onclick="deleteException(${exception.id})"><i class="bi bi-trash"></i></button></td></tr>`;
                 }).join('') || '<tr><td colspan="4" class="text-center text-muted py-4">No hay excepciones activas.</td></tr>'}</tbody>
                 </table></div>
             </div></div>
@@ -270,13 +270,13 @@ async function previewPromotion() {
     box.innerHTML = '<div class="spinner-border" role="status"></div>';
     try {
         const response = await api.get(`/semester-management/periods/${id}/promotion-preview`, { _fresh: true });
-        box.innerHTML = (response.movements || []).map(item => `<div class="semester-movement"><strong>${item.from} → ${item.to}</strong><span>${item.students} alumno(s)</span></div>`).join('') || '<p class="text-muted mb-0">No hay alumnos elegibles para promocion.</p>';
+        box.innerHTML = (response.movements || []).map(item => `<div class="semester-movement"><strong>${item.from} → ${item.to}</strong><span>${item.students} alumno(s)</span></div>`).join('') || '<p class="text-muted mb-0">No hay alumnos elegibles para promoción.</p>';
     } catch (error) { box.innerHTML = `<p class="text-danger">${esc(error.message)}</p>`; }
 }
 
 async function applyPromotion() {
     const id = document.getElementById('promotionPeriod').value;
-    if (!await confirmAction({ title: 'Aplicar promocion', text: 'Se actualizara el semestre academico de los alumnos elegibles.', confirmButtonText: 'Aplicar' })) return;
+    if (!await confirmAction({ title: 'Aplicar promoción', text: 'Se actualizará el semestre académico de los alumnos elegibles.', confirmButtonText: 'Aplicar' })) return;
     try {
         const response = await api.post(`/semester-management/periods/${id}/promote`);
         showAlert('#alertContainer', 'success', `${response.message}: ${response.summary.updated} alumno(s) actualizados.`);
@@ -329,7 +329,7 @@ async function saveException() {
 }
 
 async function deleteException(id) {
-    if (!await confirmAction({ title: 'Eliminar excepcion', text: 'La presentacion volvera a usar el semestre academico.', confirmButtonText: 'Eliminar' })) return;
+    if (!await confirmAction({ title: 'Eliminar excepción', text: 'La presentación volverá a usar el semestre académico.', confirmButtonText: 'Eliminar' })) return;
     try { await api.delete(`/semester-management/exceptions/${id}`); loadSemesterManagement(true); }
     catch (error) { showAlert('#alertContainer', 'danger', error.message); }
 }

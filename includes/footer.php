@@ -107,7 +107,7 @@ function broadcastSystemSettings(settings) {
             settings
         }));
     } catch (error) {
-        // Si storage esta bloqueado, el polling mantiene la sincronizacion.
+        // Si storage está bloqueado, el polling mantiene la sincronización.
     }
 }
 
@@ -124,7 +124,7 @@ function startSystemSettingsSync() {
                 return;
             }
         } catch (error) {
-            // Si el evento no trae ajustes validos, pedimos una copia fresca.
+            // Si el evento no trae ajustes válidos, pedimos una copia fresca.
         }
         loadPublicSettings({ force: true });
     });
@@ -311,7 +311,7 @@ function writeNotificationIds(ids) {
     try {
         localStorage.setItem('sgpi-read-notifications', JSON.stringify([...ids]));
     } catch (error) {
-        // Si storage esta bloqueado, el contador solo se limpia durante esta vista.
+        // Si storage está bloqueado, el contador solo se limpia durante esta vista.
     }
 }
 
@@ -551,7 +551,7 @@ window.stableSwalFire = async function (options = {}) {
 };
 
 window.confirmAction = async function ({
-    title = '¿Confirmar accion?',
+    title = '¿Confirmar acción?',
     text = '',
     confirmButtonText = 'Si, continuar',
     icon = 'warning'
@@ -621,17 +621,17 @@ window.promptAdminAction = async function () {
 
     const result = await stableSwalFire({
         title: 'Usuario administrador protegido',
-        text: 'Selecciona la accion que deseas autorizar.',
+        text: 'Selecciona la acción que deseas autorizar.',
         icon: 'warning',
         input: 'select',
         inputOptions: {
             DESACTIVAR: 'Desactivar usuario'
         },
-        inputPlaceholder: 'Selecciona una accion',
+        inputPlaceholder: 'Selecciona una acción',
         showCancelButton: true,
         confirmButtonText: 'Continuar',
         cancelButtonText: 'Cancelar',
-        inputValidator: value => value ? undefined : 'Selecciona una accion'
+        inputValidator: value => value ? undefined : 'Selecciona una acción'
     });
 
     return result.isConfirmed ? result.value : null;

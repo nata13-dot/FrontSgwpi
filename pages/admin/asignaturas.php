@@ -11,7 +11,7 @@ if (!is_authenticated() || !is_admin()) {
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Gestion de Asignaturas - <?= APP_NAME ?></title>
+    <title>Gestión de Asignaturas - <?= APP_NAME ?></title>
     <?php require_once $_SERVER['DOCUMENT_ROOT'] . '/includes/visual-preferences.php'; ?>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
@@ -24,12 +24,12 @@ if (!is_authenticated() || !is_admin()) {
         <div class="main-content flex-grow-1">
             <div class="container-xl mt-5 mb-5">
                 <div class="d-flex align-items-center justify-content-between mb-4">
-                    <h1 class="mb-0">Gestion de Asignaturas</h1>
+                    <h1 class="mb-0">Gestión de Asignaturas</h1>
                     <div class="d-flex gap-2">
                         <button class="btn btn-outline-primary" id="cargas" onclick="openGroupsModal()">
                             <i class="bi bi-collection"></i> Gestionar Cargas
                         </button>
-                        <button class="btn btn-outline-primary" type="button" onclick="openCompetenciasLauncher()">
+                        <button class="btn btn-outline-primary" type="button" onclick="openCompetenciasLaúncher()">
                             <i class="bi bi-star"></i> Gestionar Competencias
                         </button>
                         <button class="btn btn-primary" onclick="openAsignaturaModal()">
@@ -47,8 +47,8 @@ if (!is_authenticated() || !is_admin()) {
                                         <th>Clave</th>
                                         <th>Nombre</th>
                                         <th>Competencias</th>
-                                        <th>Descripcion</th>
-                                        <th>Gestion</th>
+                                        <th>Descripción</th>
+                                        <th>Gestión</th>
                                     </tr>
                                 </thead>
                                 <tbody id="asignaturasTable">
@@ -130,7 +130,7 @@ if (!is_authenticated() || !is_admin()) {
         </div>
     </div>
 
-    <div class="modal fade" id="competenciasLauncherModal" tabindex="-1">
+    <div class="modal fade" id="competenciasLaúncherModal" tabindex="-1">
         <div class="modal-dialog modal-lg">
             <div class="modal-content">
                 <div class="modal-header">
@@ -170,8 +170,8 @@ if (!is_authenticated() || !is_admin()) {
                         <input type="text" class="form-control" id="nombre" required>
                     </div>
                     <div class="mb-3">
-                        <label for="descripcion" class="form-label">Descripcion</label>
-                        <textarea class="form-control" id="descripcion" rows="3"></textarea>
+                        <label for="descripción" class="form-label">Descripción</label>
+                        <textarea class="form-control" id="descripción" rows="3"></textarea>
                     </div>
                 </div>
                 <div class="modal-footer">
@@ -251,7 +251,7 @@ if (!is_authenticated() || !is_admin()) {
         let asignaturaModal;
         let structureModal;
         let competenciasModal;
-        let competenciasLauncherModal;
+        let competenciasLaúncherModal;
         let groupsModal;
         let currentAsignatura = null;
         let activeAcademicPeriod = null;
@@ -272,7 +272,7 @@ if (!is_authenticated() || !is_admin()) {
             const fin = new Date(fechaFin);
             if (now >= inicio && now <= fin) return '<span class="badge bg-success">En rango</span>';
             if (now > fin) return '<span class="badge bg-danger">Vencida</span>';
-            return '<span class="badge bg-warning text-dark">Proxima</span>';
+            return '<span class="badge bg-warning text-dark">Próxima</span>';
         }
 
         async function loadAsignaturas(page = 1) {
@@ -308,7 +308,7 @@ if (!is_authenticated() || !is_admin()) {
                             <td><strong>${escapeHtml(asignatura.clave || '-')}</strong></td>
                             <td>${escapeHtml(asignatura.nombre)}</td>
                             <td><span class="badge bg-primary">${Number(asignatura.competencias_count || 0)}</span></td>
-                            <td><small>${escapeHtml(asignatura.descripcion || '-')}</small></td>
+                            <td><small>${escapeHtml(asignatura.descripción || '-')}</small></td>
                             <td>
                                 <div class="btn-group btn-group-sm" role="group">
                                     <button class="btn btn-outline-primary" onclick="openCompetenciasModal(${asignatura.id})" title="Gestionar competencias"><i class="bi bi-star"></i></button>
@@ -347,8 +347,8 @@ if (!is_authenticated() || !is_admin()) {
                 <div class="d-flex flex-wrap align-items-center justify-content-between gap-3">
                     <div class="d-flex align-items-center gap-2">
                         <span class="text-muted small">Mostrando ${from}-${to} de ${total} asignaturas</span>
-                        <select class="form-select form-select-sm" style="width:auto" aria-label="Asignaturas por pagina" onchange="changeAsignaturasPerPage(this.value)">
-                            ${[15, 25, 50, 100].map(value => `<option value="${value}" ${value === asignaturasPerPage ? 'selected' : ''}>${value} por pagina</option>`).join('')}
+                        <select class="form-select form-select-sm" style="width:auto" aria-label="Asignaturas por página" onchange="changeAsignaturasPerPage(this.value)">
+                            ${[15, 25, 50, 100].map(value => `<option value="${value}" ${value === asignaturasPerPage ? 'selected' : ''}>${value} por página</option>`).join('')}
                         </select>
                     </div>
                     <nav aria-label="Paginacion de asignaturas">
@@ -379,7 +379,7 @@ if (!is_authenticated() || !is_admin()) {
                 const asignatura = asignaturas.find(item => item.id === id);
                 document.getElementById('clave').value = asignatura?.clave || '';
                 document.getElementById('nombre').value = asignatura?.nombre || '';
-                document.getElementById('descripcion').value = asignatura?.descripcion || '';
+                document.getElementById('descripción').value = asignatura?.descripción || '';
             }
 
             asignaturaModal.show();
@@ -391,7 +391,7 @@ if (!is_authenticated() || !is_admin()) {
             const data = {
                 clave: document.getElementById('clave').value.trim() || null,
                 nombre: document.getElementById('nombre').value.trim(),
-                descripcion: document.getElementById('descripcion').value.trim() || null
+                descripción: document.getElementById('descripción').value.trim() || null
             };
 
             try {
@@ -416,21 +416,21 @@ if (!is_authenticated() || !is_admin()) {
                 competenciasModal.show();
                 await loadCompetenciasByAsignatura();
             };
-            const launcherElement = document.getElementById('competenciasLauncherModal');
-            if (launcherElement.classList.contains('show')) {
-                launcherElement.addEventListener('hidden.bs.modal', showManager, { once: true });
-                competenciasLauncherModal.hide();
+            const laúncherElement = document.getElementById('competenciasLaúncherModal');
+            if (laúncherElement.classList.contains('show')) {
+                laúncherElement.addEventListener('hidden.bs.modal', showManager, { once: true });
+                competenciasLaúncherModal.hide();
                 return;
             }
             await showManager();
         }
 
-        async function openCompetenciasLauncher() {
+        async function openCompetenciasLaúncher() {
             window.history.replaceState(null, '', `${window.location.pathname}#competencias`);
             document.getElementById('competenciasSubjectSearch').value = '';
             document.getElementById('competenciasSubjectsList').innerHTML =
                 '<div class="text-center py-4"><div class="spinner-border" role="status"></div></div>';
-            competenciasLauncherModal.show();
+            competenciasLaúncherModal.show();
 
             try {
                 competenciasAsignaturas = await loadAllAsignaturas();
@@ -540,7 +540,7 @@ if (!is_authenticated() || !is_admin()) {
         });
 
         async function deleteCompetencia(id) {
-            if (!await confirmAction({ title: 'Eliminar competencia', text: '¿Eliminar esta competencia?', confirmButtonText: 'Si, eliminar' })) return;
+            if (!await confirmAction({ title: 'Eliminar competencia', text: '¿Eliminar esta competencia?', confirmButtonText: 'Sí, eliminar' })) return;
             try {
                 await api.delete(`/competencias/${id}`);
                 swalToast('success', 'Competencia eliminada');
@@ -691,7 +691,7 @@ if (!is_authenticated() || !is_admin()) {
             const confirmed = await confirmAction({
                 title: 'Eliminar carga',
                 text: '¿Eliminar esta carga de asignaturas?',
-                confirmButtonText: 'Si, eliminar'
+                confirmButtonText: 'Sí, eliminar'
             });
             if (!confirmed) return;
 
@@ -704,7 +704,7 @@ if (!is_authenticated() || !is_admin()) {
             }
         }
         async function deleteAsignatura(id) {
-            if (!await confirmAction({ title: 'Eliminar asignatura', text: '¿Eliminar esta asignatura?', confirmButtonText: 'Si, eliminar' })) return;
+            if (!await confirmAction({ title: 'Eliminar asignatura', text: '¿Eliminar esta asignatura?', confirmButtonText: 'Sí, eliminar' })) return;
             try {
                 await api.delete(`/asignaturas/${id}`);
                 showAlert('#alertContainer', 'success', 'Asignatura eliminada');
@@ -724,7 +724,7 @@ if (!is_authenticated() || !is_admin()) {
                 document.getElementById('structureTitle').textContent = asignatura.nombre || 'Estructura de asignatura';
                 const competencias = asignatura.competencias || [];
                 if (!competencias.length) {
-                    document.getElementById('structureBody').innerHTML = '<p class="text-muted mb-0">Esta asignatura aun no tiene competencias asignadas.</p>';
+                    document.getElementById('structureBody').innerHTML = '<p class="text-muted mb-0">Esta asignatura aún no tiene competencias asignadas.</p>';
                     return;
                 }
 
@@ -756,11 +756,11 @@ if (!is_authenticated() || !is_admin()) {
             asignaturaModal = new bootstrap.Modal(document.getElementById('asignaturaModal'));
             structureModal = new bootstrap.Modal(document.getElementById('structureModal'));
             competenciasModal = new bootstrap.Modal(document.getElementById('competenciasModal'));
-            competenciasLauncherModal = new bootstrap.Modal(document.getElementById('competenciasLauncherModal'));
+            competenciasLaúncherModal = new bootstrap.Modal(document.getElementById('competenciasLaúncherModal'));
             groupsModal = new bootstrap.Modal(document.getElementById('groupsModal'));
             loadAsignaturas();
             if (window.location.hash === '#competencias') {
-                openCompetenciasLauncher();
+                openCompetenciasLaúncher();
             }
         });
     </script>

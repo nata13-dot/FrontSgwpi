@@ -63,7 +63,7 @@ class ApiClient {
     }
 
     /**
-     * Precarga la siguiente pagina de una respuesta paginada.
+     * Precarga la siguiente página de una respuesta paginada.
      */
     prefetchNextPage(endpoint, params = {}, pagination = {}) {
         const currentPage = Number(pagination.current_page || params.page || 1);
@@ -80,7 +80,7 @@ class ApiClient {
         }
 
         this.get(endpoint, nextParams).catch(() => {
-            // La precarga es opcional; la pagina se solicitara normalmente si falla.
+            // La precarga es opcional; la página se solicitará normalmente si falla.
         });
     }
 
@@ -196,7 +196,7 @@ class ApiClient {
                 }
 
                 this.redirectToLogout('unauthorized');
-                throw new Error('Sesion expirada. Inicia sesion nuevamente.');
+                throw new Error('Sesión expirada. Inicia sesión nuevamente.');
             }
 
             const result = await response.json().catch(() => ({}));
@@ -272,7 +272,7 @@ class ApiClient {
                 .filter(key => key.startsWith(this.cachePrefix))
                 .forEach(key => sessionStorage.removeItem(key));
         } catch (error) {
-            // La limpieza en memoria ya evita reutilizar datos dentro de la pagina actual.
+            // La limpieza en memoria ya evita reutilizar datos dentro de la página actual.
         }
     }
 
@@ -583,17 +583,17 @@ class ApiClient {
 
     translateError(message) {
         const replacements = {
-            'The semestre field must be an integer.': 'El semestre debe ser un numero valido.',
-            'The grupo field must be a string.': 'El grupo debe ser un texto valido.',
-            'The current password field must be a string.': 'La contraseña actual debe ser texto valido.',
-            'The password field confirmation does not match.': 'La confirmacion de contraseña no coincide.',
+            'The semestre field must be an integer.': 'El semestre debe ser un número válido.',
+            'The grupo field must be a string.': 'El grupo debe ser un texto válido.',
+            'The current password field must be a string.': 'La contraseña actual debe ser texto válido.',
+            'The password field confirmation does not match.': 'La confirmación de contraseña no coincide.',
             'The password field must be at least 6 characters.': 'La contraseña debe tener al menos 6 caracteres.',
-            'The direccion field format is invalid.': 'La direccion debe incluir un domicilio valido, con numero y caracteres permitidos.',
-            'The direccion field must be at least 10 characters.': 'La direccion debe tener al menos 10 caracteres.',
+            'The direccion field format is invalid.': 'La dirección debe incluir un domicilio válido, con número y caracteres permitidos.',
+            'The direccion field must be at least 10 characters.': 'La dirección debe tener al menos 10 caracteres.',
             'The nombre field is required.': 'El nombre es obligatorio.',
-            'The fecha evaluacion field is required.': 'La fecha de evaluacion es obligatoria.',
-            'The teacher ids field must be an array.': 'Selecciona docentes validos.',
-            'The project ids field must be an array.': 'Selecciona proyectos validos.'
+            'The fecha evaluacion field is required.': 'La fecha de evaluación es obligatoria.',
+            'The teacher ids field must be an array.': 'Selecciona docentes válidos.',
+            'The project ids field must be an array.': 'Selecciona proyectos válidos.'
         };
 
         let translated = String(message || '');
@@ -602,8 +602,8 @@ class ApiClient {
         });
         translated = translated.replaceAll('The ', 'El campo ')
             .replaceAll(' field is required.', ' es obligatorio.')
-            .replaceAll(' field must be an integer.', ' debe ser un numero valido.')
-            .replaceAll(' field must be a string.', ' debe ser texto valido.')
+            .replaceAll(' field must be an integer.', ' debe ser un número válido.')
+            .replaceAll(' field must be a string.', ' debe ser texto válido.')
             .replaceAll(' field format is invalid.', ' tiene un formato invalido.');
         return translated;
     }

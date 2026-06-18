@@ -11,7 +11,7 @@ if (!is_authenticated()) {
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Gestion de Entregables - <?= APP_NAME ?></title>
+    <title>Gestión de Entregables - <?= APP_NAME ?></title>
     <?php require_once $_SERVER['DOCUMENT_ROOT'] . '/includes/visual-preferences.php'; ?>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
@@ -31,7 +31,7 @@ if (!is_authenticated()) {
             <div class="container-xl mt-5 mb-5">
                 <div class="d-flex align-items-center justify-content-between mb-4">
                     <div>
-                        <h1 class="mb-0">Gestion de Entregables</h1>
+                        <h1 class="mb-0">Gestión de Entregables</h1>
                         <div id="activeFilter" class="small text-muted mt-1"></div>
                     </div>
                     <div class="d-flex gap-2">
@@ -67,7 +67,7 @@ if (!is_authenticated()) {
                                         <th>Nombre</th>
                                         <th>Proyecto</th>
                                         <th>Competencia</th>
-                                        <th>Calificacion</th>
+                                        <th>Calificación</th>
                                         <th>Archivo</th>
                                         <th>Estado</th>
                                         <th>Acciones</th>
@@ -111,7 +111,7 @@ if (!is_authenticated()) {
                         <input type="text" class="form-control" id="nombre" required>
                     </div>
                     <div class="mb-3">
-                        <label for="descripcion" class="form-label">Descripcion</label>
+                        <label for="descripcion" class="form-label">Descripción</label>
                         <textarea class="form-control" id="descripcion" rows="3"></textarea>
                     </div>
                     <div class="row">
@@ -121,8 +121,8 @@ if (!is_authenticated()) {
                                 <option value="documento">Documento</option>
                                 <option value="reporte">Reporte</option>
                                 <option value="video">Video</option>
-                                <option value="presentacion">Presentacion</option>
-                                <option value="codigo">Codigo</option>
+                                <option value="presentacion">Presentación</option>
+                                <option value="codigo">Código</option>
                                 <option value="otro">Otro</option>
                             </select>
                         </div>
@@ -162,7 +162,7 @@ if (!is_authenticated()) {
                 </div>
                 <div class="modal-body">
                     <input type="hidden" id="deliverableIdCalificar">
-                    <label for="calificacionInput" class="form-label">Calificacion (0-100)</label>
+                    <label for="calificacionInput" class="form-label">Calificación (0-100)</label>
                     <input type="number" id="calificacionInput" class="form-control" min="0" max="100" step="0.01">
                 </div>
                 <div class="modal-footer">

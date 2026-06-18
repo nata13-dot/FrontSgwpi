@@ -169,7 +169,7 @@ if (!is_authenticated() || !is_student()) {
                                         <span class="badge bg-${statusBadge}">${statusText}</span>
                                     </div>
                                     
-                                    <p class="card-text text-muted mb-3">${escapeHtml(deliverable.descripcion || 'Sin descripcion')}</p>
+                                    <p class="card-text text-muted mb-3">${escapeHtml(deliverable.descripcion || 'Sin descripción')}</p>
                                     
                                     <div class="mb-3 pb-3 border-bottom">
                                         <small class="text-muted d-block mb-2">

@@ -33,7 +33,7 @@ if (!is_authenticated() || !is_admin()) {
                                 <input type="text" class="form-control" id="title" name="title" required>
                             </div>
                             <div class="mb-3">
-                                <label for="descripcion" class="form-label">Descripcion</label>
+                                <label for="descripcion" class="form-label">Descripción</label>
                                 <textarea class="form-control" id="descripcion" name="descripcion" rows="4" required></textarea>
                             </div>                            <div class="border rounded p-3 mb-4">
                                 <h5 class="mb-3">Empresa beneficiada</h5>
@@ -55,9 +55,9 @@ if (!is_authenticated() || !is_admin()) {
                                         <input type="text" class="form-control" id="company_contact_position" maxlength="255" required>
                                     </div>
                                     <div class="col-md-6 mb-3">
-                                        <label for="company_address" class="form-label">Direccion de la empresa o negocio</label>
+                                        <label for="company_address" class="form-label">Dirección de la empresa o negocio</label>
                                         <textarea class="form-control" id="company_address" rows="2" maxlength="1000" required></textarea>
-                                        <div class="form-text">Separa calle, numero, colonia y municipio con comas (,).</div>
+                                        <div class="form-text">Separa calle, número, colonia y municipio con comas (,).</div>
                                     </div>
                                 </div>
                             </div>

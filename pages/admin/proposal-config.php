@@ -7,7 +7,7 @@ if (!is_authenticated() || !is_admin()) { header('Location: /index.php'); exit; 
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Gestion de Propuestas - <?= APP_NAME ?></title>
+    <title>Gestión de Propuestas - <?= APP_NAME ?></title>
     <?php require_once $_SERVER['DOCUMENT_ROOT'] . '/includes/visual-preferences.php'; ?>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
@@ -21,7 +21,7 @@ if (!is_authenticated() || !is_admin()) { header('Location: /index.php'); exit; 
         <div class="container-xl mt-5 mb-5">
             <div class="d-flex flex-wrap justify-content-between align-items-center gap-3 mb-4">
                 <div>
-                    <h1 class="mb-1">Gestion de Propuestas</h1>
+                    <h1 class="mb-1">Gestión de Propuestas</h1>
                     <p class="text-muted mb-0">Configura responsables, excepciones y periodos para Fundamentos de Ingeniería de Software.</p>
                 </div>
                 <button class="btn btn-primary" onclick="loadConfig()"><i class="bi bi-arrow-clockwise"></i></button>
@@ -83,7 +83,7 @@ if (!is_authenticated() || !is_admin()) { header('Location: /index.php'); exit; 
 
             <div class="card border-0 shadow-sm mb-4">
                 <div class="card-header bg-light d-flex justify-content-between align-items-center">
-                    <h5 class="mb-0"><i class="bi bi-person-plus"></i> Alumnos extra para revision</h5>
+                    <h5 class="mb-0"><i class="bi bi-person-plus"></i> Alumnos extra para revisión</h5>
                     <span class="badge bg-secondary" id="exceptionCounter">0 excepciones</span>
                 </div>
                 <div class="card-body">
@@ -93,7 +93,7 @@ if (!is_authenticated() || !is_admin()) { header('Location: /index.php'); exit; 
                         <div class="col-lg-3"><label class="form-label">Buscar alumno</label><input class="form-control" id="studentSearch" placeholder="Control, nombre o apellido" oninput="searchStudentsForException()"></div>
                         <div class="col-lg-3"><label class="form-label">Alumno</label><select class="form-select" id="exceptionStudent"></select></div>
                         <div class="col-lg-9"><input class="form-control" id="exceptionNotes" placeholder="Motivo o nota opcional"></div>
-                        <div class="col-lg-3 d-grid"><button class="btn btn-primary" onclick="addException()"><i class="bi bi-plus-circle"></i> Agregar excepcion</button></div>
+                        <div class="col-lg-3 d-grid"><button class="btn btn-primary" onclick="addException()"><i class="bi bi-plus-circle"></i> Agregar excepción</button></div>
                     </div>
                     <div class="table-responsive mt-3">
                         <table class="table table-sm align-middle mb-0">
@@ -186,16 +186,16 @@ function renderResponsibleTable() {
     document.getElementById('responsibleCounter').textContent = `${groups.length} grupo${groups.length === 1 ? '' : 's'}`;
 
     if (!subject) {
-        tbody.innerHTML = '<tr><td colspan="5" class="text-center text-muted py-4">Selecciona una materia para ver los grupos donde esta ligada.</td></tr>';
+        tbody.innerHTML = '<tr><td colspan="5" class="text-center text-muted py-4">Selecciona una materia para ver los grupos donde está ligada.</td></tr>';
         document.getElementById('subjectHelp').className = 'alert alert-info d-flex gap-2 align-items-start';
         return;
     }
 
     document.getElementById('subjectHelp').className = groups.length ? 'alert alert-success d-flex gap-2 align-items-start' : 'alert alert-warning d-flex gap-2 align-items-start';
-    document.getElementById('subjectHelp').innerHTML = `<i class="bi bi-info-circle"></i><div>Materia seleccionada: <strong>${esc(subject.nombre)}</strong>. ${groups.length ? 'Asigna docentes a los grupos correspondientes.' : 'Esta materia aun no esta ligada a ninguna carga/grupo.'}</div>`;
+    document.getElementById('subjectHelp').innerHTML = `<i class="bi bi-info-circle"></i><div>Materia seleccionada: <strong>${esc(subject.nombre)}</strong>. ${groups.length ? 'Asigna docentes a los grupos correspondientes.' : 'Esta materia aún no está ligada a ninguna carga/grupo.'}</div>`;
 
     if (!groups.length) {
-        tbody.innerHTML = '<tr><td colspan="5" class="text-center text-muted py-4">No hay grupos con esta materia. Ligala primero desde Asignaturas &gt; Gestionar Cargas.</td></tr>';
+        tbody.innerHTML = '<tr><td colspan="5" class="text-center text-muted py-4">No hay grupos con esta materia. Lígala primero desde Asignaturas &gt; Gestionar Cargas.</td></tr>';
         return;
     }
 
@@ -279,7 +279,7 @@ function searchStudentsForException() {
 
 function renderExceptions() {
     const rows = config.exceptions || [];
-    document.getElementById('exceptionCounter').textContent = `${rows.length} excepcion${rows.length === 1 ? '' : 'es'}`;
+    document.getElementById('exceptionCounter').textContent = `${rows.length} excepción${rows.length === 1 ? '' : 'es'}`;
     document.getElementById('exceptionsTable').innerHTML = rows.map(item => `
         <tr>
             <td>${esc(item.asignatura?.nombre || '-')}</td>
@@ -312,7 +312,7 @@ async function addException() {
 }
 
 async function deleteException(id) {
-    if (!await confirmAction({ title: 'Quitar excepcion' })) return;
+    if (!await confirmAction({ title: 'Quitar excepción' })) return;
     await api.delete(`/proposal/exceptions/${id}`);
     config.exceptions = config.exceptions.filter(item => Number(item.id) !== Number(id));
     swalToast('Excepcion removida', 'success');
@@ -336,7 +336,7 @@ async function assignTeacher(groupId) {
             subject_group_id: groupId,
             asignatura_id: subject.id,
             teacher_id: teacherId,
-            labor: `Revision de propuesta: ${subject.nombre}`,
+            labor: `Revisión de propuesta: ${subject.nombre}`,
             activo: true
         });
         const group = config.subject_groups.find(item => Number(item.id) === Number(groupId));

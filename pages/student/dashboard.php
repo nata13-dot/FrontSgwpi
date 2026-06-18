@@ -350,7 +350,7 @@ if (!is_authenticated() || !is_student()) {
             try {
                 const schedule = await api.get('/student/evaluation-schedule');
                 if (!schedule.length) {
-                    box.innerHTML = '<p class="text-muted mb-0">Aun no tienes presentaciones programadas.</p>';
+                    box.innerHTML = '<p class="text-muted mb-0">Aún no tienes presentaciones programadas.</p>';
                     return;
                 }
 
@@ -365,7 +365,7 @@ if (!is_authenticated() || !is_student()) {
                         </div>
                         <div class="small mt-2">
                             Tiempo de exposicion: <strong>${item.presentation_minutes || '-'} min</strong>
-                            ${item.evaluation_minutes ? ` · Tiempo de evaluacion docente: <strong>${item.evaluation_minutes} min</strong>` : ''}
+                            ${item.evaluation_minutes ? ` · Tiempo de evaluación docente: <strong>${item.evaluation_minutes} min</strong>` : ''}
                         </div>
                     </div>
                 `).join('');

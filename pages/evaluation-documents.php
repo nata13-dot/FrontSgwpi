@@ -54,8 +54,8 @@ if (!is_authenticated()) {
             <div class="container-xl mt-5 mb-5">
             <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3 mb-4">
                 <div>
-                    <h1 class="mb-1">Documentos de evaluacion</h1>
-                    <p class="text-muted mb-0">Revision de entregas de evaluacion, tesis y residencias.</p>
+                    <h1 class="mb-1">Documentos de evaluación</h1>
+                    <p class="text-muted mb-0">Revisión de entregas de evaluación, tesis y residencias.</p>
                 </div>
                 <button class="btn btn-outline-primary" type="button" onclick="loadDocuments(true)">
                     <i class="bi bi-arrow-clockwise"></i> Actualizar
@@ -148,7 +148,7 @@ function renderDocuments() {
     container.innerHTML = `
         <div class="nav nav-pills gap-2 mb-4">
             <button class="btn ${state.section === 'evaluations' ? 'btn-primary' : 'btn-outline-primary'}" onclick="setDocumentSection('evaluations')">
-                <i class="bi bi-clipboard-check"></i> Entregas de evaluacion
+                <i class="bi bi-clipboard-check"></i> Entregas de evaluación
             </button>
             <button class="btn ${state.section === 'thesis' ? 'btn-primary' : 'btn-outline-primary'}" onclick="setDocumentSection('thesis')">
                 <i class="bi bi-journal-text"></i> Tesis y residencias
@@ -156,8 +156,8 @@ function renderDocuments() {
         </div>
 
         <section class="${state.section === 'evaluations' ? '' : 'd-none'}">
-            <h3 class="mb-1">Entregas de evaluacion</h3>
-            <p class="text-muted mb-4">Hoja de liberacion y presentacion, organizadas por semestre.</p>
+            <h3 class="mb-1">Entregas de evaluación</h3>
+            <p class="text-muted mb-4">Hoja de liberación y presentación, organizadas por semestre.</p>
             ${projectSection}
         </section>
 
@@ -184,7 +184,7 @@ function setDocumentSection(section) {
 
 function renderEvaluationDelivery(project, type) {
     const delivery = type === 'release_sheet' ? project.release_sheet : project.presentation;
-    const title = type === 'release_sheet' ? '1. Hoja de liberacion' : '2. Presentacion';
+    const title = type === 'release_sheet' ? '1. Hoja de liberación' : '2. Presentación';
     const icon = type === 'release_sheet' ? 'bi-file-earmark-check' : 'bi-file-earmark-slides';
     const accepted = (delivery.allowed_extensions || []).map(ext => `.${ext}`).join(',');
     const status = delivery.uploaded
@@ -221,7 +221,7 @@ function renderEvaluationDelivery(project, type) {
 
 function renderReleaseReview(project, delivery) {
     if (!delivery.uploaded) {
-        return '<p class="text-muted small mb-0">La revision por alumno estara disponible cuando se cargue la hoja.</p>';
+        return '<p class="text-muted small mb-0">La revisión por alumno estará disponible cuando se cargue la hoja.</p>';
     }
 
     return `
@@ -264,7 +264,7 @@ function renderThesisUploadBox() {
                     <input class="form-control form-control-sm" id="thesisName" maxlength="255" placeholder="Nombre del avance">
                 </div>
                 <div class="col-md-3">
-                    <input class="form-control form-control-sm" id="thesisDesc" maxlength="5000" placeholder="Descripcion breve">
+                    <input class="form-control form-control-sm" id="thesisDesc" maxlength="5000" placeholder="Descripción breve">
                 </div>
                 <div class="col-md-3">
                     <input class="form-control form-control-sm" id="thesisAuthors" maxlength="1000" placeholder="Autores">
@@ -337,15 +337,15 @@ async function uploadEvaluationDelivery(projectId, type) {
     }
 
     if (!validarTamañoArchivo(file.size)) {
-        showAlert('#alertContainer', 'danger', `Archivo muy grande. Maximo ${Number(window.SGPI_SETTINGS?.max_file_size_mb || 50)}MB.`);
+        showAlert('#alertContainer', 'danger', `Archivo muy grande. Máximo ${Number(window.SGPI_SETTINGS?.max_file_size_mb || 50)}MB.`);
         return;
     }
 
     const formData = new FormData();
     formData.append('project_id', projectId);
     formData.append('document_type', type);
-    formData.append('nombre', type === 'release_sheet' ? 'Hoja de liberacion' : 'Presentacion');
-    formData.append('descripcion', `Entrega de evaluacion: ${type === 'release_sheet' ? 'hoja de liberacion' : 'presentacion'}.`);
+    formData.append('nombre', type === 'release_sheet' ? 'Hoja de liberación' : 'Presentación');
+    formData.append('descripcion', `Entrega de evaluación: ${type === 'release_sheet' ? 'hoja de liberación' : 'presentación'}.`);
     formData.append('autores', memberNames(project?.integrantes || []));
     formData.append('archivo', file);
 
@@ -394,7 +394,7 @@ async function uploadThesisDocument() {
     }
 
     if (!validarTamañoArchivo(file.size)) {
-        showAlert('#alertContainer', 'danger', `Archivo muy grande. Maximo ${Number(window.SGPI_SETTINGS?.max_file_size_mb || 50)}MB.`);
+        showAlert('#alertContainer', 'danger', `Archivo muy grande. Máximo ${Number(window.SGPI_SETTINGS?.max_file_size_mb || 50)}MB.`);
         return;
     }
 
@@ -402,7 +402,7 @@ async function uploadThesisDocument() {
     const formData = new FormData();
     formData.append('tipo', document.getElementById('thesisTipo').value);
     formData.append('nombre', document.getElementById('thesisName').value.trim() || 'Avance de tesis o residencias');
-    formData.append('descripcion', document.getElementById('thesisDesc').value.trim() || 'Avance privado para revision.');
+    formData.append('descripcion', document.getElementById('thesisDesc').value.trim() || 'Avance privado para revisión.');
     formData.append('autores', document.getElementById('thesisAuthors').value.trim() || fullName(currentUser));
     formData.append('archivo', file);
 

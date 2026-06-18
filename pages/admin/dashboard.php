@@ -99,7 +99,7 @@ if (!is_authenticated() || !is_admin()) {
 
         <div class="row g-4 mb-4">
             <div class="col-lg-3 col-md-6">
-                <a href="/pages/admin/users.php" class="text-decoration-none d-block dashboard-stat-link" aria-label="Ir a gestion de usuarios">
+                <a href="/pages/admin/users.php" class="text-decoration-none d-block dashboard-stat-link" aria-label="Ir a gestión de usuarios">
                     <div class="card dashboard-stat-card border-0 shadow-sm" style="cursor: pointer;">
                         <div class="card-body">
                             <div class="dashboard-stat-layout">
@@ -133,7 +133,7 @@ if (!is_authenticated() || !is_admin()) {
             </div>
 
             <div class="col-lg-3 col-md-6">
-                <a href="/pages/admin/projects.php" class="text-decoration-none d-block dashboard-stat-link" aria-label="Ir a gestion de proyectos">
+                <a href="/pages/admin/projects.php" class="text-decoration-none d-block dashboard-stat-link" aria-label="Ir a gestión de proyectos">
                     <div class="card dashboard-stat-card border-0 shadow-sm" style="cursor: pointer;">
                         <div class="card-body">
                             <div class="dashboard-stat-layout">
@@ -151,7 +151,7 @@ if (!is_authenticated() || !is_admin()) {
             </div>
 
             <div class="col-lg-3 col-md-6">
-                <a href="/pages/admin/asignaturas.php" class="text-decoration-none d-block dashboard-stat-link" aria-label="Ir a gestion de asignaturas">
+                <a href="/pages/admin/asignaturas.php" class="text-decoration-none d-block dashboard-stat-link" aria-label="Ir a gestión de asignaturas">
                     <div class="card dashboard-stat-card border-0 shadow-sm" style="cursor: pointer;">
                         <div class="card-body">
                             <div class="dashboard-stat-layout">

@@ -179,7 +179,7 @@ if (!is_authenticated() || !is_teacher()) {
                                 <span class="badge bg-light text-dark">${escapeHtml(student.semestre || '-')} ${escapeHtml(student.grupo || '')}</span>
                                 <span class="badge bg-success">${summary.entregados || 0} entregados</span>
                                 <span class="badge bg-secondary">${summary.faltantes || 0} faltantes</span>
-                                <span class="badge bg-primary ms-md-auto">Promedio valido: ${average}</span>
+                                <span class="badge bg-primary ms-md-auto">Promedio válido: ${average}</span>
                             </span>
                         </button>
                     </h3>

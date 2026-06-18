@@ -375,7 +375,7 @@
             const confirmed = window.Swal
                 ? await stableSwalFire({
                     title: 'Eliminar documento',
-                    text: 'Esta accion quitara el documento del repositorio.',
+                    text: 'Esta acción quitará el documento del repositorio.',
                     icon: 'warning',
                     showCancelButton: true,
                     confirmButtonText: 'Eliminar',

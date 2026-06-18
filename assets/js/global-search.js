@@ -23,21 +23,21 @@
             item('Asesores', 'Asignar asesores y revisar cargas', '/pages/admin/advisors.php', 'bi-person-check', ['asesorias', 'comites', 'revisores']),
             item('Proyectos y tesis', 'Consultar y administrar proyectos', '/pages/admin/projects.php', 'bi-diagram-3', ['proyectos', 'tesis', 'integrantes', 'empresas']),
             item('Crear proyecto', 'Registrar un proyecto desde administración', '/pages/admin/project-create.php', 'bi-folder-plus', ['nuevo proyecto', 'nueva tesis']),
-            item('Propuestas', 'Configurar grupos, ventanas y revisiones', '/pages/admin/proposal-config.php', 'bi-calendar-check', ['registro', 'ventanas', 'excepciones']),
-            item('Entregables', 'Administrar entregables académicos', '/pages/admin/deliverables.php', 'bi-file-earmark-check', ['entregas', 'fechas limite']),
-            item('Evaluaciones', 'Gestionar evaluaciones y salas', '/pages/admin/evaluations.php', 'bi-clipboard-check', ['rubricas', 'salas', 'calificaciones']),
+            item('Propuestas', 'Configurar grupos, ventanas y revisiónes', '/pages/admin/proposal-config.php', 'bi-calendar-check', ['registro', 'ventanas', 'excepciones']),
+            item('Entregables', 'Administrar entregables académicos', '/pages/admin/deliverables.php', 'bi-file-earmark-check', ['entregas', 'fechas límite']),
+            item('Evaluaciones', 'Gestionar evaluaciones y salas', '/pages/admin/evaluations.php', 'bi-clipboard-check', ['rúbricas', 'salas', 'calificaciones']),
             item('Evaluaciones archivadas', 'Consultar evaluaciones finalizadas', '/pages/admin/evaluations-archived.php', 'bi-archive-fill', ['historial', 'archivadas']),
-            item('Asignaturas', 'Gestionar asignaturas, cargas y competencias', '/pages/admin/asignaturas.php', 'bi-book', ['materias', 'competencias', 'carga academica']),
+            item('Asignaturas', 'Gestionar asignaturas, cargas y competencias', '/pages/admin/asignaturas.php', 'bi-book', ['materias', 'competencias', 'carga académica']),
             item('Semestres y periodos', 'Gestionar ciclos, promociones y presentaciones especiales', '/pages/admin/semesters.php', 'bi-calendar3', ['periodos', 'promocion', 'cambio de semestre', 'excepciones']),
             item('Competencias', 'Ir a la gestión de competencias', '/pages/admin/asignaturas.php#competencias', 'bi-star', ['criterios academicos']),
             item('Etiquetas', 'Administrar etiquetas de documentos', '/pages/admin/document-tags.php', 'bi-tags', ['colores', 'categorias']),
             item('Avisos', 'Crear y administrar avisos del sistema', '/pages/admin/notices.php', 'bi-megaphone', ['notificaciones', 'anuncios', 'mensajes']),
-            item('Ajustes', 'Configurar preferencias generales del sistema', '/pages/admin/settings.php', 'bi-sliders', ['configuracion', 'tema', 'sesion', 'periodo'])
+            item('Ajustes', 'Configurar preferencias generales del sistema', '/pages/admin/settings.php', 'bi-sliders', ['configuración', 'tema', 'sesión', 'periodo'])
         ],
         teacher: [
             item('Mis proyectos', 'Consultar proyectos y tesis asignados', '/pages/teacher/my-projects.php', 'bi-folder2-open', ['tesis', 'asesorias']),
-            item('Revisar propuestas', 'Evaluar propuestas de estudiantes', '/pages/teacher/proposal-review.php', 'bi-check2-square', ['revision', 'aprobar', 'rechazar']),
-            item('Evaluaciones', 'Consultar evaluaciones y salas asignadas', '/pages/admin/evaluations.php', 'bi-clipboard-check', ['rubricas', 'salas']),
+            item('Revisar propuestas', 'Evaluar propuestas de estudiantes', '/pages/teacher/proposal-review.php', 'bi-check2-square', ['revisión', 'aprobar', 'rechazar']),
+            item('Evaluaciones', 'Consultar evaluaciones y salas asignadas', '/pages/admin/evaluations.php', 'bi-clipboard-check', ['rúbricas', 'salas']),
             item('Evaluaciones archivadas', 'Consultar evaluaciones finalizadas', '/pages/admin/evaluations-archived.php', 'bi-archive-fill', ['historial']),
             item('Entregables', 'Revisar entregables de estudiantes', '/pages/teacher/my-deliverables.php', 'bi-file-earmark-check', ['entregas', 'calificar'])
         ],

@@ -151,7 +151,7 @@ $is_archived_view = basename($_SERVER['PHP_SELF']) === 'evaluations-archived.php
                         <?php endif; ?>
                         <?php if (is_evaluation_manager()): ?>
                         <button class="btn btn-outline-primary" onclick="openRubricModal()">
-                            <i class="bi bi-list-check"></i> Gestionar Rubrica
+                            <i class="bi bi-list-check"></i> Gestionar Rúbrica
                         </button>
                         <?php endif; ?>
                         <?php if (is_admin()): ?>
@@ -203,7 +203,7 @@ $is_archived_view = basename($_SERVER['PHP_SELF']) === 'evaluations-archived.php
         <div class="modal-dialog">
             <form class="modal-content" id="evaluationForm">
                 <div class="modal-header">
-                    <h5 class="modal-title">Nueva Evaluacion</h5>
+                    <h5 class="modal-title">Nueva Evaluación</h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal" onmousedown="this.blur()" onclick="this.blur()"></button>
                 </div>
                 <div class="modal-body">
@@ -224,7 +224,7 @@ $is_archived_view = basename($_SERVER['PHP_SELF']) === 'evaluations-archived.php
                                 <option value="5">5 - Propuesta</option>
                                 <option value="6">6 - Avance</option>
                                 <option value="7">7 - Avance</option>
-                                <option value="8">8 - Titulacion</option>
+                                <option value="8">8 - Titulación</option>
                             </select>
                         </div>
                         <div class="col-md-6 mb-3">
@@ -233,7 +233,7 @@ $is_archived_view = basename($_SERVER['PHP_SELF']) === 'evaluations-archived.php
                         </div>
                     </div>
                     <div class="mb-3">
-                        <label class="form-label" for="fecha_exposicion">Fecha de exposicion</label>
+                        <label class="form-label" for="fecha_exposicion">Fecha de exposición</label>
                         <input type="datetime-local" class="form-control" id="fecha_exposicion">
                     </div>
                 </div>
@@ -249,7 +249,7 @@ $is_archived_view = basename($_SERVER['PHP_SELF']) === 'evaluations-archived.php
         <div class="modal-dialog modal-lg modal-dialog-scrollable">
             <div class="modal-content">
                 <div class="modal-header">
-                    <h5 class="modal-title">Gestionar Rubrica por Semestre</h5>
+                    <h5 class="modal-title">Gestionar Rúbrica por Semestre</h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal" onmousedown="this.blur()" onclick="this.blur()"></button>
                 </div>
                 <div class="modal-body">
@@ -264,7 +264,7 @@ $is_archived_view = basename($_SERVER['PHP_SELF']) === 'evaluations-archived.php
                             </select>
                         </div>
                         <div class="col-md-3">
-                            <label class="form-label" for="rubricScoreMode">Metodo</label>
+                            <label class="form-label" for="rubricScoreMode">Método</label>
                             <select class="form-select" id="rubricScoreMode" onchange="saveRubricScoreMode()">
                                 <option value="levels">Acuerdos</option>
                                 <option value="numeric">Puntaje 1 a 5</option>
@@ -273,9 +273,9 @@ $is_archived_view = basename($_SERVER['PHP_SELF']) === 'evaluations-archived.php
                         <div class="col-md-4 d-none" id="rubricProjectBox">
                             <label class="form-label" for="rubricProjectId">Proyecto 8vo</label>
                             <select class="form-select" id="rubricProjectId" onchange="loadRubricCriteria()">
-                                <option value="">Rubrica general de 8vo</option>
+                                <option value="">Rúbrica general de 8vo</option>
                             </select>
-                            <div class="form-text">Sin proyecto seleccionado editas la general; puede quedar vacia.</div>
+                            <div class="form-text">Sin proyecto seleccionado editas la general; puede quedar vacía.</div>
                         </div>
                         <div class="col-md-3">
                             <label class="form-label" for="newCriterionText">Nueva pregunta</label>
@@ -297,7 +297,7 @@ $is_archived_view = basename($_SERVER['PHP_SELF']) === 'evaluations-archived.php
         <div class="modal-dialog modal-lg">
             <form class="modal-content" id="scoreForm">
                 <div class="modal-header">
-                    <h5 class="modal-title">Rubrica de Evaluacion</h5>
+                    <h5 class="modal-title">Rúbrica de Evaluación</h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal" onmousedown="this.blur()" onclick="this.blur()"></button>
                 </div>
                 <div class="modal-body">
@@ -310,7 +310,7 @@ $is_archived_view = basename($_SERVER['PHP_SELF']) === 'evaluations-archived.php
                         <textarea class="form-control" id="generalEvaluationComment" rows="3" placeholder="Comentario final visible en el desglose"></textarea>
                     </div>
                     <div class="border rounded p-3 mt-3 d-none" id="titulationAptBox">
-                        <label class="form-label fw-semibold">¿El proyecto es apto para titulacion?</label>
+                        <label class="form-label fw-semibold">¿El proyecto es apto para titulación?</label>
                         <select class="form-select" id="apto_titulacion">
                             <option value="">Sin respuesta</option>
                             <option value="1">Si</option>
@@ -321,7 +321,7 @@ $is_archived_view = basename($_SERVER['PHP_SELF']) === 'evaluations-archived.php
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
-                    <button type="submit" class="btn btn-primary">Guardar Rubrica</button>
+                    <button type="submit" class="btn btn-primary">Guardar Rúbrica</button>
                 </div>
             </form>
         </div>
@@ -332,7 +332,7 @@ $is_archived_view = basename($_SERVER['PHP_SELF']) === 'evaluations-archived.php
             <div class="modal-content">
                 <div class="modal-header">
                     <div>
-                        <h5 class="modal-title"><i class="bi bi-door-open"></i> Salas de Evaluacion</h5>
+                        <h5 class="modal-title"><i class="bi bi-door-open"></i> Salas de Evaluación</h5>
                         <div class="text-muted small">Configura fecha, docentes, responsable y orden de proyectos en un solo flujo.</div>
                     </div>
                     <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
@@ -342,7 +342,7 @@ $is_archived_view = basename($_SERVER['PHP_SELF']) === 'evaluations-archived.php
                         <div class="col-lg-5">
                             <div class="room-panel">
                                 <div class="room-panel-header">
-                                    <h6 class="mb-0"><i class="bi bi-sliders"></i> Configuracion de sala</h6>
+                                    <h6 class="mb-0"><i class="bi bi-sliders"></i> Configuración de sala</h6>
                                 </div>
                                 <div class="room-panel-body">
                                 <input type="hidden" id="roomId">
@@ -355,7 +355,7 @@ $is_archived_view = basename($_SERVER['PHP_SELF']) === 'evaluations-archived.php
                                     <div class="col-md-4"><label class="form-label">Fin</label><input type="datetime-local" class="form-control" id="roomEndDate" required onchange="updateRoomAvailability()"><div class="form-text">Debe ser posterior al inicio.</div></div>
                                     <div class="col-12"><div class="room-section-title">Tiempos</div></div>
                                     <div class="col-md-4"><label class="form-label">Eval. docente</label><input type="number" class="form-control" id="teacherMinutes" min="1" max="240" value="15"></div>
-                                    <div class="col-md-4"><label class="form-label">Presentacion</label><input type="number" class="form-control" id="presentationMinutes" min="1" max="240" value="20"></div>
+                                    <div class="col-md-4"><label class="form-label">Presentación</label><input type="number" class="form-control" id="presentationMinutes" min="1" max="240" value="20"></div>
                                     <div class="col-md-4"><label class="form-label">Oportunidades</label><input type="number" class="form-control" id="maxAttempts" min="1" max="10" value="1"></div>
                                     <div class="col-12"><div class="room-section-title">Evaluadores</div><div class="form-text mb-2">Un docente puede participar en varias salas el mismo dia mientras los horarios no se empalmen.</div><div class="room-scroll-list" id="roomTeachers"></div></div>
                                     <div class="col-12"><label class="form-label">Responsable de sala</label><select class="form-select" id="responsibleTeacher"><option value="">Selecciona primero docentes</option></select></div>
@@ -464,7 +464,7 @@ $is_archived_view = basename($_SERVER['PHP_SELF']) === 'evaluations-archived.php
         function evaluationPresentationIndicator(evaluation) {
             const uploaded = Boolean(evaluation?.document_readiness?.presentation_uploaded);
             return `<i class="bi bi-circle-fill ${uploaded ? 'text-success' : 'text-danger'} ms-2"
-                title="${uploaded ? 'Presentacion cargada' : 'Presentacion pendiente'}"></i>`;
+                title="${uploaded ? 'Presentación cargada' : 'Presentación pendiente'}"></i>`;
         }
 
         function evaluationMemberIndicators(evaluation, project) {
@@ -505,7 +505,7 @@ $is_archived_view = basename($_SERVER['PHP_SELF']) === 'evaluations-archived.php
                 ['Giro', project?.company_giro || project?.giro],
                 ['Contacto', project?.company_contact_name || project?.contact_name],
                 ['Asesor', projectAdvisor(project)],
-                ['Descripcion', project?.description || project?.descripcion]
+                ['Descripción', project?.description || project?.descripcion]
             ].filter(([, value]) => String(value ?? '').trim() !== '');
         }
 
@@ -610,9 +610,9 @@ $is_archived_view = basename($_SERVER['PHP_SELF']) === 'evaluations-archived.php
             try {
                 const response = await api.put('/evaluations/rubric-score-modes', { semester: Number(semester), mode });
                 rubricScoreModes = response.score_modes || rubricScoreModes;
-                swalToast('success', 'Metodo de rubrica guardado');
+                swalToast('success', 'Método de rúbrica guardado');
             } catch (error) {
-                showAlert('#alertContainer', 'danger', error.message || 'No se pudo guardar el metodo de rubrica.');
+                showAlert('#alertContainer', 'danger', error.message || 'No se pudo guardar el método de rúbrica.');
             }
         }
 
@@ -679,7 +679,7 @@ $is_archived_view = basename($_SERVER['PHP_SELF']) === 'evaluations-archived.php
             }
 
             if (criteriaResult.status === 'rejected') {
-                console.warn('No se pudieron cargar los criterios de evaluacion:', criteriaResult.reason);
+                console.warn('No se pudieron cargar los criterios de evaluación:', criteriaResult.reason);
             }
 
             if (CAN_MANAGE_EVALUATIONS) {
@@ -845,7 +845,7 @@ $is_archived_view = basename($_SERVER['PHP_SELF']) === 'evaluations-archived.php
                     selectedLabel: 'Archivar seleccionados',
                     emptyMessage: 'Selecciona evaluaciones, una sala completa o un semestre completo para archivar.',
                     confirmTitle: 'Archivar seleccionados',
-                    confirmText: 'Se archivaran las evaluaciones seleccionadas. Se conservaran sus reportes y detalle.',
+                    confirmText: 'Se archivarán las evaluaciones seleccionadas. Se conservarán sus reportes y detalle.',
                     confirmButton: 'Archivar seleccionados',
                     endpoint: '/evaluations/archive-selected',
                     successMessage: 'Evaluaciones archivadas correctamente',
@@ -894,7 +894,7 @@ $is_archived_view = basename($_SERVER['PHP_SELF']) === 'evaluations-archived.php
             if (!archiveSelectionMode || !canUseArchiveSelection() || !evaluation.can_manage_evaluations) return '';
             const id = Number(evaluation.id);
             return `
-                <input class="form-check-input archive-selection-checkbox mt-1" type="checkbox" data-archive-evaluation-id="${id}" onchange="toggleArchiveEvaluationSelection(${id}, this.checked)" ${selectedArchiveEvaluationIds.has(id) ? 'checked' : ''} title="Seleccionar evaluacion">`;
+                <input class="form-check-input archive-selection-checkbox mt-1" type="checkbox" data-archive-evaluation-id="${id}" onchange="toggleArchiveEvaluationSelection(${id}, this.checked)" ${selectedArchiveEvaluationIds.has(id) ? 'checked' : ''} title="Seleccionar evaluación">`;
         }
 
         function pruneArchiveSelection() {
@@ -986,7 +986,7 @@ $is_archived_view = basename($_SERVER['PHP_SELF']) === 'evaluations-archived.php
             const action = archiveSelectionAction();
             if (!await confirmAction({
                 title: action.confirmTitle,
-                text: `${action.confirmText} Total: ${ids.length} evaluacion${ids.length === 1 ? '' : 'es'}.`,
+                text: `${action.confirmText} Total: ${ids.length} evaluación${ids.length === 1 ? '' : 'es'}.`,
                 confirmButtonText: action.confirmButton
             })) return;
             try {
@@ -1063,7 +1063,7 @@ $is_archived_view = basename($_SERVER['PHP_SELF']) === 'evaluations-archived.php
                                         </div>
                                     </div>
                                     <div class="d-flex flex-wrap gap-2">
-                                        <span class="badge bg-light text-dark">${semesterStats.total} evaluacion${semesterStats.total === 1 ? '' : 'es'}</span>
+                                        <span class="badge bg-light text-dark">${semesterStats.total} evaluación${semesterStats.total === 1 ? '' : 'es'}</span>
                                         <span class="badge evaluation-success-badge">${semesterStats.evaluated} completa${semesterStats.evaluated === 1 ? '' : 's'}</span>
                                         ${semesterStats.pending ? `<span class="badge bg-warning text-dark">${semesterStats.pending} pendiente${semesterStats.pending === 1 ? '' : 's'}</span>` : ''}
                                     </div>
@@ -1120,7 +1120,7 @@ $is_archived_view = basename($_SERVER['PHP_SELF']) === 'evaluations-archived.php
                     : ({ activo: 'bg-primary', evaluado: 'evaluation-success-badge', pendiente: 'bg-secondary' }[evaluation.sequence_status] || 'bg-secondary');
                 const evaluatedClass = evaluation.is_completed ? 'evaluation-row-complete' : '';
                 const evaluatedBadge = evaluation.is_completed
-                    ? `<span class="badge evaluation-success-badge ms-2"><i class="bi bi-check2-circle"></i> ${evaluation.evaluated_by_all ? 'Evaluado por todos' : 'Evaluacion completada'}</span>`
+                    ? `<span class="badge evaluation-success-badge ms-2"><i class="bi bi-check2-circle"></i> ${evaluation.evaluated_by_all ? 'Evaluado por todos' : 'Evaluación completada'}</span>`
                     : '';
                 const evaluationSelection = renderArchiveEvaluationCheckbox(evaluation);
                 tbody.innerHTML += `
@@ -1161,7 +1161,7 @@ $is_archived_view = basename($_SERVER['PHP_SELF']) === 'evaluations-archived.php
                                 </button>
                                 ${evaluation.can_mark_completed ? `
                                     <button class="btn btn-sm btn-outline-success" onclick="markEvaluationCompleted(${evaluation.id})"
-                                        title="Marcar esta evaluacion como completada con los docentes presentes">
+                                        title="Marcar esta evaluación como completada con los docentes presentes">
                                         <i class="bi bi-check2-circle"></i><span>Marcar evaluada</span>
                                     </button>` : ''}
                                 <div class="evaluation-secondary-actions">
@@ -1289,10 +1289,10 @@ $is_archived_view = basename($_SERVER['PHP_SELF']) === 'evaluations-archived.php
             try {
                 await api.post('/evaluations', data);
                 evaluationModal.hide();
-                showAlert('#alertContainer', 'success', 'Evaluacion creada correctamente');
+                showAlert('#alertContainer', 'success', 'Evaluación creada correctamente');
                 loadEvaluations();
             } catch (error) {
-                showAlert('#alertContainer', 'danger', error.message || 'Error creando evaluacion');
+                showAlert('#alertContainer', 'danger', error.message || 'Error creando evaluación');
             }
         });
 
@@ -1474,7 +1474,7 @@ $is_archived_view = basename($_SERVER['PHP_SELF']) === 'evaluations-archived.php
             document.getElementById('roomProjects').innerHTML = availableProjects.map(project => `
                 <div class="room-project-item d-flex align-items-start gap-2">
                     <input class="form-check-input room-project mt-2" type="checkbox" value="${project.id}" id="roomProject${project.id}" ${selectedIds.includes(Number(project.id)) ? 'checked' : ''} onchange="scheduleRoomProjectsReorder()">
-                    <input class="form-control form-control-sm room-project-order" data-project-id="${project.id}" type="number" min="1" value="${normalizedOrderMap[project.id] || ''}" style="width:76px" title="Orden" aria-label="Orden de presentacion" onchange="scheduleRoomProjectsReorder()">
+                    <input class="form-control form-control-sm room-project-order" data-project-id="${project.id}" type="number" min="1" value="${normalizedOrderMap[project.id] || ''}" style="width:76px" title="Orden" aria-label="Orden de presentación" onchange="scheduleRoomProjectsReorder()">
                     <label class="form-check-label flex-grow-1" for="roomProject${project.id}">
                         <span class="fw-semibold">${escapeHtml(project.title)}</span>
                         <span class="text-muted small d-block">${escapeHtml(projectActiveAuthors(project) || 'Sin integrantes registrados')}</span>
@@ -1504,7 +1504,7 @@ $is_archived_view = basename($_SERVER['PHP_SELF']) === 'evaluations-archived.php
             const names = busy.rooms.map(room => room.nombre).join(', ');
             const projectCount = busy.projects.size;
             const teacherText = busy.rooms.length ? ` Se ocultaron ${busy.teachers.size} docente(s) ocupados en: ${escapeHtml(names)}.` : '';
-            const projectText = projectCount ? ` ${projectCount} proyecto(s) ya asignados a otra sala no estan disponibles.` : '';
+            const projectText = projectCount ? ` ${projectCount} proyecto(s) ya asignados a otra sala no están disponibles.` : '';
             hint.innerHTML = `<span class="text-warning"><i class="bi bi-exclamation-triangle"></i>${teacherText}${projectText}</span>`;
         }
 
@@ -1536,7 +1536,7 @@ $is_archived_view = basename($_SERVER['PHP_SELF']) === 'evaluations-archived.php
                                 <div class="room-meta-item"><span class="text-muted d-block">Lugar</span>${escapeHtml(room.salon || 'Sin salon')}</div>
                                 <div class="room-meta-item"><span class="text-muted d-block">Horario</span>${room.fecha_evaluacion ? new Date(room.fecha_evaluacion).toLocaleString('es-MX') : 'Sin inicio'}${room.fecha_fin_evaluacion ? ` - ${new Date(room.fecha_fin_evaluacion).toLocaleTimeString('es-MX', { hour: '2-digit', minute: '2-digit' })}` : ''}</div>
                                 <div class="room-meta-item"><span class="text-muted d-block">Responsable</span>${escapeHtml(fullName(room.responsible_teacher) || '-')}</div>
-                                <div class="room-meta-item"><span class="text-muted d-block">Tiempos</span>${room.project_presentation_minutes} min exposicion / ${room.teacher_evaluation_minutes} min evaluacion</div>
+                                <div class="room-meta-item"><span class="text-muted d-block">Tiempos</span>${room.project_presentation_minutes} min exposición / ${room.teacher_evaluation_minutes} min evaluación</div>
                             </div>
                             <div class="small mb-2"><span class="fw-semibold">Docentes:</span> ${(room.teachers || []).map(t => escapeHtml(fullName(t) || t.nombres || '')).filter(Boolean).join(', ') || '-'}</div>
                             <div class="small fw-semibold mb-1">Proyectos (${(room.projects || []).length})</div>
@@ -1603,7 +1603,7 @@ $is_archived_view = basename($_SERVER['PHP_SELF']) === 'evaluations-archived.php
             const selectedOrders = Object.values(projectOrder).filter(order => order > 0);
             const duplicateOrders = selectedOrders.filter((order, index) => selectedOrders.indexOf(order) !== index);
             if (duplicateOrders.length) {
-                showAlert('#alertContainer', 'danger', 'No repitas el orden de presentacion entre proyectos.');
+                showAlert('#alertContainer', 'danger', 'No repitas el orden de presentación entre proyectos.');
                 return;
             }
             const payload = {
@@ -1621,7 +1621,7 @@ $is_archived_view = basename($_SERVER['PHP_SELF']) === 'evaluations-archived.php
                 project_order: projectOrder
             };
             if (!payload.nombre || !payload.fecha_evaluacion) {
-                showAlert('#alertContainer', 'danger', 'Indica el nombre de la sala y la fecha de evaluacion.');
+                showAlert('#alertContainer', 'danger', 'Indica el nombre de la sala y la fecha de evaluación.');
                 return;
             }
             if (new Date(payload.fecha_evaluacion) <= new Date()) {
@@ -1659,8 +1659,8 @@ $is_archived_view = basename($_SERVER['PHP_SELF']) === 'evaluations-archived.php
         async function deleteRoom(id) {
             if (!await confirmAction({
                 title: 'Eliminar sala',
-                text: 'Se eliminaran tambien las evaluaciones, puntajes e intentos vinculados a esta sala.',
-                confirmButtonText: 'Si, eliminar'
+                text: 'Se eliminarán también las evaluaciones, puntajes e intentos vinculados a esta sala.',
+                confirmButtonText: 'Sí, eliminar'
             })) return;
             try {
                 const response = await api.delete(`/evaluations/rooms/${id}`);
@@ -1677,7 +1677,7 @@ $is_archived_view = basename($_SERVER['PHP_SELF']) === 'evaluations-archived.php
         async function archiveRoom(id) {
             if (!await confirmAction({
                 title: 'Archivar sala',
-                text: 'Todas las evaluaciones de esta sala dejaran de aparecer en la vista principal.',
+                text: 'Todas las evaluaciones de esta sala dejarán de aparecer en la vista principal.',
                 confirmButtonText: 'Si, archivar sala'
             })) return;
             await api.post(`/evaluations/rooms/${id}/archive`, {});
@@ -1690,7 +1690,7 @@ $is_archived_view = basename($_SERVER['PHP_SELF']) === 'evaluations-archived.php
         async function unarchiveRoom(id) {
             if (!await confirmAction({
                 title: 'Restaurar sala',
-                text: 'Todas las evaluaciones de esta sala volveran a la vista principal.',
+                text: 'Todas las evaluaciones de esta sala volverán a la vista principal.',
                 confirmButtonText: 'Si, restaurar sala'
             })) return;
             await api.post(`/evaluations/rooms/${id}/unarchive`, {});
@@ -1729,8 +1729,8 @@ $is_archived_view = basename($_SERVER['PHP_SELF']) === 'evaluations-archived.php
             const evaluation = evaluations.find(item => Number(item.id) === Number(id));
             if (!evaluation) return;
             if (!await confirmAction({
-                title: 'Marcar evaluacion como completada',
-                text: `Se conservaran las ${evaluation.evaluators_count || 0} rubricas registradas de ${evaluation.expected_evaluators_count || 0} docentes asignados. Los docentes ausentes quedaran sin evaluacion.`,
+                title: 'Marcar evaluación como completada',
+                text: `Se conservarán las ${evaluation.evaluators_count || 0} rúbricas registradas de ${evaluation.expected_evaluators_count || 0} docentes asignados. Los docentes ausentes quedarán sin evaluación.`,
                 confirmButtonText: 'Si, marcar evaluada'
             })) return;
 
@@ -1738,9 +1738,9 @@ $is_archived_view = basename($_SERVER['PHP_SELF']) === 'evaluations-archived.php
                 const response = await api.post(`/evaluations/${id}/mark-completed`, {});
                 replaceEvaluationLocal(response.evaluation);
                 await loadEvaluations(false, false, true);
-                swalToast('success', response.message || 'Evaluacion marcada como completada');
+                swalToast('success', response.message || 'Evaluación marcada como completada');
             } catch (error) {
-                showAlert('#alertContainer', 'danger', error.message || 'No se pudo marcar la evaluacion como completada');
+                showAlert('#alertContainer', 'danger', error.message || 'No se pudo marcar la evaluación como completada');
             }
         }
 
@@ -1814,7 +1814,7 @@ $is_archived_view = basename($_SERVER['PHP_SELF']) === 'evaluations-archived.php
             });
 
             if (semesterCriteria.length === 0) {
-                list.innerHTML = `<p class="text-muted mb-0">${selectedProjectId ? 'Este proyecto aun no tiene preguntas personalizadas.' : 'No hay preguntas para esta rubrica general.'}</p>`;
+                list.innerHTML = `<p class="text-muted mb-0">${selectedProjectId ? 'Este proyecto aún no tiene preguntas personalizadas.' : 'No hay preguntas para esta rúbrica general.'}</p>`;
                 return;
             }
 
@@ -1852,7 +1852,7 @@ $is_archived_view = basename($_SERVER['PHP_SELF']) === 'evaluations-archived.php
                 criteria.push(response.criterion);
                 document.getElementById('newCriterionText').value = '';
                 await loadRubricCriteria(true);
-                showAlert('#alertContainer', 'success', 'Pregunta agregada a la rubrica.');
+                showAlert('#alertContainer', 'success', 'Pregunta agregada a la rúbrica.');
             } catch (error) {
                 showAlert('#alertContainer', 'danger', error.message || 'No se pudo agregar la pregunta.');
             }
@@ -1870,7 +1870,7 @@ $is_archived_view = basename($_SERVER['PHP_SELF']) === 'evaluations-archived.php
         }
 
         async function deleteCriterion(id) {
-            if (!await confirmAction({ title: 'Desactivar pregunta', text: '¿Desactivar esta pregunta de la rubrica?', confirmButtonText: 'Si, desactivar' })) return;
+            if (!await confirmAction({ title: 'Desactivar pregunta', text: '¿Desactivar esta pregunta de la rúbrica?', confirmButtonText: 'Sí, desactivar' })) return;
             await api.delete(`/evaluations/rubric-criteria/${id}`);
             criteria = criteria.filter(criterion => Number(criterion.id) !== Number(id));
             await loadRubricCriteria(true);
@@ -1881,7 +1881,7 @@ $is_archived_view = basename($_SERVER['PHP_SELF']) === 'evaluations-archived.php
             document.getElementById('scoreEvaluationId').value = evaluationId;
             const evaluation = evaluations.find(item => item.id === evaluationId);
             if (evaluation && !evaluation.can_score_now) {
-                showAlert('#alertContainer', 'warning', 'Este proyecto aun no esta liberado para evaluacion dentro de la sala.');
+                showAlert('#alertContainer', 'warning', 'Este proyecto aún no está liberado para evaluacion dentro de la sala.');
                 return;
             }
             const draft = readScoreDraft(evaluationId);
@@ -1904,7 +1904,7 @@ $is_archived_view = basename($_SERVER['PHP_SELF']) === 'evaluations-archived.php
             document.getElementById('apto_titulacion').value = draft.apto_titulacion
                 ?? (evaluation?.current_teacher_apto_titulacion === true ? '1' : (evaluation?.current_teacher_apto_titulacion === false ? '0' : ''));
             if (evaluation?.current_teacher_has_scores && Number(evaluation.current_teacher_attempts) >= Number(evaluation.max_attempts)) {
-                showAlert('#alertContainer', 'danger', `Ya alcanzaste el limite de ${evaluation.max_attempts} oportunidad(es) para esta evaluacion.`);
+                showAlert('#alertContainer', 'danger', `Ya alcanzaste el límite de ${evaluation.max_attempts} oportunidad(es) para esta evaluación.`);
                 return;
             }
             const semesterCriteria = criteriaForEvaluation(evaluation);
@@ -1914,7 +1914,7 @@ $is_archived_view = basename($_SERVER['PHP_SELF']) === 'evaluations-archived.php
             container.innerHTML = '';
 
             if (semesterCriteria.length === 0) {
-                container.innerHTML = '<p class="text-muted mb-0">Este semestre no tiene preguntas de rubrica configuradas.</p>';
+                container.innerHTML = '<p class="text-muted mb-0">Este semestre no tiene preguntas de rúbrica configuradas.</p>';
                 scoreModal.show();
                 return;
             }
@@ -1957,22 +1957,22 @@ $is_archived_view = basename($_SERVER['PHP_SELF']) === 'evaluations-archived.php
                 select.classList.toggle('is-invalid', !select.value);
             });
             if (missingScores.length) {
-                showAlert('#alertContainer', 'warning', 'Selecciona una respuesta en todas las preguntas antes de guardar la rubrica.');
+                showAlert('#alertContainer', 'warning', 'Selecciona una respuesta en todas las preguntas antes de guardar la rúbrica.');
                 return;
             }
             try {
                 const evaluation = evaluations.find(item => String(item.id) === String(evaluationId));
                 const confirmSave = await confirmAction({
-                    title: 'Guardar evaluacion',
-                    text: `Se guardara la rubrica para ${evaluationProject(evaluation)?.title || 'este proyecto'}.`,
+                    title: 'Guardar evaluación',
+                    text: `Se guardará la rúbrica para ${evaluationProject(evaluation)?.title || 'este proyecto'}.`,
                     confirmButtonText: 'Si, guardar'
                 });
                 if (!confirmSave) return;
                 let confirm_update = false;
                 if (evaluation?.current_teacher_has_scores) {
                     confirm_update = await confirmAction({
-                        title: 'Modificar evaluacion existente',
-                        text: `Ya evaluaste este proyecto. Si continuas, se modificara tu evaluacion actual. Oportunidades usadas: ${evaluation.current_teacher_attempts}/${evaluation.max_attempts}.`,
+                        title: 'Modificar evaluación existente',
+                        text: `Ya evaluaste este proyecto. Si continúas, se modificará tu evaluación actual. Oportunidades usadas: ${evaluation.current_teacher_attempts}/${evaluation.max_attempts}.`,
                         confirmButtonText: 'Si, modificar'
                     });
                     if (!confirm_update) return;
@@ -1991,7 +1991,7 @@ $is_archived_view = basename($_SERVER['PHP_SELF']) === 'evaluations-archived.php
                 showAlert('#alertContainer', 'success', 'Rubrica guardada correctamente');
                 loadEvaluations(false, false, true);
             } catch (error) {
-                showAlert('#alertContainer', 'danger', error.message || 'Error guardando rubrica');
+                showAlert('#alertContainer', 'danger', error.message || 'Error guardando rúbrica');
             }
         });
 
@@ -2036,7 +2036,7 @@ $is_archived_view = basename($_SERVER['PHP_SELF']) === 'evaluations-archived.php
                     </div>`;
             };
             const teacherBlocks = evaluation.teacher_breakdown.length === 0
-                ? '<p class="text-muted mb-0">Aun no hay evaluaciones registradas por docentes.</p>'
+                ? '<p class="text-muted mb-0">Aún no hay evaluaciones registradas por docentes.</p>'
                 : evaluation.teacher_breakdown.map(teacher => `
                 <div class="border rounded p-3 mb-3">
                     <div class="d-flex justify-content-between align-items-center mb-2">
@@ -2049,7 +2049,7 @@ $is_archived_view = basename($_SERVER['PHP_SELF']) === 'evaluations-archived.php
                 </div>`).join('');
             const feedbackBox = `
                 <div class="border rounded p-3">
-                    <h6>Retroalimentacion de evaluacion</h6>
+                    <h6>Retroalimentación de evaluación</h6>
                     <p class="text-muted small">${escapeHtml(evaluation.room_feedback || 'Sin retroalimentacion registrada.')}</p>
                     ${(evaluation.can_manage_evaluations || evaluation.is_room_responsible) ? `
                         <textarea class="form-control mb-2" id="roomFeedbackText" rows="3">${escapeHtml(evaluation.room_feedback || '')}</textarea>
@@ -2079,34 +2079,34 @@ $is_archived_view = basename($_SERVER['PHP_SELF']) === 'evaluations-archived.php
         }
 
         async function deleteEvaluation(id) {
-            if (!await confirmAction({ title: 'Eliminar evaluacion', text: '¿Eliminar esta evaluacion?', confirmButtonText: 'Si, eliminar' })) return;
+            if (!await confirmAction({ title: 'Eliminar evaluación', text: '¿Eliminar esta evaluación?', confirmButtonText: 'Sí, eliminar' })) return;
             await api.delete(`/evaluations/${id}`);
             evaluations = evaluations.filter(evaluation => Number(evaluation.id) !== Number(id));
-            showAlert('#alertContainer', 'success', 'Evaluacion eliminada');
+            showAlert('#alertContainer', 'success', 'Evaluación eliminada');
             loadEvaluations(false, false, true);
         }
 
         async function archiveEvaluation(id) {
             if (!await confirmAction({
-                title: 'Archivar evaluacion',
-                text: 'La evaluacion dejara de aparecer en la vista principal, pero conservara sus reportes y detalle.',
+                title: 'Archivar evaluación',
+                text: 'La evaluación dejará de aparecer en la vista principal, pero conservará sus reportes y detalle.',
                 confirmButtonText: 'Si, archivar'
             })) return;
             await api.post(`/evaluations/${id}/archive`, {});
             evaluations = evaluations.filter(evaluation => Number(evaluation.id) !== Number(id));
-            showAlert('#alertContainer', 'success', 'Evaluacion archivada');
+            showAlert('#alertContainer', 'success', 'Evaluación archivada');
             loadEvaluations(false, false, true);
         }
 
         async function unarchiveEvaluation(id) {
             if (!await confirmAction({
-                title: 'Restaurar evaluacion',
-                text: 'La evaluacion volvera a aparecer en la vista principal.',
+                title: 'Restaurar evaluación',
+                text: 'La evaluación volverá a aparecer en la vista principal.',
                 confirmButtonText: 'Si, restaurar'
             })) return;
             await api.post(`/evaluations/${id}/unarchive`, {});
             evaluations = evaluations.filter(evaluation => Number(evaluation.id) !== Number(id));
-            showAlert('#alertContainer', 'success', 'Evaluacion restaurada');
+            showAlert('#alertContainer', 'success', 'Evaluación restaurada');
             loadEvaluations(false, false, true);
         }
 

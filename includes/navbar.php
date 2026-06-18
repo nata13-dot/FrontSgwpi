@@ -76,7 +76,7 @@ $management_pages = [
                                     </div>
                                     <div>
                                         <h6 class="dropdown-header">Proyectos</h6>
-                                        <a class="dropdown-item <?= in_array($current_page, ['projects.php', 'project-create.php', 'project-edit.php']) ? 'active' : '' ?>" href="/pages/admin/projects.php"><i class="bi bi-diagram-3"></i> Proyectos</a>
+                                        <a class="dropdown-item <?= in_array($current_page, ['projects.php', 'project-create.php', 'project-edit.php']) ? 'active' : '' ?>" href="/pages/admin/projects.php"><i class="bi bi-diagram-3"></i> Proyectos/Tesis</a>
                                         <a class="dropdown-item <?= $current_page == 'proposal-config.php' ? 'active' : '' ?>" href="/pages/admin/proposal-config.php"><i class="bi bi-calendar-check"></i> Propuestas</a>
                                         <a class="dropdown-item <?= $current_page == 'deliverables.php' ? 'active' : '' ?>" href="/pages/admin/deliverables.php"><i class="bi bi-file-earmark"></i> Entregables</a>
                                         <a class="dropdown-item <?= $current_page == 'evaluations.php' ? 'active' : '' ?>" href="/pages/admin/evaluations.php"><i class="bi bi-clipboard-check"></i> Evaluaciones</a>
@@ -255,9 +255,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
 async function logout() {
     const confirmed = await confirmAction({
-        title: 'Cerrar sesion',
-        text: '¿Estas seguro que deseas cerrar sesion?',
-        confirmButtonText: 'Si, cerrar sesion'
+        title: 'Cerrar sesión',
+        text: '¿Estás seguro de que deseas cerrar sesión?',
+        confirmButtonText: 'Sí, cerrar sesión'
     });
     if (!confirmed) return;
 

@@ -388,7 +388,7 @@ if (!is_authenticated() || !is_admin()) {
         async function deleteTag(tagId) {
             const confirmed = await confirmAction({
                 title: 'Eliminar etiqueta',
-                text: '¿Estas seguro de eliminar esta etiqueta?',
+                text: '¿Estás seguro de eliminar esta etiqueta?',
                 confirmButtonText: 'Si, eliminar'
             });
             if (!confirmed) return;

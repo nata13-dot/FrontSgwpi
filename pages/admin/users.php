@@ -136,7 +136,7 @@ if (!is_authenticated() || !is_admin()) {
                 <div class="card border-0 shadow-sm">
                     <div class="card-header credential-selection-toolbar d-none flex-wrap align-items-center justify-content-between gap-2" id="credentialSelectionToolbar">
                         <div class="small text-muted" id="selectedUsersCount">0 usuarios seleccionados</div>
-                        <div class="btn-group btn-group-sm" role="group" aria-label="Seleccion de usuarios">
+                        <div class="btn-group btn-group-sm" role="group" aria-label="Selección de usuarios">
                             <button type="button" class="btn btn-outline-secondary" onclick="selectVisibleUsers()">
                                 <i class="bi bi-check2-square"></i> Seleccionar página
                             </button>
@@ -209,8 +209,8 @@ if (!is_authenticated() || !is_admin()) {
                 <div class="modal-body">
                     <div id="credentialEmailAlert"></div>
                     <div class="alert alert-warning small">
-                        Por seguridad no se envian contraseñas existentes. Si usas la etiqueta <strong>{{Contraseña}}</strong>,
-                        el sistema generara una contraseña temporal nueva para cada usuario y guardara solo su hash.
+                        Por seguridad no se envían contraseñas existentes. Si usas la etiqueta <strong>{{Contraseña}}</strong>,
+                        el sistema generará una contraseña temporal nueva para cada usuario y guardará solo su hash.
                     </div>
                     <div class="mb-3">
                         <label class="form-label d-block">Destinatarios</label>
@@ -218,17 +218,17 @@ if (!is_authenticated() || !is_admin()) {
                             <label class="form-check border rounded p-2 ps-4">
                                 <input class="form-check-input" type="radio" name="credentialEmailMode" id="credentialEmailModeSelected" value="selected">
                                 <span class="form-check-label">Solo usuarios seleccionados</span>
-                                <span class="text-muted small d-block" id="credentialEmailSelectedHelp">Selecciona usuarios en la tabla para usar esta opcion.</span>
+                                <span class="text-muted small d-block" id="credentialEmailSelectedHelp">Selecciona usuarios en la tabla para usar esta opción.</span>
                             </label>
                             <label class="form-check border rounded p-2 ps-4">
                                 <input class="form-check-input" type="radio" name="credentialEmailMode" id="credentialEmailModeFiltered" value="filtered" checked>
                                 <span class="form-check-label">Todos los usuarios del filtro actual</span>
-                                <span class="text-muted small d-block">Usa perfil, estado, busqueda, semestre y grupo actuales.</span>
+                                <span class="text-muted small d-block">Usa perfil, estado, búsqueda, semestre y grupo actuales.</span>
                             </label>
                         </div>
                     </div>
                     <div class="mb-3">
-                        <label class="form-label d-block">Perfiles para envio por filtro</label>
+                        <label class="form-label d-block">Perfiles para envío por filtro</label>
                         <div class="d-flex flex-wrap gap-2">
                             <label class="form-check border rounded px-3 py-2">
                                 <input class="form-check-input credential-profile-checkbox" type="checkbox" value="1" checked onchange="refreshCredentialScopeText()">
@@ -342,8 +342,8 @@ if (!is_authenticated() || !is_admin()) {
                                 <input type="text" class="form-control" id="userAma">
                             </div>
                             <div class="col-12">
-                                <label class="form-label" for="userAddress">Direccion</label>
-                                <input type="text" class="form-control" id="userAddress" minlength="10" pattern="(?=.*\d)[A-Za-zÁÉÍÓÚÜÑáéíóúüñ0-9\s#.,\-\/]+" placeholder="Calle, numero, colonia, municipio">
+                                <label class="form-label" for="userAddress">Dirección</label>
+                                <input type="text" class="form-control" id="userAddress" minlength="10" pattern="(?=.*\d)[A-Za-zÁÉÍÓÚÜÑáéíóúüñ0-9\s#.,\-\/]+" placeholder="Calle, número, colonia, municipio">
                                 <div class="form-text">Separa los datos con comas (,).</div>
                             </div>
                             <div class="col-md-6">
@@ -538,7 +538,7 @@ if (!is_authenticated() || !is_admin()) {
                         ? `<button class="btn ${toggleClass}" disabled title="Administrador protegido"><i class="bi ${toggleIcon}"></i></button>`
                         : `<button class="btn ${toggleClass}" onclick="toggleUserStatus('${escapeHtml(user.id)}')" title="${toggleTitle}"><i class="bi ${toggleIcon}"></i></button>`;
                     const protectedButton = isAdminUser
-                        ? `<button class="btn btn-outline-secondary" onclick="protectedAdminAction('${escapeHtml(user.id)}')" title="Accion protegida"><i class="bi bi-shield-lock"></i></button>`
+                        ? `<button class="btn btn-outline-secondary" onclick="protectedAdminAction('${escapeHtml(user.id)}')" title="Acción protegida"><i class="bi bi-shield-lock"></i></button>`
                         : '';
 
                     tbody.innerHTML += `
@@ -551,7 +551,7 @@ if (!is_authenticated() || !is_admin()) {
                             <td>${escapeHtml(user.email)}</td>
                             <td><span class="badge bg-secondary">${profileNames[user.perfil_id] || 'N/A'}</span></td>
                             <td>${Number(user.perfil_id) === 3 ? `<span class="badge bg-primary">${escapeHtml(user.semestre || '-')} ${escapeHtml(user.grupo || '')}</span>` : '<span class="text-muted small">-</span>'}</td>
-                            <td>${Number(user.perfil_id) === 2 ? `<span class="badge bg-info text-dark">${Number(user.advising_projects_count || 0)} asesorias</span>` : (Number(user.perfil_id) === 3 ? (Number(user.student_projects_count || 0) > 0 ? '<span class="badge bg-success">Con proyecto</span>' : '<span class="badge bg-warning text-dark">Sin proyecto</span>') : '<span class="text-muted small">-</span>')}</td>
+                            <td>${Number(user.perfil_id) === 2 ? `<span class="badge bg-info text-dark">${Number(user.advising_projects_count || 0)} asesorías</span>` : (Number(user.perfil_id) === 3 ? (Number(user.student_projects_count || 0) > 0 ? '<span class="badge bg-success">Con proyecto</span>' : '<span class="badge bg-warning text-dark">Sin proyecto</span>') : '<span class="text-muted small">-</span>')}</td>
                             <td>${statusBadge}</td>
                             <td>
                                 <div class="btn-group btn-group-sm" role="group">
@@ -624,7 +624,7 @@ if (!is_authenticated() || !is_admin()) {
             const openButton = document.getElementById('credentialEmailOpenBtn');
             if (openButton) {
                 openButton.innerHTML = credentialSelectionMode
-                    ? '<i class="bi bi-envelope-check"></i> Continuar envio'
+                    ? '<i class="bi bi-envelope-check"></i> Continuar envío'
                     : '<i class="bi bi-envelope-lock"></i> Enviar credenciales';
                 openButton.className = credentialSelectionMode ? 'btn btn-warning' : 'btn btn-outline-warning';
             }
@@ -641,7 +641,7 @@ if (!is_authenticated() || !is_admin()) {
             if (selectedMode) selectedMode.disabled = count === 0;
             if (selectedHelp) selectedHelp.textContent = count > 0
                 ? `${count} usuario${count === 1 ? '' : 's'} seleccionado${count === 1 ? '' : 's'} para pruebas controladas.`
-                : 'Selecciona usuarios en la tabla para usar esta opcion.';
+                : 'Selecciona usuarios en la tabla para usar esta opción.';
         }
 
         function enableCredentialSelectionMode() {
@@ -649,7 +649,7 @@ if (!is_authenticated() || !is_admin()) {
             updateSelectedUsersUi();
             document.getElementById('alertContainer').innerHTML = `
                 <div class="alert alert-info alert-dismissible fade show" role="alert">
-                    <i class="bi bi-info-circle"></i> Selecciona usuarios en la tabla o presiona <strong>Continuar envio</strong> para usar filtros por perfil.
+                    <i class="bi bi-info-circle"></i> Selecciona usuarios en la tabla o presiona <strong>Continuar envío</strong> para usar filtros por perfil.
                     <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
                 </div>`;
         }
@@ -828,7 +828,7 @@ if (!is_authenticated() || !is_admin()) {
             const password = document.getElementById('userPassword').value;
             const passwordConfirmation = document.getElementById('userPasswordConfirmation').value;
             if ((password || passwordConfirmation) && password !== passwordConfirmation) {
-                swalToast('danger', 'La nueva contraseña y su confirmacion no coinciden');
+                swalToast('danger', 'La nueva contraseña y su confirmación no coinciden');
                 return;
             }
 
@@ -1179,13 +1179,13 @@ if (!is_authenticated() || !is_admin()) {
             }
             if (payload.semestre) parts.push(`semestre ${payload.semestre}`);
             if (payload.grupo) parts.push(`grupo ${payload.grupo}`);
-            if (payload.q) parts.push(`busqueda: "${payload.q}"`);
-            return `Se enviara a los usuarios con correo que coincidan con el filtro actual: ${parts.join(', ')}. Maximo 200 destinatarios.`;
+            if (payload.q) parts.push(`búsqueda: "${payload.q}"`);
+            return `Se enviará a los usuarios con correo que coincidan con el filtro actual: ${parts.join(', ')}. Máximo 200 destinatarios.`;
         }
 
         function selectedCredentialScope() {
             const count = selectedUserIds.size;
-            return `Se enviara solo a ${count} usuario${count === 1 ? '' : 's'} seleccionado${count === 1 ? '' : 's'}. Esta es la opcion recomendada para pruebas controladas.`;
+            return `Se enviará solo a ${count} usuario${count === 1 ? '' : 's'} seleccionado${count === 1 ? '' : 's'}. Esta es la opción recomendada para pruebas controladas.`;
         }
 
         function currentCredentialMode() {
@@ -1222,7 +1222,7 @@ if (!is_authenticated() || !is_admin()) {
                 document.getElementById('credentialEmailTags').textContent = `Etiquetas disponibles: ${(template.tags || []).join(', ')}`;
             } catch (error) {
                 document.getElementById('credentialEmailSubject').value = 'Credenciales de acceso al SGPI';
-                document.getElementById('credentialEmailBody').value = 'Hola {{Nombre}},\n\nUsuario: {{Usuario}}\nCorreo: {{Correo}}\nContraseña temporal: {{Contraseña}}\n\nPor seguridad, cambia tu contraseña despues de iniciar sesion.';
+                document.getElementById('credentialEmailBody').value = 'Hola {{Nombre}},\n\nUsuario: {{Usuario}}\nCorreo: {{Correo}}\nContraseña temporal: {{Contraseña}}\n\nPor seguridad, cambia tu contraseña después de iniciar sesión.';
             }
             refreshCredentialScopeText();
             usersCredentialModal.show();
@@ -1244,7 +1244,7 @@ if (!is_authenticated() || !is_admin()) {
             }
 
             if (mode === 'filtered' && selectedCredentialProfiles().length === 0) {
-                document.getElementById('credentialEmailAlert').innerHTML = '<div class="alert alert-warning">Selecciona al menos un perfil para el envio por filtro.</div>';
+                document.getElementById('credentialEmailAlert').innerHTML = '<div class="alert alert-warning">Selecciona al menos un perfil para el envío por filtro.</div>';
                 return;
             }
 
@@ -1261,8 +1261,8 @@ if (!is_authenticated() || !is_admin()) {
                 document.getElementById('credentialEmailAlert').innerHTML = `
                     <div class="alert alert-info">
                         ${mode === 'selected'
-                            ? `Confirma el envio a ${selectedUserIds.size} usuario(s) seleccionado(s).`
-                            : 'Confirma el envio a los usuarios del filtro actual.'}
+                            ? `Confirma el envío a ${selectedUserIds.size} usuario(s) seleccionado(s).`
+                            : 'Confirma el envío a los usuarios del filtro actual.'}
                         Escribe tu contraseña de administrador y vuelve a presionar "Enviar correos".
                     </div>`;
                 return;

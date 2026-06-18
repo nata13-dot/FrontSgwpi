@@ -98,10 +98,10 @@ if (!is_authenticated() || !is_admin()) {
 
                             <div class="row">
                                 <div class="col-12 mb-3">
-                                    <label for="direccion" class="form-label">Direccion</label>
-                                    <input type="text" class="form-control" id="direccion" name="direccion" minlength="10" pattern="(?=.*\d)[A-Za-zÁÉÍÓÚÜÑáéíóúüñ0-9\s#.,\-\/]+" placeholder="Calle, numero, colonia, municipio">
-                                    <div class="form-text">Debe incluir calle y numero. Ej. Av. Reforma 123, Col. Centro.</div>
-                                    <div class="invalid-feedback">Ingresa un domicilio valido con al menos un numero.</div>
+                                    <label for="direccion" class="form-label">Dirección</label>
+                                    <input type="text" class="form-control" id="direccion" name="direccion" minlength="10" pattern="(?=.*\d)[A-Za-zÁÉÍÓÚÜÑáéíóúüñ0-9\s#.,\-\/]+" placeholder="Calle, número, colonia, municipio">
+                                    <div class="form-text">Debe incluir calle y número. Ej. Av. Reforma 123, Col. Centro.</div>
+                                    <div class="invalid-feedback">Ingresa un domicilio válido con al menos un número.</div>
                                 </div>
                             </div>
 
@@ -150,7 +150,7 @@ if (!is_authenticated() || !is_admin()) {
             form.classList.add('was-validated');
             if (!form.checkValidity()) return;
             if (document.getElementById('password').value !== document.getElementById('password_confirmation').value) {
-                swalToast('danger', 'La nueva contraseña y su confirmacion no coinciden');
+                swalToast('danger', 'La nueva contraseña y su confirmación no coinciden');
                 return;
             }
 

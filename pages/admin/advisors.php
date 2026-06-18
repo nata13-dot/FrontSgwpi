@@ -11,7 +11,7 @@ if (!is_authenticated() || !is_admin()) {
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Asignacion de Asesores - <?= APP_NAME ?></title>
+    <title>Asignación de Asesores - <?= APP_NAME ?></title>
     <?php require_once $_SERVER['DOCUMENT_ROOT'] . '/includes/visual-preferences.php'; ?>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
@@ -25,8 +25,8 @@ if (!is_authenticated() || !is_admin()) {
             <div class="container-xl mt-5 mb-5">
                 <div class="d-flex align-items-center justify-content-between mb-4">
                     <div>
-                        <h1 class="mb-1">Asignacion de Asesores</h1>
-                        <p class="text-muted mb-0">Gestiona asesores por proyecto y comites para tesis marcadas por administracion.</p>
+                        <h1 class="mb-1">Asignación de Asesores</h1>
+                        <p class="text-muted mb-0">Gestiona asesores por proyecto y comités para tesis marcadas por administración.</p>
                     </div>
                 </div>
 
@@ -40,17 +40,17 @@ if (!is_authenticated() || !is_admin()) {
                             <option value="5">5 - Propuesta</option>
                             <option value="6">6 - Avance</option>
                             <option value="7">7 - Avance</option>
-                            <option value="8">8 - Titulacion</option>
+                            <option value="8">8 - Titulación</option>
                         </select>
                     </div>
                 </div>
 
-                <div class="d-flex flex-wrap gap-2 mb-3" role="group" aria-label="Vista de gestion de asesores">
+                <div class="d-flex flex-wrap gap-2 mb-3" role="group" aria-label="Vista de gestión de asesores">
                     <button type="button" class="btn btn-primary" id="viewByProjectBtn" onclick="setAdvisorView('projects')">
                         <i class="bi bi-folder2-open"></i> Por proyecto
                     </button>
                     <button type="button" class="btn btn-outline-secondary" id="viewThesisCommitteeBtn" onclick="setAdvisorView('thesis')">
-                        <i class="bi bi-mortarboard"></i> Comite de tesis
+                        <i class="bi bi-mortarboard"></i> Comité de tesis
                     </button>
                     <button type="button" class="btn btn-outline-secondary" id="viewByTeacherBtn" onclick="setAdvisorView('teachers')">
                         <i class="bi bi-person-workspace"></i> Por asesor
@@ -113,7 +113,7 @@ if (!is_authenticated() || !is_admin()) {
                                     <label class="form-label" for="teacherSearch">Buscar asesor</label>
                                     <div class="input-group">
                                         <span class="input-group-text"><i class="bi bi-search"></i></span>
-                                        <input type="search" class="form-control" id="teacherSearch" placeholder="Nombre, apellidos o nomina" oninput="renderTeacherAdvisorView()">
+                                        <input type="search" class="form-control" id="teacherSearch" placeholder="Nombre, apellidos o nómina" oninput="renderTeacherAdvisorView()">
                                     </div>
                                 </div>
                                 <div class="col-lg-3">
@@ -171,12 +171,12 @@ if (!is_authenticated() || !is_admin()) {
         let advisorView = 'projects';
         const ADVISOR_ROLES = [
             { key: 'primario', label: 'Primario', badge: 'bg-primary', icon: 'bi-award', help: 'Responsable principal' },
-            { key: 'secundario', label: 'Secundario', badge: 'bg-info text-dark', icon: 'bi-person-check', help: 'Apoyo academico' }
+            { key: 'secundario', label: 'Secundario', badge: 'bg-info text-dark', icon: 'bi-person-check', help: 'Apoyo académico' }
         ];
         const THESIS_ROLES = [
-            { key: 'asesor', label: 'Asesor', badge: 'bg-primary', icon: 'bi-award', help: 'Responsable academico' },
-            { key: 'revisor_1', label: 'Revisor 1', badge: 'bg-info text-dark', icon: 'bi-person-check', help: 'Primera revision' },
-            { key: 'revisor_2', label: 'Revisor 2', badge: 'bg-warning text-dark', icon: 'bi-person-lines-fill', help: 'Segunda revision' }
+            { key: 'asesor', label: 'Asesor', badge: 'bg-primary', icon: 'bi-award', help: 'Responsable académico' },
+            { key: 'revisor_1', label: 'Revisor 1', badge: 'bg-info text-dark', icon: 'bi-person-check', help: 'Primera revisión' },
+            { key: 'revisor_2', label: 'Revisor 2', badge: 'bg-warning text-dark', icon: 'bi-person-lines-fill', help: 'Segunda revisión' }
         ];
 
         function escapeHtml(value) {
@@ -369,7 +369,7 @@ if (!is_authenticated() || !is_admin()) {
             document.getElementById('summaryProjects').textContent = totalAdvisories;
 
             if (!teachersWithProjects.length) {
-                container.innerHTML = '<div class="col-12"><div class="alert alert-info mb-0">No hay asesores que coincidan con la busqueda o el filtro seleccionado.</div></div>';
+                container.innerHTML = '<div class="col-12"><div class="alert alert-info mb-0">No hay asesores que coincidan con la búsqueda o el filtro seleccionado.</div></div>';
                 return;
             }
 
@@ -403,7 +403,7 @@ if (!is_authenticated() || !is_admin()) {
                                     <i class="bi bi-pencil-square"></i> Ajustar asesores
                                 </button>
                                 ${project.is_thesis ? `<button type="button" class="btn btn-sm btn-outline-success" onclick="focusProjectAssignment(${project.id}, 'thesis')">
-                                    <i class="bi bi-mortarboard"></i> Ajustar comite
+                                    <i class="bi bi-mortarboard"></i> Ajustar comité
                                 </button>` : ''}
                             </div>
                         </div>`;
@@ -460,7 +460,7 @@ if (!is_authenticated() || !is_admin()) {
                     title: escapeHtml(project.title),
                     html: `
                         <div class="text-start">
-                            <p class="text-muted">${escapeHtml(project.description || 'Sin descripcion')}</p>
+                            <p class="text-muted">${escapeHtml(project.description || 'Sin descripción')}</p>
                             <p><strong>Semestre:</strong> ${escapeHtml(project.semestre || '-')} | <strong>Año:</strong> ${escapeHtml(project.year || '-')}</p>
                             <p><strong>Grupo / carga:</strong><br>${escapeHtml(project.subject_group?.nombre || '-')}</p>
                             <p><strong>Integrantes:</strong><br>${students}</p>
@@ -594,7 +594,7 @@ if (!is_authenticated() || !is_admin()) {
             }
 
             const adminPassword = await promptPassword({
-                title: 'Confirmar modificacion de asesores',
+                title: 'Confirmar modificación de asesores',
                 inputPlaceholder: 'Contraseña del administrador actual',
                 confirmButtonText: 'Autorizar'
             });
@@ -628,7 +628,7 @@ if (!is_authenticated() || !is_admin()) {
             }
 
             const adminPassword = await promptPassword({
-                title: 'Confirmar modificacion de asesores',
+                title: 'Confirmar modificación de asesores',
                 inputPlaceholder: 'Contraseña del administrador actual',
                 confirmButtonText: 'Guardar cambios'
             });

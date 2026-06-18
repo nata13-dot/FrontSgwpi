@@ -137,15 +137,15 @@ class AuthManager {
             if (!response.ok) {
                 const error = new Error(
                     response.status >= 500
-                        ? 'El servidor no pudo renovar la sesion temporalmente.'
-                        : 'La sesion ya no puede renovarse.'
+                        ? 'El servidor no pudo renovar la sesión temporalmente.'
+                        : 'La sesión ya no puede renovarse.'
                 );
                 error.status = response.status;
                 error.authTerminal = response.status === 401 || response.status === 403;
                 throw error;
             }
             const data = await response.json();
-            if (!data.access_token) throw new Error('Respuesta de sesion invalida.');
+            if (!data.access_token) throw new Error('Respuesta de sesión invalida.');
             this.token = data.access_token;
             if (data.user) this.user = data.user;
             await fetch('/api/set-session.php', {
@@ -219,7 +219,7 @@ class AuthManager {
             await this.refreshToken();
             return;
         }
-        if (!response.ok) throw new Error('No se pudo mantener activa la sesion.');
+        if (!response.ok) throw new Error('No se pudo mantener activa la sesión.');
     }
 
     scheduleHeartbeat() {
