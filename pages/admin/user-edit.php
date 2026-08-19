@@ -1,7 +1,7 @@
 <?php 
 require_once $_SERVER['DOCUMENT_ROOT'] . '/includes/config.php';
 
-if (!is_authenticated() || !is_admin()) {
+if (!is_authenticated() || !can_govern_users()) {
     header('Location: /index.php');
     exit;
 }
@@ -82,10 +82,13 @@ if (!$userId) {
                                 </div>
                                 <div class="col-md-4 mb-3">
                                     <label for="perfil_id" class="form-label">Perfil</label>
-                                    <select class="form-select" id="perfil_id" name="perfil_id" required disabled>
+                                    <select class="form-select" id="perfil_id" name="perfil_id" required>
                                         <option value="1">Administrador</option>
                                         <option value="2">Docente</option>
                                         <option value="3">Estudiante</option>
+                                        <option value="5">Jefe de Carrera</option>
+                                        <option value="6">Asistente de Jefe de Carrera</option>
+                                        <option value="7">Coordinador de Proyectos</option>
                                     </select>
                                 </div>
                                 <div class="col-md-4 mb-3">
@@ -172,7 +175,7 @@ if (!$userId) {
                 await loadGroupsForSemester(user.grupo || '');
                 toggleStudentFields();
 
-                if (Number(user.perfil_id) === 1) {
+                if ([1, 5].includes(Number(user.perfil_id))) {
                     const stateHelp = document.createElement('div');
                     stateHelp.className = 'form-text text-warning';
                     stateHelp.textContent = 'Administrador protegido: para desactivarlo o cambiar su perfil se pedira la contraseña del administrador actual.';
@@ -209,8 +212,8 @@ if (!$userId) {
                 telefonos: document.getElementById('telefonos').value.trim()
             };
 
-            const changesProtectedAdmin = loadedUser && Number(loadedUser.perfil_id) === 1
-                && ((Number(formData.perfil_id) !== 1) || !formData.activo);
+            const changesProtectedAdmin = loadedUser && [1, 5].includes(Number(loadedUser.perfil_id))
+                && ((Number(formData.perfil_id) !== Number(loadedUser.perfil_id)) || !formData.activo);
 
             if (changesProtectedAdmin) {
                 const adminPassword = await promptPassword({

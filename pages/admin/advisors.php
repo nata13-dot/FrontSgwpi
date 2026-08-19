@@ -1,7 +1,7 @@
 <?php
 require_once $_SERVER['DOCUMENT_ROOT'] . '/includes/config.php';
 
-if (!is_authenticated() || !is_admin()) {
+if (!is_authenticated() || !can_manage_projects()) {
     header('Location: /index.php');
     exit;
 }
@@ -41,6 +41,7 @@ if (!is_authenticated() || !is_admin()) {
                             <option value="6">6 - Avance</option>
                             <option value="7">7 - Avance</option>
                             <option value="8">8 - Titulación</option>
+                            <option value="9">9 - Titulación</option>
                         </select>
                     </div>
                 </div>
@@ -280,15 +281,20 @@ if (!is_authenticated() || !is_admin()) {
             document.getElementById('thesisCommitteeTable').innerHTML = '<tr><td colspan="7" class="text-center py-4"><div class="spinner-border" role="status"></div></td></tr>';
 
             try {
-                const params = {};
+                const commonParams = {};
                 const semester = document.getElementById('semesterFilter').value;
-                if (semester) params.semestre = semester;
-                params.per_page = 100;
+                if (semester) commonParams.semestre = semester;
+                commonParams.per_page = 100;
 
-                const response = await api.get('/projects', params);
-                projects = response.data || [];
-                renderAssignmentTable('projectsTable', 'projects', ADVISOR_ROLES, projects.filter(project => !project.is_thesis), 'No hay proyectos integradores', 6);
-                renderAssignmentTable('thesisCommitteeTable', 'thesis', THESIS_ROLES, projects.filter(project => project.is_thesis), 'No hay tesis marcadas', 7);
+                const [projectResponse, thesisResponse] = await Promise.all([
+                    api.get('/projects', { ...commonParams, tipo_registro: 'proyecto' }),
+                    api.get('/projects', { ...commonParams, tipo_registro: 'tesis' })
+                ]);
+                const regularProjects = projectResponse.data || [];
+                const theses = thesisResponse.data || [];
+                projects = [...regularProjects, ...theses];
+                renderAssignmentTable('projectsTable', 'projects', ADVISOR_ROLES, regularProjects, 'No hay proyectos integradores', 6);
+                renderAssignmentTable('thesisCommitteeTable', 'thesis', THESIS_ROLES, theses, 'No hay tesis marcadas', 7);
                 renderTeacherAdvisorView();
                 updateSaveAllButton();
             } catch (error) {

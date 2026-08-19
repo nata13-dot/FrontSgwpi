@@ -11,14 +11,12 @@ $requestHost = strtolower(preg_replace('/:\d+$/', '', trim(
 $localHosts = ['localhost', '127.0.0.1', '::1', 'frontend_swgpi.test'];
 $isLocalRequest = in_array($requestHost, $localHosts, true)
     || str_ends_with($requestHost, '.test');
-$productionApiUrl = 'https://apiswgpi-production-0e59.up.railway.app/api';
-$configuredApiUrl = trim((string) getenv('API_BASE_URL'));
-
-if ($configuredApiUrl === '') {
-    $configuredApiUrl = $isLocalRequest ? 'http://127.0.0.1:8000/api' : $productionApiUrl;
-} elseif (!$isLocalRequest && preg_match('#^https?://(127\.0\.0\.1|localhost)(:\d+)?(?:/|$)#i', $configuredApiUrl)) {
-    $configuredApiUrl = $productionApiUrl;
-}
+// Conexion anterior:
+// $productionApiUrl = 'https://apiswgpi-production-0e59.up.railway.app/api';
+$localApiUrl = 'http://127.0.0.1:8000/api';
+// Variable de entorno anterior, desactivada para usar siempre la API local:
+// $configuredApiUrl = trim((string) getenv('API_BASE_URL'));
+$configuredApiUrl = $localApiUrl;
 
 $configuredApiUrl = rtrim($configuredApiUrl, '/');
 define('API_BASE_URL', $configuredApiUrl);
@@ -166,12 +164,16 @@ function is_authenticated() {
 // Helper para obtener rol
 function get_user_role() {
     if (!is_authenticated()) return null;
-    return $_SESSION['user']['perfil_id'] ?? null;
+    return $_SESSION['user']['active_profile_id'] ?? $_SESSION['user']['perfil_id'] ?? null;
 }
 
 // Helper para verificar rol específico
 function is_admin() {
-    return get_user_role() == 1;
+    return in_array((int) get_user_role(), [1, 5], true) || is_general_admin();
+}
+
+function is_general_admin() {
+    return is_authenticated() && ($_SESSION['user']['perfil_id'] ?? null) == 4;
 }
 
 function is_teacher() {
@@ -182,14 +184,67 @@ function is_student() {
     return get_user_role() == 3;
 }
 
+function is_career_head() {
+    return get_user_role() == 5;
+}
+
+function is_career_head_assistant() {
+    return get_user_role() == 6;
+}
+
+function is_project_coordinator() {
+    return get_user_role() == 7;
+}
+
+function can_manage_academics() {
+    return is_admin() || is_career_head_assistant();
+}
+
+function can_manage_projects() {
+    return is_admin() || is_career_head_assistant() || is_project_coordinator();
+}
+
+function is_management_staff() {
+    return can_manage_projects();
+}
+
+function can_govern_users() {
+    return is_general_admin();
+}
+
+function profile_role_label() {
+    return match ((int) get_user_role()) {
+        1 => 'Administrador',
+        2 => 'Docente',
+        3 => 'Estudiante',
+        4 => 'Administrador general',
+        5 => 'Jefe de Carrera',
+        6 => 'Asistente de Jefe de Carrera',
+        7 => 'Coordinador de Proyectos',
+        default => 'Usuario',
+    };
+}
+
 function is_evaluation_manager() {
     return is_admin() || !empty($_SESSION['user']['is_evaluation_manager']);
 }
 function dashboard_url() {
-    if (is_admin()) return '/pages/admin/dashboard.php';
+    if (is_management_staff()) return '/pages/admin/dashboard.php';
     if (is_teacher()) return '/pages/teacher/dashboard.php';
     if (is_student()) return '/pages/student/dashboard.php';
     return '/index.php';
+}
+
+function active_career() {
+    return $_SESSION['user']['active_career'] ?? null;
+}
+
+function active_career_id() {
+    return active_career()['id'] ?? null;
+}
+
+function available_careers() {
+    return $_SESSION['user']['careers'] ?? [];
 }
 
 function profile_photo_url($user = null) {
@@ -217,7 +272,10 @@ function requireAuth($minRole = null) {
  * Alias para admin
  */
 function requireAdmin() {
-    requireAuth(1);
+    if (!is_authenticated() || !is_admin()) {
+        header('Location: /index.php');
+        exit;
+    }
 }
 
 /**

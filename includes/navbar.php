@@ -27,7 +27,7 @@ $management_pages = [
             <a href="<?= $home_url ?>" class="navbar-mobile-emblem" aria-label="Ir al inicio">
                 <img src="/assets/img/ITSSMT/ITSSMT.webp" alt="ITSSMT">
             </a>
-            <div class="global-search-shell" data-global-search data-role="<?= is_admin() ? 'admin' : (is_teacher() ? 'teacher' : 'student') ?>">
+            <div class="global-search-shell" data-global-search data-role="<?= is_general_admin() ? 'general_admin' : (is_management_staff() ? 'admin' : (is_teacher() ? 'teacher' : 'student')) ?>">
                 <form class="global-search" role="search" action="/pages/repositorio.php" method="get" autocomplete="off">
                     <i class="bi bi-search" aria-hidden="true"></i>
                     <input
@@ -62,6 +62,39 @@ $management_pages = [
                 </li>
                 
                 <?php if (is_authenticated()): ?>
+                    <?php if (is_general_admin() || count(available_careers()) > 1): ?>
+                        <li class="nav-item dropdown career-switcher">
+                            <button class="nav-link dropdown-toggle career-switcher-button" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+                                <i class="bi bi-diagram-3"></i>
+                                <span><?= htmlspecialchars(active_career()['nombre_corto'] ?? 'Seleccionar carrera') ?></span>
+                            </button>
+                            <ul class="dropdown-menu dropdown-menu-end career-switcher-menu">
+                                <li><h6 class="dropdown-header">Administrar como</h6></li>
+                                <?php foreach (available_careers() as $career): ?>
+                                    <li>
+                                        <button
+                                            type="button"
+                                            class="dropdown-item career-switch-option <?= (int) ($career['id'] ?? 0) === (int) active_career_id() ? 'active' : '' ?>"
+                                            data-career-id="<?= (int) ($career['id'] ?? 0) ?>"
+                                        >
+                                            <span class="career-color-dot" style="--dot-color: <?= htmlspecialchars($career['color_acento'] ?? $career['color_primario'] ?? '#1B396A') ?>"></span>
+                                            <span>
+                                                <strong><?= htmlspecialchars($career['nombre_corto'] ?? $career['nombre'] ?? '') ?></strong>
+                                                <small><?= htmlspecialchars($career['clave'] ?? '') ?></small>
+                                            </span>
+                                            <?php if ((int) ($career['id'] ?? 0) === (int) active_career_id()): ?>
+                                                <i class="bi bi-check2 ms-auto"></i>
+                                            <?php endif; ?>
+                                        </button>
+                                    </li>
+                                <?php endforeach; ?>
+                                <?php if (is_general_admin()): ?>
+                                    <li><hr class="dropdown-divider"></li>
+                                    <li><a class="dropdown-item" href="/pages/admin/careers.php"><i class="bi bi-sliders"></i> Gestionar carreras</a></li>
+                                <?php endif; ?>
+                            </ul>
+                        </li>
+                    <?php endif; ?>
                     <?php if (is_admin()): ?>
                         <li class="nav-item dropdown">
                             <a class="nav-link dropdown-toggle <?= in_array($current_page, $management_pages) ? 'active' : '' ?>" href="#" id="managementMenu" role="button" data-bs-toggle="dropdown">
@@ -92,6 +125,7 @@ $management_pages = [
                                         <a class="dropdown-item <?= $current_page == 'document-tags.php' ? 'active' : '' ?>" href="/pages/admin/document-tags.php"><i class="bi bi-tags"></i> Etiquetas</a>
                                         <a class="dropdown-item <?= $current_page == 'notices.php' ? 'active' : '' ?>" href="/pages/admin/notices.php"><i class="bi bi-megaphone"></i> Avisos</a>
                                         <a class="dropdown-item <?= $current_page == 'settings.php' ? 'active' : '' ?>" href="/pages/admin/settings.php"><i class="bi bi-sliders"></i> Ajustes</a>
+                                        <a class="dropdown-item <?= $current_page == 'career-modules.php' ? 'active' : '' ?>" href="/pages/admin/career-modules.php"><i class="bi bi-grid-3x3-gap"></i> Módulos de carrera</a>
                                         <a class="dropdown-item <?= $current_page == 'repositorio.php' ? 'active' : '' ?>" href="/pages/repositorio.php"><i class="bi bi-archive"></i> Repositorio</a>
                                     </div>
                                 </div>
@@ -147,6 +181,29 @@ $management_pages = [
                         </li>
                     <?php endif; ?>
                     
+                    <?php if (is_general_admin()): ?>
+                    <li class="nav-item nav-icon-item dropdown">
+                        <button class="nav-link nav-icon-link" type="button" id="operationalNotificationMenu" data-bs-toggle="dropdown" data-bs-auto-close="outside" aria-expanded="false" aria-label="Alertas operativas">
+                            <i class="bi bi-shield-exclamation"></i>
+                            <span class="nav-icon-badge" id="operationalNotificationBadge" hidden>0</span>
+                        </button>
+                        <div class="dropdown-menu dropdown-menu-end notification-menu" aria-labelledby="operationalNotificationMenu">
+                            <div class="notification-menu-header">
+                                <div>
+                                    <strong>Estado operativo</strong>
+                                    <small id="operationalNotificationSummary">Sin alertas activas</small>
+                                </div>
+                                <a href="/pages/admin/operations.php" class="btn btn-sm btn-outline-primary">Ver centro</a>
+                            </div>
+                            <div class="notification-list" id="operationalNotificationList">
+                                <div class="notification-empty">
+                                    <i class="bi bi-shield-check"></i>
+                                    <span>Operación institucional saludable.</span>
+                                </div>
+                            </div>
+                        </div>
+                    </li>
+                    <?php endif; ?>
                     <li class="nav-item nav-icon-item dropdown">
                         <button class="nav-link nav-icon-link" type="button" id="notificationMenu" data-bs-toggle="dropdown" data-bs-auto-close="outside" aria-expanded="false" aria-label="Notificaciones">
                             <i class="bi bi-bell"></i>
@@ -196,7 +253,7 @@ $management_pages = [
                             <img src="<?= htmlspecialchars(profile_photo_url($current_user)) ?>" class="profile-thumb" alt="Perfil">
                             <span class="user-nav-name">
                                 <strong><?= isset($current_user['nombres']) ? htmlspecialchars($current_user['nombres']) : 'Perfil' ?></strong>
-                                <small><?= is_admin() ? 'Administrador' : (is_teacher() ? 'Docente' : 'Estudiante') ?></small>
+                                <small><?= htmlspecialchars(profile_role_label()) ?></small>
                             </span>
                         </a>
                         <ul class="dropdown-menu dropdown-menu-end">
@@ -282,4 +339,9 @@ async function logout() {
 <?php if (is_authenticated()): ?>
     <script src="/assets/js/global-search.js"></script>
     <script src="/assets/js/activity-notifications.js"></script>
+    <?php if (is_general_admin()): ?>
+        <script src="/assets/js/operational-notifications.js"></script>
+    <?php endif; ?>
+    <script src="/assets/js/career-modules.js"></script>
+    <script src="/assets/js/career-switcher.js"></script>
 <?php endif; ?>

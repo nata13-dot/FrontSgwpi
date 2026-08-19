@@ -10,11 +10,11 @@
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
     <link rel="stylesheet" href="/assets/css/app.css">
 </head>
-<body>
+<body class="repository-shell repository-detail-shell">
     <?php require_once $_SERVER['DOCUMENT_ROOT'] . '/includes/navbar.php'; ?>
     
     <!-- Hero -->
-    <div class="hero-gradient">
+    <div class="hero-gradient repository-detail-hero">
         <div class="container-xl">
             <nav aria-label="breadcrumb">
                 <ol class="breadcrumb" style="background: rgba(255,255,255,0.1); border-radius: 5px; padding: 10px 15px;">
@@ -48,6 +48,14 @@
             return String(value ?? '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#039;');
         }
 
+        function repositoryDetailDate(value) {
+            if (!value) return 'Fecha no disponible';
+            const date = new Date(value);
+            return Number.isNaN(date.getTime())
+                ? 'Fecha no disponible'
+                : new Intl.DateTimeFormat('es-MX', { day: '2-digit', month: 'long', year: 'numeric' }).format(date);
+        }
+
         async function loadDocumento() {
             const params = new URLSearchParams(window.location.search);
             const docId = params.get('id');
@@ -66,12 +74,12 @@
                 const html = `
                     <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-4">
                         <div>
-                            <h1 class="mb-1">${esc(doc.nombre)}</h1>
+                            <h1 class="mb-1">${esc(doc.nombre || doc.titulo || 'Documento sin título')}</h1>
                             <p class="text-muted mb-0">${esc(doc.descripcion || '')}</p>
                         </div>
-                        <a href="${downloadUrl}" class="btn btn-primary">
-                            <i class="bi bi-download"></i> Descargar documento
-                        </a>
+                        ${doc.file_available === false
+                            ? '<span class="badge text-bg-warning p-2"><i class="bi bi-exclamation-triangle"></i> Archivo no disponible</span>'
+                            : `<a href="${downloadUrl}" class="btn btn-primary"><i class="bi bi-download"></i> Descargar documento</a>`}
                     </div>
 
                     <div class="row g-4">
@@ -101,7 +109,7 @@
                                     <ul class="list-unstyled small mb-4">
                                         <li class="mb-2"><strong>Autores:</strong><br>${esc(doc.autores || 'No especificados')}</li>
                                         <li class="mb-2"><strong>Tipo:</strong><br>${esc((doc.archivo_tipo || 'documento').toUpperCase())}</li>
-                                        <li class="mb-2"><strong>Fecha:</strong><br>${new Date(doc.created_at).toLocaleDateString()}</li>
+                                        <li class="mb-2"><strong>Fecha:</strong><br>${esc(repositoryDetailDate(doc.created_at || doc.creado_en))}</li>
                                         <li class="mb-2"><strong>Subido por:</strong><br>${esc(doc.uploader?.nombres || 'N/A')}</li>
                                     </ul>
                                     <h6>Etiquetas</h6>
@@ -120,10 +128,14 @@
                 `;
 
                 document.getElementById('detailsContainer').innerHTML = html;
-                renderDocumentPreview(fileType, viewUrl, downloadUrl);
+                if (doc.file_available === false) {
+                    document.getElementById('documentReader').innerHTML = previewFallback('', 'El registro está publicado, pero el archivo físico necesita ser recuperado desde un respaldo.');
+                } else {
+                    renderDocumentPreview(fileType, viewUrl, downloadUrl);
+                }
             } catch (error) {
                 console.error('Error:', error);
-                document.getElementById('detailsContainer').innerHTML = '<p class="text-danger">Error al cargar el documento</p>';
+                document.getElementById('detailsContainer').innerHTML = `<div class="repository-empty-state repository-error-state"><i class="bi bi-file-earmark-x"></i><h2>Documento no disponible</h2><p>${esc(error.message || 'No fue posible cargar el documento solicitado.')}</p><a class="btn btn-primary" href="/pages/repositorio.php"><i class="bi bi-arrow-left"></i> Volver al repositorio</a></div>`;
             }
         }
 
@@ -200,7 +212,7 @@
                 <div class="text-center py-5">
                     <i class="bi bi-file-earmark-text text-muted" style="font-size: 3rem;"></i>
                     <p class="mt-3 text-muted">${esc(message)}</p>
-                    <a href="${downloadUrl}" class="btn btn-primary"><i class="bi bi-download"></i> Descargar para leer</a>
+                    ${downloadUrl ? `<a href="${downloadUrl}" class="btn btn-primary"><i class="bi bi-download"></i> Descargar para leer</a>` : ''}
                 </div>
             `;
         }

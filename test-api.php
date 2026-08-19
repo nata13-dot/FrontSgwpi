@@ -1,5 +1,9 @@
 <?php
 require_once $_SERVER['DOCUMENT_ROOT'] . '/includes/config.php';
+if (!is_authenticated() || !is_general_admin()) {
+    http_response_code(404);
+    exit;
+}
 
 /**
  * Página de prueba para verificar que la API está siendo consumida

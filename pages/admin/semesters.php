@@ -1,7 +1,7 @@
 <?php
 require_once $_SERVER['DOCUMENT_ROOT'] . '/includes/config.php';
 
-if (!is_authenticated() || !is_admin()) {
+if (!is_authenticated() || !can_manage_academics()) {
     header('Location: /index.php');
     exit;
 }

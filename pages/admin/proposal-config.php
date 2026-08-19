@@ -1,6 +1,6 @@
 <?php
 require_once $_SERVER['DOCUMENT_ROOT'] . '/includes/config.php';
-if (!is_authenticated() || !is_admin()) { header('Location: /index.php'); exit; }
+if (!is_authenticated() || !can_manage_projects()) { header('Location: /index.php'); exit; }
 ?>
 <!DOCTYPE html>
 <html lang="es">

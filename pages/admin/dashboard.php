@@ -2,10 +2,22 @@
 require_once $_SERVER['DOCUMENT_ROOT'] . '/includes/config.php';
 
 // Verificar autenticación y rol
-if (!is_authenticated() || !is_admin()) {
+if (!is_authenticated() || !is_management_staff()) {
     header('Location: /index.php');
     exit;
 }
+$career = active_career() ?? [];
+$careerCode = $career['clave'] ?? 'ISC';
+$careerHeroImage = $career['portada_ruta'] ?? ($careerCode === 'ISC' ? '/assets/img/ITSSMT/fondochido2.webp' : null);
+$careerHeroStyle = $careerHeroImage
+    ? "background-image: linear-gradient(90deg, rgba(3, 31, 70, .92), rgba(3, 31, 70, .28)), url('" . htmlspecialchars($careerHeroImage) . "');"
+    : '';
+$careerFeature = match ($careerCode) {
+    'IIND' => ['module' => 'procesos', 'label' => 'Procesos', 'icon' => 'bi-diagram-3'],
+    'IEME' => ['module' => 'laboratorios', 'label' => 'Laboratorios', 'icon' => 'bi-tools'],
+    'CP' => ['module' => 'reportes_financieros', 'label' => 'Reportes financieros', 'icon' => 'bi-file-earmark-bar-graph'],
+    default => ['module' => 'academico', 'label' => 'Asignaturas', 'icon' => 'bi-mortarboard'],
+};
 ?>
 <!DOCTYPE html>
 <html lang="es">
@@ -26,7 +38,7 @@ if (!is_authenticated() || !is_admin()) {
 
         <div class="main-content flex-grow-1">
             <!-- Page Header -->
-            <div class="page-image-header dashboard-hero" style="background: url('/assets/img/ITSSMT/fondochido2.webp'); background-size: cover; background-position: center; position: relative;">
+            <div class="page-image-header dashboard-hero career-dashboard-hero career-<?= htmlspecialchars(strtolower($careerCode)) ?>" style="<?= $careerHeroStyle ?>" data-career="<?= htmlspecialchars($careerCode) ?>">
                 <div class="overlay"></div>
                 <div class="container-xl" style="position: relative; z-index: 1;">
                     <h1 class="display-4 fw-bold text-white mb-3">Panel Administrativo</h1>
@@ -34,6 +46,8 @@ if (!is_authenticated() || !is_admin()) {
                         <strong>Bienvenido, <?= htmlspecialchars($current_user['nombres']) ?></strong> | Gestión integral del sistema
                     </p>
                     <span class="dashboard-hero-line"></span>
+                    <p class="dashboard-career-name"><?= htmlspecialchars($career['nombre'] ?? 'Ingeniería en Sistemas Computacionales') ?></p>
+                    <p class="dashboard-career-motto"><?= htmlspecialchars($career['lema'] ?? 'Tecnología, innovación y transformación digital.') ?></p>
                     <p class="dashboard-hero-tag">#OrgulloHalcón</p>
                 </div>
             </div>
@@ -151,15 +165,15 @@ if (!is_authenticated() || !is_admin()) {
             </div>
 
             <div class="col-lg-3 col-md-6">
-                <a href="/pages/admin/asignaturas.php" class="text-decoration-none d-block dashboard-stat-link" aria-label="Ir a gestión de asignaturas">
+                <a href="<?= $careerCode === 'ISC' ? '/pages/admin/asignaturas.php' : '/pages/admin/career-modules.php' ?>" class="text-decoration-none d-block dashboard-stat-link" aria-label="Ir a <?= htmlspecialchars(strtolower($careerFeature['label'])) ?>">
                     <div class="card dashboard-stat-card border-0 shadow-sm" style="cursor: pointer;">
                         <div class="card-body">
                             <div class="dashboard-stat-layout">
-                                <span class="dashboard-stat-icon dashboard-stat-icon-subjects"><i class="bi bi-mortarboard"></i></span>
+                                <span class="dashboard-stat-icon dashboard-stat-icon-subjects"><i class="bi <?= htmlspecialchars($careerFeature['icon']) ?>"></i></span>
                                 <div>
-                                    <div class="dashboard-stat-label">Asignaturas</div>
-                                    <div class="dashboard-stat-value mt-2" id="totalAsignaturas">0</div>
-                                    <div class="dashboard-stat-note mt-2">Catálogo académico</div>
+                                    <div class="dashboard-stat-label"><?= htmlspecialchars($careerFeature['label']) ?></div>
+                                    <div class="dashboard-stat-value mt-2" id="careerFeatureTotal">0</div>
+                                    <div class="dashboard-stat-note mt-2"><?= $careerCode === 'ISC' ? 'Catálogo académico' : 'Módulo particular' ?></div>
                                 </div>
                                 <i class="bi bi-chevron-right dashboard-stat-arrow dashboard-stat-arrow-purple"></i>
                             </div>
@@ -187,7 +201,7 @@ if (!is_authenticated() || !is_admin()) {
             </div>
             <div class="col-lg-4">
                 <div class="dashboard-insight-card p-4">
-                    <h5 class="mb-3"><i class="bi bi-file-earmark-check"></i> Entregables</h5>
+                    <h5 class="mb-3"><i class="bi <?= $careerCode === 'ISC' ? 'bi-file-earmark-check' : 'bi-speedometer2' ?>"></i> <?= $careerCode === 'ISC' ? 'Entregables' : 'Indicadores de carrera' ?></h5>
                     <div class="dashboard-status-grid" id="deliverableStatusGrid"></div>
                 </div>
             </div>
@@ -249,18 +263,18 @@ if (!is_authenticated() || !is_admin()) {
                 </div>
             </div>
 
-            <!-- Recent Projects -->
+            <!-- Project Overview -->
             <div class="col-lg-6">
                 <div class="card border-0 shadow-sm">
                     <div class="card-header" style="background: linear-gradient(135deg, #1B396A 0%, #2D5A96 100%); color: white; border: 0;">
                         <div class="dashboard-card-header-actions">
-                            <h5 class="mb-0" style="color: white;"><i class="bi bi-clock-history"></i> Proyectos Recientes</h5>
+                            <h5 class="mb-0" style="color: white;"><i class="bi bi-kanban"></i> Resumen de proyectos</h5>
                             <a href="/pages/admin/projects.php">Ver todos <i class="bi bi-arrow-right"></i></a>
                         </div>
                     </div>
                     <div class="card-body p-0">
-                        <div class="p-3" id="recentProjectsList">
-                            <p class="dashboard-empty"><i class="bi bi-hourglass-split"></i> Cargando...</p>
+                        <div class="p-3" id="recentProjectsList" data-skeleton-disabled>
+                            <p class="dashboard-empty"><i class="bi bi-hourglass-split"></i> Preparando resumen de proyectos...</p>
                         </div>
                     </div>
                 </div>
@@ -276,6 +290,8 @@ if (!is_authenticated() || !is_admin()) {
     <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
     <script>
         const API_BASE_URL = '<?= API_BASE_URL ?>';
+        const ACTIVE_CAREER_CODE = <?= json_encode($careerCode) ?>;
+        const CAREER_FEATURE_MODULE = <?= json_encode($careerFeature['module']) ?>;
     </script>
     <script src="/assets/js/auth.js"></script>
     <script src="/assets/js/api.js"></script>
@@ -291,10 +307,16 @@ if (!is_authenticated() || !is_admin()) {
 
         function statusLabel(status) {
             const labels = {
+                borrador: 'Borrador',
                 pendiente: 'Pendiente',
+                en_revision: 'En revisión',
                 enviado: 'Enviado',
                 revisado: 'Revisado',
                 aprobado: 'Aprobado',
+                publicado: 'Publicado',
+                cerrado: 'Cerrado',
+                finalizado: 'Finalizado',
+                archivado: 'Archivado',
                 requiere_cambios: 'Requiere cambios',
                 rechazado: 'Rechazado'
             };
@@ -340,6 +362,21 @@ if (!is_authenticated() || !is_admin()) {
             `).join('');
         }
 
+        function renderCareerIndicators(containerId, indicators) {
+            const container = document.getElementById(containerId);
+            if (!container) return;
+            const rows = Array.isArray(indicators) ? indicators : [];
+            container.innerHTML = rows.length ? rows.slice(0, 3).map(indicator => {
+                const current = indicator.valor_actual === null ? '—' : Number(indicator.valor_actual).toLocaleString('es-MX');
+                const target = indicator.valor_meta === null ? 'Sin meta' : `Meta: ${Number(indicator.valor_meta).toLocaleString('es-MX')}${indicator.unidad === 'porcentaje' ? '%' : ''}`;
+                return `<div class="dashboard-status-pill" style="border-top:3px solid ${escapeHtml(indicator.color || '#1B396A')}">
+                    <strong>${current}${indicator.valor_actual !== null && indicator.unidad === 'porcentaje' ? '%' : ''}</strong>
+                    <span>${escapeHtml(indicator.nombre)}</span>
+                    <small>${escapeHtml(target)}</small>
+                </div>`;
+            }).join('') : '<p class="dashboard-empty"><i class="bi bi-speedometer2"></i> Sin indicadores configurados.</p>';
+        }
+
         function updateAdminNextAction(stats) {
             const title = document.getElementById('adminNextActionTitle');
             const text = document.getElementById('adminNextActionText');
@@ -376,16 +413,100 @@ if (!is_authenticated() || !is_admin()) {
             if (element) element.style.width = value;
         }
 
+        function formatDashboardDate(value) {
+            if (!value) return 'Sin fecha';
+            const date = new Date(value);
+            if (Number.isNaN(date.getTime())) return 'Sin fecha';
+            return date.toLocaleDateString('es-MX', {
+                day: '2-digit',
+                month: 'short',
+                year: 'numeric'
+            });
+        }
+
+        function renderProjectOverview(response = {}) {
+            const projectsList = document.getElementById('recentProjectsList');
+            if (!projectsList) return;
+
+            const stats = response.stats || {};
+            const recentProjects = Array.isArray(response.recent_projects) ? response.recent_projects : [];
+            const statusEntries = Object.entries(response.charts?.projects_by_proposal_status || {})
+                .filter(([, value]) => Number(value || 0) > 0)
+                .slice(0, 4);
+
+            const statusSummary = statusEntries.length
+                ? `<div class="dashboard-project-summary-grid mb-3">
+                    ${statusEntries.map(([status, value]) => `
+                        <div class="dashboard-status-pill">
+                            <strong>${Number(value || 0)}</strong>
+                            <span>${escapeHtml(statusLabel(status))}</span>
+                        </div>
+                    `).join('')}
+                </div>`
+                : '';
+
+            const recentMarkup = recentProjects.length
+                ? recentProjects.slice(0, 4).map(project => `
+                    <a href="/pages/admin/projects.php?edit=${Number(project.id)}" class="dashboard-project-card">
+                        <div class="dashboard-project-title">${escapeHtml(project.title || project.titulo || `Proyecto ${project.id}`)}</div>
+                        <div class="small text-muted">
+                            <i class="bi bi-person"></i> ${escapeHtml(project.creator?.nombres || project.creador?.nombres || 'Sin responsable')}
+                            <span class="mx-1">|</span>
+                            <i class="bi bi-calendar"></i> ${formatDashboardDate(project.created_at || project.creado_en)}
+                        </div>
+                    </a>
+                `).join('')
+                : '';
+
+            if (!statusSummary && !recentMarkup && !Number(stats.total_projects || 0)) {
+                projectsList.innerHTML = '<p class="dashboard-empty"><i class="bi bi-inbox"></i> No hay proyectos registrados.</p>';
+                return;
+            }
+
+            projectsList.innerHTML = `
+                <div class="dashboard-project-overview">
+                    <div class="dashboard-project-overview-head">
+                        <div>
+                            <span class="dashboard-action-kicker">Total registrado</span>
+                            <strong>${Number(stats.total_projects || recentProjects.length || 0)}</strong>
+                        </div>
+                        <a href="/pages/admin/project-create.php" class="btn btn-sm btn-outline-primary">
+                            <i class="bi bi-plus-circle"></i> Nuevo
+                        </a>
+                    </div>
+                    ${statusSummary}
+                    ${recentMarkup ? `<div class="dashboard-project-overview-list">${recentMarkup}</div>` : '<p class="dashboard-empty"><i class="bi bi-clock-history"></i> Aún no hay actividad reciente.</p>'}
+                </div>
+            `;
+        }
+
+        function renderProjectOverviewError() {
+            const projectsList = document.getElementById('recentProjectsList');
+            if (!projectsList) return;
+            projectsList.innerHTML = `
+                <div class="dashboard-empty">
+                    <i class="bi bi-exclamation-circle"></i>
+                    <span>No se pudo cargar el resumen de proyectos. Intenta actualizar la página.</span>
+                </div>
+            `;
+        }
+
         async function loadDashboard() {
             try {
-                const response = await api.get('/dashboard/stats');
+                const [response, moduleResponse] = await Promise.all([
+                    api.get('/dashboard/stats'),
+                    api.get('/career/modules')
+                ]);
 
                 const stats = response.stats || {};
                 setDashboardText('totalUsers', stats.total_users || 0);
                 setDashboardText('activeUsers', stats.active_users || 0);
                 setDashboardText('inactiveUsers', stats.inactive_users || 0);
                 setDashboardText('totalProjects', stats.total_projects || 0);
-                setDashboardText('totalAsignaturas', stats.total_asignaturas || 0);
+                const featureModule = (moduleResponse.modules || []).find(item => item.modulo === CAREER_FEATURE_MODULE);
+                setDashboardText('careerFeatureTotal', ACTIVE_CAREER_CODE === 'ISC'
+                    ? (stats.total_asignaturas || 0)
+                    : (featureModule?.records_count || 0));
                 setDashboardText('pendingProposals', stats.pending_proposals || 0);
                 updateAdminNextAction(stats);
                 const activeRate = percent(stats.active_users, stats.total_users);
@@ -395,32 +516,18 @@ if (!is_authenticated() || !is_admin()) {
                 setDashboardWidth('globalCompletionProgress', `${completionRate}%`);
                 renderBarChart('usersRoleChart', response.charts?.users_by_role || {});
                 renderBarChart('proposalStatusChart', response.charts?.projects_by_proposal_status || {});
-                renderStatusGrid('deliverableStatusGrid', response.charts?.deliverables_by_status || {});
-
-                // Cargar proyectos recientes
-                const projectsList = document.getElementById('recentProjectsList');
-                if (!projectsList) return;
-
-                projectsList.innerHTML = '';
-
-                if (response.recent_projects && response.recent_projects.length > 0) {
-                    response.recent_projects.forEach(project => {
-                        const item = `
-                            <a href="/pages/admin/projects.php?edit=${project.id}" class="dashboard-project-card">
-                                <div class="dashboard-project-title">${escapeHtml(project.title)}</div>
-                                <div class="small text-muted">
-                                    <i class="bi bi-person"></i> ${escapeHtml(project.creator?.nombres || 'N/A')} | 
-                                    ${new Date(project.created_at).toLocaleDateString()}
-                                </div>
-                            </a>
-                        `;
-                        projectsList.innerHTML += item;
-                    });
+                if (ACTIVE_CAREER_CODE === 'ISC') {
+                    renderStatusGrid('deliverableStatusGrid', response.charts?.deliverables_by_status || {});
                 } else {
-                    projectsList.innerHTML = '<p class="dashboard-empty"><i class="bi bi-inbox"></i> No hay proyectos recientes.</p>';
+                    renderCareerIndicators('deliverableStatusGrid', moduleResponse.indicators || []);
                 }
+                renderProjectOverview(response);
             } catch (error) {
                 console.error('Error al cargar dashboard:', error);
+                renderBarChart('usersRoleChart', {});
+                renderBarChart('proposalStatusChart', {});
+                renderStatusGrid('deliverableStatusGrid', {});
+                renderProjectOverviewError();
             }
         }
 

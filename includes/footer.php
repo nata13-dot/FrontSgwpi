@@ -15,13 +15,19 @@ window.SGPI_SETTINGS_LAST_SYNC = 0;
 async function loadPublicSettings(options = {}) {
     const force = Boolean(options.force);
     try {
-        const url = new URL(`${window.SGPI_API_BASE_URL}/settings/public`);
+        const settingsEndpoint = window.SGPI_SESSION?.authenticated ? '/settings/current' : '/settings/public';
+        const url = new URL(`${window.SGPI_API_BASE_URL}${settingsEndpoint}`);
         if (force) url.searchParams.set('_', Date.now());
 
         const response = await fetch(url.toString(), {
             credentials: 'include',
             cache: force ? 'no-store' : 'default',
-            headers: { 'Accept': 'application/json' }
+            headers: {
+                'Accept': 'application/json',
+                ...(window.SGPI_SESSION?.authenticated
+                    ? {'Authorization': `Bearer ${window.SGPI_SESSION.token || ''}`}
+                    : {})
+            }
         });
         if (!response.ok) return;
         const settings = await response.json();
@@ -201,7 +207,7 @@ startSystemSettingsSync();
 function currentAudienceContext() {
     const user = window.SGPI_SESSION?.user || null;
 
-    const roleId = Number(user?.perfil_id || 0);
+    const roleId = Number(user?.active_profile_id || user?.perfil_id || 0);
     const pathname = window.location.pathname.replace(/\/+$/, '') || '/';
     const isIndex = pathname === '/' || pathname.endsWith('/index.php');
     const isDashboard = /\/pages\/(admin|teacher|student)\/dashboard\.php$/.test(pathname);
@@ -210,7 +216,7 @@ function currentAudienceContext() {
         isIndex,
         isDashboard,
         authenticated: Boolean(window.SGPI_SESSION?.authenticated && user),
-        role: roleId === 1 ? 'admin' : (roleId === 2 ? 'teacher' : (roleId === 3 ? 'student' : 'public'))
+        role: [1, 4].includes(roleId) ? 'admin' : (roleId === 2 ? 'teacher' : (roleId === 3 ? 'student' : 'public'))
     };
 }
 

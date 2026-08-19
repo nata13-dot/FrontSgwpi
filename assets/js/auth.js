@@ -91,21 +91,22 @@ class AuthManager {
      * Verificar si es admin
      */
     isAdmin() {
-        return this.user?.perfil_id === 1;
+        const profileId = Number(this.user?.active_profile_id ?? this.user?.perfil_id);
+        return [1, 4, 5].includes(profileId);
     }
 
     /**
      * Verificar si es profesor
      */
     isTeacher() {
-        return this.user?.perfil_id === 2;
+        return Number(this.user?.active_profile_id ?? this.user?.perfil_id) === 2;
     }
 
     /**
      * Verificar si es estudiante
      */
     isStudent() {
-        return this.user?.perfil_id === 3;
+        return Number(this.user?.active_profile_id ?? this.user?.perfil_id) === 3;
     }
 
     /**

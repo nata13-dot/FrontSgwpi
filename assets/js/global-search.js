@@ -8,6 +8,7 @@
     const role = shell.dataset.role;
     let results = [];
     let activeIndex = -1;
+    let enabledModules = null;
 
     const commonItems = [
         item('Inicio', 'Panel principal del sistema', dashboardPath(role), 'bi-house', ['dashboard', 'principal']),
@@ -29,6 +30,7 @@
             item('Evaluaciones archivadas', 'Consultar evaluaciones finalizadas', '/pages/admin/evaluations-archived.php', 'bi-archive-fill', ['historial', 'archivadas']),
             item('Asignaturas', 'Gestionar asignaturas, cargas y competencias', '/pages/admin/asignaturas.php', 'bi-book', ['materias', 'competencias', 'carga académica']),
             item('Semestres y periodos', 'Gestionar ciclos, promociones y presentaciones especiales', '/pages/admin/semesters.php', 'bi-calendar3', ['periodos', 'promocion', 'cambio de semestre', 'excepciones']),
+            item('Carga inicial', 'Importar asignaturas y grupos de la carrera activa', '/pages/admin/career-setup.php', 'bi-cloud-arrow-up', ['csv', 'plan de estudios', 'catalogo']),
             item('Competencias', 'Ir a la gestión de competencias', '/pages/admin/asignaturas.php#competencias', 'bi-star', ['criterios academicos']),
             item('Etiquetas', 'Administrar etiquetas de documentos', '/pages/admin/document-tags.php', 'bi-tags', ['colores', 'categorias']),
             item('Avisos', 'Crear y administrar avisos del sistema', '/pages/admin/notices.php', 'bi-megaphone', ['notificaciones', 'anuncios', 'mensajes']),
@@ -47,14 +49,40 @@
         ]
     };
 
+    // Las opciones de gobierno de cuentas pertenecen exclusivamente al
+    // Administrador General; el resto de autoridades conserva solo consulta.
+    roleItems.general_admin = roleItems.admin;
+    roleItems.admin = roleItems.admin.filter(entry => !entry.url.includes('/admin/users'));
+
     const catalog = [...commonItems, ...(roleItems[role] || [])];
+
+    window.addEventListener('sgpi:career-modules', event => {
+        enabledModules = event.detail?.enabled || null;
+        if (!resultsBox.hidden) render(input.value);
+    });
 
     function item(title, description, url, icon, keywords = []) {
         return { title, description, url, icon, keywords, type: 'option' };
     }
 
     function dashboardPath(currentRole) {
-        return `/pages/${currentRole === 'admin' ? 'admin' : (currentRole === 'teacher' ? 'teacher' : 'student')}/dashboard.php`;
+        return `/pages/${['admin', 'general_admin'].includes(currentRole) ? 'admin' : (currentRole === 'teacher' ? 'teacher' : 'student')}/dashboard.php`;
+    }
+
+    function moduleForUrl(url) {
+        if (url.includes('/users') || url.includes('/advisors')) return 'usuarios';
+        if (url.includes('/deliverable')) return 'entregables';
+        if (url.includes('/evaluation')) return 'evaluaciones';
+        if (url.includes('/asignaturas') || url.includes('/semesters') || url.includes('/career-setup')) return 'academico';
+        if (url.includes('/repositorio') || url.includes('/document-tags')) return 'repositorio';
+        if (url.includes('/settings') || url.includes('/notices')) return 'configuracion';
+        if (url.includes('/projects') || url.includes('/proposal')) return 'proyectos';
+        return null;
+    }
+
+    function moduleAllowed(entry) {
+        const module = moduleForUrl(entry.url);
+        return !module || !enabledModules || enabledModules.get(module) !== false;
     }
 
     function normalize(value) {
@@ -67,9 +95,10 @@
 
     function searchCatalog(query) {
         const term = normalize(query);
-        if (!term) return catalog.slice(0, 7);
+        if (!term) return catalog.filter(moduleAllowed).slice(0, 7);
 
         const matched = catalog
+            .filter(moduleAllowed)
             .map(entry => {
                 const title = normalize(entry.title);
                 const haystack = normalize([entry.title, entry.description, ...entry.keywords].join(' '));
@@ -83,7 +112,7 @@
             .filter(entry => entry.score > 0)
             .sort((a, b) => b.score - a.score || a.title.localeCompare(b.title));
 
-        return [...matched, ...dynamicSearchItems(query)].slice(0, 9);
+        return [...matched, ...dynamicSearchItems(query).filter(moduleAllowed)].slice(0, 9);
     }
 
     function dynamicSearchItems(query) {

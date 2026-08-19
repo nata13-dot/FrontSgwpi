@@ -1,7 +1,7 @@
 <?php
 require_once $_SERVER['DOCUMENT_ROOT'] . '/includes/config.php';
 
-if (!is_authenticated() || (!is_admin() && !is_teacher())) {
+if (!is_authenticated() || (!can_manage_projects() && !is_teacher())) {
     header('Location: /index.php');
     exit;
 }
@@ -165,6 +165,16 @@ $is_archived_view = basename($_SERVER['PHP_SELF']) === 'evaluations-archived.php
                 <div id="alertContainer"></div>
 
                 <div class="row g-3 mb-4">
+                    <div class="col-md-4">
+                        <label class="form-label" for="semesterFilter">Semestre</label>
+                        <select class="form-select" id="semesterFilter" onchange="loadEvaluations()">
+                            <option value="">Todos los semestres</option>
+                            <option value="5">5 - Propuesta</option>
+                            <option value="6">6 - Avance</option>
+                            <option value="7">7 - Avance</option>
+                            <option value="8">8 - Titulación</option>
+                        </select>
+                    </div>
                     <div class="col-md-8">
                         <label class="form-label" for="projectFilter">Proyecto</label>
                         <select class="form-select" id="projectFilter" onchange="loadEvaluations()">
@@ -416,7 +426,7 @@ $is_archived_view = basename($_SERVER['PHP_SELF']) === 'evaluations-archived.php
     <script src="/assets/js/api.js"></script>
     <script src="/assets/js/app.js"></script>
     <script>
-        const IS_ADMIN = <?= is_admin() ? 'true' : 'false' ?>;
+        const IS_ADMIN = <?= can_manage_projects() ? 'true' : 'false' ?>;
         const CAN_MANAGE_EVALUATIONS = <?= is_evaluation_manager() ? 'true' : 'false' ?>;
         const IS_ARCHIVED_VIEW = <?= $is_archived_view ? 'true' : 'false' ?>;
     </script>
@@ -1013,7 +1023,9 @@ $is_archived_view = basename($_SERVER['PHP_SELF']) === 'evaluations-archived.php
             const tbody = document.getElementById('evaluationsTable');
             if (!useLocal) {
                 const projectId = document.getElementById('projectFilter').value;
+                const semester = document.getElementById('semesterFilter').value;
                 const params = projectId ? { project_id: projectId } : {};
+                if (semester) params.semestre = semester;
                 params.archived = IS_ARCHIVED_VIEW ? 1 : 0;
                 params.per_page = 200;
                 if (fresh) params._fresh = 1;
@@ -1150,7 +1162,9 @@ $is_archived_view = basename($_SERVER['PHP_SELF']) === 'evaluations-archived.php
                         </td>
                         <td class="evaluation-cell-average">
                             <button class="btn btn-sm evaluation-average-btn evaluation-average-${averageColor}" onclick="showBreakdown(${evaluation.id})">
-                                ${evaluation.global_average}% · ${evaluation.evaluators_count}/${evaluation.expected_evaluators_count || 0} evaluadores
+                                ${evaluation.evaluators_count > 0
+                                    ? `${evaluation.global_average}% · ${evaluation.evaluators_count}/${evaluation.expected_evaluators_count || 0} evaluadores`
+                                    : `Sin calificaciones · 0/${evaluation.expected_evaluators_count || 0} evaluadores`}
                             </button>
                         </td>
                         <td class="evaluation-cell-actions">
@@ -2065,9 +2079,17 @@ $is_archived_view = basename($_SERVER['PHP_SELF']) === 'evaluations-archived.php
                 room_feedback: document.getElementById('roomFeedbackText').value.trim()
             });
             replaceEvaluationLocal(response.evaluation);
+            releaseModalFocus('breakdownModal');
             breakdownModal.hide();
             showAlert('#alertContainer', 'success', 'Retroalimentacion guardada');
             loadEvaluations(false, false, true);
+        }
+
+        function releaseModalFocus(modalId) {
+            const modalElement = document.getElementById(modalId);
+            if (modalElement?.contains(document.activeElement)) {
+                document.activeElement.blur();
+            }
         }
 
         function replaceEvaluationLocal(updatedEvaluation) {
@@ -2115,6 +2137,7 @@ $is_archived_view = basename($_SERVER['PHP_SELF']) === 'evaluations-archived.php
             rubricModal = new bootstrap.Modal(document.getElementById('rubricModal'));
             scoreModal = new bootstrap.Modal(document.getElementById('scoreModal'));
             breakdownModal = new bootstrap.Modal(document.getElementById('breakdownModal'));
+            document.getElementById('breakdownModal').addEventListener('hide.bs.modal', () => releaseModalFocus('breakdownModal'));
             projectDetailsModal = new bootstrap.Modal(document.getElementById('projectDetailsModal'));
             roomsModal = new bootstrap.Modal(document.getElementById('roomsModal'));
             document.getElementById('scoreModal').addEventListener('hide.bs.modal', () => {

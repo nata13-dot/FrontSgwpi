@@ -1,7 +1,7 @@
 <?php 
 require_once $_SERVER['DOCUMENT_ROOT'] . '/includes/config.php';
 
-if (!is_authenticated() || !is_admin()) {
+if (!is_authenticated() || !can_govern_users()) {
     header('Location: /index.php');
     exit;
 }
@@ -75,6 +75,9 @@ if (!is_authenticated() || !is_admin()) {
                                         <option value="1">Administrador</option>
                                         <option value="2">Docente</option>
                                         <option value="3">Estudiante</option>
+                                        <option value="5">Jefe de Carrera</option>
+                                        <option value="6">Asistente de Jefe de Carrera</option>
+                                        <option value="7">Coordinador de Proyectos</option>
                                     </select>
                                     <div class="invalid-feedback">Selecciona un perfil.</div>
                                 </div>

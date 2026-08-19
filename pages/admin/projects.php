@@ -26,7 +26,7 @@ if (!is_authenticated()) {
             <div class="container-xl mt-5 mb-5">
                 <div class="d-flex align-items-center justify-content-between mb-4">
                     <div><h1 class="mb-1">Gestión de Proyectos y Tesis</h1><span class="badge bg-primary"><i class="bi bi-table"></i> Vista resumida de proyectos y tesis</span></div>
-                    <?php if (is_admin()): ?>
+                    <?php if (can_manage_projects()): ?>
                     <div class="d-flex flex-wrap gap-2">
                         <button type="button" class="btn btn-outline-primary" onclick="downloadProjectsExcelTemplate()">
                             <i class="bi bi-file-earmark-spreadsheet"></i> Plantilla Excel
@@ -57,11 +57,6 @@ if (!is_authenticated()) {
                         <label for="semesterFilter" class="form-label">Filtrar por semestre</label>
                         <select id="semesterFilter" class="form-select" onchange="loadProjects(1)">
                             <option value="">Todos los semestres</option>
-                            <option value="5">5 - Propuesta</option>
-                            <option value="6">6 - Avance</option>
-                            <option value="7">7 - Avance</option>
-                            <option value="8">8 - Titulacion</option>
-                            <option value="9">9 - Titulacion</option>
                         </select>
                     </div>
                     <div class="col-md-8">
@@ -131,7 +126,7 @@ if (!is_authenticated()) {
         </div>
     </div>
 
-    <?php if (is_admin()): ?>
+    <?php if (can_manage_projects()): ?>
     <div class="modal fade" id="projectsImportModal" tabindex="-1">
         <div class="modal-dialog">
             <form class="modal-content" id="projectsImportForm" onsubmit="importProjectsExcel(event)">
@@ -298,6 +293,17 @@ if (!is_authenticated()) {
             revisor_1: 'Revisor 1',
             revisor_2: 'Revisor 2'
         };
+        const PROJECT_SEMESTER_OPTIONS = [
+            { value: '5', label: '5 - Propuesta' },
+            { value: '6', label: '6 - Avance' },
+            { value: '7', label: '7 - Avance' },
+            { value: '8', label: '8 - Proyecto integrador' },
+            { value: '9', label: '9 - Proyecto integrador' }
+        ];
+        const THESIS_SEMESTER_OPTIONS = [
+            { value: '8', label: '8 - Titulación' },
+            { value: '9', label: '9 - Titulación' }
+        ];
 
         function escapeHtml(value) {
             return String(value ?? '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#039;');
@@ -331,7 +337,6 @@ if (!is_authenticated()) {
                 projectManagementView = view;
                 document.getElementById('projectManagementView').classList.toggle('d-none', view !== 'projects');
                 document.getElementById('thesisManagementView').classList.toggle('d-none', view !== 'thesis');
-                document.getElementById('projectsPagination').classList.toggle('d-none', view !== 'projects');
                 document.getElementById('projectViewBtn').className = view === 'projects' ? 'btn btn-primary' : 'btn btn-outline-secondary';
                 document.getElementById('thesisViewBtn').className = view === 'thesis' ? 'btn btn-success' : 'btn btn-outline-secondary';
                 const newButton = document.getElementById('newProjectBtn');
@@ -346,14 +351,30 @@ if (!is_authenticated()) {
                 if (searchInput) searchInput.placeholder = view === 'thesis'
                     ? 'Tesis, estudiante, asesor, empresa o año'
                     : 'Proyecto, estudiante, asesor, empresa o año';
+                renderSemesterFilter();
             });
+            loadProjects(1);
+        }
+
+        function renderSemesterFilter() {
+            const select = document.getElementById('semesterFilter');
+            if (!select) return;
+
+            const currentValue = select.value;
+            const options = projectManagementView === 'thesis'
+                ? THESIS_SEMESTER_OPTIONS
+                : PROJECT_SEMESTER_OPTIONS;
+            select.innerHTML = '<option value="">Todos los semestres</option>' + options
+                .map(option => `<option value="${option.value}">${option.label}</option>`)
+                .join('');
+            select.value = options.some(option => option.value === currentValue) ? currentValue : '';
         }
 
         function renderThesisTable(projects) {
             const tbody = document.getElementById('thesisTable');
             const info = document.getElementById('thesisCountInfo');
             if (!tbody || !info) return;
-            info.textContent = `${projects.length} tesis`;
+            info.textContent = `${projectsTotal} tesis`;
 
             if (!projects.length) {
                 tbody.innerHTML = '<tr><td colspan="7" class="text-center text-muted py-4">No hay tesis registradas</td></tr>';
@@ -394,12 +415,17 @@ if (!is_authenticated()) {
         async function loadProjects(page = 1) {
             try {
                 const user = auth.getCurrentUser();
-                isAdmin = user && user.perfil_id === 1;
+                const activeProfileId = Number(user?.active_profile_id ?? user?.perfil_id);
+                isAdmin = [1, 4, 5, 6, 7].includes(activeProfileId);
                 isTeacher = user && user.perfil_id === 2;
                 isStudent = user && user.perfil_id === 3;
                 currentUserId = user && user.id;
 
-                const params = { page, per_page: PROJECTS_PER_PAGE };
+                const params = {
+                    page,
+                    per_page: PROJECTS_PER_PAGE,
+                    tipo_registro: projectManagementView === 'thesis' ? 'tesis' : 'proyecto'
+                };
                 const semester = document.getElementById('semesterFilter').value;
                 const search = document.getElementById('projectSearchInput')?.value.trim();
                 if (semester) params.semestre = semester;
@@ -415,8 +441,11 @@ if (!is_authenticated()) {
                 tbody.innerHTML = '';
 
                 if (!response.data || response.data.length === 0) {
-                    tbody.innerHTML = '<tr><td colspan="7" class="text-center text-muted py-4">No hay proyectos</td></tr>';
-                    renderThesisTable([]);
+                    if (projectManagementView === 'thesis') {
+                        renderThesisTable([]);
+                    } else {
+                        tbody.innerHTML = '<tr><td colspan="7" class="text-center text-muted py-4">No hay proyectos</td></tr>';
+                    }
                     renderProjectsPagination();
                     return;
                 }
@@ -429,14 +458,20 @@ if (!is_authenticated()) {
                 }
 
                 if (proyectosFiltrados.length === 0) {
-                    tbody.innerHTML = '<tr><td colspan="7" class="text-center text-muted py-4">No hay proyectos para este filtro</td></tr>';
-                    renderThesisTable([]);
+                    if (projectManagementView === 'thesis') {
+                        renderThesisTable([]);
+                    } else {
+                        tbody.innerHTML = '<tr><td colspan="7" class="text-center text-muted py-4">No hay proyectos para este filtro</td></tr>';
+                    }
                     renderProjectsPagination();
                     return;
                 }
 
-                renderThesisTable(proyectosFiltrados.filter(project => project.is_thesis));
-                proyectosFiltrados = proyectosFiltrados.filter(project => !project.is_thesis);
+                if (projectManagementView === 'thesis') {
+                    renderThesisTable(proyectosFiltrados);
+                    renderProjectsPagination();
+                    return;
+                }
 
                 if (proyectosFiltrados.length === 0) {
                     tbody.innerHTML = '<tr><td colspan="7" class="text-center text-muted py-4">No hay proyectos integradores para este filtro</td></tr>';
@@ -484,8 +519,8 @@ if (!is_authenticated()) {
             const nav = document.getElementById('projectsPagination');
             if (info) {
                 info.textContent = projectsTotal
-                    ? `Página ${projectsCurrentPage} de ${projectsLastPage} · ${projectsTotal} proyecto(s)`
-                    : 'Sin proyectos';
+                    ? `Página ${projectsCurrentPage} de ${projectsLastPage} · ${projectsTotal} ${projectManagementView === 'thesis' ? 'tesis' : 'proyecto(s)'}`
+                    : (projectManagementView === 'thesis' ? 'Sin tesis' : 'Sin proyectos');
             }
             if (!nav) return;
             if (projectsLastPage <= 1) {
@@ -531,14 +566,29 @@ if (!is_authenticated()) {
             document.getElementById('projectModalEditingId').value = '';
             document.getElementById('projectYear').value = new Date().getFullYear();
             projectModalIsThesis = projectManagementView === 'thesis';
+            renderProjectSemesterOptions();
             projectSelectedStudents = [];
             renderProjectSelectedStudents();
+        }
+
+        function renderProjectSemesterOptions(selectedValue = '') {
+            const select = document.getElementById('projectSemester');
+            if (!select) return;
+
+            const options = projectModalIsThesis
+                ? THESIS_SEMESTER_OPTIONS
+                : PROJECT_SEMESTER_OPTIONS;
+            select.innerHTML = '<option value="">Seleccionar...</option>' + options
+                .map(option => `<option value="${option.value}">${option.label}</option>`)
+                .join('');
+            select.value = selectedValue ? String(selectedValue) : '';
         }
 
         async function openProjectModal(projectId = null, asThesis = null) {
             if (!projectFormModal) projectFormModal = new bootstrap.Modal(document.getElementById('projectFormModal'));
             resetProjectModal();
             if (asThesis !== null) projectModalIsThesis = Boolean(asThesis);
+            renderProjectSemesterOptions();
             const isEdit = Boolean(projectId);
             document.getElementById('projectModalTitle').innerHTML = isEdit
                 ? `<i class="bi bi-pencil"></i> Editar ${projectModalIsThesis ? 'tesis' : 'proyecto'}`
@@ -551,6 +601,7 @@ if (!is_authenticated()) {
             if (isEdit) {
                 const project = await api.get(`/projects/${projectId}`);
                 projectModalIsThesis = Boolean(project.is_thesis);
+                renderProjectSemesterOptions(project.semestre || '');
                 document.getElementById('projectModalTitle').innerHTML = `<i class="bi bi-pencil"></i> Editar ${projectModalIsThesis ? 'tesis' : 'proyecto'}`;
                 document.getElementById('projectModalEditingId').value = project.id;
                 document.getElementById('projectTitle').value = project.title || '';
@@ -560,7 +611,6 @@ if (!is_authenticated()) {
                 document.getElementById('projectCompanyContact').value = project.company_contact_name || '';
                 document.getElementById('projectCompanyPosition').value = project.company_contact_position || '';
                 document.getElementById('projectCompanyAddress').value = project.company_address || '';
-                document.getElementById('projectSemester').value = project.semestre || '';
                 document.getElementById('projectYear').value = project.year || new Date().getFullYear();
                 projectSelectedStudents = project.students || [];
                 await loadProjectModalGroups(project.subject_group_id || '');
@@ -880,8 +930,9 @@ if (!is_authenticated()) {
             const params = new URLSearchParams(window.location.search);
             const search = params.get('q');
             if (search) document.getElementById('projectSearchInput').value = search;
+            renderSemesterFilter();
             await loadProjects();
-            if (params.get('edit') && auth.getCurrentUser()?.perfil_id === 1) openProjectModal(params.get('edit'));
+            if (params.get('edit') && [1, 4, 5, 6, 7].includes(Number(auth.getCurrentUser()?.active_profile_id ?? auth.getCurrentUser()?.perfil_id))) openProjectModal(params.get('edit'));
             if (params.get('id')) showProjectDetails(params.get('id'));
         });
     </script>

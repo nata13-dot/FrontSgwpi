@@ -10,34 +10,44 @@
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
     <link rel="stylesheet" href="/assets/css/app.css">
 </head>
-<body>
+<body class="repository-shell">
     <?php require_once $_SERVER['DOCUMENT_ROOT'] . '/includes/navbar.php'; ?>
     
     <!-- Hero -->
     <div class="hero-gradient repository-page-hero">
         <div class="container-xl">
+            <span class="repository-hero-kicker"><i class="bi bi-journals"></i> Acervo institucional</span>
             <h1 class="display-4 fw-bold mb-3">Repositorio Digital</h1>
-            <p class="lead">Explora nuestro repositorio de proyectos y documentos</p>
+            <p class="lead mb-0">Consulta proyectos, tesis y documentos académicos publicados por el instituto.</p>
         </div>
     </div>
 
-    <div class="container-xl pb-5">
+    <main class="container-xl pb-5 repository-content">
         <?php if (is_authenticated() && (is_admin() || is_student())): ?>
-            <div class="d-flex justify-content-end mt-4">
+            <div class="d-flex justify-content-end mt-4 repository-upload-action">
                 <button type="button" class="btn btn-primary" onclick="openRepositoryUploadModal()">
                     <i class="bi bi-cloud-arrow-up"></i> <?= is_student() ? 'Subir documento de proyecto' : 'Agregar documento' ?>
                 </button>
             </div>
         <?php endif; ?>
 
-        <!-- Filters -->
-        <div class="row g-3 mb-4 mt-4">
-            <div class="col-lg-5 col-md-12">
+        <section class="repository-toolbar mt-4" aria-label="Buscar y filtrar documentos">
+            <div class="repository-toolbar-heading">
+                <div>
+                    <span class="repository-section-kicker">Catálogo público</span>
+                    <h2 class="h4 mb-1">Documentos disponibles</h2>
+                </div>
+                <span class="repository-results-summary" id="repositoryResultsSummary" aria-live="polite">Cargando documentos…</span>
+            </div>
+            <div class="row g-3">
+            <div class="col-lg-5 col-md-12 repository-search-field">
+                <i class="bi bi-search" aria-hidden="true"></i>
                 <input 
                     type="text" 
                     class="form-control form-control-lg"
                     id="searchInput"
                     placeholder="Buscar documentos..."
+                    aria-label="Buscar documentos por título, descripción o autor"
                 >
             </div>
             <div class="col-lg-3 col-md-6">
@@ -57,10 +67,11 @@
                     <option value="nombre_desc">Nombre Z-A</option>
                 </select>
             </div>
-        </div>
+            </div>
+        </section>
 
         <!-- Documentos -->
-        <div class="row g-4" id="documentosContainer">
+        <div class="row g-4 repository-grid" id="documentosContainer">
             <div class="col-12 text-center">
                 <div class="spinner-custom"></div>
                 <p class="mt-2">Cargando documentos...</p>
@@ -73,7 +84,7 @@
                 <nav id="paginationContainer"></nav>
             </div>
         </div>
-    </div>
+    </main>
 
     <?php if (is_authenticated() && (is_admin() || is_student())): ?>
     <div class="modal fade" id="repositoryUploadModal" tabindex="-1">
@@ -173,6 +184,15 @@
             return String(value ?? '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#039;');
         }
 
+        function formatRepositoryDate(value) {
+            if (!value) return 'Fecha no disponible';
+            const date = new Date(value);
+            if (Number.isNaN(date.getTime())) return 'Fecha no disponible';
+            return new Intl.DateTimeFormat('es-MX', {
+                day: '2-digit', month: 'short', year: 'numeric'
+            }).format(date);
+        }
+
         async function loadDocumentos(page = 1) {
             try {
                 const endpoint = CAN_MANAGE_REPOSITORY
@@ -187,14 +207,17 @@
                 container.innerHTML = '';
 
                 if (!response.data || response.data.length === 0) {
-                    container.innerHTML = '<div class="col-12"><p class="text-center text-muted">No se encontraron documentos</p></div>';
+                    container.innerHTML = '<div class="col-12"><div class="repository-empty-state"><i class="bi bi-search"></i><h3>No encontramos documentos</h3><p>Prueba con otra búsqueda o cambia los filtros seleccionados.</p></div></div>';
+                    document.getElementById('repositoryResultsSummary').textContent = '0 documentos';
+                    renderRepositoryPagination(response);
                     return;
                 }
 
                 response.data.forEach(doc => {
                     const categoryLabel = repositoryCategoryLabel(doc.document_category);
+                    const isPrivate = ['private', 'privado'].includes(String(doc.visibility || doc.visibilidad || '').toLowerCase());
                     const visibilityBadge = (CAN_MANAGE_REPOSITORY || IS_STUDENT)
-                        ? `<span class="badge ${doc.visibility === 'private' ? 'text-bg-warning' : 'text-bg-success'} mb-2 ms-1">${doc.visibility === 'private' ? 'Privado' : 'Público'}</span>`
+                        ? `<span class="badge ${isPrivate ? 'text-bg-warning' : 'text-bg-success'}">${isPrivate ? 'Privado' : 'Público'}</span>`
                         : '';
                     const adminActions = CAN_MANAGE_REPOSITORY ? `
                         <div class="d-flex gap-2 mt-2">
@@ -207,41 +230,63 @@
                         </div>
                     ` : '';
                     const card = `
-                        <div class="col-lg-4 col-md-6">
-                            <div class="card h-100">
+                        <div class="col-xl-4 col-md-6">
+                            <article class="card h-100 repository-document-card">
                                 <div class="card-body">
-                                    <h6 class="card-title">${escapeHtml(doc.nombre)}</h6>
-                                    <span class="badge text-bg-light border mb-2">${escapeHtml(categoryLabel)}</span>
-                                    ${visibilityBadge}
-                                    <p class="card-text text-muted small">${escapeHtml(doc.descripcion || '')}</p>
-                                    <div class="mb-3">
+                                    <div class="repository-card-badges"><span class="badge repository-category-badge">${escapeHtml(categoryLabel)}</span>${visibilityBadge}</div>
+                                    <h3 class="h5 card-title">${escapeHtml(doc.nombre || doc.titulo || 'Documento sin título')}</h3>
+                                    <p class="card-text text-muted">${escapeHtml(doc.descripcion || 'Sin descripción disponible.')}</p>
+                                    <div class="repository-tag-list">
                                         ${doc.tags ? doc.tags.map(tag => 
-                                            `<span class="badge" style="background-color: ${escapeHtml(tag.color)}">${escapeHtml(tag.nombre)}</span>`
+                                            `<span class="badge" style="--tag-color: ${escapeHtml(tag.color || '#2d5a96')}">${escapeHtml(tag.nombre)}</span>`
                                         ).join('') : ''}
                                     </div>
-                                    <small class="text-muted d-block mb-2">
-                                        <i class="bi bi-people"></i> ${escapeHtml(doc.autores || 'Autores no especificados')}
-                                    </small>
-                                    <small class="text-muted d-block">
-                                        <i class="bi bi-calendar"></i> ${new Date(doc.created_at).toLocaleDateString()}
-                                    </small>
+                                    <div class="repository-card-meta">
+                                        <span><i class="bi bi-people"></i> ${escapeHtml(doc.autores || doc.autor_nombre || 'Autores no especificados')}</span>
+                                        <span><i class="bi bi-calendar3"></i> ${escapeHtml(formatRepositoryDate(doc.created_at || doc.creado_en))}</span>
+                                        ${doc.file_available === false ? '<span class="repository-file-missing"><i class="bi bi-exclamation-circle"></i> Archivo pendiente de recuperación</span>' : ''}
+                                    </div>
                                 </div>
-                                <div class="card-footer border-0">
-                                    <a href="/pages/repositorio-detail.php?id=${doc.id}" class="btn btn-sm btn-primary w-100">
-                                        <i class="bi bi-eye"></i> Ver Detalles
+                                <div class="card-footer repository-card-actions">
+                                    <a href="/pages/repositorio-detail.php?id=${encodeURIComponent(doc.id)}" class="btn btn-primary w-100">
+                                        <i class="bi bi-eye"></i> Ver detalles
                                     </a>
                                     ${adminActions}
                                 </div>
-                            </div>
+                            </article>
                         </div>
                     `;
                     container.innerHTML += card;
                 });
 
                 currentPage = page;
+                const total = Number(response.total ?? response.data.length);
+                document.getElementById('repositoryResultsSummary').textContent = `${total} documento${total === 1 ? '' : 's'}`;
+                renderRepositoryPagination(response);
             } catch (error) {
                 console.error('Error al cargar documentos:', error);
+                document.getElementById('repositoryResultsSummary').textContent = 'No disponible';
+                document.getElementById('documentosContainer').innerHTML = `<div class="col-12"><div class="repository-empty-state repository-error-state"><i class="bi bi-exclamation-triangle"></i><h3>No fue posible cargar el repositorio</h3><p>${escapeHtml(error.message || 'Comprueba la conexión e intenta nuevamente.')}</p><button class="btn btn-outline-primary" type="button" onclick="loadDocumentos(currentPage)"><i class="bi bi-arrow-clockwise"></i> Reintentar</button></div></div>`;
             }
+        }
+
+        function renderRepositoryPagination(response) {
+            const container = document.getElementById('paginationContainer');
+            const current = Number(response.current_page || 1);
+            const last = Number(response.last_page || 1);
+            if (last <= 1) {
+                container.innerHTML = '';
+                return;
+            }
+            const start = Math.max(1, current - 2);
+            const end = Math.min(last, current + 2);
+            const pages = [];
+            for (let page = start; page <= end; page++) pages.push(page);
+            container.innerHTML = `<ul class="pagination justify-content-center">
+                <li class="page-item ${current === 1 ? 'disabled' : ''}"><button class="page-link" type="button" ${current === 1 ? 'disabled' : ''} onclick="loadDocumentos(${current - 1})" aria-label="Página anterior"><i class="bi bi-chevron-left"></i></button></li>
+                ${pages.map(page => `<li class="page-item ${page === current ? 'active' : ''}"><button class="page-link" type="button" onclick="loadDocumentos(${page})">${page}</button></li>`).join('')}
+                <li class="page-item ${current === last ? 'disabled' : ''}"><button class="page-link" type="button" ${current === last ? 'disabled' : ''} onclick="loadDocumentos(${current + 1})" aria-label="Página siguiente"><i class="bi bi-chevron-right"></i></button></li>
+            </ul>`;
         }
 
         async function loadRepositoryAdminData(selectedTagIds = []) {
@@ -396,9 +441,11 @@
         }
 
         // Event listeners
+        let repositorySearchTimer;
         document.getElementById('searchInput').addEventListener('input', (e) => {
             filters.buscar = e.target.value;
-            loadDocumentos(1);
+            clearTimeout(repositorySearchTimer);
+            repositorySearchTimer = setTimeout(() => loadDocumentos(1), 280);
         });
 
         document.getElementById('sortFilter').addEventListener('change', (e) => {
@@ -415,9 +462,12 @@
         function repositoryCategoryLabel(category) {
             return {
                 repository: 'General',
+                repositorio: 'General',
                 evaluation_document: 'Desarrollo de proyecto',
+                evaluacion: 'Desarrollo de proyecto',
                 thesis_general: 'Tesis',
-                thesis_residency: 'Residencias'
+                thesis_residency: 'Residencias',
+                tesis: 'Tesis'
             }[category] || 'General';
         }
 

@@ -1,7 +1,7 @@
 <?php 
 require_once $_SERVER['DOCUMENT_ROOT'] . '/includes/config.php';
 
-if (!is_authenticated() || !is_admin()) {
+if (!is_authenticated() || !can_govern_users()) {
     header('Location: /index.php');
     exit;
 }
@@ -306,6 +306,9 @@ if (!is_authenticated() || !is_admin()) {
                                     <option value="1">Administrador</option>
                                     <option value="2">Docente</option>
                                     <option value="3">Estudiante</option>
+                                    <option value="5">Jefe de Carrera</option>
+                                    <option value="6">Asistente de Jefe de Carrera</option>
+                                    <option value="7">Coordinador de Proyectos</option>
                                 </select>
                                 <div class="form-text" id="userProfileHelp"></div>
                             </div>
@@ -527,13 +530,16 @@ if (!is_authenticated() || !is_admin()) {
                 }
 
                 users.forEach(user => {
-                    const profileNames = { 1: 'Administrativo', 2: 'Docente', 3: 'Estudiante' };
+                    const profileNames = { 1: 'Administrador', 2: 'Docente', 3: 'Estudiante', 5: 'Jefe de Carrera', 6: 'Asistente de Jefe de Carrera', 7: 'Coordinador de Proyectos' };
                     const isActive = Boolean(user.activo);
-                    const isAdminUser = Number(user.perfil_id) === 1;
+                    const isAdminUser = [1, 5].includes(Number(user.perfil_id));
                     const statusBadge = isActive ? '<span class="badge bg-success">Activo</span>' : '<span class="badge bg-secondary">Inactivo</span>';
-                    const toggleClass = isActive ? 'btn-outline-warning' : 'btn-outline-success';
-                    const toggleIcon = isActive ? 'bi-pause-circle' : 'bi-check-circle';
-                    const toggleTitle = isActive ? 'Desactivar usuario' : 'Activar usuario';
+                    // El botón refleja el estado actual; el título indica la acción disponible.
+                    const toggleClass = isActive ? 'btn-outline-success' : 'btn-outline-danger';
+                    const toggleIcon = isActive ? 'bi-check-circle-fill' : 'bi-x-circle-fill';
+                    const toggleTitle = isActive
+                        ? 'Estado: Activo. Clic para desactivar'
+                        : 'Estado: Inactivo. Clic para activar';
                     const normalToggle = isAdminUser
                         ? `<button class="btn ${toggleClass}" disabled title="Administrador protegido"><i class="bi ${toggleIcon}"></i></button>`
                         : `<button class="btn ${toggleClass}" onclick="toggleUserStatus('${escapeHtml(user.id)}')" title="${toggleTitle}"><i class="bi ${toggleIcon}"></i></button>`;
@@ -784,8 +790,8 @@ if (!is_authenticated() || !is_admin()) {
                 document.getElementById('userEmail').value = loadedModalUser.email || '';
                 document.getElementById('userPhone').value = loadedModalUser.telefonos || '';
                 document.getElementById('userProfile').value = loadedModalUser.perfil_id || '';
-                document.getElementById('userProfile').disabled = true;
-                document.getElementById('userProfileHelp').textContent = 'El rol ya definido no puede modificarse.';
+                document.getElementById('userProfile').disabled = false;
+                document.getElementById('userProfileHelp').textContent = 'Solo el Administrador General puede modificar este perfil.';
                 document.getElementById('userActive').value = loadedModalUser.activo ? '1' : '0';
                 document.getElementById('userNames').value = loadedModalUser.nombres || '';
                 document.getElementById('userApa').value = loadedModalUser.apa || '';
@@ -849,15 +855,21 @@ if (!is_authenticated() || !is_admin()) {
                 payload.perfil_id = document.getElementById('userProfile').value;
                 payload.password = password;
                 payload.password_confirmation = passwordConfirmation;
-            } else if (password) {
-                payload.password = password;
-                payload.password_confirmation = passwordConfirmation;
+            } else {
+                payload.perfil_id = document.getElementById('userProfile').value;
+                if (password) {
+                    payload.password = password;
+                    payload.password_confirmation = passwordConfirmation;
+                }
             }
 
-            if (loadedModalUser && Number(loadedModalUser.perfil_id) === 1 && !payload.activo) {
+            const changesProtectedAuthority = loadedModalUser
+                && [1, 5].includes(Number(loadedModalUser.perfil_id))
+                && (!payload.activo || Number(payload.perfil_id) !== Number(loadedModalUser.perfil_id));
+            if (changesProtectedAuthority) {
                 const adminPassword = await promptPassword({
-                    title: 'Administrador protegido',
-                    inputPlaceholder: 'Contraseña del administrador actual',
+                    title: 'Autoridad protegida',
+                    inputPlaceholder: 'Contraseña del Administrador General',
                     confirmButtonText: 'Autorizar cambio'
                 });
                 if (!adminPassword) return;
@@ -1172,7 +1184,7 @@ if (!is_authenticated() || !is_admin()) {
         function describeCredentialScope(payload) {
             const parts = [];
             const statusLabels = { active: 'activos', inactive: 'inactivos', all: 'todos' };
-            const profileLabels = { 1: 'administrativos', 2: 'docentes', 3: 'estudiantes' };
+            const profileLabels = { 1: 'administradores', 2: 'docentes', 3: 'estudiantes', 5: 'jefes de carrera', 6: 'asistentes de jefatura', 7: 'coordinadores de proyectos' };
             parts.push(`Usuarios ${statusLabels[payload.status || 'all'] || 'activos'}`);
             if (payload.perfil_ids?.length) {
                 parts.push(payload.perfil_ids.map(id => profileLabels[id] || `perfil ${id}`).join(', '));
@@ -1351,7 +1363,9 @@ if (!is_authenticated() || !is_admin()) {
                 : '';
             document.querySelector(target).innerHTML = `
                 <div class="alert ${errors.length ? 'alert-warning' : 'alert-success'}">
-                    Registros creados: <strong>${Number(result.created || 0)}</strong>. Errores: <strong>${errors.length}</strong>.
+                    Registros creados: <strong>${Number(result.created || 0)}</strong>.
+                    Cuentas existentes vinculadas: <strong>${Number(result.linked || 0)}</strong>.
+                    Errores: <strong>${errors.length}</strong>.
                     ${details}
                 </div>`;
         }
@@ -1390,7 +1404,7 @@ if (!is_authenticated() || !is_admin()) {
             const summary = document.getElementById('usersMobileFilterSummary');
             if (!summary) return;
             const statusLabels = { active: 'Activos', inactive: 'Inactivos', all: 'Todos los estados' };
-            const profileLabels = { all: 'Todos los perfiles', 1: 'Administrativos', 2: 'Docentes', 3: 'Estudiantes' };
+            const profileLabels = { all: 'Todos los perfiles', 1: 'Administradores', 2: 'Docentes', 3: 'Estudiantes', 5: 'Jefes de Carrera', 6: 'Asistentes de Jefatura', 7: 'Coordinadores de Proyectos' };
             summary.textContent = `${statusLabels[currentStatus] || 'Activos'} · ${profileLabels[currentProfile] || 'Todos los perfiles'}`;
         }
     </script>
