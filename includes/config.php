@@ -5,18 +5,9 @@ header('Pragma: no-cache');
 header('Expires: 0');
 
 define('APP_NAME', 'Sistema de Gestión de Proyectos Integradores');
-$requestHost = strtolower(preg_replace('/:\d+$/', '', trim(
-    explode(',', $_SERVER['HTTP_X_FORWARDED_HOST'] ?? $_SERVER['HTTP_HOST'] ?? 'localhost')[0]
-)));
-$localHosts = ['localhost', '127.0.0.1', '::1', 'frontend_swgpi.test'];
-$isLocalRequest = in_array($requestHost, $localHosts, true)
-    || str_ends_with($requestHost, '.test');
-// Conexion anterior:
-// $productionApiUrl = 'https://apiswgpi-production-0e59.up.railway.app/api';
-$localApiUrl = 'http://127.0.0.1:8000/api';
-// Variable de entorno anterior, desactivada para usar siempre la API local:
-// $configuredApiUrl = trim((string) getenv('API_BASE_URL'));
-$configuredApiUrl = $localApiUrl;
+$productionApiUrl = 'https://apiswgpi-production-0e59.up.railway.app/api';
+$environmentApiUrl = trim((string) getenv('SGPI_API_BASE_URL'));
+$configuredApiUrl = $environmentApiUrl !== '' ? $environmentApiUrl : $productionApiUrl;
 
 $configuredApiUrl = rtrim($configuredApiUrl, '/');
 define('API_BASE_URL', $configuredApiUrl);
