@@ -43,9 +43,15 @@ if (!is_authenticated()) {
 
                 <div id="alertContainer" class="mb-3"></div>
 
-                <div class="d-flex flex-wrap gap-2 mb-3" role="group" aria-label="Vista de gestión de proyectos y tesis">
-                    <button type="button" class="btn btn-primary" id="projectViewBtn" onclick="setProjectManagementView('projects')">
-                        <i class="bi bi-folder2-open"></i> Proyectos
+                <div class="d-flex flex-wrap gap-2 mb-3" role="group" aria-label="Vista por modalidad de proyecto">
+                    <button type="button" class="btn btn-primary" id="integratorViewBtn" onclick="setProjectManagementView('integrator')">
+                        <i class="bi bi-diagram-3"></i> Proyecto integrador
+                    </button>
+                    <button type="button" class="btn btn-outline-secondary" id="dualViewBtn" onclick="setProjectManagementView('dual')">
+                        <i class="bi bi-building"></i> Modalidad Dual
+                    </button>
+                    <button type="button" class="btn btn-outline-secondary" id="caseViewBtn" onclick="setProjectManagementView('case')">
+                        <i class="bi bi-lightbulb"></i> Caso integrador
                     </button>
                     <button type="button" class="btn btn-outline-secondary" id="thesisViewBtn" onclick="setProjectManagementView('thesis')">
                         <i class="bi bi-mortarboard"></i> Tesis
@@ -173,6 +179,10 @@ if (!is_authenticated()) {
                                 <input type="text" class="form-control" id="projectCompanyName" maxlength="255" required>
                             </div>
                             <div class="col-md-6">
+                                <label class="form-label" for="projectCompanyRfc">RFC de la empresa</label>
+                                <input type="text" class="form-control text-uppercase" id="projectCompanyRfc" maxlength="13" pattern="[A-Za-z&amp;Ññ]{3,4}[0-9]{6}[A-Za-z0-9]{3}" required>
+                            </div>
+                            <div class="col-md-6">
                                 <label class="form-label" for="projectCompanyGiro">Giro</label>
                                 <input type="text" class="form-control" id="projectCompanyGiro" maxlength="255" required>
                             </div>
@@ -188,6 +198,14 @@ if (!is_authenticated()) {
                                 <label class="form-label" for="projectCompanyAddress">Dirección de empresa</label>
                                 <textarea class="form-control" id="projectCompanyAddress" rows="2" maxlength="1000" required></textarea>
                                 <div class="form-text">Separa calle, número, colonia y municipio con comas (,).</div>
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label" for="projectModality">Modalidad</label>
+                                <select class="form-select" id="projectModality" required>
+                                    <option value="proyecto_integrador">Proyecto integrador</option>
+                                    <option value="dual">Modalidad Dual</option>
+                                    <option value="caso_integrador">Caso integrador</option>
+                                </select>
                             </div>
                             <div class="col-md-4">
                                 <label class="form-label" for="projectSemester">Semestre</label>
@@ -278,7 +296,7 @@ if (!is_authenticated()) {
         let projectsCurrentPage = 1;
         let projectsLastPage = 1;
         let projectsTotal = 0;
-        let projectManagementView = 'projects';
+        let projectManagementView = 'integrator';
         let projectModalIsThesis = false;
         const PROJECTS_PER_PAGE = 12;
         const THESIS_COMMITTEE_ROLES = [
@@ -304,6 +322,15 @@ if (!is_authenticated()) {
             { value: '8', label: '8 - Titulación' },
             { value: '9', label: '9 - Titulación' }
         ];
+        const PROJECT_MODALITIES = {
+            integrator: { value: 'proyecto_integrador', label: 'Proyecto integrador', icon: 'bi-diagram-3' },
+            dual: { value: 'dual', label: 'Modalidad Dual', icon: 'bi-building' },
+            case: { value: 'caso_integrador', label: 'Caso integrador', icon: 'bi-lightbulb' }
+        };
+
+        function currentProjectModality() {
+            return PROJECT_MODALITIES[projectManagementView] || PROJECT_MODALITIES.integrator;
+        }
 
         function escapeHtml(value) {
             return String(value ?? '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#039;');
@@ -335,15 +362,17 @@ if (!is_authenticated()) {
             if (projectManagementView === view) return;
             SGPIViewTransition.run(() => {
                 projectManagementView = view;
-                document.getElementById('projectManagementView').classList.toggle('d-none', view !== 'projects');
+                document.getElementById('projectManagementView').classList.toggle('d-none', view === 'thesis');
                 document.getElementById('thesisManagementView').classList.toggle('d-none', view !== 'thesis');
-                document.getElementById('projectViewBtn').className = view === 'projects' ? 'btn btn-primary' : 'btn btn-outline-secondary';
+                ['integrator', 'dual', 'case'].forEach(item => {
+                    document.getElementById(`${item}ViewBtn`).className = view === item ? 'btn btn-primary' : 'btn btn-outline-secondary';
+                });
                 document.getElementById('thesisViewBtn').className = view === 'thesis' ? 'btn btn-success' : 'btn btn-outline-secondary';
                 const newButton = document.getElementById('newProjectBtn');
                 if (newButton) {
                     newButton.innerHTML = view === 'thesis'
                         ? '<i class="bi bi-plus-circle"></i> Nueva Tesis'
-                        : '<i class="bi bi-plus-circle"></i> Nuevo Proyecto';
+                        : `<i class="bi bi-plus-circle"></i> Nuevo ${currentProjectModality().label}`;
                 }
                 const searchLabel = document.querySelector('label[for="projectSearchInput"]');
                 const searchInput = document.getElementById('projectSearchInput');
@@ -426,6 +455,7 @@ if (!is_authenticated()) {
                     per_page: PROJECTS_PER_PAGE,
                     tipo_registro: projectManagementView === 'thesis' ? 'tesis' : 'proyecto'
                 };
+                if (projectManagementView !== 'thesis') params.modalidad = currentProjectModality().value;
                 const semester = document.getElementById('semesterFilter').value;
                 const search = document.getElementById('projectSearchInput')?.value.trim();
                 if (semester) params.semestre = semester;
@@ -486,13 +516,14 @@ if (!is_authenticated()) {
                         : '<span class="text-muted small">Sin empresa</span>';
 
                     const thesisBadge = project.is_thesis ? '<span class="badge bg-success ms-2">Tesis</span>' : '';
+                    const modalityBadge = `<span class="badge bg-primary-subtle text-primary-emphasis ms-2">${escapeHtml(currentProjectModality().label)}</span>`;
                     const thesisAction = project.is_thesis
                         ? `<button type="button" class="btn btn-outline-warning" onclick="toggleProjectThesis(${project.id}, false)" title="Quitar de tesis"><i class="bi bi-mortarboard-fill"></i></button>`
                         : `<button type="button" class="btn btn-outline-success" onclick="toggleProjectThesis(${project.id}, true)" title="Marcar como tesis"><i class="bi bi-mortarboard"></i></button>`;
 
                     tbody.innerHTML += `
                         <tr>
-                            <td><strong>${escapeHtml(project.title)}</strong>${thesisBadge}</td>
+                            <td><strong>${escapeHtml(project.title)}</strong>${thesisBadge}${modalityBadge}</td>
                             <td>${project.semestre || '-'}</td>
                             <td><small>${escapeHtml(projectActiveAuthors(project))}</small></td>
                             <td>${project.year || '-'}</td>
@@ -519,8 +550,8 @@ if (!is_authenticated()) {
             const nav = document.getElementById('projectsPagination');
             if (info) {
                 info.textContent = projectsTotal
-                    ? `Página ${projectsCurrentPage} de ${projectsLastPage} · ${projectsTotal} ${projectManagementView === 'thesis' ? 'tesis' : 'proyecto(s)'}`
-                    : (projectManagementView === 'thesis' ? 'Sin tesis' : 'Sin proyectos');
+                    ? `Página ${projectsCurrentPage} de ${projectsLastPage} · ${projectsTotal} ${projectManagementView === 'thesis' ? 'tesis' : currentProjectModality().label.toLowerCase() + '(s)'}`
+                    : (projectManagementView === 'thesis' ? 'Sin tesis' : `Sin ${currentProjectModality().label.toLowerCase()}`);
             }
             if (!nav) return;
             if (projectsLastPage <= 1) {
@@ -566,6 +597,7 @@ if (!is_authenticated()) {
             document.getElementById('projectModalEditingId').value = '';
             document.getElementById('projectYear').value = new Date().getFullYear();
             projectModalIsThesis = projectManagementView === 'thesis';
+            document.getElementById('projectModality').value = projectModalIsThesis ? 'proyecto_integrador' : currentProjectModality().value;
             renderProjectSemesterOptions();
             projectSelectedStudents = [];
             renderProjectSelectedStudents();
@@ -607,10 +639,12 @@ if (!is_authenticated()) {
                 document.getElementById('projectTitle').value = project.title || '';
                 document.getElementById('projectDescription').value = project.description || '';
                 document.getElementById('projectCompanyName').value = project.company_name || '';
+                document.getElementById('projectCompanyRfc').value = project.company_rfc || '';
                 document.getElementById('projectCompanyGiro').value = project.company_giro || '';
                 document.getElementById('projectCompanyContact').value = project.company_contact_name || '';
                 document.getElementById('projectCompanyPosition').value = project.company_contact_position || '';
                 document.getElementById('projectCompanyAddress').value = project.company_address || '';
+                document.getElementById('projectModality').value = project.modalidad || 'proyecto_integrador';
                 document.getElementById('projectYear').value = project.year || new Date().getFullYear();
                 projectSelectedStudents = project.students || [];
                 await loadProjectModalGroups(project.subject_group_id || '');
@@ -708,10 +742,13 @@ if (!is_authenticated()) {
                 subject_group_id: document.getElementById('projectSubjectGroup').value || null,
                 year: Number(document.getElementById('projectYear').value),
                 company_name: document.getElementById('projectCompanyName').value.trim(),
+                company_rfc: document.getElementById('projectCompanyRfc').value.trim().toUpperCase(),
                 company_giro: document.getElementById('projectCompanyGiro').value.trim(),
                 company_contact_name: document.getElementById('projectCompanyContact').value.trim(),
                 company_contact_position: document.getElementById('projectCompanyPosition').value.trim(),
                 company_address: document.getElementById('projectCompanyAddress').value.trim(),
+                request_company_registration: true,
+                modalidad: document.getElementById('projectModality').value,
                 is_thesis: projectModalIsThesis,
                 student_ids: projectSelectedStudents.map(student => student.id)
             };
@@ -753,6 +790,7 @@ if (!is_authenticated()) {
                         <div class="text-start">
                             <p class="text-muted">${escapeHtml(project.description || 'Sin descripción')}</p>
                             <p><strong>Tipo de registro:</strong> ${status}</p>
+                            <p><strong>Modalidad:</strong> ${escapeHtml(({dual: 'Modalidad Dual', proyecto_integrador: 'Proyecto integrador', caso_integrador: 'Caso integrador'})[project.modalidad] || 'Proyecto integrador')}</p>
                             <p><strong>Integrantes:</strong><br>${escapeHtml(projectActiveAuthors(project))}</p>
                             <p><strong>Grupo / carga:</strong><br>${escapeHtml(project.subject_group?.nombre || '-')}</p>
                             <p><strong>Asignaturas:</strong><br>${subjects}</p>
