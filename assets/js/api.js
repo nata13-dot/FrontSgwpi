@@ -34,7 +34,7 @@ class ApiClient {
             '/profile',
             '/users'
         ];
-        this.cachePrefix = `sgpi-api-cache:v2:${this.baseURL}:`;
+        this.cachePrefix = `sgpi-api-cache:v3:${this.baseURL}:`;
         this.defaultCacheTtls = [
             { pattern: /^\/dashboard\/(stats|teacher|student)$/, ttl: 20000 },
             { pattern: /^\/users(?:\/[^/]+)?$/, ttl: 30000 },
@@ -282,6 +282,20 @@ class ApiClient {
         const entity = this.mutationEntity(result, requestData, mutationId);
         const now = Date.now();
         const retained = [];
+
+        // Proyectos tiene colecciones mutuamente excluyentes por modalidad y
+        // tipo. Parchar todas las cachés haría aparecer temporalmente una alta
+        // o un cambio de modalidad en pestañas que no le corresponden.
+        if (resource === '/projects') {
+            this.cache.forEach((cached, cacheKey) => {
+                if (this.cacheMatchesResource(cached?.endpoint, resource)) this.cache.delete(cacheKey);
+            });
+            this.removeStoredResource(resource);
+            window.dispatchEvent(new CustomEvent('sgpi:api-mutated', {
+                detail: { method, endpoint: this.normalizeEndpoint(endpoint), resource, id: this.endpointId(endpoint), result }
+            }));
+            return;
+        }
 
         this.cache.forEach((cached, cacheKey) => {
             if (!cached || !this.cacheMatchesResource(cached.endpoint, resource)) return;

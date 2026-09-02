@@ -296,6 +296,7 @@ if (!is_authenticated()) {
         let projectsCurrentPage = 1;
         let projectsLastPage = 1;
         let projectsTotal = 0;
+        let projectsRequestSequence = 0;
         let projectManagementView = 'integrator';
         let projectModalIsThesis = false;
         const PROJECTS_PER_PAGE = 12;
@@ -442,6 +443,8 @@ if (!is_authenticated()) {
         }
 
         async function loadProjects(page = 1) {
+            const requestId = ++projectsRequestSequence;
+            const requestedView = projectManagementView;
             try {
                 const user = auth.getCurrentUser();
                 const activeProfileId = Number(user?.active_profile_id ?? user?.perfil_id);
@@ -462,6 +465,7 @@ if (!is_authenticated()) {
                 if (search) params.q = search;
 
                 const response = await api.get('/projects', params);
+                if (requestId !== projectsRequestSequence || requestedView !== projectManagementView) return;
                 api.prefetchNextPage('/projects', params, response);
                 projectsCurrentPage = Number(response.current_page || page);
                 projectsLastPage = Number(response.last_page || 1);
@@ -480,7 +484,10 @@ if (!is_authenticated()) {
                     return;
                 }
 
-                let proyectosFiltrados = response.data;
+                let proyectosFiltrados = response.data.filter(project => requestedView === 'thesis'
+                    ? Boolean(project.is_thesis) || project.tipo === 'tesis'
+                    : !project.is_thesis && project.tipo !== 'tesis' && project.modalidad === currentProjectModality().value
+                );
                 if (isTeacher) {
                     proyectosFiltrados = response.data.filter(p => p.advisors && p.advisors.some(a => a.id === currentUserId));
                 } else if (isStudent) {
@@ -541,6 +548,7 @@ if (!is_authenticated()) {
                         </tr>`;
                 });
             } catch (error) {
+                if (requestId !== projectsRequestSequence || requestedView !== projectManagementView) return;
                 showAlert('#alertContainer', 'danger', 'Error cargando proyectos: ' + error.message);
             }
         }
