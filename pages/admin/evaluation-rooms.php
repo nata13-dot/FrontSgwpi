@@ -1,10 +1,11 @@
 <?php
 require_once $_SERVER['DOCUMENT_ROOT'] . '/includes/config.php';
 
-if (!is_authenticated() || !can_manage_projects()) {
+if (!is_authenticated() || (!can_manage_projects() && !is_teacher())) {
     header('Location: /index.php');
     exit;
 }
+$canManageRooms = can_manage_projects();
 ?>
 <!DOCTYPE html>
 <html lang="es">
@@ -158,6 +159,18 @@ if (!is_authenticated() || !can_manage_projects()) {
             font-size: .8rem;
             margin-top: .3rem;
         }
+        .room-live-timer {
+            background: var(--soft-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            margin: .8rem 0;
+            padding: .75rem;
+        }
+        .room-live-timer.running { border-color: var(--success-color, #198754); }
+        .room-live-timer.expired { border-color: var(--warning-color, #f59e0b); }
+        .room-live-timer-display { font-size: 1.65rem; font-variant-numeric: tabular-nums; font-weight: 700; }
+        .room-live-timer-controls { align-items: end; display: flex; flex-wrap: wrap; gap: .35rem; }
+        .room-live-timer-controls input { width: 82px; }
         @media (max-width: 991.98px) {
             .room-meta-grid {
                 grid-template-columns: 1fr;
@@ -225,6 +238,7 @@ if (!is_authenticated() || !can_manage_projects()) {
                     <button type="button" class="btn btn-primary" id="viewRoomsBtn" onclick="setRoomView('rooms')">
                         <i class="bi bi-door-open"></i> Por sala
                     </button>
+                    <?php if ($canManageRooms): ?>
                     <button type="button" class="btn btn-outline-secondary" id="viewProjectsBtn" onclick="setRoomView('projects')">
                         <i class="bi bi-kanban"></i> Por proyecto
                     </button>
@@ -234,6 +248,7 @@ if (!is_authenticated() || !can_manage_projects()) {
                     <button type="button" class="btn btn-success ms-md-auto" onclick="startNewRoom()">
                         <i class="bi bi-plus-circle"></i> Crear sala
                     </button>
+                    <?php endif; ?>
                 </div>
 
                 <div class="row g-3 mb-4" id="roomSummary">
@@ -245,6 +260,7 @@ if (!is_authenticated() || !can_manage_projects()) {
 
                 <div id="roomByRoomView">
                     <div class="row g-3">
+                        <?php if ($canManageRooms): ?>
                         <div class="col-xl-5">
                             <div class="room-work-panel" id="roomFormPanel">
                                 <div class="room-work-panel-header">
@@ -310,7 +326,7 @@ if (!is_authenticated() || !can_manage_projects()) {
 
                                         <div class="col-12">
                                             <div class="room-section-title">Evaluadores</div>
-                                            <div class="room-inline-hint mb-2">Solo aparecen docentes sin empalme en el horario seleccionado.</div>
+                                            <div class="room-inline-hint mb-2">Los docentes pueden participar en más de una sala aunque los horarios coincidan.</div>
                                             <div class="room-scroll-list" id="roomTeachers"></div>
                                         </div>
                                         <div class="col-12">
@@ -334,7 +350,8 @@ if (!is_authenticated() || !can_manage_projects()) {
                                 </div>
                             </div>
                         </div>
-                        <div class="col-xl-7">
+                        <?php endif; ?>
+                        <div class="<?= $canManageRooms ? 'col-xl-7' : 'col-12' ?>">
                             <div class="room-work-panel">
                                 <div class="room-work-panel-header d-flex justify-content-between align-items-center gap-2">
                                     <h5 class="mb-0"><i class="bi bi-list-check"></i> Salas registradas</h5>
@@ -346,6 +363,7 @@ if (!is_authenticated() || !can_manage_projects()) {
                     </div>
                 </div>
 
+                <?php if ($canManageRooms): ?>
                 <div class="d-none" id="roomByProjectView">
                     <div class="room-work-panel">
                         <div class="room-work-panel-header">
@@ -374,7 +392,28 @@ if (!is_authenticated() || !can_manage_projects()) {
                 <div class="d-none" id="roomByTeacherView">
                     <div class="row g-3" id="teacherRoomContainer"></div>
                 </div>
+                <?php endif; ?>
             </div>
+        </div>
+    </div>
+
+    <div class="modal fade" id="roomScheduleModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog">
+            <form class="modal-content" id="roomScheduleForm">
+                <div class="modal-header"><h5 class="modal-title">Horario y evaluación fuera de tiempo</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
+                <div class="modal-body">
+                    <input type="hidden" id="scheduleRoomId">
+                    <div class="row g-3">
+                        <div class="col-md-6"><label class="form-label" for="scheduleStart">Inicio</label><input class="form-control" id="scheduleStart" type="datetime-local" required></div>
+                        <div class="col-md-6"><label class="form-label" for="scheduleEnd">Fin ordinario</label><input class="form-control" id="scheduleEnd" type="datetime-local" required></div>
+                        <div class="col-12"><div class="form-check"><input class="form-check-input" id="scheduleAllowLate" type="checkbox" onchange="toggleLateScheduleFields()"><label class="form-check-label" for="scheduleAllowLate">Permitir evaluaciones fuera del horario ordinario</label></div></div>
+                        <div class="col-md-6 d-none" id="scheduleLateUntilBox"><label class="form-label" for="scheduleLateUntil">Autorizada hasta</label><input class="form-control" id="scheduleLateUntil" type="datetime-local"></div>
+                        <div class="col-12 d-none" id="scheduleLateReasonBox"><label class="form-label" for="scheduleLateReason">Motivo</label><textarea class="form-control" id="scheduleLateReason" rows="3" minlength="10" maxlength="500"></textarea></div>
+                    </div>
+                    <div class="small text-muted mt-3">Si la sala ya comenzó, la hora de inicio queda protegida; todavía puedes extender el cierre o autorizar una captura tardía.</div>
+                </div>
+                <div class="modal-footer"><button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancelar</button><button type="submit" class="btn btn-primary">Guardar horario</button></div>
+            </form>
         </div>
     </div>
 
@@ -386,12 +425,14 @@ if (!is_authenticated() || !can_manage_projects()) {
     <script src="/assets/js/api.js"></script>
     <script src="/assets/js/app.js"></script>
     <script>
+        const CAN_MANAGE_ROOMS = <?= $canManageRooms ? 'true' : 'false' ?>;
         let teachers = [];
         let projects = [];
         let rooms = [];
         let roomProjects = [];
         let roomView = 'rooms';
         let roomProjectsReorderTimer = null;
+        const roomScheduleModal = new bootstrap.Modal(document.getElementById('roomScheduleModal'));
 
         function escapeHtml(value) {
             return String(value ?? '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#039;');
@@ -403,6 +444,20 @@ if (!is_authenticated() || !can_manage_projects()) {
 
         function fullName(user) {
             return [user?.nombres, user?.apa, user?.ama, user?.apellido_paterno, user?.apellido_materno].filter(Boolean).join(' ') || user?.id || '';
+        }
+
+        function roomDisplayIdentifier(room) {
+            if (room?.display_identifier) return room.display_identifier;
+            const labels = { 1: '1ro', 2: '2do', 3: '3ro', 4: '4to', 5: '5to', 6: '6to', 7: '7mo', 8: '8vo', 9: '9no', 10: '10mo' };
+            const semester = Number(room?.semestre || 0);
+            const date = new Date(room?.fecha_evaluacion || room?.inicia_en || Date.now());
+            const half = date.getMonth() < 6 ? 1 : 2;
+            const year = String(date.getFullYear()).slice(-2);
+            return `${labels[semester] || `${semester}to`}-${half}-${year}`;
+        }
+
+        function roomDisplayName(room) {
+            return room?.display_name || `${room?.nombre || 'Sin sala'} · ${roomDisplayIdentifier(room)}`;
         }
 
         function projectActiveAuthors(project) {
@@ -438,6 +493,13 @@ if (!is_authenticated() || !can_manage_projects()) {
         function formatLocalDateTimeInput(date) {
             const pad = value => String(value).padStart(2, '0');
             return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}T${pad(date.getHours())}:${pad(date.getMinutes())}`;
+        }
+
+        function nextMinuteInput() {
+            const date = new Date();
+            date.setSeconds(0, 0);
+            date.setMinutes(date.getMinutes() + 1);
+            return formatLocalDateTimeInput(date);
         }
 
         function roomRange(room) {
@@ -480,7 +542,7 @@ if (!is_authenticated() || !can_manage_projects()) {
                 if (semester && String(room.semestre) !== String(semester)) return false;
                 if (!search) return true;
                 const haystack = [
-                    room.nombre,
+                    roomDisplayName(room),
                     room.salon,
                     fullName(room.responsible_teacher),
                     ...(room.teachers || []).map(fullName),
@@ -526,9 +588,13 @@ if (!is_authenticated() || !can_manage_projects()) {
         }
 
         async function loadInitialData() {
-            await Promise.all([loadTeachers(), loadProjects(), loadRooms()]);
-            renderRoomTeachers();
-            loadRoomProjects();
+            if (CAN_MANAGE_ROOMS) {
+                await Promise.all([loadTeachers(), loadProjects(), loadRooms()]);
+                renderRoomTeachers();
+                loadRoomProjects();
+            } else {
+                await loadRooms();
+            }
             renderCurrentView();
         }
 
@@ -569,12 +635,15 @@ if (!is_authenticated() || !can_manage_projects()) {
             document.getElementById('roomsCountBadge').textContent = `${visibleRooms.length} sala${visibleRooms.length === 1 ? '' : 's'}`;
             document.getElementById('roomsList').innerHTML = visibleRooms.map(room => {
                 const archived = document.getElementById('roomStatusFilter').value === 'archived';
+                const windowStatus = room.evaluation_window?.status || 'closed';
+                const windowLabel = windowStatus === 'open' ? 'Horario abierto' : windowStatus === 'late_authorized' ? 'Fuera de horario autorizado' : windowStatus === 'scheduled' ? 'Pendiente de inicio' : 'Horario cerrado';
+                const windowClass = room.evaluation_window?.is_open ? 'text-success' : 'text-warning';
                 return `
                     <div class="room-list-card">
                         <div class="d-flex justify-content-between gap-3 flex-wrap">
                             <div class="flex-grow-1">
                                 <div class="d-flex align-items-center flex-wrap gap-2">
-                                    <span class="fw-bold">${escapeHtml(room.nombre)}</span>
+                                    <span class="fw-bold">${escapeHtml(roomDisplayName(room))}</span>
                                     <span class="badge bg-secondary">Semestre ${escapeHtml(room.semestre)}</span>
                                     ${room.sequence_locked ? '<span class="badge bg-primary">Orden bloqueado</span>' : ''}
                                     ${room.completed_at ? '<span class="badge bg-success">Finalizada</span>' : ''}
@@ -586,23 +655,59 @@ if (!is_authenticated() || !can_manage_projects()) {
                                     <div class="room-meta-item"><span class="text-muted d-block">Tiempos</span>${room.project_presentation_minutes} min exposición / ${room.teacher_evaluation_minutes} min evaluación</div>
                                 </div>
                                 <div class="small mb-2"><span class="fw-semibold">Evaluadores:</span> ${(room.teachers || []).map(teacher => escapeHtml(fullName(teacher))).filter(Boolean).join(', ') || '-'}</div>
+                                <div class="small ${windowClass} mb-2"><i class="bi bi-clock"></i> ${escapeHtml(windowLabel)}${windowStatus === 'late_authorized' ? ` hasta ${new Date(room.late_evaluation_until).toLocaleString('es-MX')}` : ''}</div>
+                                ${room.sequence_locked && !room.completed_at ? roomTimerMarkup(room) : ''}
                                 <div class="small fw-semibold mb-1">Proyectos (${(room.projects || []).length})</div>
-                                <ol class="small mb-0 ps-3">${orderedRoomProjects(room).map(project => `<li class="mb-1">${escapeHtml(project.title)} <span class="badge bg-light text-dark">Orden ${escapeHtml(project.presentation_order || project.pivot?.presentation_order || '-')}</span></li>`).join('') || '<li>Sin proyectos asignados</li>'}</ol>
+                                <ol class="small mb-0 ps-3">${orderedRoomProjects(room).map(project => `<li class="mb-1 ${project.is_current ? 'fw-bold text-primary' : ''}">${escapeHtml(project.title)} <span class="badge bg-light text-dark">Orden ${escapeHtml(project.presentation_order || project.pivot?.presentation_order || '-')}</span> <span class="text-muted">${project.sequence_status === 'evaluado' ? 'Finalizada' : `${Number(project.submitted_evaluators_count || 0)}/${Number(project.expected_evaluators_count || 0)} rúbricas`}</span></li>`).join('') || '<li>Sin proyectos asignados</li>'}</ol>
                             </div>
                             <div class="room-action-group align-self-start">
                                 <button class="btn btn-sm btn-outline-dark" onclick="downloadRoomReport(${room.id})" title="Reporte sala"><i class="bi bi-file-earmark-pdf"></i></button>
                                 <button class="btn btn-sm btn-outline-info" onclick="downloadRoomTeacherReport(${room.id})" title="Reporte docentes"><i class="bi bi-people"></i></button>
-                                ${archived ? `<button class="btn btn-sm btn-outline-secondary" onclick="unarchiveRoom(${room.id})" title="Restaurar"><i class="bi bi-arrow-counterclockwise"></i></button>` : `
-                                    <button class="btn btn-sm btn-outline-primary" onclick="editRoom(${room.id})" title="Editar"><i class="bi bi-pencil"></i></button>
-                                    <button class="btn btn-sm btn-outline-success" onclick="lockRoomSequence(${room.id})" title="Bloquear orden"><i class="bi bi-lock"></i></button>
-                                    ${room.sequence_locked && !room.completed_at ? `<button class="btn btn-sm btn-outline-warning" onclick="advanceRoom(${room.id})" title="Siguiente proyecto"><i class="bi bi-skip-forward"></i></button>` : ''}
-                                    <button class="btn btn-sm btn-outline-secondary" onclick="archiveRoom(${room.id})" title="Archivar"><i class="bi bi-archive"></i></button>
-                                    <button class="btn btn-sm btn-outline-danger" onclick="deleteRoom(${room.id})" title="Eliminar"><i class="bi bi-trash"></i></button>
-                                `}
+                                ${archived && CAN_MANAGE_ROOMS ? `<button class="btn btn-sm btn-outline-secondary" onclick="unarchiveRoom(${room.id})" title="Restaurar"><i class="bi bi-arrow-counterclockwise"></i></button>` : !archived ? `
+                                    ${room.can_edit_room ? `<button class="btn btn-sm btn-outline-primary" onclick="editRoom(${room.id})" title="Editar"><i class="bi bi-pencil"></i></button>` : ''}
+                                    ${room.can_control_room ? `<button class="btn btn-sm btn-outline-primary" onclick="openRoomSchedule(${room.id})" title="Modificar horario"><i class="bi bi-clock-history"></i></button>` : ''}
+                                    ${CAN_MANAGE_ROOMS && !room.sequence_locked ? `<button class="btn btn-sm btn-outline-success" onclick="lockRoomSequence(${room.id})" title="Bloquear orden"><i class="bi bi-lock"></i></button>` : ''}
+                                    ${room.can_control_room && room.sequence_locked && !room.completed_at ? `<button class="btn btn-sm btn-outline-warning" onclick="advanceRoom(${room.id})" title="Siguiente proyecto"><i class="bi bi-skip-forward"></i></button>` : ''}
+                                    ${CAN_MANAGE_ROOMS ? `<button class="btn btn-sm btn-outline-secondary" onclick="archiveRoom(${room.id})" title="Archivar"><i class="bi bi-archive"></i></button>
+                                    <button class="btn btn-sm btn-outline-danger" onclick="deleteRoom(${room.id})" title="Eliminar"><i class="bi bi-trash"></i></button>` : ''}
+                                ` : ''}
                             </div>
                         </div>
                     </div>`;
             }).join('') || '<p class="text-muted mb-0">No hay salas con los filtros seleccionados.</p>';
+            tickRoomTimers();
+        }
+
+        function roomTimerMarkup(room) {
+            const timer = room.timer || {};
+            const remaining = Number(timer.remaining_seconds || 0);
+            const minutes = Math.max(1, Math.ceil(Number(timer.duration_seconds || room.project_presentation_minutes * 60) / 60));
+            return `<div class="room-live-timer ${timer.status === 'en_curso' ? 'running' : ''} ${remaining === 0 ? 'expired' : ''}">
+                <div class="d-flex align-items-center justify-content-between gap-2 mb-2">
+                    <span><i class="bi bi-stopwatch"></i> Tiempo del equipo en turno</span>
+                    <span class="room-live-timer-display" data-room-timer="${room.id}" data-status="${escapeHtml(timer.status || 'detenido')}" data-remaining="${remaining}">00:00</span>
+                </div>
+                ${room.can_control_room ? `<div class="room-live-timer-controls">
+                    <label class="small">Minutos<input class="form-control form-control-sm" id="timerMinutes${room.id}" type="number" min="1" max="240" value="${minutes}" ${timer.status === 'en_curso' ? 'disabled' : ''}></label>
+                    ${timer.status === 'en_curso'
+                        ? `<button class="btn btn-sm btn-outline-warning" onclick="controlRoomTimer(${room.id}, 'pause')"><i class="bi bi-pause"></i> Pausar</button>`
+                        : timer.status === 'pausado'
+                            ? `<button class="btn btn-sm btn-outline-success" onclick="controlRoomTimer(${room.id}, 'resume')"><i class="bi bi-play"></i> Reanudar</button>`
+                            : `<button class="btn btn-sm btn-outline-success" onclick="controlRoomTimer(${room.id}, 'start')"><i class="bi bi-play"></i> Iniciar</button>`}
+                    <button class="btn btn-sm btn-outline-secondary" onclick="controlRoomTimer(${room.id}, 'reset')"><i class="bi bi-arrow-counterclockwise"></i> Reiniciar</button>
+                    <button class="btn btn-sm btn-outline-danger" onclick="controlRoomTimer(${room.id}, 'finish')"><i class="bi bi-stop"></i> Finalizar</button>
+                </div>` : ''}
+            </div>`;
+        }
+
+        function tickRoomTimers() {
+            document.querySelectorAll('[data-room-timer]').forEach(display => {
+                let remaining = Math.max(0, Number(display.dataset.remaining || 0));
+                if (display.dataset.status === 'en_curso' && display.dataset.tickReady === '1') remaining = Math.max(0, remaining - 1);
+                display.dataset.remaining = remaining;
+                display.dataset.tickReady = '1';
+                display.textContent = `${String(Math.floor(remaining / 60)).padStart(2, '0')}:${String(remaining % 60).padStart(2, '0')}`;
+            });
         }
 
         function renderProjectRoomView() {
@@ -618,11 +723,11 @@ if (!is_authenticated() || !can_manage_projects()) {
                             <div class="small text-muted">${escapeHtml(projectActiveAuthors(project) || 'Sin integrantes registrados')}</div>
                         </td>
                         <td>${escapeHtml(projectSemester(project) || '-')}</td>
-                        <td>${currentRoom ? `<span class="badge bg-primary">${escapeHtml(currentRoom.nombre)}</span><div class="small text-muted">${escapeHtml(currentRoom.salon || '')}</div>` : '<span class="text-muted">Sin sala</span>'}</td>
+                        <td>${currentRoom ? `<span class="badge bg-primary">${escapeHtml(roomDisplayName(currentRoom))}</span><div class="small text-muted">${escapeHtml(currentRoom.salon || '')}</div>` : '<span class="text-muted">Sin sala</span>'}</td>
                         <td>
                             <select class="form-select form-select-sm" id="projectRoom${project.id}">
                                 <option value="">Sin sala</option>
-                                ${availableRooms.map(room => `<option value="${room.id}" ${currentRoom && Number(currentRoom.id) === Number(room.id) ? 'selected' : ''}>${escapeHtml(room.nombre)} - ${escapeHtml(room.salon || 'Sin salon')}</option>`).join('')}
+                                ${availableRooms.map(room => `<option value="${room.id}" ${currentRoom && Number(currentRoom.id) === Number(room.id) ? 'selected' : ''}>${escapeHtml(roomDisplayName(room))} - ${escapeHtml(room.salon || 'Sin salon')}</option>`).join('')}
                             </select>
                         </td>
                         <td><input class="form-control form-control-sm" id="projectOrder${project.id}" type="number" min="1" value="${escapeHtml(currentOrder)}" style="width:90px"></td>
@@ -666,7 +771,7 @@ if (!is_authenticated() || !can_manage_projects()) {
                             ${[...new Map([...item.evaluatorRooms, ...item.responsibleRooms].map(room => [room.id, room])).values()].map(room => `
                                 <div class="room-meta-item">
                                     <div class="d-flex justify-content-between gap-2 flex-wrap">
-                                        <strong>${escapeHtml(room.nombre)}</strong>
+                                        <strong>${escapeHtml(roomDisplayName(room))}</strong>
                                         <span class="badge bg-secondary">Semestre ${escapeHtml(room.semestre)}</span>
                                     </div>
                                     <div class="small text-muted">${escapeHtml(room.salon || '-')} · ${room.fecha_evaluacion ? new Date(room.fecha_evaluacion).toLocaleString('es-MX') : '-'}</div>
@@ -692,7 +797,6 @@ if (!is_authenticated() || !can_manage_projects()) {
         function busyRoomIds() {
             const conflicts = conflictingRoomsForCurrentForm();
             return {
-                teachers: new Set(conflicts.flatMap(room => (room.teachers || []).map(teacher => String(teacher.id)))),
                 projects: new Set(conflicts.flatMap(room => (room.projects || []).map(project => Number(project.id)))),
                 rooms: conflicts
             };
@@ -743,27 +847,30 @@ if (!is_authenticated() || !can_manage_projects()) {
         function renderRoomTeachers(selected = []) {
             const selectedIds = selected.map(String);
             const busy = busyRoomIds();
-            const availableTeachers = teachers.filter(teacher => !busy.teachers.has(String(teacher.id)) || selectedIds.includes(String(teacher.id)));
-            document.getElementById('roomTeachers').innerHTML = availableTeachers.map(teacher => `
+            document.getElementById('roomTeachers').innerHTML = teachers.map(teacher => `
                 <label class="room-option-card" for="roomTeacher${escapeHtml(teacher.id)}">
                     <input class="form-check-input room-teacher mt-1" type="checkbox" value="${escapeHtml(teacher.id)}" id="roomTeacher${escapeHtml(teacher.id)}" ${selectedIds.includes(String(teacher.id)) ? 'checked' : ''} onchange="refreshResponsibleTeacherOptions()">
                     <span class="flex-grow-1">
                         <span class="fw-semibold d-block">${escapeHtml(fullName(teacher))}</span>
                         <span class="text-muted small">${Number(teacher.perfil_id) === 1 ? 'Administrativo' : 'Docente'}</span>
                     </span>
-                </label>`).join('') || '<p class="text-muted mb-0">No hay evaluadores disponibles para esta fecha y hora.</p>';
+                </label>`).join('') || '<p class="text-muted mb-0">No hay evaluadores activos.</p>';
             refreshResponsibleTeacherOptions();
             renderAvailabilityHint(busy);
         }
 
         function refreshResponsibleTeacherOptions(selected = null) {
-            const current = selected ?? document.getElementById('responsibleTeacher')?.value ?? '';
+            const select = document.getElementById('responsibleTeacher');
+            const current = selected ?? select?.value ?? '';
             const checked = [...document.querySelectorAll('.room-teacher:checked')].map(input => String(input.value));
             const available = teachers.filter(teacher => checked.includes(String(teacher.id)));
-            document.getElementById('responsibleTeacher').innerHTML = '<option value="">Sin responsable</option>' + available.map(teacher => `
+            select.innerHTML = '<option value="">Sin responsable</option>' + available.map(teacher => `
                 <option value="${escapeHtml(teacher.id)}">${escapeHtml(fullName(teacher))}</option>
             `).join('');
-            if (current) document.getElementById('responsibleTeacher').value = current;
+            const validCurrent = available.some(teacher => String(teacher.id) === String(current));
+            select.value = validCurrent
+                ? String(current)
+                : (available.length === 1 ? String(available[0].id) : '');
         }
 
         function loadRoomProjects(selected = [], orderMap = {}) {
@@ -808,7 +915,7 @@ if (!is_authenticated() || !can_manage_projects()) {
             const hint = document.getElementById('roomAvailabilityHint');
             if (!hint) return;
             if (!document.getElementById('roomDate').value || !document.getElementById('roomEndDate').value) {
-                hint.textContent = 'Selecciona hora de inicio y fin para filtrar docentes y proyectos ocupados en ese rango.';
+                hint.textContent = 'Selecciona hora de inicio y fin. Los docentes pueden participar en salas simultáneas; los proyectos no pueden duplicarse.';
                 return;
             }
             const selectedStart = parseRoomDate(document.getElementById('roomDate').value);
@@ -818,11 +925,11 @@ if (!is_authenticated() || !can_manage_projects()) {
                 return;
             }
             if (!busy.rooms.length && !busy.projects.size) {
-                hint.textContent = 'No hay conflictos para el rango seleccionado.';
+                hint.textContent = 'Horario válido. Los docentes pueden participar también en otras salas simultáneas.';
                 return;
             }
-            const names = busy.rooms.map(room => room.nombre).join(', ');
-            hint.innerHTML = `<span class="text-warning"><i class="bi bi-exclamation-triangle"></i> Hay conflictos con: ${escapeHtml(names)}.</span>`;
+            const names = busy.rooms.map(roomDisplayName).join(', ');
+            hint.innerHTML = `<span class="text-warning"><i class="bi bi-exclamation-triangle"></i> Coincide con ${escapeHtml(names)}. Los docentes pueden compartirse; sólo se bloquean proyectos duplicados.</span>`;
         }
 
         function focusRoomForm() {
@@ -848,7 +955,10 @@ if (!is_authenticated() || !can_manage_projects()) {
             document.getElementById('roomClassroom').value = room.salon || '';
             document.getElementById('roomSemester').value = room.semestre;
             document.getElementById('roomDate').value = room.fecha_evaluacion ? room.fecha_evaluacion.slice(0, 16) : '';
-            document.getElementById('roomEndDate').value = room.fecha_fin_evaluacion ? room.fecha_fin_evaluacion.slice(0, 16) : '';
+            const legacyEnd = room.fecha_evaluacion
+                ? formatLocalDateTimeInput(new Date(new Date(room.fecha_evaluacion).getTime() + 60 * 60 * 1000))
+                : '';
+            document.getElementById('roomEndDate').value = room.fecha_fin_evaluacion ? room.fecha_fin_evaluacion.slice(0, 16) : legacyEnd;
             document.getElementById('teacherMinutes').value = room.teacher_evaluation_minutes || 15;
             document.getElementById('presentationMinutes').value = room.project_presentation_minutes || 20;
             document.getElementById('maxAttempts').value = room.max_attempts || 1;
@@ -866,6 +976,7 @@ if (!is_authenticated() || !can_manage_projects()) {
             document.getElementById('teacherMinutes').value = 15;
             document.getElementById('presentationMinutes').value = 20;
             document.getElementById('maxAttempts').value = 1;
+            document.getElementById('roomDate').min = nextMinuteInput();
             renderRoomTeachers();
             loadRoomProjects();
         }
@@ -925,12 +1036,18 @@ if (!is_authenticated() || !can_manage_projects()) {
                 showAlert('#alertContainer', 'danger', 'Indica el nombre de la sala y la fecha de evaluación.');
                 return;
             }
-            if (new Date(payload.fecha_evaluacion) <= new Date()) {
+            if (!id && new Date(payload.fecha_evaluacion) < new Date()) {
                 showAlert('#alertContainer', 'danger', 'La fecha de la sala debe ser posterior al momento actual.');
                 return;
             }
-            if (!teacherIds.length || !projectIds.length) {
-                showAlert('#alertContainer', 'danger', 'Selecciona al menos un docente y un proyecto para la sala.');
+            if (!teacherIds.length || (!id && !projectIds.length)) {
+                showAlert('#alertContainer', 'danger', id
+                    ? 'Selecciona al menos un docente para la sala.'
+                    : 'Selecciona al menos un docente y un proyecto para la sala.');
+                return;
+            }
+            if (!payload.responsible_teacher_id) {
+                showAlert('#alertContainer', 'danger', 'Selecciona como encargado a uno de los docentes activos de la sala.');
                 return;
             }
             try {
@@ -1013,7 +1130,11 @@ if (!is_authenticated() || !can_manage_projects()) {
         async function advanceRoom(id) {
             if (!await confirmAction({ title: 'Avanzar turno', text: 'Se finalizara el proyecto actual y se activara el siguiente.', confirmButtonText: 'Si, avanzar' })) return;
             try {
-                const response = await api.post(`/evaluations/rooms/${id}/advance`, { continue_next: true });
+                const room = rooms.find(item => Number(item.id) === Number(id));
+                const response = await api.post(`/evaluations/rooms/${id}/advance`, {
+                    continue_next: true,
+                    expected_sequence_version: room?.sequence_version ?? null
+                });
                 replaceRoomLocal(response.room);
                 renderCurrentView();
                 swalToast('success', response.message || 'Turno actualizado');
@@ -1021,6 +1142,82 @@ if (!is_authenticated() || !can_manage_projects()) {
                 showAlert('#alertContainer', 'danger', error.message || 'No se pudo avanzar el turno');
             }
         }
+
+        async function controlRoomTimer(id, action) {
+            const room = rooms.find(item => Number(item.id) === Number(id));
+            if (!room) return;
+            const minutes = Number(document.getElementById(`timerMinutes${id}`)?.value || room.project_presentation_minutes || 20);
+            try {
+                const response = await api.post(`/evaluations/rooms/${id}/timer`, {
+                    action,
+                    expected_sequence_version: room.sequence_version,
+                    ...(['start', 'reset'].includes(action) ? { duration_seconds: Math.max(1, minutes) * 60 } : {})
+                });
+                replaceRoomLocal(response.room);
+                renderCurrentView();
+            } catch (error) {
+                showAlert('#alertContainer', 'danger', error.message || 'No se pudo actualizar el temporizador');
+                await reloadRooms();
+            }
+        }
+
+        function openRoomSchedule(id) {
+            const room = rooms.find(item => Number(item.id) === Number(id));
+            if (!room) return;
+            document.getElementById('scheduleRoomId').value = room.id;
+            document.getElementById('scheduleStart').value = room.fecha_evaluacion?.slice(0, 16) || '';
+            document.getElementById('scheduleStart').disabled = room.evaluation_window?.status !== 'scheduled';
+            document.getElementById('scheduleEnd').value = room.fecha_fin_evaluacion?.slice(0, 16) || '';
+            document.getElementById('scheduleAllowLate').checked = Boolean(room.allow_late_evaluations);
+            document.getElementById('scheduleLateUntil').value = room.late_evaluation_until?.slice(0, 16) || '';
+            document.getElementById('scheduleLateReason').value = room.late_evaluation_reason || '';
+            toggleLateScheduleFields();
+            roomScheduleModal.show();
+        }
+
+        function toggleLateScheduleFields() {
+            const enabled = document.getElementById('scheduleAllowLate').checked;
+            document.getElementById('scheduleLateUntilBox').classList.toggle('d-none', !enabled);
+            document.getElementById('scheduleLateReasonBox').classList.toggle('d-none', !enabled);
+            document.getElementById('scheduleLateUntil').required = enabled;
+            document.getElementById('scheduleLateReason').required = enabled;
+        }
+
+        document.getElementById('roomScheduleForm').addEventListener('submit', async event => {
+            event.preventDefault();
+            const id = Number(document.getElementById('scheduleRoomId').value);
+            const room = rooms.find(item => Number(item.id) === id);
+            if (!room) return;
+            const start = document.getElementById('scheduleStart').value;
+            const end = document.getElementById('scheduleEnd').value;
+            const allowsLate = document.getElementById('scheduleAllowLate').checked;
+            const lateUntil = document.getElementById('scheduleLateUntil').value;
+            if (new Date(end) <= new Date(start)) {
+                showAlert('#alertContainer', 'warning', 'La hora de fin debe ser posterior al inicio.');
+                return;
+            }
+            if (allowsLate && new Date(lateUntil) <= new Date(end)) {
+                showAlert('#alertContainer', 'warning', 'La autorización fuera de horario debe terminar después del horario ordinario.');
+                return;
+            }
+            try {
+                const response = await api.put(`/evaluations/rooms/${id}/schedule`, {
+                    fecha_evaluacion: start,
+                    fecha_fin_evaluacion: end,
+                    allow_late_evaluations: allowsLate,
+                    late_evaluation_until: allowsLate ? lateUntil : null,
+                    late_evaluation_reason: allowsLate ? document.getElementById('scheduleLateReason').value.trim() : null,
+                    expected_sequence_version: room.sequence_version
+                });
+                replaceRoomLocal(response.room);
+                renderCurrentView();
+                roomScheduleModal.hide();
+                swalToast('success', response.message || 'Horario actualizado');
+            } catch (error) {
+                showAlert('#alertContainer', 'danger', error.message || 'No se pudo actualizar el horario');
+                await reloadRooms();
+            }
+        });
 
         function replaceRoomLocal(updatedRoom) {
             if (!updatedRoom) return;
@@ -1074,6 +1271,8 @@ if (!is_authenticated() || !can_manage_projects()) {
             } catch (error) {
                 showAlert('#alertContainer', 'danger', error.message || 'No se pudo cargar la gestión de salas.');
             }
+            window.setInterval(tickRoomTimers, 1000);
+            window.setInterval(() => reloadRooms().catch(() => {}), 5000);
         });
     </script>
 </body>

@@ -7,7 +7,7 @@ Sistema de Gestión de Proyectos Integradores - Frontend HTML/CSS/JavaScript
 ### Requisitos
 - PHP 7.4 o superior
 - Navegador web moderno
-- Acceso a la API REST (http://127.0.0.1:8000/api)
+- Acceso a la API REST (`https://apiswgpi-production-0e59.up.railway.app/api`)
 
 ### Pasos de Instalación
 
@@ -18,7 +18,7 @@ Sistema de Gestión de Proyectos Integradores - Frontend HTML/CSS/JavaScript
 
 2. **Configurar la URL de la API**
    - Editar el archivo base en los scripts
-   - Por defecto: `http://127.0.0.1:8000/api`
+   - Por defecto: `https://apiswgpi-production-0e59.up.railway.app/api`
 
 3. **Ejecutar con servidor built-in de PHP**
    ```bash
@@ -144,7 +144,7 @@ El sistema utiliza **JWT (JSON Web Tokens)** almacenado en localStorage
 
 ## 🔌 API REST
 
-Todas las peticiones a `http://127.0.0.1:8000/api`
+Todas las peticiones utilizan `https://apiswgpi-production-0e59.up.railway.app/api`
 
 **Endpoints principales:**
 - `POST /auth/login` - Iniciar sesión
@@ -177,7 +177,7 @@ Todas las peticiones a `http://127.0.0.1:8000/api`
 ## 🚨 Troubleshooting
 
 ### "Error al conectar con la API"
-- Verificar que el backend Laravel esté corriendo en http://127.0.0.1:8000
+- Verificar que la API en línea responda en `https://apiswgpi-production-0e59.up.railway.app/api/settings/public`
 - Revisar la configuración de CORS en el backend
 
 ### "Sesión no se mantiene"

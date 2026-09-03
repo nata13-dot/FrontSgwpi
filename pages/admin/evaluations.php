@@ -219,8 +219,8 @@ $is_archived_view = basename($_SERVER['PHP_SELF']) === 'evaluations-archived.php
                 <div class="modal-body">
                     <div class="mb-3">
                         <label class="form-label" for="evaluation_room_id">Sala configurada</label>
-                        <select class="form-select" id="evaluation_room_id" onchange="applyRoomToEvaluationForm()">
-                            <option value="">Sin sala configurada</option>
+                        <select class="form-select" id="evaluation_room_id" onchange="applyRoomToEvaluationForm()" required>
+                            <option value="">Selecciona una sala</option>
                         </select>
                     </div>
                     <div class="mb-3">
@@ -464,6 +464,20 @@ $is_archived_view = basename($_SERVER['PHP_SELF']) === 'evaluations-archived.php
 
         function fullName(user) {
             return [user?.nombres, user?.apa, user?.ama].filter(Boolean).join(' ') || user?.id || '';
+        }
+
+        function roomDisplayIdentifier(room) {
+            if (room?.display_identifier) return room.display_identifier;
+            const labels = { 1: '1ro', 2: '2do', 3: '3ro', 4: '4to', 5: '5to', 6: '6to', 7: '7mo', 8: '8vo', 9: '9no', 10: '10mo' };
+            const semester = Number(room?.semestre || 0);
+            const date = new Date(room?.fecha_evaluacion || room?.inicia_en || Date.now());
+            const half = date.getMonth() < 6 ? 1 : 2;
+            const year = String(date.getFullYear()).slice(-2);
+            return `${labels[semester] || `${semester}to`}-${half}-${year}`;
+        }
+
+        function roomDisplayName(room) {
+            return room?.display_name || `${room?.nombre || 'Sin sala'} · ${roomDisplayIdentifier(room)}`;
         }
 
         function projectActiveAuthors(project) {
@@ -733,7 +747,7 @@ $is_archived_view = basename($_SERVER['PHP_SELF']) === 'evaluations-archived.php
         }
 
         function renderRoomOptions() {
-            document.getElementById('evaluation_room_id').innerHTML = '<option value="">Sin sala configurada</option>' + rooms.map(room => `<option value="${room.id}">${escapeHtml(room.nombre)} · ${escapeHtml(room.salon || 'Sin salon')} · ${room.semestre}</option>`).join('');
+            document.getElementById('evaluation_room_id').innerHTML = '<option value="">Selecciona una sala</option>' + rooms.filter(room => !room.sequence_locked).map(room => `<option value="${room.id}">${escapeHtml(roomDisplayName(room))} · ${escapeHtml(room.salon || 'Sin salon')}</option>`).join('');
         }
 
         function normalizeRoomName(value) {
@@ -1107,7 +1121,7 @@ $is_archived_view = basename($_SERVER['PHP_SELF']) === 'evaluations-archived.php
                                         <div class="d-flex align-items-start gap-2">
                                             ${roomSelection}
                                             <div>
-                                                <strong>${escapeHtml(room?.nombre || 'Sin sala')}</strong>
+                                                <strong>${escapeHtml(roomDisplayName(room))}</strong>
                                                 <span class="text-muted small d-block">${escapeHtml(room?.salon || '-')} · Responsable: ${escapeHtml(fullName(room?.responsible_teacher) || '-')}</span>
                                             </div>
                                         </div>
@@ -1153,7 +1167,7 @@ $is_archived_view = basename($_SERVER['PHP_SELF']) === 'evaluations-archived.php
                         <td class="evaluation-cell-data">${projectKeyData(project)}</td>
                         <td class="evaluation-cell-room">
                             <span class="badge ${statusClass}">Orden #${evaluation.presentation_order || '-'}</span>
-                            <div class="small mt-1">${escapeHtml(evaluation.sala || evaluation.room?.nombre || '-')}</div>
+                            <div class="small mt-1">${escapeHtml(evaluation.room ? roomDisplayName(evaluation.room) : (evaluation.sala || '-'))}</div>
                             <div class="text-muted small">${evaluation.fecha_exposicion ? new Date(evaluation.fecha_exposicion).toLocaleString('es-MX') : '-'}</div>
                         </td>
                         <td class="evaluation-cell-status">
@@ -1277,6 +1291,7 @@ $is_archived_view = basename($_SERVER['PHP_SELF']) === 'evaluations-archived.php
 
         function openEvaluationModal() {
             document.getElementById('evaluationForm').reset();
+            document.getElementById('project_id').innerHTML = '<option value="">Selecciona primero una sala</option>';
             evaluationModal.show();
         }
 
@@ -1293,7 +1308,7 @@ $is_archived_view = basename($_SERVER['PHP_SELF']) === 'evaluations-archived.php
             event.preventDefault();
             const data = {
                 project_id: document.getElementById('project_id').value,
-                evaluation_room_id: document.getElementById('evaluation_room_id').value || null,
+                evaluation_room_id: document.getElementById('evaluation_room_id').value,
                 semestre: document.getElementById('semestre').value,
                 sala: document.getElementById('sala').value.trim() || null,
                 fecha_exposicion: document.getElementById('fecha_exposicion').value || null,
@@ -1515,7 +1530,7 @@ $is_archived_view = basename($_SERVER['PHP_SELF']) === 'evaluations-archived.php
                 hint.textContent = 'No hay conflictos para el rango seleccionado.';
                 return;
             }
-            const names = busy.rooms.map(room => room.nombre).join(', ');
+            const names = busy.rooms.map(roomDisplayName).join(', ');
             const projectCount = busy.projects.size;
             const teacherText = busy.rooms.length ? ` Se ocultaron ${busy.teachers.size} docente(s) ocupados en: ${escapeHtml(names)}.` : '';
             const projectText = projectCount ? ` ${projectCount} proyecto(s) ya asignados a otra sala no están disponibles.` : '';
@@ -1541,7 +1556,7 @@ $is_archived_view = basename($_SERVER['PHP_SELF']) === 'evaluations-archived.php
                     <div class="d-flex justify-content-between gap-3 flex-wrap">
                         <div class="flex-grow-1">
                             <div class="d-flex align-items-center flex-wrap gap-2">
-                                <span class="room-card-title">${escapeHtml(room.nombre)}</span>
+                                <span class="room-card-title">${escapeHtml(roomDisplayName(room))}</span>
                                 <span class="badge bg-secondary">Semestre ${room.semestre}</span>
                                 ${room.sequence_locked ? '<span class="badge bg-primary">Orden bloqueado</span>' : ''}
                                 ${room.completed_at ? '<span class="badge bg-success">Sala finalizada</span>' : ''}
