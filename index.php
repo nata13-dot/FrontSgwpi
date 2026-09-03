@@ -527,15 +527,15 @@ $serverDashboardUrl = dashboard_url();
                     <div id="loginMessageContainer" class="mb-3"></div>
 
                     <form id="loginForm" class="needs-validation" novalidate>
-                        <div class="mb-3 form-floating">
-                            <input type="text" class="form-control" id="loginUserId" name="id" placeholder="No. de Control, No. de empleado" required autocomplete="username">
-                            <label for="loginUserId">Número de control / empleado</label>
+                        <div class="mb-3">
+                            <label class="form-label" for="loginUserId">Número de control o empleado</label>
+                            <input type="text" class="form-control" id="loginUserId" name="username" placeholder="Ejemplo: 20260001" required autocomplete="username" autocapitalize="none" spellcheck="false">
                             <div class="invalid-feedback">Ingresa tu número de control o empleado.</div>
                         </div>
 
-                        <div class="mb-3 form-floating">
-                            <input type="password" class="form-control" id="loginPassword" name="password" placeholder="Contraseña" required autocomplete="current-password">
-                            <label for="loginPassword">Contraseña</label>
+                        <div class="mb-3">
+                            <label class="form-label" for="loginPassword">Contraseña</label>
+                            <input type="password" class="form-control" id="loginPassword" name="password" placeholder="Escribe tu contraseña" required autocomplete="current-password">
                             <div class="invalid-feedback">Ingresa tu contraseña.</div>
                         </div>
 
@@ -573,14 +573,14 @@ $serverDashboardUrl = dashboard_url();
                     <p class="text-muted small">Ingresa tu No. de Control o No. de empleado y el correo registrado en tu perfil.</p>
                     <div id="passwordRecoveryMessage" class="mb-3"></div>
                     <form id="passwordRecoveryForm" class="needs-validation" novalidate>
-                        <div class="mb-3 form-floating">
-                            <input type="text" class="form-control" id="recoveryUserId" placeholder="No. de Control, No. de empleado" required autocomplete="username">
-                            <label for="recoveryUserId">No. de Control, No. de empleado</label>
+                        <div class="mb-3">
+                            <label class="form-label" for="recoveryUserId">Número de control o empleado</label>
+                            <input type="text" class="form-control" id="recoveryUserId" name="username" placeholder="Ejemplo: 20260001" required autocomplete="username" autocapitalize="none" spellcheck="false">
                             <div class="invalid-feedback">Ingresa tu No. de Control o No. de empleado.</div>
                         </div>
-                        <div class="mb-3 form-floating">
-                            <input type="email" class="form-control" id="recoveryEmail" placeholder="correo@dominio.com" required autocomplete="email">
-                            <label for="recoveryEmail">Correo registrado</label>
+                        <div class="mb-3">
+                            <label class="form-label" for="recoveryEmail">Correo registrado</label>
+                            <input type="email" class="form-control" id="recoveryEmail" name="email" placeholder="correo@dominio.com" required autocomplete="email" autocapitalize="none" spellcheck="false">
                             <div class="invalid-feedback">Ingresa un correo válido.</div>
                         </div>
                         <div class="d-grid">
@@ -605,9 +605,9 @@ $serverDashboardUrl = dashboard_url();
                     <p class="text-muted small">Escribe el token de 6 digitos que enviamos al correo registrado.</p>
                     <div id="passwordTokenMessage" class="mb-3"></div>
                     <form id="passwordTokenForm" class="needs-validation" novalidate>
-                        <div class="mb-3 form-floating">
-                            <input type="text" inputmode="numeric" maxlength="6" pattern="[0-9]{6}" class="form-control text-center fs-4" id="recoveryToken" placeholder="000000" required autocomplete="one-time-code">
-                            <label for="recoveryToken">Token</label>
+                        <div class="mb-3">
+                            <label class="form-label" for="recoveryToken">Token de verificación</label>
+                            <input type="text" inputmode="numeric" maxlength="6" pattern="[0-9]{6}" class="form-control text-center fs-4" id="recoveryToken" name="one-time-code" placeholder="000000" required autocomplete="one-time-code">
                             <div class="invalid-feedback">Ingresa el token de 6 digitos.</div>
                         </div>
                         <div class="d-grid">
@@ -632,14 +632,14 @@ $serverDashboardUrl = dashboard_url();
                     <p class="text-muted small">Define tu nueva contraseña antes de entrar al sistema.</p>
                     <div id="passwordResetMessage" class="mb-3"></div>
                     <form id="passwordResetForm" class="needs-validation" novalidate>
-                        <div class="mb-3 form-floating">
-                            <input type="password" class="form-control" id="newRecoveryPassword" placeholder="Nueva contraseña" minlength="6" required autocomplete="new-password">
-                            <label for="newRecoveryPassword">Nueva contraseña</label>
+                        <div class="mb-3">
+                            <label class="form-label" for="newRecoveryPassword">Nueva contraseña</label>
+                            <input type="password" class="form-control" id="newRecoveryPassword" name="new-password" placeholder="Mínimo 6 caracteres" minlength="6" required autocomplete="new-password">
                             <div class="invalid-feedback">La contraseña debe tener al menos 6 caracteres.</div>
                         </div>
-                        <div class="mb-3 form-floating">
-                            <input type="password" class="form-control" id="newRecoveryPasswordConfirmation" placeholder="Confirmar contraseña" minlength="6" required autocomplete="new-password">
-                            <label for="newRecoveryPasswordConfirmation">Confirmar contraseña</label>
+                        <div class="mb-3">
+                            <label class="form-label" for="newRecoveryPasswordConfirmation">Confirmar contraseña</label>
+                            <input type="password" class="form-control" id="newRecoveryPasswordConfirmation" name="new-password-confirmation" placeholder="Repite la contraseña" minlength="6" required autocomplete="new-password">
                             <div class="invalid-feedback">Confirma tu nueva contraseña.</div>
                         </div>
                         <div class="d-grid">
