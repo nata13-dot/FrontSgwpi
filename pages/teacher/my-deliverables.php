@@ -69,6 +69,7 @@ if (!is_authenticated() || !is_teacher()) {
                 <div class="modal-body">
                     <div id="gradeAlert"></div>
                     <input type="hidden" id="gradeDeliverableId">
+                    <input type="hidden" id="gradeProjectId">
                     <p class="mb-2" id="gradeDeliverableName"></p>
                     <label class="form-label" for="gradeInput">Calificacion (0-100)</label>
                     <input type="number" class="form-control" id="gradeInput" min="0" max="100" step="0.01" required>
@@ -222,10 +223,10 @@ if (!is_authenticated() || !is_teacher()) {
                 ? '<span class="text-muted">Sin calificar</span>'
                 : `<strong>${Number(grade).toFixed(2)}%</strong><div class="small text-muted">Efectiva: ${Number(effective || 0).toFixed(2)}%</div>`;
             const fileButton = deliverable?.archivo_path
-                ? `<button class="btn btn-sm btn-outline-info" onclick="descargarEntregable(${deliverable.id}, '${escapeHtml(deliverable.nombre)}')" title="Descargar"><i class="bi bi-download"></i></button>`
+                ? `<button class="btn btn-sm btn-outline-info" onclick="descargarEntregable(${deliverable.id}, '${escapeHtml(deliverable.nombre)}', ${deliverable.project_id})" title="Descargar"><i class="bi bi-download"></i></button>`
                 : '<span class="text-muted small">Sin archivo</span>';
             const gradeButton = deliverable
-                ? `<button class="btn btn-sm btn-outline-primary" onclick="openGradeModal(${deliverable.id}, '${escapeHtml(deliverable.nombre)}', ${grade === null || grade === undefined ? 'null' : Number(grade)})" title="Calificar"><i class="bi bi-star"></i></button>`
+                ? `<button class="btn btn-sm btn-outline-primary" onclick="openGradeModal(${deliverable.id}, ${deliverable.project_id}, '${escapeHtml(deliverable.nombre)}', ${grade === null || grade === undefined ? 'null' : Number(grade)})" title="Calificar"><i class="bi bi-star"></i></button>`
                 : '<span class="text-muted small">No entregado</span>';
 
             return `
@@ -234,7 +235,7 @@ if (!is_authenticated() || !is_teacher()) {
                         <strong>${escapeHtml(item.asignatura?.nombre || '-')}</strong>
                         ${item.asignatura?.clave ? `<div class="small text-muted">${escapeHtml(item.asignatura.clave)}</div>` : ''}
                     </td>
-                    <td>${escapeHtml(item.competencia?.nombre || '-')}</td>
+                    <td>${escapeHtml(deliverable?.nombre || item.competencia?.nombre || '-')}</td>
                     <td>${statusBadge}</td>
                     <td>${gradeText}</td>
                     <td>${fileButton}</td>
@@ -242,9 +243,10 @@ if (!is_authenticated() || !is_teacher()) {
                 </tr>`;
         }
 
-        function openGradeModal(deliverableId, name, currentGrade = null) {
+        function openGradeModal(deliverableId, projectId, name, currentGrade = null) {
             if (!gradeModal) gradeModal = new bootstrap.Modal(document.getElementById('gradeModal'));
             document.getElementById('gradeDeliverableId').value = deliverableId;
+            document.getElementById('gradeProjectId').value = projectId;
             document.getElementById('gradeDeliverableName').textContent = name;
             document.getElementById('gradeInput').value = currentGrade === null ? '' : currentGrade;
             document.getElementById('gradeAlert').innerHTML = '';
@@ -254,6 +256,7 @@ if (!is_authenticated() || !is_teacher()) {
         async function saveGrade(event) {
             event.preventDefault();
             const id = document.getElementById('gradeDeliverableId').value;
+            const projectId = document.getElementById('gradeProjectId').value;
             const grade = document.getElementById('gradeInput').value;
             if (!validarCalificacion(grade)) {
                 showAlert('#gradeAlert', 'danger', 'La calificacion debe estar entre 0 y 100.');
@@ -261,7 +264,7 @@ if (!is_authenticated() || !is_teacher()) {
             }
 
             try {
-                const response = await api.post(`/deliverables/${id}/calificar`, { calificacion: Number(grade) });
+                const response = await api.post(`/deliverables/${id}/calificar`, { project_id: Number(projectId), calificacion: Number(grade) });
                 replaceDeliverableInMatrix(response.deliverable);
                 gradeModal.hide();
                 renderMatrix(lastMatrix);

@@ -100,9 +100,9 @@ if (!is_authenticated()) {
                             <div class="form-text">Opcional. El alcance principal se toma desde la competencia y su materia.</div>
                         </div>
                         <div class="col-md-6 mb-3">
-                            <label for="competencia_id" class="form-label">Competencia</label>
+                            <label for="competencia_id" class="form-label">Asignatura</label>
                             <select class="form-select" id="competencia_id" required>
-                                <option value="">Selecciona una competencia</option>
+                                <option value="">Selecciona una asignatura</option>
                             </select>
                         </div>
                     </div>
@@ -210,6 +210,7 @@ if (!is_authenticated()) {
         let modalCalificar;
         let modalSubirArchivo;
         let currentDeliverableId = null;
+        let currentProjectId = null;
         const urlParams = new URLSearchParams(window.location.search);
         const competenciaFilter = urlParams.get('competencia_id');
 
@@ -236,10 +237,9 @@ if (!is_authenticated()) {
             projects.forEach(project => projectSelect.innerHTML += `<option value="${project.id}">${escapeHtml(project.title)}</option>`);
 
             const competenciaSelect = document.getElementById('competencia_id');
-            competenciaSelect.innerHTML = '<option value="">Selecciona una competencia</option>';
-            competencias.forEach(competencia => {
-                const subject = competencia.asignatura?.nombre ? ` - ${competencia.asignatura.nombre}` : '';
-                competenciaSelect.innerHTML += `<option value="${competencia.id}">${escapeHtml(competencia.nombre + subject)}</option>`;
+            competenciaSelect.innerHTML = '<option value="">Selecciona una asignatura</option>';
+            asignaturas.forEach(asignatura => {
+                competenciaSelect.innerHTML += `<option value="${asignatura.id}">${escapeHtml(asignatura.nombre)}</option>`;
             });
 
             if (competenciaFilter) {
@@ -298,7 +298,7 @@ if (!is_authenticated()) {
                         ? '<i class="bi bi-file-earmark text-primary"></i>'
                         : '<span class="text-muted">-</span>';
                     const downloadButton = deliverable.archivo_path
-                        ? `<button class="btn btn-outline-info" onclick="descargarEntregable(${deliverable.id}, '${escapeHtml(deliverable.nombre)}')" title="Descargar"><i class="bi bi-download"></i></button>`
+                        ? `<button class="btn btn-outline-info" onclick="descargarEntregable(${deliverable.id}, '${escapeHtml(deliverable.nombre)}', ${deliverable.project_id})" title="Descargar"><i class="bi bi-download"></i></button>`
                         : '';
 
                     tbody.innerHTML += `
@@ -312,9 +312,9 @@ if (!is_authenticated()) {
                             <td>
                                 <div class="btn-group btn-group-sm">
                                     <button class="btn btn-outline-primary" onclick="openDeliverableModal(${deliverable.id})" title="Editar"><i class="bi bi-pencil"></i></button>
-                                    <button class="btn btn-outline-warning" onclick="abrirCalificar(${deliverable.id})" title="Calificar"><i class="bi bi-star"></i></button>
+                                    <button class="btn btn-outline-warning" onclick="abrirCalificar(${deliverable.id}, ${deliverable.project_id})" title="Calificar"><i class="bi bi-star"></i></button>
                                     ${downloadButton}
-                                    <button class="btn btn-outline-success" onclick="abrirSubirArchivo(${deliverable.id})" title="Subir archivo"><i class="bi bi-cloud-upload"></i></button>
+                                    <button class="btn btn-outline-success" onclick="abrirSubirArchivo(${deliverable.id}, ${deliverable.project_id})" title="Subir archivo"><i class="bi bi-cloud-upload"></i></button>
                                     <button class="btn btn-outline-danger" onclick="deleteDeliverable(${deliverable.id})" title="Eliminar"><i class="bi bi-trash"></i></button>
                                 </div>
                             </td>
@@ -336,7 +336,7 @@ if (!is_authenticated()) {
             if (id) {
                 const deliverable = deliverables.find(item => item.id === id);
                 document.getElementById('project_id').value = deliverable?.project_id || '';
-                document.getElementById('competencia_id').value = deliverable?.competencia_id || '';
+                document.getElementById('competencia_id').value = deliverable?.asignatura_id || '';
                 document.getElementById('nombre').value = deliverable?.nombre || '';
                 document.getElementById('descripcion').value = deliverable?.descripcion || '';
                 document.getElementById('tipo_documento').value = deliverable?.tipo_documento || 'documento';
@@ -352,7 +352,7 @@ if (!is_authenticated()) {
             const id = document.getElementById('deliverableId').value;
             const data = {
                 project_id: document.getElementById('project_id').value || null,
-                competencia_id: document.getElementById('competencia_id').value || null,
+                asignatura_id: document.getElementById('competencia_id').value || null,
                 nombre: document.getElementById('nombre').value.trim(),
                 descripcion: document.getElementById('descripcion').value.trim() || null,
                 tipo_documento: document.getElementById('tipo_documento').value,
@@ -383,23 +383,25 @@ if (!is_authenticated()) {
             }
         }
 
-        function abrirCalificar(id) {
+        function abrirCalificar(id, projectId) {
             currentDeliverableId = id;
+            currentProjectId = projectId;
             document.getElementById('calificacionInput').value = '';
             modalCalificar.show();
         }
 
         async function guardarCalificacion() {
             const calificacion = document.getElementById('calificacionInput').value.trim();
-            const result = await calificarEntregable(currentDeliverableId, calificacion);
+            const result = await calificarEntregable(currentDeliverableId, currentProjectId, calificacion);
             if (result) {
                 modalCalificar.hide();
                 loadDeliverables();
             }
         }
 
-        function abrirSubirArchivo(id) {
+        function abrirSubirArchivo(id, projectId) {
             currentDeliverableId = id;
+            currentProjectId = projectId;
             document.getElementById('archivoInput').value = '';
             modalSubirArchivo.show();
         }
@@ -410,7 +412,7 @@ if (!is_authenticated()) {
                 showAlert('#alertContainer', 'danger', 'Selecciona un archivo');
                 return;
             }
-            const result = await subirArchivo(currentDeliverableId, file);
+            const result = await subirArchivo(currentDeliverableId, currentProjectId, file);
             if (result) {
                 modalSubirArchivo.hide();
                 loadDeliverables();

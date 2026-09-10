@@ -179,7 +179,7 @@ function formatearTamaño(bytes) {
 /**
  * Descargar archivo de entregable
  */
-async function descargarEntregable(deliverable_id, nombre = null) {
+async function descargarEntregable(deliverable_id, nombre = null, project_id = null) {
     try {
         const token = auth.getToken();
         if (!token) {
@@ -187,7 +187,8 @@ async function descargarEntregable(deliverable_id, nombre = null) {
             return;
         }
 
-        const response = await fetch(`${API_BASE_URL}/deliverables/${deliverable_id}/download`, {
+        const query = project_id ? `?project_id=${encodeURIComponent(project_id)}` : '';
+        const response = await fetch(`${API_BASE_URL}/deliverables/${deliverable_id}/download${query}`, {
             credentials: 'include',
             headers: { 'Authorization': `Bearer ${token}` }
         });
@@ -251,7 +252,7 @@ async function validarFechaEntregable(competencia_id, fecha_limite) {
 /**
  * Subir archivo a entregable
  */
-async function subirArchivo(deliverable_id, file) {
+async function subirArchivo(deliverable_id, project_id, file) {
     try {
         const token = auth.getToken();
         if (!token) {
@@ -275,6 +276,7 @@ async function subirArchivo(deliverable_id, file) {
 
         const formData = new FormData();
         formData.append('archivo', file);
+        formData.append('project_id', project_id);
 
         const data = await api.post(`/deliverables/${deliverable_id}/upload`, formData, { _timeout: 120000 });
         showAlert('#alertContainer', 'success', 'Archivo subido exitosamente.');
@@ -289,7 +291,7 @@ async function subirArchivo(deliverable_id, file) {
 /**
  * Calificar entregable
  */
-async function calificarEntregable(deliverable_id, calificacion) {
+async function calificarEntregable(deliverable_id, project_id, calificacion) {
     try {
         if (!validarCalificacion(calificacion)) {
             showAlert('#alertContainer', 'danger', 'Calificación debe ser un número entre 0 y 100.');
@@ -303,6 +305,7 @@ async function calificarEntregable(deliverable_id, calificacion) {
         }
 
         const data = await api.post(`/deliverables/${deliverable_id}/calificar`, {
+            project_id: Number(project_id),
             calificacion: parseFloat(calificacion)
         });
         showAlert('#alertContainer', 'success', 'Entregable calificado exitosamente.');

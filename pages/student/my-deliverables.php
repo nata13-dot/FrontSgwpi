@@ -142,7 +142,7 @@ if (!is_authenticated() || !is_student()) {
                         archivoHTML = '<i class="bi bi-file-earmark text-primary"></i> Presente';
                         btnDescargar = `
                             <button class="btn btn-sm btn-outline-info w-100 mt-2" 
-                                    onclick="descargarEntregable(${deliverable.id}, '${deliverable.nombre}')">
+                                    onclick="descargarEntregable(${deliverable.id}, '${deliverable.nombre}', ${deliverable.project_id})">
                                 <i class="bi bi-download"></i> Descargar Archivo
                             </button>
                         `;
@@ -196,7 +196,7 @@ if (!is_authenticated() || !is_student()) {
                                 <div class="card-footer border-0 bg-light">
                                     ${btnDescargar}
                                     <button class="btn btn-sm btn-primary w-100" 
-                                            onclick="abrirSubirArchivo(${deliverable.id}, '${deliverable.nombre}')">
+                                            onclick="abrirSubirArchivo(${deliverable.id}, ${deliverable.project_id}, '${deliverable.nombre}')">
                                         <i class="bi bi-cloud-upload"></i> Subir/Actualizar Archivo
                                     </button>
                                 </div>
@@ -211,8 +211,11 @@ if (!is_authenticated() || !is_student()) {
             }
         }
 
-        function abrirSubirArchivo(deliverableId, nombre) {
+        let currentProjectId = null;
+
+        function abrirSubirArchivo(deliverableId, projectId, nombre) {
             currentDeliverableId = deliverableId;
+            currentProjectId = projectId;
             document.getElementById('deliverableIdSubir').value = deliverableId;
             document.getElementById('modalDeliverableName').textContent = nombre;
             document.getElementById('archivoInput').value = '';
@@ -229,7 +232,7 @@ if (!is_authenticated() || !is_student()) {
                 return;
             }
 
-            const result = await subirArchivo(currentDeliverableId, file);
+            const result = await subirArchivo(currentDeliverableId, currentProjectId, file);
             if (result) {
                 bootstrap.Modal.getInstance(document.getElementById('modalSubirArchivo')).hide();
                 loadDeliverables();

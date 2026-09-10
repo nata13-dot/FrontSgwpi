@@ -85,19 +85,8 @@ if (!is_authenticated() || !is_teacher()) {
                 }
 
                 response.data.forEach(project => {
-                    // Archivo
-                    let archivoHTML = '<span class="text-muted small">-</span>';
-                    let btnDescargar = '';
-                    if (project.file_path) {
-                        archivoHTML = '<i class="bi bi-file-earmark text-primary"></i> Presente';
-                        btnDescargar = `
-                            <button class="btn btn-sm btn-outline-info w-100 mt-2" 
-                                    onclick="descargarEntregable(${project.id}, '${project.title}.pdf')">
-                                <i class="bi bi-download"></i> Descargar Proyecto
-                            </button>
-                        `;
-                    }
-
+                    const archivoHTML = '<span class="text-muted small">Los archivos se consultan desde entregables o repositorio.</span>';
+                    const btnDescargar = '';
                     const activeAuthors = projectActiveAuthors(project);
                     const card = `
                         <div class="col-lg-6 col-md-12">
