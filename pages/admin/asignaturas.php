@@ -212,7 +212,7 @@ if (!is_authenticated() || !can_manage_academics()) {
                         </div>
                         <div class="col-md-3">
                             <label for="groupPeriod" class="form-label">Periodo</label>
-                            <input type="text" class="form-control" id="groupPeriod" readonly>
+                            <select class="form-select" id="groupPeriod" required></select>
                         </div>
                         <div class="col-md-2 d-flex align-items-end">
                             <button class="btn btn-primary w-100" onclick="saveSubjectGroup()"><i class="bi bi-save"></i> Guardar</button>
@@ -594,12 +594,15 @@ if (!is_authenticated() || !can_manage_academics()) {
             try {
                 const [catalog, settings] = await Promise.all([
                     loadAllAsignaturas(),
-                    api.get('/settings/public', { _cache_ttl: 60000 })
+                    api.get('/settings/current', { _cache_ttl: 60000 })
                 ]);
                 groupAsignaturas = catalog;
                 activeAcademicPeriod = settings.academic_period_info;
+                const periodSelect = document.getElementById('groupPeriod');
+                periodSelect.replaceChildren(new Option('Selecciona un periodo', ''));
+                for (const period of settings.academic_period_options || []) periodSelect.add(new Option(period.label, period.code));
                 const semesterSelect = document.getElementById('groupSemestre');
-                semesterSelect.innerHTML = (activeAcademicPeriod?.semesters || []).map(semester =>
+                semesterSelect.innerHTML = (activeAcademicPeriod?.semesters || [5, 6, 7, 8, 9]).map(semester =>
                     `<option value="${semester}">${semester}</option>`
                 ).join('');
                 document.getElementById('groupPeriod').value = activeAcademicPeriod?.code || '';
@@ -650,7 +653,7 @@ if (!is_authenticated() || !can_manage_academics()) {
             document.getElementById('groupSemestre').value = group.semestre;
             document.getElementById('groupCode').value = group.grupo || '';
             document.getElementById('groupName').value = group.nombre || '';
-            document.getElementById('groupPeriod').value = activeAcademicPeriod?.code || group.periodo || '';
+            document.getElementById('groupPeriod').value = group.periodo || activeAcademicPeriod?.code || '';
             renderSubjectCheckboxes((group.asignaturas || []).map(item => item.id));
         }
 

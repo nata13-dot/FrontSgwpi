@@ -22,6 +22,7 @@ $section = isset($_GET['section']) ? $_GET['section'] : '';
             </div>
         </div>
     <?php endif; ?>
+    <?php if (is_authenticated()): ?><a href="/pages/academic-workflows.php" class="sidebar-item"><i class="bi bi-calendar3"></i><span>Seguimiento académico y residencias</span></a><?php endif; ?>
     <?php if (is_management_staff()): ?>
         <div class="sidebar-section-title" style="padding: 0 20px; margin-bottom: 20px;"><h6 class="text-muted text-uppercase" style="font-size: 0.85rem;">Administración</h6></div>
         <a href="/pages/admin/dashboard.php" class="sidebar-item <?= $current_page == 'dashboard.php' ? 'active' : '' ?>"><i class="bi bi-speedometer2"></i><span>Inicio</span></a>

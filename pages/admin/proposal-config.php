@@ -81,28 +81,7 @@ if (!is_authenticated() || !can_manage_projects()) { header('Location: /index.ph
                 </div>
             </div>
 
-            <div class="card border-0 shadow-sm mb-4">
-                <div class="card-header bg-light d-flex justify-content-between align-items-center">
-                    <h5 class="mb-0"><i class="bi bi-person-plus"></i> Alumnos extra para revisión</h5>
-                    <span class="badge bg-secondary" id="exceptionCounter">0 excepciones</span>
-                </div>
-                <div class="card-body">
-                    <div class="row g-3 align-items-end">
-                        <div class="col-lg-3"><label class="form-label">Materia</label><select class="form-select" id="exceptionSubject" disabled></select></div>
-                        <div class="col-lg-3"><label class="form-label">Carga de propuestas</label><select class="form-select" id="exceptionGroup"></select></div>
-                        <div class="col-lg-3"><label class="form-label">Buscar alumno</label><input class="form-control" id="studentSearch" placeholder="Control, nombre o apellido" oninput="searchStudentsForException()"></div>
-                        <div class="col-lg-3"><label class="form-label">Alumno</label><select class="form-select" id="exceptionStudent"></select></div>
-                        <div class="col-lg-9"><input class="form-control" id="exceptionNotes" placeholder="Motivo o nota opcional"></div>
-                        <div class="col-lg-3 d-grid"><button class="btn btn-primary" onclick="addException()"><i class="bi bi-plus-circle"></i> Agregar excepción</button></div>
-                    </div>
-                    <div class="table-responsive mt-3">
-                        <table class="table table-sm align-middle mb-0">
-                            <thead><tr><th>Materia</th><th>Carga asignada</th><th>Alumno</th><th>Grupo alumno</th><th>Nota</th><th class="text-end">Acciones</th></tr></thead>
-                            <tbody id="exceptionsTable"></tbody>
-                        </table>
-                    </div>
-                </div>
-            </div>
+            <div class="alert alert-info">Las inscripciones excepcionales requieren autorización por semestre y matrícula al curso. <a href="../academic-workflows.php">Gestionar en Operación académica</a>.</div>
 
             <div class="card border-0 shadow-sm">
                 <div class="card-header bg-light d-flex justify-content-between align-items-center">
@@ -130,7 +109,6 @@ async function loadConfig() {
     renderSubjectOptions();
     renderResponsibleTable();
     renderWindows();
-    renderExceptions();
 }
 
 function renderSubjectOptions() {
@@ -139,10 +117,7 @@ function renderSubjectOptions() {
     select.innerHTML = subject
         ? `<option value="${subject.id}">${esc(subject.clave ? subject.clave + ' - ' : '')}${esc(subject.nombre)}</option>`
         : '<option value="">Materia predeterminada no encontrada</option>';
-    document.getElementById('exceptionSubject').innerHTML = select.innerHTML;
-    document.getElementById('exceptionGroup').innerHTML = '<option value="">Selecciona una carga</option>' + config.subject_groups.map(group => `
-        <option value="${group.id}">${esc(group.nombre)} - ${esc(group.grupo || '')}</option>
-    `).join('');
+
 }
 
 function teacherOptions() {
@@ -221,7 +196,7 @@ function renderResponsibleTable() {
                 </td>
                 <td class="text-end">
                     <button class="btn btn-sm btn-primary" onclick="assignTeacher(${group.id})" title="Asignar docente"><i class="bi bi-person-plus"></i></button>
-                    ${assignments.map(item => `<button class="btn btn-sm btn-outline-danger" onclick="deleteAssignment(${item.id})" title="Quitar ${esc(item.teacher?.nombres || 'docente')}"><i class="bi bi-trash"></i></button>`).join('')}
+                    ${assignments.map(item => `<button class="btn btn-sm btn-outline-danger" onclick="deleteAssignment('${item.id}')" title="Quitar ${esc(item.teacher?.nombres || 'docente')}"><i class="bi bi-trash"></i></button>`).join('')}
                 </td>
             </tr>
         `;
@@ -264,61 +239,6 @@ function renderWindows() {
     }).join('');
 }
 
-let exceptionSearchTimer = null;
-function searchStudentsForException() {
-    clearTimeout(exceptionSearchTimer);
-    exceptionSearchTimer = setTimeout(async () => {
-        const term = document.getElementById('studentSearch').value.trim();
-        if (term.length < 2) return;
-        const students = await api.get('/proposal/students/search', { q: term });
-        document.getElementById('exceptionStudent').innerHTML = '<option value="">Selecciona alumno</option>' + students.map(student => `
-            <option value="${esc(student.id)}">${esc(student.id)} - ${esc(student.nombres)} ${esc(student.apa || '')} (${esc(student.semestre || '-')}${esc(student.grupo || '')})</option>
-        `).join('');
-    }, 350);
-}
-
-function renderExceptions() {
-    const rows = config.exceptions || [];
-    document.getElementById('exceptionCounter').textContent = `${rows.length} excepción${rows.length === 1 ? '' : 'es'}`;
-    document.getElementById('exceptionsTable').innerHTML = rows.map(item => `
-        <tr>
-            <td>${esc(item.asignatura?.nombre || '-')}</td>
-            <td>${esc(item.subject_group?.nombre || '-')}</td>
-            <td>${esc(item.student?.id || '')} - ${esc(item.student?.nombres || '')} ${esc(item.student?.apa || '')}</td>
-            <td>${esc(item.student?.semestre || '-')} ${esc(item.student?.grupo || '')}</td>
-            <td>${esc(item.notes || '-')}</td>
-            <td class="text-end"><button class="btn btn-sm btn-outline-danger" onclick="deleteException(${item.id})"><i class="bi bi-trash"></i></button></td>
-        </tr>
-    `).join('') || '<tr><td colspan="6" class="text-center text-muted py-3">Sin alumnos extra configurados.</td></tr>';
-}
-
-async function addException() {
-    const payload = {
-        subject_group_id: document.getElementById('exceptionGroup').value,
-        student_id: document.getElementById('exceptionStudent').value,
-        notes: document.getElementById('exceptionNotes').value.trim() || null
-    };
-    if (!payload.subject_group_id || !payload.student_id) {
-        Swal.fire('Faltan datos', 'Selecciona la carga de propuestas y el alumno.', 'warning');
-        return;
-    }
-    const response = await api.post('/proposal/exceptions', payload);
-    const existingIndex = config.exceptions.findIndex(item => Number(item.id) === Number(response.exception.id));
-    if (existingIndex >= 0) config.exceptions[existingIndex] = response.exception;
-    else config.exceptions.unshift(response.exception);
-    document.getElementById('exceptionNotes').value = '';
-    swalToast('Excepcion agregada', 'success');
-    renderExceptions();
-}
-
-async function deleteException(id) {
-    if (!await confirmAction({ title: 'Quitar excepción' })) return;
-    await api.delete(`/proposal/exceptions/${id}`);
-    config.exceptions = config.exceptions.filter(item => Number(item.id) !== Number(id));
-    swalToast('Excepcion removida', 'success');
-    renderExceptions();
-}
-
 async function assignTeacher(groupId) {
     const subject = selectedSubject();
     const teacherId = document.getElementById(`teacher-${groupId}`).value;
@@ -342,7 +262,7 @@ async function assignTeacher(groupId) {
         const group = config.subject_groups.find(item => Number(item.id) === Number(groupId));
         if (group) {
             group.teacher_assignments = group.teacher_assignments || [];
-            const existingIndex = group.teacher_assignments.findIndex(item => Number(item.id) === Number(response.assignment.id));
+            const existingIndex = group.teacher_assignments.findIndex(item => String(item.id) === String(response.assignment.id));
             if (existingIndex >= 0) group.teacher_assignments[existingIndex] = response.assignment;
             else group.teacher_assignments.push(response.assignment);
         }
@@ -357,7 +277,7 @@ async function deleteAssignment(id) {
     if (!await confirmAction({ title: 'Quitar docente responsable' })) return;
     await api.delete(`/proposal/assignments/${id}`);
     config.subject_groups.forEach(group => {
-        group.teacher_assignments = (group.teacher_assignments || []).filter(item => Number(item.id) !== Number(id));
+        group.teacher_assignments = (group.teacher_assignments || []).filter(item => String(item.id) !== String(id));
     });
     swalToast('Responsable removido', 'success');
     renderResponsibleTable();
@@ -389,7 +309,7 @@ async function deleteWindow(id) {
     if (!await confirmAction({ title: 'Eliminar ventana' })) return;
     await api.delete(`/proposal/windows/${id}`);
     config.subject_groups.forEach(group => {
-        group.registration_windows = (group.registration_windows || []).filter(item => Number(item.id) !== Number(id));
+        group.registration_windows = (group.registration_windows || []).filter(item => String(item.id) !== String(id));
     });
     swalToast('Ventana eliminada', 'success');
     renderWindows();

@@ -69,20 +69,14 @@ async function loadProfile() {
     document.querySelectorAll('.student-only').forEach(el => el.style.display = isStudent ? '' : 'none');
     ['semestre', 'grupo'].forEach(id => {
         const field = document.getElementById(id);
-        if (field) field.disabled = !isStudent;
+        if (field) field.disabled = true;
     });
 }
 document.getElementById('profileForm').addEventListener('submit', async e => {
     e.preventDefault();
     const data = new FormData(e.target);
-    if (Number(currentUser?.perfil_id) !== 3) {
-        data.delete('semestre');
-        data.delete('grupo');
-    } else {
-        ['semestre', 'grupo'].forEach(field => {
-            if (!String(data.get(field) || '').trim()) data.delete(field);
-        });
-    }
+    data.delete('semestre');
+    data.delete('grupo');
     ['current_password', 'password', 'password_confirmation'].forEach(field => {
         if (!String(data.get(field) || '').trim()) data.delete(field);
     });

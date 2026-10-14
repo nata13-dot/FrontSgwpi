@@ -320,7 +320,7 @@ $is_archived_view = basename($_SERVER['PHP_SELF']) === 'evaluations-archived.php
                         <textarea class="form-control" id="generalEvaluationComment" rows="3" placeholder="Comentario final visible en el desglose"></textarea>
                     </div>
                     <div class="border rounded p-3 mt-3 d-none" id="titulationAptBox">
-                        <label class="form-label fw-semibold">¿El proyecto es apto para titulación?</label>
+                        <label class="form-label fw-semibold">¿Recomienda continuar el proyecto? (No acredita titulación)</label>
                         <select class="form-select" id="apto_titulacion">
                             <option value="">Sin respuesta</option>
                             <option value="1">Si</option>
@@ -580,6 +580,7 @@ $is_archived_view = basename($_SERVER['PHP_SELF']) === 'evaluations-archived.php
         }
 
         function criteriaForEvaluation(evaluation) {
+            if (Array.isArray(evaluation?.criteria)) return evaluation.criteria;
             const projectId = String(evaluation?.project_id || evaluation?.project?.id || '');
             const semesterCriteria = criteriaBySemester[evaluation?.semestre] || [];
             return semesterCriteria.filter(criterion => {
@@ -1937,7 +1938,7 @@ $is_archived_view = basename($_SERVER['PHP_SELF']) === 'evaluations-archived.php
                 return;
             }
             const semesterCriteria = criteriaForEvaluation(evaluation);
-            const rubricMode = currentRubricMode(evaluation?.semestre);
+            const rubricMode = evaluation?.score_mode || currentRubricMode(evaluation?.semestre);
             const numericOptions = numericLevelOptions();
             const container = document.getElementById('scoreFields');
             container.innerHTML = '';
@@ -1997,16 +1998,8 @@ $is_archived_view = basename($_SERVER['PHP_SELF']) === 'evaluations-archived.php
                     confirmButtonText: 'Si, guardar'
                 });
                 if (!confirmSave) return;
-                let confirm_update = false;
-                if (evaluation?.current_teacher_has_scores) {
-                    confirm_update = await confirmAction({
-                        title: 'Modificar evaluación existente',
-                        text: `Ya evaluaste este proyecto. Si continúas, se modificará tu evaluación actual. Oportunidades usadas: ${evaluation.current_teacher_attempts}/${evaluation.max_attempts}.`,
-                        confirmButtonText: 'Si, modificar'
-                    });
-                    if (!confirm_update) return;
-                }
-                const payload = { scores, confirm_update, general_comment: document.getElementById('generalEvaluationComment').value.trim() || null };
+                if (evaluation?.current_teacher_has_scores) throw new Error('Solicita un nuevo intento autorizado; el resultado registrado se conserva.');
+                const payload = { scores, general_comment: document.getElementById('generalEvaluationComment').value.trim() || null };
                 const aptValue = document.getElementById('apto_titulacion').value;
                 if (aptValue !== '') payload.apto_titulacion = aptValue === '1';
                 const response = await api.post(`/evaluations/${evaluationId}/score`, payload);
@@ -2032,7 +2025,7 @@ $is_archived_view = basename($_SERVER['PHP_SELF']) === 'evaluations-archived.php
             const renderAptVote = value => value === true ? 'Si' : (value === false ? 'No' : 'Sin respuesta');
             const aptSummaryBox = aptSummary.applies ? `
                 <div class="alert alert-info border mb-3">
-                    <strong>Apto para titulacion: ${escapeHtml(aptSummary.label || 'Sin votos')}</strong>
+                    <strong>Recomendación del proyecto (sin efecto de egreso): ${escapeHtml(aptSummary.label || 'Sin votos')}</strong>
                 </div>` : '';
             const renderTeacherScores = teacher => {
                 if (!teacher.can_view_score_detail) {
@@ -2072,7 +2065,7 @@ $is_archived_view = basename($_SERVER['PHP_SELF']) === 'evaluations-archived.php
                         <h6 class="mb-0">${escapeHtml(teacher.teacher_name)}</h6>
                         <span class="badge bg-primary">${teacher.average}%</span>
                     </div>
-                    ${aptSummary.applies ? `<div class="small text-muted mb-2"><strong>Apto para titulacion:</strong> ${escapeHtml(renderAptVote(teacher.apto_titulacion))}</div>` : ''}
+                    ${aptSummary.applies ? `<div class="small text-muted mb-2"><strong>Recomendación del proyecto (sin efecto de egreso):</strong> ${escapeHtml(renderAptVote(teacher.apto_titulacion))}</div>` : ''}
                     ${teacher.general_comment ? `<div class="alert alert-light border py-2 mb-3"><strong>Comentario general:</strong><div class="mt-1" style="white-space:pre-wrap">${escapeHtml(teacher.general_comment)}</div></div>` : ''}
                     ${renderTeacherScores(teacher)}
                 </div>`).join('');

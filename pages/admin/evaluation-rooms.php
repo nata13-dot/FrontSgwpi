@@ -287,8 +287,8 @@ $canManageRooms = can_manage_projects();
                                         </div>
                                         <div class="col-md-6">
                                             <label class="form-label" for="roomClassroom">Salon</label>
-                                            <input class="form-control" id="roomClassroom" placeholder="Salon/Laboratorio">
-                                            <div class="room-inline-hint">Puedes escribir EB1, laboratorio o aula.</div>
+                                            <select class="form-select" id="roomClassroom"><option value="">Selecciona salón institucional</option></select>
+                                            <div class="room-inline-hint">El catálogo lo administra la administración general.</div>
                                         </div>
                                         <div class="col-md-4">
                                             <label class="form-label" for="roomSemester">Semestre</label>
@@ -589,6 +589,10 @@ $canManageRooms = can_manage_projects();
 
         async function loadInitialData() {
             if (CAN_MANAGE_ROOMS) {
+                const catalog = await api.get('/academic-operations/catalog');
+                const classroom = document.getElementById('roomClassroom');
+                classroom.replaceChildren(new Option('Selecciona salón institucional', ''));
+                for (const room of catalog.rooms) classroom.add(new Option(room.nombre, room.id));
                 await Promise.all([loadTeachers(), loadProjects(), loadRooms()]);
                 renderRoomTeachers();
                 loadRoomProjects();
@@ -952,7 +956,7 @@ $canManageRooms = can_manage_projects();
             if (!room) return;
             document.getElementById('roomId').value = room.id;
             document.getElementById('roomName').value = room.nombre || '';
-            document.getElementById('roomClassroom').value = room.salon || '';
+            document.getElementById('roomClassroom').value = room.salon_id || '';
             document.getElementById('roomSemester').value = room.semestre;
             document.getElementById('roomDate').value = room.fecha_evaluacion ? room.fecha_evaluacion.slice(0, 16) : '';
             const legacyEnd = room.fecha_evaluacion
@@ -986,6 +990,7 @@ $canManageRooms = can_manage_projects();
             return {
                 nombre: room.nombre,
                 salon: room.salon || null,
+                salon_id: room.salon_id,
                 semestre: room.semestre,
                 responsible_teacher_id: room.responsible_teacher_id || room.responsible_teacher?.id || null,
                 fecha_evaluacion: room.fecha_evaluacion,
@@ -1020,7 +1025,7 @@ $canManageRooms = can_manage_projects();
             }
             const payload = {
                 nombre: normalizeRoomName(document.getElementById('roomName').value),
-                salon: normalizeClassroom(document.getElementById('roomClassroom').value) || null,
+                salon_id: Number(document.getElementById('roomClassroom').value),
                 semestre: document.getElementById('roomSemester').value,
                 responsible_teacher_id: document.getElementById('responsibleTeacher').value || null,
                 fecha_evaluacion: document.getElementById('roomDate').value,
