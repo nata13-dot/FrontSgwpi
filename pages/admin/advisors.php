@@ -15,7 +15,7 @@ if (!is_authenticated() || !can_manage_projects()) {
     <?php require_once $_SERVER['DOCUMENT_ROOT'] . '/includes/visual-preferences.php'; ?>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
-    <link rel="stylesheet" href="/assets/css/app.css">
+    <link rel="stylesheet" href="<?= asset('/assets/css/app.css') ?>">
 </head>
 <body>
     <?php require_once $_SERVER['DOCUMENT_ROOT'] . '/includes/navbar.php'; ?>
@@ -35,7 +35,7 @@ if (!is_authenticated() || !can_manage_projects()) {
                 <div class="row g-3 mb-3">
                     <div class="col-md-4">
                         <label for="semesterFilter" class="form-label">Filtrar por semestre</label>
-                        <select id="semesterFilter" class="form-select" onchange="loadProjects()">
+                        <select data-semester-scope="career" id="semesterFilter" class="form-select" onchange="loadProjects()">
                             <option value="">Todos los semestres</option>
                             <option value="5">5 - Propuesta</option>
                             <option value="6">6 - Avance</option>
@@ -50,7 +50,7 @@ if (!is_authenticated() || !can_manage_projects()) {
                     <button type="button" class="btn btn-primary" id="viewByProjectBtn" onclick="setAdvisorView('projects')">
                         <i class="bi bi-folder2-open"></i> Por proyecto
                     </button>
-                    <button type="button" class="btn btn-outline-secondary" id="viewThesisCommitteeBtn" onclick="setAdvisorView('thesis')">
+                    <button type="button" class="btn btn-outline-secondary" id="viewThesisCommitteeBtn" <?= is_project_coordinator() ? 'hidden title="Las tesis las administra la jefatura"' : '' ?> onclick="setAdvisorView('thesis')">
                         <i class="bi bi-mortarboard"></i> Comité de tesis
                     </button>
                     <button type="button" class="btn btn-outline-secondary" id="viewByTeacherBtn" onclick="setAdvisorView('teachers')">
@@ -161,11 +161,10 @@ if (!is_authenticated() || !can_manage_projects()) {
 
     <?php require_once $_SERVER['DOCUMENT_ROOT'] . '/includes/footer.php'; ?>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
     <script>const API_BASE_URL = '<?= API_BASE_URL ?>';</script>
-    <script src="/assets/js/auth.js"></script>
-    <script src="/assets/js/api.js"></script>
-    <script src="/assets/js/app.js"></script>
+    <script src="<?= asset('/assets/js/auth.js') ?>"></script>
+    <script src="<?= asset('/assets/js/api.js') ?>"></script>
+    <script src="<?= asset('/assets/js/app.js') ?>"></script>
     <script>
         let projects = [];
         let teachers = [];
@@ -269,8 +268,8 @@ if (!is_authenticated() || !can_manage_projects()) {
 
         async function loadTeachers() {
             const [adminsResponse, teachersResponse] = await Promise.all([
-                api.get('/users', { perfil_id: 1, status: 'active', compact: 1, per_page: 500, _cache_ttl: 60000 }),
-                api.get('/users', { perfil_id: 2, status: 'active', compact: 1, per_page: 500, _cache_ttl: 60000 })
+                api.getAll('/users', { perfil_id: 1, status: 'active', compact: 1, per_page: 500, _cache_ttl: 60000 }),
+                api.getAll('/users', { perfil_id: 2, status: 'active', compact: 1, per_page: 500, _cache_ttl: 60000 })
             ]);
             teachers = [...(adminsResponse.data || []), ...(teachersResponse.data || [])]
                 .sort((a, b) => Number(a.perfil_id) - Number(b.perfil_id) || fullName(a).localeCompare(fullName(b)));

@@ -1,0 +1,437 @@
+<!doctype html><html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>VERIFICACION​​​​</title><style>body{margin:0;background:#f2f5f9;color:#172334;font:16px/1.65 system-ui,sans-serif}main{max-width:1120px;margin:auto;background:white;padding:48px 56px}h1,h2,h3{color:#1b396a;line-height:1.25;scroll-margin-top:20px}h1{font-size:2.5rem}h2{border-bottom:2px solid #dae4f1;padding-bottom:12px;margin-top:48px}h3{margin-top:30px}a{color:#185ea0}table{border-collapse:collapse;width:100%;font-size:.9rem;display:block;overflow:auto;margin:20px 0}th,td{border:1px solid #d7dfe9;text-align:left;padding:9px 12px;vertical-align:top}th{background:#eaf0f8}tr:nth-child(even){background:#f7f9fc}code{font-family:ui-monospace,monospace;font-size:.87em;overflow-wrap:anywhere}pre{background:#f2f5f9;border:1px solid #d7dfe9;padding:16px;overflow:auto;line-height:1.45}pre code{overflow-wrap:normal}.toc{background:#edf3fa;border-radius:12px;padding:20px;font-size:.9rem}.toc ul{padding-left:22px}nav{margin-bottom:24px;font-size:.9rem}@media(max-width:720px){main{padding:24px 18px}h1{font-size:2rem}}@media print{body,main{background:white}main{max-width:none;padding:0;font-size:10pt}.toc{break-after:page}h2,h3,thead{break-after:avoid}tr{break-inside:avoid}table{display:table;font-size:9pt}a{color:inherit}pre{white-space:pre-wrap}nav{display:none}}</style></head><body><main><nav><a href="MANUAL_FRONTEND_SWGPI.html">Manual principal</a> · <a href="MANUAL_FRONTEND_SWGPI.docx">Versión Word</a></nav><div class="toc">
+<ul>
+<li><a href="#resultados-individuales">Resultados individuales</a></li>
+</ul>
+</div>
+<h1 id="verificacion-y-limites-de-evidencia">Verificación y límites de evidencia</h1>
+<p>Fecha: 23 de octubre de 2026. Se verificó el corte local sin cambiar lógica de aplicación ni llamar a operaciones institucionales.</p>
+<table>
+<thead>
+<tr>
+<th>Comprobación</th>
+<th style="text-align: right;">Cantidad</th>
+<th>Resultado</th>
+<th>Qué demuestra</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>php -l</code></td>
+<td style="text-align: right;">56 archivos PHP</td>
+<td>Aprobada</td>
+<td>Sintaxis PHP de páginas, includes, diagnóstico y prueba.</td>
+</tr>
+<tr>
+<td><code>node --input-type=module --check</code></td>
+<td style="text-align: right;">14 módulos JS externos</td>
+<td>Aprobada</td>
+<td>Sintaxis de los archivos JavaScript externos; no ejecuta el DOM.</td>
+</tr>
+<tr>
+<td><code>php tests/academic-page-smoke.php &lt;perfil&gt;</code></td>
+<td style="text-align: right;">7 perfiles, 1–7</td>
+<td>Aprobada</td>
+<td>La plantilla emite el contenedor y montaje de la consola con sesión sintética.</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Entorno de verificación:</strong> PHP 8.5.11 (cli) (built: Sep 22 2026 13:32:06) (NTS gcc x86_64); v22.23.1. Composer declara PHP 8.3.*: la versión de esta comprobación no prueba por sí sola compatibilidad con todas las versiones de despliegue.</p>
+<p>La prueba de humo sólo comprueba dos marcadores HTML; no ejecuta el JavaScript de pestañas ni demuestra permisos completos para cada rol. El análisis de sintaxis de JS no incluye la ejecución de scripts inline interpolados por PHP. No se añadió una nueva suite funcional.</p>
+<p>No se probó: navegador autenticado, llamadas reales a la API, correos, cargas/descargas privadas, importaciones institucionales, promociones, cierres, diagnósticos remotos, creación/limpieza de respaldos, Apache real, responsive visual o accesibilidad completa. Los hallazgos del manual son estáticos o se identifican expresamente como contraste con el informe previo de API.</p>
+<h2 id="resultados-individuales">Resultados individuales</h2>
+<table>
+<thead>
+<tr>
+<th>Archivo / ejecución</th>
+<th>Estado</th>
+<th>Salida</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>Frontend_Swgpi/api/set-session.php</code></td>
+<td>OK</td>
+<td>No syntax errors detected in Frontend_Swgpi/api/set-session.php</td>
+</tr>
+<tr>
+<td><code>Frontend_Swgpi/includes/alert.php</code></td>
+<td>OK</td>
+<td>No syntax errors detected in Frontend_Swgpi/includes/alert.php</td>
+</tr>
+<tr>
+<td><code>Frontend_Swgpi/includes/config.php</code></td>
+<td>OK</td>
+<td>No syntax errors detected in Frontend_Swgpi/includes/config.php</td>
+</tr>
+<tr>
+<td><code>Frontend_Swgpi/includes/footer.php</code></td>
+<td>OK</td>
+<td>No syntax errors detected in Frontend_Swgpi/includes/footer.php</td>
+</tr>
+<tr>
+<td><code>Frontend_Swgpi/includes/head-responsive.php</code></td>
+<td>OK</td>
+<td>No syntax errors detected in Frontend_Swgpi/includes/head-responsive.php</td>
+</tr>
+<tr>
+<td><code>Frontend_Swgpi/includes/modal.php</code></td>
+<td>OK</td>
+<td>No syntax errors detected in Frontend_Swgpi/includes/modal.php</td>
+</tr>
+<tr>
+<td><code>Frontend_Swgpi/includes/navbar.php</code></td>
+<td>OK</td>
+<td>No syntax errors detected in Frontend_Swgpi/includes/navbar.php</td>
+</tr>
+<tr>
+<td><code>Frontend_Swgpi/includes/scripts-responsive.php</code></td>
+<td>OK</td>
+<td>No syntax errors detected in Frontend_Swgpi/includes/scripts-responsive.php</td>
+</tr>
+<tr>
+<td><code>Frontend_Swgpi/includes/sidebar.php</code></td>
+<td>OK</td>
+<td>No syntax errors detected in Frontend_Swgpi/includes/sidebar.php</td>
+</tr>
+<tr>
+<td><code>Frontend_Swgpi/includes/validations.php</code></td>
+<td>OK</td>
+<td>No syntax errors detected in Frontend_Swgpi/includes/validations.php</td>
+</tr>
+<tr>
+<td><code>Frontend_Swgpi/includes/visual-preferences.php</code></td>
+<td>OK</td>
+<td>No syntax errors detected in Frontend_Swgpi/includes/visual-preferences.php</td>
+</tr>
+<tr>
+<td><code>Frontend_Swgpi/index.php</code></td>
+<td>OK</td>
+<td>No syntax errors detected in Frontend_Swgpi/index.php</td>
+</tr>
+<tr>
+<td><code>Frontend_Swgpi/pages/academic-workflows.php</code></td>
+<td>OK</td>
+<td>No syntax errors detected in Frontend_Swgpi/pages/academic-workflows.php</td>
+</tr>
+<tr>
+<td><code>Frontend_Swgpi/pages/admin/advisors.php</code></td>
+<td>OK</td>
+<td>No syntax errors detected in Frontend_Swgpi/pages/admin/advisors.php</td>
+</tr>
+<tr>
+<td><code>Frontend_Swgpi/pages/admin/asignaturas.php</code></td>
+<td>OK</td>
+<td>No syntax errors detected in Frontend_Swgpi/pages/admin/asignaturas.php</td>
+</tr>
+<tr>
+<td><code>Frontend_Swgpi/pages/admin/career-audit.php</code></td>
+<td>OK</td>
+<td>No syntax errors detected in Frontend_Swgpi/pages/admin/career-audit.php</td>
+</tr>
+<tr>
+<td><code>Frontend_Swgpi/pages/admin/career-integrity.php</code></td>
+<td>OK</td>
+<td>No syntax errors detected in Frontend_Swgpi/pages/admin/career-integrity.php</td>
+</tr>
+<tr>
+<td><code>Frontend_Swgpi/pages/admin/career-modules.php</code></td>
+<td>OK</td>
+<td>No syntax errors detected in Frontend_Swgpi/pages/admin/career-modules.php</td>
+</tr>
+<tr>
+<td><code>Frontend_Swgpi/pages/admin/career-setup.php</code></td>
+<td>OK</td>
+<td>No syntax errors detected in Frontend_Swgpi/pages/admin/career-setup.php</td>
+</tr>
+<tr>
+<td><code>Frontend_Swgpi/pages/admin/careers.php</code></td>
+<td>OK</td>
+<td>No syntax errors detected in Frontend_Swgpi/pages/admin/careers.php</td>
+</tr>
+<tr>
+<td><code>Frontend_Swgpi/pages/admin/competencias.php</code></td>
+<td>OK</td>
+<td>No syntax errors detected in Frontend_Swgpi/pages/admin/competencias.php</td>
+</tr>
+<tr>
+<td><code>Frontend_Swgpi/pages/admin/dashboard.php</code></td>
+<td>OK</td>
+<td>No syntax errors detected in Frontend_Swgpi/pages/admin/dashboard.php</td>
+</tr>
+<tr>
+<td><code>Frontend_Swgpi/pages/admin/database-backups.php</code></td>
+<td>OK</td>
+<td>No syntax errors detected in Frontend_Swgpi/pages/admin/database-backups.php</td>
+</tr>
+<tr>
+<td><code>Frontend_Swgpi/pages/admin/deliverables.php</code></td>
+<td>OK</td>
+<td>No syntax errors detected in Frontend_Swgpi/pages/admin/deliverables.php</td>
+</tr>
+<tr>
+<td><code>Frontend_Swgpi/pages/admin/document-tags.php</code></td>
+<td>OK</td>
+<td>No syntax errors detected in Frontend_Swgpi/pages/admin/document-tags.php</td>
+</tr>
+<tr>
+<td><code>Frontend_Swgpi/pages/admin/evaluation-rooms.php</code></td>
+<td>OK</td>
+<td>No syntax errors detected in Frontend_Swgpi/pages/admin/evaluation-rooms.php</td>
+</tr>
+<tr>
+<td><code>Frontend_Swgpi/pages/admin/evaluations-archived.php</code></td>
+<td>OK</td>
+<td>No syntax errors detected in Frontend_Swgpi/pages/admin/evaluations-archived.php</td>
+</tr>
+<tr>
+<td><code>Frontend_Swgpi/pages/admin/evaluations.php</code></td>
+<td>OK</td>
+<td>No syntax errors detected in Frontend_Swgpi/pages/admin/evaluations.php</td>
+</tr>
+<tr>
+<td><code>Frontend_Swgpi/pages/admin/notices.php</code></td>
+<td>OK</td>
+<td>No syntax errors detected in Frontend_Swgpi/pages/admin/notices.php</td>
+</tr>
+<tr>
+<td><code>Frontend_Swgpi/pages/admin/operations.php</code></td>
+<td>OK</td>
+<td>No syntax errors detected in Frontend_Swgpi/pages/admin/operations.php</td>
+</tr>
+<tr>
+<td><code>Frontend_Swgpi/pages/admin/project-create.php</code></td>
+<td>OK</td>
+<td>No syntax errors detected in Frontend_Swgpi/pages/admin/project-create.php</td>
+</tr>
+<tr>
+<td><code>Frontend_Swgpi/pages/admin/project-edit.php</code></td>
+<td>OK</td>
+<td>No syntax errors detected in Frontend_Swgpi/pages/admin/project-edit.php</td>
+</tr>
+<tr>
+<td><code>Frontend_Swgpi/pages/admin/projects.php</code></td>
+<td>OK</td>
+<td>No syntax errors detected in Frontend_Swgpi/pages/admin/projects.php</td>
+</tr>
+<tr>
+<td><code>Frontend_Swgpi/pages/admin/proposal-config.php</code></td>
+<td>OK</td>
+<td>No syntax errors detected in Frontend_Swgpi/pages/admin/proposal-config.php</td>
+</tr>
+<tr>
+<td><code>Frontend_Swgpi/pages/admin/semesters.php</code></td>
+<td>OK</td>
+<td>No syntax errors detected in Frontend_Swgpi/pages/admin/semesters.php</td>
+</tr>
+<tr>
+<td><code>Frontend_Swgpi/pages/admin/settings.php</code></td>
+<td>OK</td>
+<td>No syntax errors detected in Frontend_Swgpi/pages/admin/settings.php</td>
+</tr>
+<tr>
+<td><code>Frontend_Swgpi/pages/admin/user-create.php</code></td>
+<td>OK</td>
+<td>No syntax errors detected in Frontend_Swgpi/pages/admin/user-create.php</td>
+</tr>
+<tr>
+<td><code>Frontend_Swgpi/pages/admin/user-edit.php</code></td>
+<td>OK</td>
+<td>No syntax errors detected in Frontend_Swgpi/pages/admin/user-edit.php</td>
+</tr>
+<tr>
+<td><code>Frontend_Swgpi/pages/admin/users.php</code></td>
+<td>OK</td>
+<td>No syntax errors detected in Frontend_Swgpi/pages/admin/users.php</td>
+</tr>
+<tr>
+<td><code>Frontend_Swgpi/pages/evaluation-documents.php</code></td>
+<td>OK</td>
+<td>No syntax errors detected in Frontend_Swgpi/pages/evaluation-documents.php</td>
+</tr>
+<tr>
+<td><code>Frontend_Swgpi/pages/forgot-password.php</code></td>
+<td>OK</td>
+<td>No syntax errors detected in Frontend_Swgpi/pages/forgot-password.php</td>
+</tr>
+<tr>
+<td><code>Frontend_Swgpi/pages/login.php</code></td>
+<td>OK</td>
+<td>No syntax errors detected in Frontend_Swgpi/pages/login.php</td>
+</tr>
+<tr>
+<td><code>Frontend_Swgpi/pages/logout.php</code></td>
+<td>OK</td>
+<td>No syntax errors detected in Frontend_Swgpi/pages/logout.php</td>
+</tr>
+<tr>
+<td><code>Frontend_Swgpi/pages/profile.php</code></td>
+<td>OK</td>
+<td>No syntax errors detected in Frontend_Swgpi/pages/profile.php</td>
+</tr>
+<tr>
+<td><code>Frontend_Swgpi/pages/repositorio-detail.php</code></td>
+<td>OK</td>
+<td>No syntax errors detected in Frontend_Swgpi/pages/repositorio-detail.php</td>
+</tr>
+<tr>
+<td><code>Frontend_Swgpi/pages/repositorio.php</code></td>
+<td>OK</td>
+<td>No syntax errors detected in Frontend_Swgpi/pages/repositorio.php</td>
+</tr>
+<tr>
+<td><code>Frontend_Swgpi/pages/reset-password.php</code></td>
+<td>OK</td>
+<td>No syntax errors detected in Frontend_Swgpi/pages/reset-password.php</td>
+</tr>
+<tr>
+<td><code>Frontend_Swgpi/pages/student/dashboard.php</code></td>
+<td>OK</td>
+<td>No syntax errors detected in Frontend_Swgpi/pages/student/dashboard.php</td>
+</tr>
+<tr>
+<td><code>Frontend_Swgpi/pages/student/my-deliverables.php</code></td>
+<td>OK</td>
+<td>No syntax errors detected in Frontend_Swgpi/pages/student/my-deliverables.php</td>
+</tr>
+<tr>
+<td><code>Frontend_Swgpi/pages/student/proposal-register.php</code></td>
+<td>OK</td>
+<td>No syntax errors detected in Frontend_Swgpi/pages/student/proposal-register.php</td>
+</tr>
+<tr>
+<td><code>Frontend_Swgpi/pages/teacher/dashboard.php</code></td>
+<td>OK</td>
+<td>No syntax errors detected in Frontend_Swgpi/pages/teacher/dashboard.php</td>
+</tr>
+<tr>
+<td><code>Frontend_Swgpi/pages/teacher/my-deliverables.php</code></td>
+<td>OK</td>
+<td>No syntax errors detected in Frontend_Swgpi/pages/teacher/my-deliverables.php</td>
+</tr>
+<tr>
+<td><code>Frontend_Swgpi/pages/teacher/my-projects.php</code></td>
+<td>OK</td>
+<td>No syntax errors detected in Frontend_Swgpi/pages/teacher/my-projects.php</td>
+</tr>
+<tr>
+<td><code>Frontend_Swgpi/pages/teacher/proposal-review.php</code></td>
+<td>OK</td>
+<td>No syntax errors detected in Frontend_Swgpi/pages/teacher/proposal-review.php</td>
+</tr>
+<tr>
+<td><code>Frontend_Swgpi/test-api.php</code></td>
+<td>OK</td>
+<td>No syntax errors detected in Frontend_Swgpi/test-api.php</td>
+</tr>
+<tr>
+<td><code>Frontend_Swgpi/tests/academic-page-smoke.php</code></td>
+<td>OK</td>
+<td>No syntax errors detected in Frontend_Swgpi/tests/academic-page-smoke.php</td>
+</tr>
+<tr>
+<td><code>Frontend_Swgpi/assets/js/academic-console.js</code></td>
+<td>OK</td>
+<td>Sintaxis válida</td>
+</tr>
+<tr>
+<td><code>Frontend_Swgpi/assets/js/activity-notifications.js</code></td>
+<td>OK</td>
+<td>Sintaxis válida</td>
+</tr>
+<tr>
+<td><code>Frontend_Swgpi/assets/js/api.js</code></td>
+<td>OK</td>
+<td>Sintaxis válida</td>
+</tr>
+<tr>
+<td><code>Frontend_Swgpi/assets/js/app.js</code></td>
+<td>OK</td>
+<td>Sintaxis válida</td>
+</tr>
+<tr>
+<td><code>Frontend_Swgpi/assets/js/auth.js</code></td>
+<td>OK</td>
+<td>Sintaxis válida</td>
+</tr>
+<tr>
+<td><code>Frontend_Swgpi/assets/js/career-modules.js</code></td>
+<td>OK</td>
+<td>Sintaxis válida</td>
+</tr>
+<tr>
+<td><code>Frontend_Swgpi/assets/js/career-switcher.js</code></td>
+<td>OK</td>
+<td>Sintaxis válida</td>
+</tr>
+<tr>
+<td><code>Frontend_Swgpi/assets/js/global-search.js</code></td>
+<td>OK</td>
+<td>Sintaxis válida</td>
+</tr>
+<tr>
+<td><code>Frontend_Swgpi/assets/js/operational-notifications.js</code></td>
+<td>OK</td>
+<td>Sintaxis válida</td>
+</tr>
+<tr>
+<td><code>Frontend_Swgpi/assets/js/responsive.js</code></td>
+<td>OK</td>
+<td>Sintaxis válida</td>
+</tr>
+<tr>
+<td><code>Frontend_Swgpi/assets/js/router.js</code></td>
+<td>OK</td>
+<td>Sintaxis válida</td>
+</tr>
+<tr>
+<td><code>Frontend_Swgpi/assets/js/skeleton-loader.js</code></td>
+<td>OK</td>
+<td>Sintaxis válida</td>
+</tr>
+<tr>
+<td><code>Frontend_Swgpi/assets/js/table.js</code></td>
+<td>OK</td>
+<td>Sintaxis válida</td>
+</tr>
+<tr>
+<td><code>Frontend_Swgpi/assets/js/view-transitions.js</code></td>
+<td>OK</td>
+<td>Sintaxis válida</td>
+</tr>
+<tr>
+<td><code>academic-page-smoke perfil 1</code></td>
+<td>OK</td>
+<td>PHP academic page profile 1: OK</td>
+</tr>
+<tr>
+<td><code>academic-page-smoke perfil 2</code></td>
+<td>OK</td>
+<td>PHP academic page profile 2: OK</td>
+</tr>
+<tr>
+<td><code>academic-page-smoke perfil 3</code></td>
+<td>OK</td>
+<td>PHP academic page profile 3: OK</td>
+</tr>
+<tr>
+<td><code>academic-page-smoke perfil 4</code></td>
+<td>OK</td>
+<td>PHP academic page profile 4: OK</td>
+</tr>
+<tr>
+<td><code>academic-page-smoke perfil 5</code></td>
+<td>OK</td>
+<td>PHP academic page profile 5: OK</td>
+</tr>
+<tr>
+<td><code>academic-page-smoke perfil 6</code></td>
+<td>OK</td>
+<td>PHP academic page profile 6: OK</td>
+</tr>
+<tr>
+<td><code>academic-page-smoke perfil 7</code></td>
+<td>OK</td>
+<td>PHP academic page profile 7: OK</td>
+</tr>
+</tbody>
+</table></main></body></html>

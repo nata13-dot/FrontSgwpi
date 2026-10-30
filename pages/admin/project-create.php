@@ -15,7 +15,7 @@ if (!is_authenticated() || !can_manage_projects()) {
     <?php require_once $_SERVER['DOCUMENT_ROOT'] . '/includes/visual-preferences.php'; ?>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
-    <link rel="stylesheet" href="/assets/css/app.css">
+    <link rel="stylesheet" href="<?= asset('/assets/css/app.css') ?>">
 </head>
 <body>
     <?php require_once $_SERVER['DOCUMENT_ROOT'] . '/includes/navbar.php'; ?>
@@ -64,7 +64,7 @@ if (!is_authenticated() || !can_manage_projects()) {
                             <div class="row">
                                 <div class="col-md-4 mb-3">
                                     <label for="semestre" class="form-label">Semestre</label>
-                                    <select class="form-select" id="semestre" name="semestre" required>
+                                    <select data-semester-scope="period" class="form-select" id="semestre" name="semestre" required>
                                         <option value="">Seleccionar...</option>
                                         <option value="5">5 - Propuesta</option>
                                         <option value="6">6 - Avance</option>
@@ -106,11 +106,10 @@ if (!is_authenticated() || !can_manage_projects()) {
 
     <?php require_once $_SERVER['DOCUMENT_ROOT'] . '/includes/footer.php'; ?>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
     <script>const API_BASE_URL = '<?= API_BASE_URL ?>';</script>
-    <script src="/assets/js/auth.js"></script>
-    <script src="/assets/js/api.js"></script>
-    <script src="/assets/js/app.js"></script>
+    <script src="<?= asset('/assets/js/auth.js') ?>"></script>
+    <script src="<?= asset('/assets/js/api.js') ?>"></script>
+    <script src="<?= asset('/assets/js/app.js') ?>"></script>
     <script>
         const form = document.getElementById('projectForm');
         let students = [];
@@ -127,8 +126,8 @@ if (!is_authenticated() || !can_manage_projects()) {
 
         async function loadStudents() {
             const [usersResponse, projectsResponse] = await Promise.all([
-                api.get('/users', { perfil_id: 3, status: 'active', compact: 1, per_page: 500, _cache_ttl: 60000 }),
-                api.get('/projects', { compact: 1, per_page: 500, _cache_ttl: 30000 })
+                api.getAll('/users', { perfil_id: 3, status: 'active', compact: 1, per_page: 500, _cache_ttl: 60000 }),
+                api.getAll('/projects', { compact: 1, per_page: 500, _cache_ttl: 30000 })
             ]);
 
             students = usersResponse.data || [];

@@ -19,7 +19,7 @@ $serverDashboardUrl = dashboard_url();
     <?php require_once $_SERVER['DOCUMENT_ROOT'] . '/includes/visual-preferences.php'; ?>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
-    <link rel="stylesheet" href="/assets/css/app.css?v=<?= filemtime($_SERVER['DOCUMENT_ROOT'] . '/assets/css/app.css') ?>">
+    <link rel="stylesheet" href="<?= asset('/assets/css/app.css') ?>">
     <style>
         .login-modal {
             border: 0;
@@ -519,7 +519,7 @@ $serverDashboardUrl = dashboard_url();
                 <div class="modal-body">
                     <button type="button" class="btn-close float-end" data-bs-dismiss="modal" aria-label="Cerrar"></button>
                     <div class="login-brand text-center mb-3">
-                        <img src="/assets/img/ITSSMT/ITSSMT.webp" alt="ITSSMT">
+                        <img src="/assets/img/ITSSMT/ITSSMT-192.webp" alt="ITSSMT">
                         <h4 class="mt-2" id="loginModalLabel">Bienvenido</h4>
                         <p class="text-muted mb-0">Ingresa tus credenciales para continuar</p>
                     </div>
@@ -656,12 +656,11 @@ $serverDashboardUrl = dashboard_url();
     <?php require_once $_SERVER['DOCUMENT_ROOT'] . '/includes/footer.php'; ?>
     
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
     <script>const API_BASE_URL = '<?= API_BASE_URL ?>';</script>
-    <script src="/assets/js/auth.js"></script>
-    <script src="/assets/js/api.js"></script>
-    <script src="/assets/js/app.js"></script>
-    <script src="/assets/js/responsive.js"></script>
+    <script src="<?= asset('/assets/js/auth.js') ?>"></script>
+    <script src="<?= asset('/assets/js/api.js') ?>"></script>
+    <script src="<?= asset('/assets/js/app.js') ?>"></script>
+    <script src="<?= asset('/assets/js/responsive.js') ?>"></script>
     <script>
         const loginForm = document.getElementById('loginForm');
         const loginSubmitBtn = document.getElementById('loginSubmitBtn');
@@ -845,11 +844,8 @@ $serverDashboardUrl = dashboard_url();
 
                 auth.token = response.access_token;
                 auth.user = response.user;
-                await axios.post('/api/set-session.php', {
-                    auth_token: auth.getToken(),
-                    user: auth.getCurrentUser(),
-                    remember: true
-                });
+                auth.remember = true;
+                await auth.persistSession();
 
                 await Swal.fire({
                     icon: 'success',
@@ -866,6 +862,18 @@ $serverDashboardUrl = dashboard_url();
                 restoreButton(button);
             }
         });
+
+        function showLoginError(text) {
+            const alert = document.createElement('div');
+            alert.className = 'alert alert-danger py-2 mb-0';
+            alert.setAttribute('role', 'alert');
+            alert.innerHTML = '<i class="bi bi-exclamation-circle"></i> ';
+            alert.append(document.createTextNode(text));
+            loginMessageContainer.replaceChildren(alert);
+            swalToast('danger', text);
+            loginSubmitBtn.disabled = false;
+            loginSubmitBtn.innerHTML = '<i class="bi bi-box-arrow-in-right"></i> Iniciar sesión';
+        }
 
         loginForm.addEventListener('submit', async (event) => {
             event.preventDefault();
@@ -890,21 +898,16 @@ $serverDashboardUrl = dashboard_url();
             const result = await auth.login(id, password, remember);
 
             if (!result.success) {
-                loginMessageContainer.innerHTML = `
-                    <div class="alert alert-danger py-2 mb-0" role="alert">
-                        <i class="bi bi-exclamation-circle"></i> ${result.error}
-                    </div>`;
-                swalToast('danger', result.error);
-                loginSubmitBtn.disabled = false;
-                loginSubmitBtn.innerHTML = '<i class="bi bi-box-arrow-in-right"></i> Iniciar sesión';
+                showLoginError(result.error);
                 return;
             }
 
-            await axios.post('/api/set-session.php', {
-                auth_token: auth.getToken(),
-                user: auth.getCurrentUser(),
-                remember
-            });
+            try {
+                await auth.persistSession();
+            } catch (error) {
+                showLoginError(error.message);
+                return;
+            }
 
             await Swal.fire({
                 icon: 'success',

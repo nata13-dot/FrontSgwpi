@@ -11,7 +11,7 @@ if (!is_authenticated()) { header('Location: /index.php'); exit; }
     <?php require_once $_SERVER['DOCUMENT_ROOT'] . '/includes/visual-preferences.php'; ?>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
-    <link rel="stylesheet" href="/assets/css/app.css">
+    <link rel="stylesheet" href="<?= asset('/assets/css/app.css') ?>">
 </head>
 <body>
 <?php require_once $_SERVER['DOCUMENT_ROOT'] . '/includes/navbar.php'; ?>
@@ -28,7 +28,7 @@ if (!is_authenticated()) { header('Location: /index.php'); exit; }
                     <div class="row g-4">
                         <div class="col-md-4">
                             <div class="text-center">
-                                <img id="profilePhoto" src="/assets/img/ITSSMT/ISC.webp" class="rounded-circle border mb-3" style="width:140px;height:140px;object-fit:cover;" alt="Foto de perfil">
+                                <img id="profilePhoto" src="/assets/img/ITSSMT/ISC-256.webp" class="rounded-circle border mb-3" style="width:140px;height:140px;object-fit:cover;" alt="Foto de perfil">
                                 <input type="file" class="form-control" name="photo" accept="image/*">
                             </div>
                         </div>
@@ -38,10 +38,10 @@ if (!is_authenticated()) { header('Location: /index.php'); exit; }
                                 <div class="col-md-4"><label class="form-label">Apellido paterno</label><input class="form-control" id="apa" disabled></div>
                                 <div class="col-md-4"><label class="form-label">Apellido materno</label><input class="form-control" id="ama" disabled></div>
                                 <div class="col-md-6"><label class="form-label">Correo</label><input class="form-control" id="email" disabled></div>
-                                <div class="col-md-3 student-only"><label class="form-label">Semestre</label><select class="form-select" name="semestre" id="semestre"><option value="">-</option><option>5</option><option>6</option><option>7</option><option>8</option><option>9</option></select></div>
+                                <div class="col-md-3 student-only"><label class="form-label">Semestre</label><input class="form-control" name="semestre" id="semestre" readonly></div>
                                 <div class="col-md-3 student-only"><label class="form-label">Grupo</label><input class="form-control" name="grupo" id="grupo"></div>
                                 <div class="col-md-6"><label class="form-label">Teléfono</label><input class="form-control" name="telefonos" id="telefonos"></div>
-                                <div class="col-md-6"><label class="form-label">Dirección</label><input class="form-control" name="direccion" id="direccion"></div>
+                                <div class="col-md-6 staff-only"><label class="form-label">Especialidad</label><input class="form-control" name="especialidad" id="especialidad" maxlength="255"></div>
                                 <div class="col-md-4"><label class="form-label">Contraseña actual</label><input type="password" class="form-control" name="current_password"></div>
                                 <div class="col-md-4"><label class="form-label">Nueva contraseña</label><input type="password" class="form-control" name="password"></div>
                                 <div class="col-md-4"><label class="form-label">Confirmar contraseña</label><input type="password" class="form-control" name="password_confirmation"></div>
@@ -57,16 +57,17 @@ if (!is_authenticated()) { header('Location: /index.php'); exit; }
 <?php require_once $_SERVER['DOCUMENT_ROOT'] . '/includes/footer.php'; ?>
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 <script>const API_BASE_URL = '<?= API_BASE_URL ?>';</script>
-<script src="/assets/js/auth.js"></script><script src="/assets/js/api.js"></script>
+<script src="<?= asset('/assets/js/auth.js') ?>"></script><script src="<?= asset('/assets/js/api.js') ?>"></script>
 <script>
 let currentUser = null;
-function photoUrl(path) { return path ? `<?= API_ORIGIN_URL ?>/storage/${path}` : '/assets/img/ITSSMT/ISC.webp'; }
+function photoUrl(path) { return path ? `<?= API_ORIGIN_URL ?>/storage/${path}` : '/assets/img/ITSSMT/ISC-256.webp'; }
 async function loadProfile() {
     currentUser = await api.get('/profile');
-    ['nombres','apa','ama','email','semestre','grupo','telefonos','direccion'].forEach(id => { const el = document.getElementById(id); if (el) el.value = currentUser[id] || ''; });
+    ['nombres','apa','ama','email','semestre','grupo','telefonos','especialidad'].forEach(id => { const el = document.getElementById(id); if (el) el.value = currentUser[id] || ''; });
     document.getElementById('profilePhoto').src = photoUrl(currentUser.photo_path);
     const isStudent = Number(currentUser.perfil_id) === 3;
     document.querySelectorAll('.student-only').forEach(el => el.style.display = isStudent ? '' : 'none');
+    document.querySelectorAll('.staff-only').forEach(el => el.style.display = isStudent ? 'none' : '');
     ['semestre', 'grupo'].forEach(id => {
         const field = document.getElementById(id);
         if (field) field.disabled = true;
@@ -77,17 +78,14 @@ document.getElementById('profileForm').addEventListener('submit', async e => {
     const data = new FormData(e.target);
     data.delete('semestre');
     data.delete('grupo');
+    if (Number(currentUser?.perfil_id) === 3) data.delete('especialidad');
     ['current_password', 'password', 'password_confirmation'].forEach(field => {
         if (!String(data.get(field) || '').trim()) data.delete(field);
     });
     try {
         const res = await api.post('/profile', data);
-        await fetch('/api/set-session.php', {
-            method: 'POST',
-            credentials: 'include',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ auth_token: auth.getToken(), user: res.user })
-        });
+        auth.user = res.user;
+        await auth.persistSession();
         currentUser = res.user;
         if (window.SGPI_SESSION) window.SGPI_SESSION.user = res.user;
         swalToast('success', 'Perfil actualizado');

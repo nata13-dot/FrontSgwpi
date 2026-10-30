@@ -14,7 +14,7 @@ if (!is_authenticated() || !is_general_admin()) {
     <?php require_once $_SERVER['DOCUMENT_ROOT'] . '/includes/visual-preferences.php'; ?>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
-    <link rel="stylesheet" href="/assets/css/app.css">
+    <link rel="stylesheet" href="<?= asset('/assets/css/app.css') ?>">
 </head>
 <body>
 <?php require_once $_SERVER['DOCUMENT_ROOT'] . '/includes/navbar.php'; ?>
@@ -66,9 +66,9 @@ if (!is_authenticated() || !is_general_admin()) {
 <?php require_once $_SERVER['DOCUMENT_ROOT'] . '/includes/footer.php'; ?>
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 <script>const API_BASE_URL = '<?= API_BASE_URL ?>';</script>
-<script src="/assets/js/auth.js"></script>
-<script src="/assets/js/api.js"></script>
-<script src="/assets/js/app.js"></script>
+<script src="<?= asset('/assets/js/auth.js') ?>"></script>
+<script src="<?= asset('/assets/js/api.js') ?>"></script>
+<script src="<?= asset('/assets/js/app.js') ?>"></script>
 <script>
 function backupEscape(value) {
     return String(value ?? '').replace(/[&<>'"]/g, character => ({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'}[character]));

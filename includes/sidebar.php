@@ -5,7 +5,7 @@ $section = isset($_GET['section']) ? $_GET['section'] : '';
 
 <nav class="sidebar" id="appSidebar">
     <a href="<?= htmlspecialchars(dashboard_url()) ?>" class="sidebar-brand">
-        <img src="/assets/img/ITSSMT/ITSSMT.webp" alt="ITSSMT">
+        <img src="/assets/img/ITSSMT/ITSSMT-192.webp" alt="ITSSMT">
         <div>
             <strong>Gestión de Proyectos</strong>
             <strong><?= htmlspecialchars(active_career()['nombre_corto'] ?? 'Integradores ITSSMT') ?></strong>
@@ -22,24 +22,29 @@ $section = isset($_GET['section']) ? $_GET['section'] : '';
             </div>
         </div>
     <?php endif; ?>
-    <?php if (is_authenticated()): ?><a href="/pages/academic-workflows.php" class="sidebar-item"><i class="bi bi-calendar3"></i><span>Seguimiento académico y residencias</span></a><?php endif; ?>
+    <?php $academicWorkflowsLink = '<a href="/pages/academic-workflows.php" class="sidebar-item ' . ($current_page == 'academic-workflows.php' ? 'active' : '') . '"><i class="bi bi-calendar3"></i><span>Seguimiento académico</span></a>'; ?>
     <?php if (is_management_staff()): ?>
-        <div class="sidebar-section-title" style="padding: 0 20px; margin-bottom: 20px;"><h6 class="text-muted text-uppercase" style="font-size: 0.85rem;">Administración</h6></div>
-        <a href="/pages/admin/dashboard.php" class="sidebar-item <?= $current_page == 'dashboard.php' ? 'active' : '' ?>"><i class="bi bi-speedometer2"></i><span>Inicio</span></a>
         <?php if (is_general_admin()): ?>
-            <details class="sidebar-group" <?= in_array($current_page, ['operations.php', 'careers.php']) ? 'open' : '' ?>>
-                <summary><i class="bi bi-buildings"></i><span>Gobierno institucional</span><i class="bi bi-chevron-down ms-auto"></i></summary>
-                <a href="/pages/admin/operations.php" class="sidebar-item sidebar-subitem <?= $current_page == 'operations.php' ? 'active' : '' ?>"><i class="bi bi-activity"></i><span>Operaciones</span></a>
-                <a href="/pages/admin/careers.php" class="sidebar-item sidebar-subitem <?= $current_page == 'careers.php' ? 'active' : '' ?>"><i class="bi bi-diagram-3"></i><span>Carreras y accesos</span></a>
-            </details>
+            <?php // El administrador general tiene su sección propia, separada de la carrera que administra en este momento. ?>
+            <div class="sidebar-section-title"><h6 class="text-uppercase">Administración general</h6></div>
+            <a href="/pages/admin/general.php" class="sidebar-item <?= $current_page == 'general.php' ? 'active' : '' ?>"><i class="bi bi-buildings"></i><span>Panel institucional</span></a>
+            <a href="/pages/admin/careers.php" class="sidebar-item <?= $current_page == 'careers.php' ? 'active' : '' ?>"><i class="bi bi-diagram-3"></i><span>Carreras y accesos</span></a>
+            <a href="/pages/admin/operations.php" class="sidebar-item <?= $current_page == 'operations.php' ? 'active' : '' ?>"><i class="bi bi-activity"></i><span>Operaciones</span></a>
             <details class="sidebar-group" <?= in_array($current_page, ['career-audit.php', 'career-integrity.php', 'database-backups.php']) ? 'open' : '' ?>>
                 <summary><i class="bi bi-shield-check"></i><span>Seguridad y continuidad</span><i class="bi bi-chevron-down ms-auto"></i></summary>
                 <a href="/pages/admin/career-audit.php" class="sidebar-item sidebar-subitem <?= $current_page == 'career-audit.php' ? 'active' : '' ?>"><i class="bi bi-shield-lock"></i><span>Auditoría</span></a>
                 <a href="/pages/admin/career-integrity.php" class="sidebar-item sidebar-subitem <?= $current_page == 'career-integrity.php' ? 'active' : '' ?>"><i class="bi bi-shield-check"></i><span>Integridad</span></a>
                 <a href="/pages/admin/database-backups.php" class="sidebar-item sidebar-subitem <?= $current_page == 'database-backups.php' ? 'active' : '' ?>"><i class="bi bi-database-check"></i><span>Respaldos</span></a>
             </details>
+            <div class="sidebar-section-title"><h6 class="text-uppercase">Carrera: <?= htmlspecialchars(active_career()['nombre_corto'] ?? 'sin seleccionar') ?></h6></div>
+            <a href="/pages/admin/dashboard.php" class="sidebar-item <?= $current_page == 'dashboard.php' ? 'active' : '' ?>"><i class="bi bi-speedometer2"></i><span>Inicio de la carrera</span></a>
+            <?= $academicWorkflowsLink ?>
+        <?php else: ?>
+            <div class="sidebar-section-title"><h6 class="text-uppercase">Administración</h6></div>
+            <a href="/pages/admin/dashboard.php" class="sidebar-item <?= $current_page == 'dashboard.php' ? 'active' : '' ?>"><i class="bi bi-speedometer2"></i><span>Inicio</span></a>
+            <?= $academicWorkflowsLink ?>
         <?php endif; ?>
-        <?php if (can_govern_users()): ?>
+        <?php if (can_view_users()): ?>
         <details class="sidebar-group" data-career-module="usuarios" <?= in_array($current_page, ['users.php', 'advisors.php']) ? 'open' : '' ?>>
             <summary><i class="bi bi-people"></i><span>Personas</span><i class="bi bi-chevron-down ms-auto"></i></summary>
             <a href="/pages/admin/users.php" class="sidebar-item sidebar-subitem <?= $current_page == 'users.php' ? 'active' : '' ?>"><i class="bi bi-people"></i><span>Usuarios</span></a>
@@ -82,8 +87,9 @@ $section = isset($_GET['section']) ? $_GET['section'] : '';
         </details>
         <a href="/pages/profile.php" class="sidebar-item <?= $current_page == 'profile.php' ? 'active' : '' ?>"><i class="bi bi-person-circle"></i><span>Mi Perfil</span></a>
     <?php elseif (is_teacher()): ?>
-        <div class="sidebar-section-title" style="padding: 0 20px; margin-bottom: 20px;"><h6 class="text-muted text-uppercase" style="font-size: 0.85rem;">Docente</h6></div>
+        <div class="sidebar-section-title"><h6 class="text-uppercase">Docente</h6></div>
         <a href="/pages/teacher/dashboard.php" class="sidebar-item <?= $current_page == 'dashboard.php' ? 'active' : '' ?>"><i class="bi bi-speedometer2"></i><span>Inicio</span></a>
+        <?= $academicWorkflowsLink ?>
         <details class="sidebar-group" <?= in_array($current_page, ['my-projects.php', 'proposal-review.php', 'evaluations.php', 'evaluations-archived.php', 'evaluation-rooms.php', 'evaluation-documents.php']) ? 'open' : '' ?>>
             <summary><i class="bi bi-mortarboard"></i><span>Proyectos y tesis</span><i class="bi bi-chevron-down ms-auto"></i></summary>
             <a data-career-module="proyectos" href="/pages/teacher/my-projects.php" class="sidebar-item sidebar-subitem <?= $current_page == 'my-projects.php' ? 'active' : '' ?>"><i class="bi bi-folder2"></i><span>Mis proyectos</span></a>
@@ -103,8 +109,9 @@ $section = isset($_GET['section']) ? $_GET['section'] : '';
         </details>
         <a href="/pages/profile.php" class="sidebar-item <?= $current_page == 'profile.php' ? 'active' : '' ?>"><i class="bi bi-person-circle"></i><span>Mi Perfil</span></a>
     <?php else: ?>
-        <div class="sidebar-section-title" style="padding: 0 20px; margin-bottom: 20px;"><h6 class="text-muted text-uppercase" style="font-size: 0.85rem;">Estudiante</h6></div>
+        <div class="sidebar-section-title"><h6 class="text-uppercase">Estudiante</h6></div>
         <a href="/pages/student/dashboard.php" class="sidebar-item <?= $current_page == 'dashboard.php' ? 'active' : '' ?>"><i class="bi bi-speedometer2"></i><span>Inicio</span></a>
+        <?= $academicWorkflowsLink ?>
         <details class="sidebar-group" <?= in_array($current_page, ['proposal-register.php', 'evaluation-documents.php']) ? 'open' : '' ?>>
             <summary><i class="bi bi-mortarboard"></i><span>Proyectos y tesis</span><i class="bi bi-chevron-down ms-auto"></i></summary>
             <a data-career-module="proyectos" href="/pages/student/proposal-register.php" class="sidebar-item sidebar-subitem <?= $current_page == 'proposal-register.php' ? 'active' : '' ?>"><i class="bi bi-pencil-square"></i><span>Registrar propuesta</span></a>
@@ -121,7 +128,7 @@ $section = isset($_GET['section']) ? $_GET['section'] : '';
         <a href="/pages/profile.php" class="sidebar-item <?= $current_page == 'profile.php' ? 'active' : '' ?>"><i class="bi bi-person-circle"></i><span>Mi Perfil</span></a>
     <?php endif; ?>
     <div class="sidebar-footer-brand">
-        <img src="/assets/img/ITSSMT/ITSSMT.webp" alt="ITSSMT">
+        <img src="/assets/img/ITSSMT/ITSSMT-192.webp" alt="ITSSMT">
         <div>
             <strong>Gestión de Proyectos Integradores ITSSMT</strong>
             <small>Versión BETA 2.1.17</small>

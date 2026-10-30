@@ -1,0 +1,1343 @@
+<!doctype html><html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Manual Frontend Swgpi​​​​</title><style>body{margin:0;background:#f2f5f9;color:#172334;font:16px/1.65 system-ui,sans-serif}main{max-width:1120px;margin:auto;background:white;padding:48px 56px}h1,h2,h3{color:#1b396a;line-height:1.25;scroll-margin-top:20px}h1{font-size:2.5rem}h2{border-bottom:2px solid #dae4f1;padding-bottom:12px;margin-top:48px}h3{margin-top:30px}a{color:#185ea0}table{border-collapse:collapse;width:100%;font-size:.9rem;display:block;overflow:auto;margin:20px 0}th,td{border:1px solid #d7dfe9;text-align:left;padding:9px 12px;vertical-align:top}th{background:#eaf0f8}tr:nth-child(even){background:#f7f9fc}code{font-family:ui-monospace,monospace;font-size:.87em;overflow-wrap:anywhere}pre{background:#f2f5f9;border:1px solid #d7dfe9;padding:16px;overflow:auto;line-height:1.45}pre code{overflow-wrap:normal}.toc{background:#edf3fa;border-radius:12px;padding:20px;font-size:.9rem}.toc ul{padding-left:22px}nav{margin-bottom:24px;font-size:.9rem}@media(max-width:720px){main{padding:24px 18px}h1{font-size:2rem}}@media print{body,main{background:white}main{max-width:none;padding:0;font-size:10pt}.toc{break-after:page}h2,h3,thead{break-after:avoid}tr{break-inside:avoid}table{display:table;font-size:9pt}a{color:inherit}pre{white-space:pre-wrap}nav{display:none}}</style></head><body><main><nav><a href="MANUAL_FRONTEND_SWGPI.html">Manual principal</a> · <a href="MANUAL_FRONTEND_SWGPI.docx">Versión Word</a></nav><div class="toc">
+<ul>
+<li><a href="#como-utilizar-este-documento">Cómo utilizar este documento</a></li>
+<li><a href="#1-que-es-este-frontend">1. Qué es este frontend</a><ul>
+<li><a href="#vocabulario-de-uso">Vocabulario de uso</a></li>
+</ul>
+</li>
+<li><a href="#2-roles-permisos-y-contexto-de-carrera">2. Roles, permisos y contexto de carrera</a><ul>
+<li><a href="#helpers-que-explican-los-accesos">Helpers que explican los accesos</a></li>
+<li><a href="#cambio-de-carrera">Cambio de carrera</a></li>
+</ul>
+</li>
+<li><a href="#3-estructura-visual-compartida">3. Estructura visual compartida</a><ul>
+<li><a href="#barra-superior">Barra superior</a></li>
+<li><a href="#barra-lateral">Barra lateral</a></li>
+<li><a href="#mensajes-modales-y-estados">Mensajes, modales y estados</a></li>
+<li><a href="#apariencia-y-adaptacion">Apariencia y adaptación</a></li>
+</ul>
+</li>
+<li><a href="#4-portada-inicio-y-recuperacion-de-sesion">4. Portada, inicio y recuperación de sesión</a><ul>
+<li><a href="#iniciar-sesion">Iniciar sesión</a></li>
+<li><a href="#recuperar-contrasena">Recuperar contraseña</a></li>
+<li><a href="#salir-y-mantener-la-sesion">Salir y mantener la sesión</a></li>
+</ul>
+</li>
+<li><a href="#5-tableros-por-perfil">5. Tableros por perfil</a><ul>
+<li><a href="#administracion-pagesadmindashboardphp">Administración — /pages/admin/dashboard.php</a></li>
+<li><a href="#docente-pagesteacherdashboardphp">Docente — /pages/teacher/dashboard.php</a></li>
+<li><a href="#estudiante-pagesstudentdashboardphp">Estudiante — /pages/student/dashboard.php</a></li>
+</ul>
+</li>
+<li><a href="#6-perfil-personal-pagesprofilephp">6. Perfil personal — /pages/profile.php</a></li>
+<li><a href="#7-gobierno-de-usuarios">7. Gobierno de usuarios</a><ul>
+<li><a href="#listado-pagesadminusersphp">Listado — /pages/admin/users.php</a></li>
+<li><a href="#alta-y-edicion">Alta y edición</a></li>
+<li><a href="#control-de-grupos">Control de grupos</a></li>
+<li><a href="#importacion-y-correo-de-credenciales">Importación y correo de credenciales</a></li>
+</ul>
+</li>
+<li><a href="#8-carreras-identidad-y-membresias">8. Carreras, identidad y membresías</a><ul>
+<li><a href="#carreras-y-accesos-pagesadmincareersphp">Carreras y accesos — /pages/admin/careers.php</a></li>
+<li><a href="#modulos-pagesadmincareer-modulesphp">Módulos — /pages/admin/career-modules.php</a></li>
+<li><a href="#carga-inicial-pagesadmincareer-setupphp">Carga inicial — /pages/admin/career-setup.php</a></li>
+</ul>
+</li>
+<li><a href="#9-asignaturas-cargas-y-competencias">9. Asignaturas, cargas y competencias</a></li>
+<li><a href="#10-seguimiento-academico-y-residencias">10. Seguimiento académico y residencias</a><ul>
+<li><a href="#pestanas-y-visibilidad">Pestañas y visibilidad</a></li>
+<li><a href="#101-periodos-y-matricula">10.1 Periodos y matrícula</a></li>
+<li><a href="#102-materias-e-inscripciones">10.2 Materias e inscripciones</a></li>
+<li><a href="#103-autorizaciones">10.3 Autorizaciones</a></li>
+<li><a href="#104-perfiles-y-compromisos">10.4 Perfiles y compromisos</a></li>
+<li><a href="#105-continuidad">10.5 Continuidad</a></li>
+<li><a href="#106-residencias-individuales">10.6 Residencias individuales</a></li>
+</ul>
+</li>
+<li><a href="#11-proyectos-modalidades-y-tesis">11. Proyectos, modalidades y tesis</a><ul>
+<li><a href="#listado-de-gestion-pagesadminprojectsphp">Listado de gestión — /pages/admin/projects.php</a></li>
+<li><a href="#paginas-independientes">Páginas independientes</a></li>
+<li><a href="#mis-proyectos-del-docente-pagesteachermy-projectsphp">Mis proyectos del docente — /pages/teacher/my-projects.php</a></li>
+</ul>
+</li>
+<li><a href="#12-registro-y-revision-de-propuestas">12. Registro y revisión de propuestas</a><ul>
+<li><a href="#estudiante-pagesstudentproposal-registerphp">Estudiante — /pages/student/proposal-register.php</a></li>
+<li><a href="#gestion-pagesadminproposal-configphp">Gestión — /pages/admin/proposal-config.php</a></li>
+<li><a href="#docente-pagesteacherproposal-reviewphp">Docente — /pages/teacher/proposal-review.php</a></li>
+</ul>
+</li>
+<li><a href="#13-asesores-y-comites-pagesadminadvisorsphp">13. Asesores y comités — /pages/admin/advisors.php</a></li>
+<li><a href="#14-entregables">14. Entregables</a><ul>
+<li><a href="#gestion-pagesadmindeliverablesphp">Gestión — /pages/admin/deliverables.php</a></li>
+<li><a href="#estudiante-pagesstudentmy-deliverablesphp">Estudiante — /pages/student/my-deliverables.php</a></li>
+<li><a href="#docente-pagesteachermy-deliverablesphp">Docente — /pages/teacher/my-deliverables.php</a></li>
+<li><a href="#archivos-y-diferencias-de-validacion">Archivos y diferencias de validación</a></li>
+</ul>
+</li>
+<li><a href="#15-salas-turnos-y-horarios-de-evaluacion">15. Salas, turnos y horarios de evaluación</a><ul>
+<li><a href="#vistas-y-filtros">Vistas y filtros</a></li>
+<li><a href="#configurar-una-sala">Configurar una sala</a></li>
+<li><a href="#operar-la-sesion">Operar la sesión</a></li>
+</ul>
+</li>
+<li><a href="#16-evaluaciones-rubricas-e-historial">16. Evaluaciones, rúbricas e historial</a><ul>
+<li><a href="#consulta-y-organizacion">Consulta y organización</a></li>
+<li><a href="#evaluar">Evaluar</a></li>
+<li><a href="#borradores">Borradores</a></li>
+<li><a href="#administrar-rubricas">Administrar rúbricas</a></li>
+<li><a href="#cierre-retroalimentacion-y-reportes">Cierre, retroalimentación y reportes</a></li>
+<li><a href="#archivo-y-componentes-heredados">Archivo y componentes heredados</a></li>
+</ul>
+</li>
+<li><a href="#17-documentos-de-evaluacion-tesis-y-publicacion">17. Documentos de evaluación, tesis y publicación</a><ul>
+<li><a href="#hoja-de-liberacion-y-presentacion">Hoja de liberación y presentación</a></li>
+<li><a href="#tesis-y-residencias-de-noveno">Tesis y residencias de noveno</a></li>
+</ul>
+</li>
+<li><a href="#18-repositorio-publico-y-privado">18. Repositorio público y privado</a><ul>
+<li><a href="#catalogo-pagesrepositoriophp">Catálogo — /pages/repositorio.php</a></li>
+<li><a href="#cargar-y-editar">Cargar y editar</a></li>
+<li><a href="#detalle-pagesrepositorio-detailphpid">Detalle — /pages/repositorio-detail.php?id=...</a></li>
+</ul>
+</li>
+<li><a href="#19-etiquetas-documentales-pagesadmindocument-tagsphp">19. Etiquetas documentales — /pages/admin/document-tags.php</a></li>
+<li><a href="#20-avisos-y-notificaciones">20. Avisos y notificaciones</a><ul>
+<li><a href="#avisos-administrables-pagesadminnoticesphp">Avisos administrables — /pages/admin/notices.php</a></li>
+<li><a href="#actividad-reciente">Actividad reciente</a></li>
+<li><a href="#alertas-operativas">Alertas operativas</a></li>
+</ul>
+</li>
+<li><a href="#21-ajustes-generales-pagesadminsettingsphp">21. Ajustes generales — /pages/admin/settings.php</a></li>
+<li><a href="#22-operaciones-auditoria-integridad-y-respaldos">22. Operaciones, auditoría, integridad y respaldos</a><ul>
+<li><a href="#centro-de-operaciones-pagesadminoperationsphp">Centro de operaciones — /pages/admin/operations.php</a></li>
+<li><a href="#auditoria-pagesadmincareer-auditphp">Auditoría — /pages/admin/career-audit.php</a></li>
+<li><a href="#integridad-pagesadmincareer-integrityphp">Integridad — /pages/admin/career-integrity.php</a></li>
+<li><a href="#respaldos-pagesadmindatabase-backupsphp">Respaldos — /pages/admin/database-backups.php</a></li>
+</ul>
+</li>
+<li><a href="#23-procesos-de-principio-a-fin">23. Procesos de principio a fin</a><ul>
+<li><a href="#preparar-una-carrera-para-trabajar">Preparar una carrera para trabajar</a></li>
+<li><a href="#alumno-propuesta-entregables-y-evaluacion">Alumno: propuesta, entregables y evaluación</a></li>
+<li><a href="#docente-seguimiento-y-exposicion">Docente: seguimiento y exposición</a></li>
+<li><a href="#cambio-de-periodo-con-conservacion-de-historia">Cambio de periodo con conservación de historia</a></li>
+<li><a href="#residencia-individual">Residencia individual</a></li>
+</ul>
+</li>
+<li><a href="#24-arquitectura-tecnica-para-mantenimiento">24. Arquitectura técnica para mantenimiento</a><ul>
+<li><a href="#responsabilidades-por-carpeta">Responsabilidades por carpeta</a></li>
+<li><a href="#entorno-y-arranque">Entorno y arranque</a></li>
+<li><a href="#configuracion">Configuración</a></li>
+<li><a href="#cliente-http-assetsjsapijs">Cliente HTTP — assets/js/api.js</a></li>
+<li><a href="#autenticacion-assetsjsauthjs">Autenticación — assets/js/auth.js</a></li>
+<li><a href="#funciones-de-apoyo">Funciones de apoyo</a></li>
+</ul>
+</li>
+<li><a href="#25-estado-local-fechas-y-persistencia">25. Estado local, fechas y persistencia</a></li>
+<li><a href="#26-que-revisar-cuando-algo-no-aparece-o-falla">26. Qué revisar cuando algo no aparece o falla</a></li>
+<li><a href="#27-hallazgos-que-delimitan-el-comportamiento-real">27. Hallazgos que delimitan el comportamiento real</a><ul>
+<li><a href="#f01-selector-de-envio-en-correccion-de-propuesta">F01. Selector de envío en corrección de propuesta</a></li>
+<li><a href="#f02-destino-fijo-despues-de-cambiar-carrera">F02. Destino fijo después de cambiar carrera</a></li>
+<li><a href="#f03-condiciones-diferentes-entre-menu-y-guardias">F03. Condiciones diferentes entre menú y guardias</a></li>
+<li><a href="#f04-perfil-base-en-documentos">F04. Perfil base en documentos</a></li>
+<li><a href="#f05-funciones-heredadas-con-compatibilidad-limitada">F05. Funciones heredadas con compatibilidad limitada</a></li>
+<li><a href="#f06-htaccess-incluye-php-en-una-regla-de-denegacion">F06. .htaccess incluye PHP en una regla de denegación</a></li>
+<li><a href="#f07-guardias-locales-basadas-en-sesion-suministrada-al-puente">F07. Guardias locales basadas en sesión suministrada al puente</a></li>
+<li><a href="#f08-diferencias-en-previsualizacion-y-limites-de-archivos">F08. Diferencias en previsualización y límites de archivos</a></li>
+<li><a href="#f09-catalogos-limitados-y-dos-implementaciones-de-salas">F09. Catálogos limitados y dos implementaciones de salas</a></li>
+<li><a href="#f10-helpers-genericos-no-equivalen-a-funciones-operativas-completas">F10. Helpers genéricos no equivalen a funciones operativas completas</a></li>
+<li><a href="#f11-destino-de-detalle-sin-identificador">F11. Destino de detalle sin identificador</a></li>
+</ul>
+</li>
+<li><a href="#28-alcance-de-la-verificacion-y-trazabilidad">28. Alcance de la verificación y trazabilidad</a></li>
+</ul>
+</div>
+<h1 id="manual-funcional-y-tecnico-completo-de-frontend_swgpi">Manual funcional y técnico completo de Frontend_Swgpi</h1>
+<p><strong>Fecha de revisión:</strong> 23 de octubre de 2026, America/Mexico_City.<br />
+<strong>Proyecto:</strong> <code>Frontend_Swgpi</code>.<br />
+<strong>Destinatarios:</strong> usuarios, responsables académicos, soporte, pruebas y desarrollo.<br />
+<strong>Base:</strong> archivos de la copia de trabajo; análisis estático y comprobaciones locales indicadas en <a href="VERIFICACION.html">VERIFICACION.md</a>.</p>
+<p><strong>Versiones de lectura:</strong> <a href="MANUAL_FRONTEND_SWGPI.docx">Word</a> · <a href="MANUAL_FRONTEND_SWGPI.html">HTML con índice navegable</a>. Los anexos se conservan junto al manual.</p>
+<h2 id="como-utilizar-este-documento">Cómo utilizar este documento</h2>
+<p>Esta guía explica qué puede hacer una persona en cada apartado, cómo se relacionan las pantallas y qué código interviene. Los anexos completan el detalle de los controles y permiten localizar una función sin recorrer todo el proyecto.</p>
+<table>
+<thead>
+<tr>
+<th>Documento</th>
+<th>Para qué consultarlo</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Este manual</td>
+<td>Comprender roles, pantallas, procesos, botones principales y restricciones.</td>
+</tr>
+<tr>
+<td><a href="RUTAS.html">RUTAS.md</a></td>
+<td>Localizar todas las entradas PHP, sus parámetros y condiciones de acceso.</td>
+</tr>
+<tr>
+<td><a href="INTERFACES.html">INTERFACES.md</a></td>
+<td>Consultar controles HTML, etiquetas, formularios, modales, enlaces y eventos por archivo.</td>
+</tr>
+<tr>
+<td><a href="FUNCIONES.html">FUNCIONES.md</a></td>
+<td>Localizar declaraciones PHP/JavaScript, métodos, manejadores y llamadas de integración.</td>
+</tr>
+<tr>
+<td><a href="REFERENCIA.html">REFERENCIA.md</a></td>
+<td>Consultar la instantánea del código propio de implementación y sus condiciones exactas.</td>
+</tr>
+<tr>
+<td><a href="INVENTARIO.html">INVENTARIO.md</a></td>
+<td>Identificar archivos, tamaños y huellas del corte documentado.</td>
+</tr>
+<tr>
+<td><a href="VERIFICACION.html">VERIFICACION.md</a></td>
+<td>Conocer qué se comprobó y qué no se probó en ejecución.</td>
+</tr>
+<tr>
+<td><a href="cobertura.json">cobertura.json</a></td>
+<td>Procesar inventario y métricas de documentación. No representa cobertura de pruebas.</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Alcance:</strong> exclusivamente el cliente PHP/HTML/JavaScript <code>Frontend_Swgpi</code>. No se documenta <code>React_Swgpi</code> ni se repite la arquitectura interna de la API. Las solicitudes HTTP se mencionan sólo para explicar el resultado de los botones y la dependencia del frontend. El <a href="../../../ApiSwgpi_v2/docs/informe_2026-10-19/README.md">informe previo de API</a> debe consultarse por separado para reglas autoritativas del servidor; ese enlace se resuelve desde la estructura de proyectos hermanos.</p>
+<p><strong>Cómo interpretar las afirmaciones:</strong> una pantalla o botón presente en el código es una capacidad expuesta por la interfaz, no una certificación de que el servidor la acepte en cualquier estado. La visibilidad depende de sesión, carrera, rol, permisos devueltos, configuración y datos. Los hallazgos al final distinguen inconsistencias del cliente y compatibilidad descrita en el informe previo. No se iniciaron sesiones con cuentas reales ni se enviaron correos, modificaron matrículas o ejecutaron operaciones institucionales.</p>
+<h2 id="1-que-es-este-frontend">1. Qué es este frontend</h2>
+<p>Es el portal web del Sistema de Gestión de Proyectos Integradores del ITSSMT. Permite consultar el repositorio, acceder con una cuenta institucional y realizar seguimiento de proyectos, propuestas, materias, evidencias, evaluaciones y residencias. Para administración incorpora gobierno de usuarios y carreras, configuración, auditoría, integridad, alertas y respaldos.</p>
+<p>La aplicación está construida con páginas PHP que generan HTML y JavaScript que consulta la API. No requiere el proyecto React para mostrar estas páginas. Las rutas principales son archivos <code>.php</code>; los cambios de filtros y formularios suelen actualizar fragmentos dentro de la misma página. Las transiciones visuales no convierten el portal completo en una SPA.</p>
+<p>La interfaz usa Bootstrap 5.3.0, Bootstrap Icons 1.11.0 y CSS propio. También carga SweetAlert2 para mensajes y confirmaciones, Axios en los flujos que lo necesitan y Mammoth para la vista previa de DOCX. Son dependencias declaradas en los enlaces del código; no se afirma que sean las versiones más recientes. Imágenes institucionales, fondos y variantes WebP/JPEG están en <code>assets/img/ITSSMT</code>.</p>
+<h3 id="vocabulario-de-uso">Vocabulario de uso</h3>
+<table>
+<thead>
+<tr>
+<th>Concepto</th>
+<th>Significado en las pantallas</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Carrera activa</td>
+<td>Contexto institucional bajo el que se consultan y administran los datos.</td>
+</tr>
+<tr>
+<td>Perfil activo</td>
+<td>Papel que se utiliza para decidir accesos dentro de la carrera. Puede diferir de <code>perfil_id</code>.</td>
+</tr>
+<tr>
+<td>Periodo</td>
+<td>Calendario de trabajo académico y su estado operativo.</td>
+</tr>
+<tr>
+<td>Matrícula</td>
+<td>Ubicación del estudiante en un grupo del periodo.</td>
+</tr>
+<tr>
+<td>Inscripción</td>
+<td>Participación del estudiante en un curso/materia particular.</td>
+</tr>
+<tr>
+<td>Grupo o carga</td>
+<td>Agrupación por semestre, grupo y periodo con asignaturas asociadas.</td>
+</tr>
+<tr>
+<td>Propuesta</td>
+<td>Registro de proyecto sometido a revisión y, en su caso, correcciones.</td>
+</tr>
+<tr>
+<td>Proyecto</td>
+<td>Trabajo con integrantes, empresa, asignaturas y asesores.</td>
+</tr>
+<tr>
+<td>Tesis</td>
+<td>Clasificación de proyecto/documentación que aparece en vistas específicas.</td>
+</tr>
+<tr>
+<td>Entregable</td>
+<td>Actividad o evidencia académica con archivo y posible calificación.</td>
+</tr>
+<tr>
+<td>Sala</td>
+<td>Organización de presentaciones con docentes, responsable, orden y horario.</td>
+</tr>
+<tr>
+<td>Rúbrica</td>
+<td>Conjunto de preguntas/criterios y respuestas que sustentan una evaluación.</td>
+</tr>
+<tr>
+<td>Residencia</td>
+<td>Expediente individual, con requisitos y versiones documentales.</td>
+</tr>
+<tr>
+<td>Publicar</td>
+<td>Hacer visible un documento en el repositorio público, sujeto al servidor.</td>
+</tr>
+<tr>
+<td>Archivar</td>
+<td>Llevar una evaluación o sala al historial; no equivale a borrar.</td>
+</tr>
+</tbody>
+</table>
+<h2 id="2-roles-permisos-y-contexto-de-carrera">2. Roles, permisos y contexto de carrera</h2>
+<p><code>includes/config.php</code> define siete perfiles. La mayoría de comprobaciones usa <code>active_profile_id</code> y recurre a <code>perfil_id</code> cuando falta. La condición de administrador general se calcula específicamente con el <code>perfil_id</code> base igual a 4.</p>
+<table>
+<thead>
+<tr>
+<th style="text-align: right;">ID</th>
+<th>Perfil</th>
+<th>Alcance que expresa el cliente</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: right;">1</td>
+<td>Administrador</td>
+<td>Gestión de proyectos y académica, ajustes y módulos de carrera.</td>
+</tr>
+<tr>
+<td style="text-align: right;">2</td>
+<td>Docente</td>
+<td>Proyectos asignados, propuestas, entregables, evaluaciones y seguimiento aplicable.</td>
+</tr>
+<tr>
+<td style="text-align: right;">3</td>
+<td>Estudiante</td>
+<td>Propuesta, proyectos propios, entregables, documentos, inscripciones y residencia propia.</td>
+</tr>
+<tr>
+<td style="text-align: right;">4</td>
+<td>Administrador general</td>
+<td>Gobierno institucional, cuentas, carreras, auditoría, integridad y continuidad; además funciones administrativas.</td>
+</tr>
+<tr>
+<td style="text-align: right;">5</td>
+<td>Jefe de Carrera</td>
+<td>Se considera administrador para las comprobaciones habituales.</td>
+</tr>
+<tr>
+<td style="text-align: right;">6</td>
+<td>Asistente de Jefe de Carrera</td>
+<td>Gestión académica y de proyectos; no equivale a administrador de ajustes.</td>
+</tr>
+<tr>
+<td style="text-align: right;">7</td>
+<td>Coordinador de Proyectos</td>
+<td>Gestión de proyectos; no recibe automáticamente gestión académica ni gobierno de cuentas.</td>
+</tr>
+</tbody>
+</table>
+<h3 id="helpers-que-explican-los-accesos">Helpers que explican los accesos</h3>
+<table>
+<thead>
+<tr>
+<th>Helper PHP</th>
+<th>Condición resumida</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>is_authenticated()</code></td>
+<td>Existe <code>$_SESSION['auth_token']</code>; no consulta la API al evaluar la condición.</td>
+</tr>
+<tr>
+<td><code>is_admin()</code></td>
+<td>Perfil activo 1 o 5, o administrador general.</td>
+</tr>
+<tr>
+<td><code>can_manage_academics()</code></td>
+<td>Administrador o asistente de jefatura.</td>
+</tr>
+<tr>
+<td><code>can_manage_projects()</code></td>
+<td>Administrador, asistente o coordinador.</td>
+</tr>
+<tr>
+<td><code>is_management_staff()</code></td>
+<td>Usa <code>can_manage_projects()</code>.</td>
+</tr>
+<tr>
+<td><code>can_govern_users()</code></td>
+<td>Sólo administrador general.</td>
+</tr>
+<tr>
+<td><code>is_evaluation_manager()</code></td>
+<td>Administrador o bandera <code>is_evaluation_manager</code> del usuario.</td>
+</tr>
+<tr>
+<td><code>dashboard_url()</code></td>
+<td>Tablero administrativo para personal de gestión; docente para 2; estudiante para 3; portada en otros casos.</td>
+</tr>
+</tbody>
+</table>
+<p>Hay tres capas distintas: enlaces del menú, guardia PHP de la página y autorización de la API. Por ejemplo, <code>admin/projects.php</code> y <code>admin/deliverables.php</code> comprueban sesión al entrar, aunque se encuentren bajo <code>admin</code>. No debe inferirse un permiso por el nombre del directorio. Los anexos registran las guardias por archivo.</p>
+<h3 id="cambio-de-carrera">Cambio de carrera</h3>
+<p>El selector superior aparece para administración general o cuando hay más de una carrera disponible. Muestra nombre corto, clave, color y la carrera seleccionada. Al pulsar una opción, <code>career-switcher.js</code> solicita el cambio, guarda el nuevo token y usuario mediante <code>/api/set-session.php</code>, vacía <code>sessionStorage</code> y recarga. Deshabilita la opción durante la operación; ante un error la reactiva y muestra el motivo.</p>
+<p>El destino está fijado a <code>/pages/admin/dashboard.php</code>, incluso cuando el perfil de la carrera es docente o estudiante. Esta particularidad se registra como hallazgo; no se debe describir como redirección automática correcta para todos los perfiles.</p>
+<h2 id="3-estructura-visual-compartida">3. Estructura visual compartida</h2>
+<h3 id="barra-superior">Barra superior</h3>
+<p>Contiene el logotipo y enlace a Inicio, acceso al Repositorio, botón de menú lateral, buscador global, selector de carrera cuando aplica, menú de gestiones, notificaciones y opciones de usuario. Su contenido se genera en <code>includes/navbar.php</code> según la sesión y el perfil.</p>
+<table>
+<thead>
+<tr>
+<th>Control</th>
+<th>Qué hace</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Logotipo / Inicio</td>
+<td>Abre el tablero adecuado o la portada pública.</td>
+</tr>
+<tr>
+<td>Icono de menú</td>
+<td>Alterna la barra lateral y su presentación móvil.</td>
+</tr>
+<tr>
+<td>Repositorio</td>
+<td>Abre el catálogo documental.</td>
+</tr>
+<tr>
+<td>Buscador global</td>
+<td>Busca opciones del catálogo local de navegación y propone enlaces con filtros.</td>
+</tr>
+<tr>
+<td><code>Ctrl + K</code> / <code>Cmd + K</code></td>
+<td>Enfoca y selecciona el texto del buscador.</td>
+</tr>
+<tr>
+<td>Flechas, Enter, Escape</td>
+<td>Recorren resultados, abren el seleccionado o cierran el panel.</td>
+</tr>
+<tr>
+<td>Gestiones</td>
+<td>Despliega accesos agrupados según perfil.</td>
+</tr>
+<tr>
+<td>Campana</td>
+<td>Consulta avisos del sistema aplicables.</td>
+</tr>
+<tr>
+<td>Sobre de actividad</td>
+<td>Consulta notificaciones de actividad y permite marcarlas leídas.</td>
+</tr>
+<tr>
+<td>Escudo de alertas</td>
+<td>Acceso exclusivo de administración general al estado operativo.</td>
+</tr>
+<tr>
+<td>Mi perfil</td>
+<td>Abre la consulta de identidad y edición de los datos permitidos.</td>
+</tr>
+<tr>
+<td>Modo oscuro / Modo claro</td>
+<td>Alterna el tema y guarda la preferencia en este navegador.</td>
+</tr>
+<tr>
+<td>Cerrar sesión</td>
+<td>Inicia el flujo de salida y limpieza de sesión.</td>
+</tr>
+</tbody>
+</table>
+<p>El buscador no consulta un índice remoto de todo el sistema: combina títulos, descripciones y palabras clave de un catálogo JavaScript. Normaliza acentos y ordena coincidencias. Sin texto muestra hasta siete accesos; con texto, hasta nueve resultados. Las propuestas de búsqueda en repositorio, proyectos o usuarios navegan a esas pantallas con <code>q</code>; no son resultados de registros ya recuperados.</p>
+<h3 id="barra-lateral">Barra lateral</h3>
+<p>Muestra identidad de carrera, fotografía, nombre, perfil y texto «En línea». Ese texto es visual, no una comprobación de disponibilidad instantánea del servidor. Incluye un acceso común a «Seguimiento académico y residencias» y agrupaciones por rol. En gestión aparecen gobierno institucional, seguridad y continuidad, personas, proyectos y tesis, académico y sistema, según permisos. Docentes y estudiantes tienen menos opciones. El control inferior contrae el menú.</p>
+<p>Los elementos <code>data-career-module</code> pueden ocultarse según <code>/career/modules</code>. La ocultación es una ayuda de navegación; no reemplaza la autorización de las solicitudes. El menú lateral, el menú superior y el buscador no tienen condiciones idénticas en todos los casos.</p>
+<h3 id="mensajes-modales-y-estados">Mensajes, modales y estados</h3>
+<p>Se utilizan indicadores de carga, filas vacías, insignias, mensajes de error y avisos temporales. <code>showAlert</code> prefiere las notificaciones SweetAlert; si no están disponibles genera una alerta dentro del contenedor. <code>confirmAction</code>, <code>promptText</code> y <code>promptPassword</code> centralizan confirmaciones, texto y contraseñas. Las utilidades de diálogo intentan conservar el scroll y devolver el foco al control anterior.</p>
+<p>Cerrar o cancelar un modal no equivale a guardar. Las pantallas que modifican datos necesitan una acción de envío explícita. La rúbrica constituye una excepción parcial: conserva borrador local, pero éste tampoco equivale a una calificación enviada.</p>
+<h3 id="apariencia-y-adaptacion">Apariencia y adaptación</h3>
+<p>El CSS propio define tarjetas, tablas, barras laterales, avisos, formularios, temas y disposición móvil. <code>responsive.js</code> adapta navegación y tablas; <code>skeleton-loader.js</code> proporciona marcadores de carga; <code>view-transitions.js</code> anima cambios y navegación interna, respetando la preferencia de movimiento reducido. El tema puede proceder de una preferencia local o de ajustes del sistema. Escala de grises y tamaño de fuente se aplican a la interfaz.</p>
+<p>No se ha realizado una certificación de accesibilidad ni un recorrido visual en todos los tamaños. Los atributos ARIA y las mejoras de foco presentes en el código son evidencia de implementación, no una evaluación completa de conformidad.</p>
+<h2 id="4-portada-inicio-y-recuperacion-de-sesion">4. Portada, inicio y recuperación de sesión</h2>
+<p><strong>Ruta principal:</strong> <code>/index.php</code>.</p>
+<p>La portada presenta identidad institucional, una introducción al repositorio, acceso al catálogo y explicación de capacidades académicas. Desde ella se abre el modal de acceso; los fragmentos <code>#login</code> y <code>#recover</code> permiten abrir directamente el flujo correspondiente. Se muestra un aviso relacionado con cookies y un control para aceptarlo.</p>
+<h3 id="iniciar-sesion">Iniciar sesión</h3>
+<ol>
+<li>Abrir «Iniciar sesión».</li>
+<li>Introducir número de control o de empleado y contraseña.</li>
+<li>Elegir «Recuérdame».</li>
+<li>Enviar el formulario.</li>
+<li>El cliente comprueba cookies, solicita autenticación, persiste la sesión PHP y navega al tablero.</li>
+</ol>
+<p>Mientras se procesa se cambia el texto/estado del botón para evitar envíos repetidos. Los campos requeridos y los mensajes de error ayudan a corregir la entrada. <code>AuthManager.login()</code> conserva token, usuario y preferencia de recordatorio en memoria. La persistencia PHP se realiza mediante la entrada local <code>/api/set-session.php</code>.</p>
+<p>«Recuérdame» afecta las cookies persistentes; el cliente PHP declara 28 días de duración de esas cookies. No significa que un JWT nunca expire: hay renovación, comprobaciones del servidor y cierre de sesión por inactividad.</p>
+<h3 id="recuperar-contrasena">Recuperar contraseña</h3>
+<p>El flujo está dividido en tres modales:</p>
+<table>
+<thead>
+<tr>
+<th>Paso</th>
+<th>Campos</th>
+<th>Botón y resultado</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Solicitar</td>
+<td>Número de control/empleado y correo registrado</td>
+<td><strong>Enviar token</strong> solicita el código al servidor.</td>
+</tr>
+<tr>
+<td>Verificar</td>
+<td>Token de seis dígitos</td>
+<td><strong>Validar token</strong> comprueba el código y abre el siguiente paso.</td>
+</tr>
+<tr>
+<td>Cambiar</td>
+<td>Nueva contraseña y confirmación</td>
+<td>Envía la nueva contraseña, recibe sesión y la guarda.</td>
+</tr>
+</tbody>
+</table>
+<p>La nueva contraseña exige al menos seis caracteres en el HTML y debe coincidir con la confirmación. La existencia de la cuenta, validez y vigencia del token dependen del servidor. El frontend no envía el correo por sí mismo.</p>
+<p><code>pages/login.php</code> redirige a la portada con <code>#login</code> o al tablero si ya hay sesión. <code>forgot-password.php</code> y <code>reset-password.php</code> redirigen a <code>#recover</code>; no son formularios independientes de recuperación mediante enlace de token.</p>
+<h3 id="salir-y-mantener-la-sesion">Salir y mantener la sesión</h3>
+<p>El control de la barra superior pide confirmación antes de enviar la salida; la función global <code>logout()</code> y <code>AuthManager.logout()</code> son implementaciones relacionadas. <code>AuthManager.logout()</code> intenta cerrar la sesión en la API y después navega a <code>pages/logout.php</code>. Esta última limpia sesión PHP y cookies. Las solicitudes protegidas que reciben 401 pueden intentar una renovación; si la sesión es terminal se fuerza la salida.</p>
+<p>El mantenimiento programa renovación antes de la expiración, heartbeat y revalidación al recuperar el foco/visibilidad. <code>includes/footer.php</code> aplica el tiempo de inactividad obtenido de ajustes. Los fallos temporales de servidor se distinguen de errores terminales cuando la implementación dispone de ese dato.</p>
+<h2 id="5-tableros-por-perfil">5. Tableros por perfil</h2>
+<h3 id="administracion-pagesadmindashboardphp">Administración — <code>/pages/admin/dashboard.php</code></h3>
+<p>Accesible a personal de gestión. Presenta identidad de carrera, acciones rápidas, avance global, distribución de usuarios, estados de propuestas y resumen de proyectos. Consulta estadísticas y módulos de carrera para construir indicadores y enlaces. Los gráficos son representaciones HTML/CSS de los datos recibidos.</p>
+<p>Los accesos rápidos conducen a usuarios, proyectos, entregables y etiquetas cuando se muestran. La presencia de un enlace no amplía permisos sobre su destino. Las funciones de renderizado calculan porcentajes, etiquetas de estado y barras; los valores de negocio vienen de la API.</p>
+<h3 id="docente-pagesteacherdashboardphp">Docente — <code>/pages/teacher/dashboard.php</code></h3>
+<p>Exige perfil docente. Resume revisión, entregables, propuestas y proyectos recientes. Las tarjetas de proyectos incluyen avance y datos de integrantes/asesoría disponibles. Propone una siguiente acción según estadísticas. Su fuente principal es <code>/dashboard/teacher</code>.</p>
+<h3 id="estudiante-pagesstudentdashboardphp">Estudiante — <code>/pages/student/dashboard.php</code></h3>
+<p>Exige perfil estudiante. Muestra avance, entregables, propuestas, proyectos activos y presentaciones programadas. Consulta además el estado de propuesta y la agenda de evaluación. Puede abrir un modal de perfil inicial con nombre, apellidos, semestre, grupo y foto; <strong>Guardar y continuar</strong> envía esos datos al endpoint de completar perfil.</p>
+<p>La agenda orienta sobre presentaciones; no debe confundirse con un editor de horarios. Cuando no hay proyecto, datos o presentaciones, el frontend genera estados vacíos en lugar de asumir que todas las etapas están completas.</p>
+<h2 id="6-perfil-personal-pagesprofilephp">6. Perfil personal — <code>/pages/profile.php</code></h2>
+<p>Pantalla común para usuarios autenticados. Carga <code>/profile</code> y presenta datos personales y fotografía.</p>
+<table>
+<thead>
+<tr>
+<th>Grupo</th>
+<th>Campos y comportamiento</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Identidad</td>
+<td>Nombre y apellidos de sólo lectura: campos deshabilitados.</td>
+</tr>
+<tr>
+<td>Contacto</td>
+<td>Correo de sólo lectura; teléfono y dirección editables.</td>
+</tr>
+<tr>
+<td>Contexto académico</td>
+<td>Semestre y grupo del estudiante, deshabilitados al cargar; se eliminan del envío. No se cambian desde este perfil.</td>
+</tr>
+<tr>
+<td>Fotografía</td>
+<td>Selección de imagen y actualización de la presentación del perfil.</td>
+</tr>
+<tr>
+<td>Contraseña</td>
+<td>Contraseña actual, nueva y confirmación.</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Guardar cambios</strong> envía <code>FormData</code> a <code>/profile</code>; omite semestre/grupo y contraseñas vacías. Tras guardar solicita actualizar la sesión PHP con el usuario devuelto. El procesamiento PHP no guarda la fotografía ni los datos en una base local del frontend. La URL de foto se forma con el origen de la API y <code>storage</code>; si falta fotografía se muestra una imagen institucional.</p>
+<h2 id="7-gobierno-de-usuarios">7. Gobierno de usuarios</h2>
+<h3 id="listado-pagesadminusersphp">Listado — <code>/pages/admin/users.php</code></h3>
+<p>La guardia exige administrador general (<code>can_govern_users</code>). Ofrece búsqueda por texto, estado activo/inactivo/todos, perfil, semestre y grupo; paginación y selección de usuarios. En móvil agrupa opciones y resume los filtros activos.</p>
+<table>
+<thead>
+<tr>
+<th>Acción</th>
+<th>Funcionamiento</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Nuevo Usuario</td>
+<td>Abre el formulario de alta en modal.</td>
+</tr>
+<tr>
+<td>Editar</td>
+<td>Recupera los datos del registro y permite modificarlos.</td>
+</tr>
+<tr>
+<td>Activar / desactivar</td>
+<td>Solicita cambio de estado; cuentas protegidas pasan por confirmaciones/contraseña administrativa.</td>
+</tr>
+<tr>
+<td>Seleccionar página</td>
+<td>Añade los registros visibles a la selección.</td>
+</tr>
+<tr>
+<td>Limpiar selección</td>
+<td>Descarta la selección local.</td>
+</tr>
+<tr>
+<td>Plantilla Excel</td>
+<td>Descarga el formato de importación.</td>
+</tr>
+<tr>
+<td>Cargar Excel</td>
+<td>Abre el modal para seleccionar y enviar la plantilla.</td>
+</tr>
+<tr>
+<td>Enviar credenciales</td>
+<td>Configura destinatarios, correo y posible contraseña temporal.</td>
+</tr>
+<tr>
+<td>Control de grupos</td>
+<td>Abre gestión de grupos y asignación de estudiantes.</td>
+</tr>
+</tbody>
+</table>
+<p>La selección local puede incluir varias páginas. «Todos los usuarios del filtro actual» es un alcance distinto de «Sólo usuarios seleccionados»: el primero se construye con filtros y no se limita a las filas visibles.</p>
+<h3 id="alta-y-edicion">Alta y edición</h3>
+<p>Campos: identificador institucional, email, teléfono, perfil, nombres, apellidos, dirección, contraseña y confirmación; estado en edición; semestre y grupo para alumnos. El cambio de semestre carga grupos compatibles. Se validan campos obligatorios y coincidencia de contraseñas según cada formulario. No debe asumirse que las variantes modal y página independiente son idénticas.</p>
+<p>También existen <code>/pages/admin/user-create.php</code> y <code>/pages/admin/user-edit.php?id=...</code>. La edición sin <code>id</code> devuelve al listado. En edición se indica que una contraseña vacía conserva la existente. <strong>Guardar</strong> y <strong>Guardar cambios</strong> llaman a creación o actualización del usuario.</p>
+<h3 id="control-de-grupos">Control de grupos</h3>
+<p>Permite listar por semestre, crear grupo, editarlo, detectar duplicados, eliminarlo y asignar estudiante. Los formularios incluyen nombre/periodo y los datos de semestre/grupo correspondientes. El cliente carga alumnos activos para seleccionar. La retirada de un estudiante en este flujo heredado se implementa enviando semestre y grupo nulos al usuario; no es el mismo proceso que una baja de curso en la consola académica nueva.</p>
+<h3 id="importacion-y-correo-de-credenciales">Importación y correo de credenciales</h3>
+<p>La importación usa archivo multipart y presenta resultados o errores por la respuesta recibida. No basta con seleccionar el archivo: hay que pulsar <strong>Importar</strong>. El formulario de credenciales permite asunto, base del correo, perfiles destinatarios cuando se usa filtro, regeneración opcional de contraseña temporal y contraseña del administrador actual. <strong>Enviar correos</strong> envía la operación al servidor y puede tardar más que una consulta habitual.</p>
+<p>El informe previo de API identifica una posible colisión de la ruta de plantilla de correo. Este manual registra la función expuesta, pero no afirma que el envío o la carga de plantilla hayan sido comprobados contra el backend actual.</p>
+<h2 id="8-carreras-identidad-y-membresias">8. Carreras, identidad y membresías</h2>
+<h3 id="carreras-y-accesos-pagesadmincareersphp">Carreras y accesos — <code>/pages/admin/careers.php</code></h3>
+<p>Reservada a administración general. Muestra tarjetas de carreras con clave, nombre corto, integrantes y porcentaje de preparación. Seleccionar una carrera cambia el detalle que se administra; <strong>Administrar</strong> entra en su contexto.</p>
+<p>La identidad editable incluye nombre, nombre corto, colores principal/secundario/acento y lema. <strong>Guardar identidad</strong> persiste los datos de la carrera seleccionada. <strong>Exportar resumen</strong> descarga un resumen institucional.</p>
+<p>En membresías se introduce identificador de persona, rol en la carrera y condición de carrera principal. <strong>Asignar</strong> crea el vínculo; los controles de fila permiten activar/desactivar o retirar una membresía. Una membresía y una cuenta global son conceptos diferentes: retirar un acceso de carrera no debe describirse como eliminar automáticamente al usuario institucional.</p>
+<h3 id="modulos-pagesadmincareer-modulesphp">Módulos — <code>/pages/admin/career-modules.php</code></h3>
+<p>Accesible mediante <code>requireAdmin</code>. Lista módulos habilitados, registros e indicadores. Al seleccionar un módulo carga sus registros. Un interruptor solicita cambiar habilitación; el servidor puede impedir desactivar un componente obligatorio.</p>
+<p><strong>Nuevo registro</strong> abre datos de clave, título, estado y descripción; <strong>Guardar</strong> crea el registro. Se pueden eliminar registros mediante el control correspondiente. En indicadores se envían valores actual y meta. Estos registros genéricos no equivalen por sí solos a crear una asignatura, proyecto o evaluación de los módulos especializados.</p>
+<h3 id="carga-inicial-pagesadmincareer-setupphp">Carga inicial — <code>/pages/admin/career-setup.php</code></h3>
+<p>Disponible para administradores. Organiza la preparación en asignaturas, grupos/cargas y rúbricas. <strong>Descargar plantilla</strong> obtiene ejemplos de estructura; el lector procesa archivos CSV y actualiza el resumen antes de enviarlos. <strong>Importar catálogo</strong> solicita la carga de asignaturas y grupos. Exige al menos asignaturas preparadas. Sus columnas son <code>clave,nombre,descripcion</code>; para grupos, <code>nombre,semestre,grupo,periodo,asignaturas</code>, con claves de asignaturas separadas por <code>|</code>. El resumen muestra filas preparadas; el texto indica actualización de claves existentes sin eliminar registros. <strong>Inicializar rúbricas</strong> crea contenedores vacíos de quinto a octavo; las preguntas se configuran después en Evaluaciones y es una operación separada. <strong>Exportar carrera</strong> descarga el paquete de la carrera activa.</p>
+<p>No ejecuta migraciones ni sustituye la instalación del backend. Es una interfaz para importar catálogos y preparar datos de una carrera ya disponible.</p>
+<h2 id="9-asignaturas-cargas-y-competencias">9. Asignaturas, cargas y competencias</h2>
+<p><strong>Ruta:</strong> <code>/pages/admin/asignaturas.php</code>. Exige <code>can_manage_academics()</code>.</p>
+<p>La vista lista asignaturas con búsqueda y paginación, permite abrir su estructura y ofrece tres acciones principales: <strong>Nueva Asignatura</strong>, <strong>Gestionar Cargas</strong> y <strong>Gestionar Competencias</strong>.</p>
+<table>
+<thead>
+<tr>
+<th>Área</th>
+<th>Entradas</th>
+<th>Acciones</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Asignatura</td>
+<td>Clave, nombre y descripción</td>
+<td>Crear, editar, guardar, eliminar y ver estructura.</td>
+</tr>
+<tr>
+<td>Competencias</td>
+<td>Asignatura seleccionada, texto de competencia, fecha inicio y fin</td>
+<td>Listar, abrir, editar, guardar, eliminar.</td>
+</tr>
+<tr>
+<td>Grupo/carga</td>
+<td>Semestre, grupo, nombre visible, periodo y selección de asignaturas</td>
+<td>Crear/editar carga, guardar y eliminar.</td>
+</tr>
+</tbody>
+</table>
+<p>La vista de estructura ayuda a relacionar asignatura y competencias. El gestor de competencias puede abrirse desde una asignatura concreta o desde un selector/buscador de materias. El código calcula estados según las fechas para presentarlos visualmente.</p>
+<p><code>/pages/admin/competencias.php</code> sólo redirige a <code>/pages/admin/asignaturas.php#competencias</code>, después de verificar permiso académico. No mantiene una pantalla autónoma. Hay una limitación relevante: según el informe previo de API, las mutaciones genéricas de competencias están inhabilitadas en el servidor; por tanto, sus botones heredados no prueban que la operación sea aceptada.</p>
+<h2 id="10-seguimiento-academico-y-residencias">10. Seguimiento académico y residencias</h2>
+<p><strong>Ruta:</strong> <code>/pages/academic-workflows.php?tab=...</code>. La variante <code>/pages/admin/semesters.php</code> incluye esta misma página. La entrada exige sesión; posteriormente recupera <code>/auth/me</code> para montar la consola con usuario actualizado. <code>assets/js/academic-console.js</code> construye el DOM y gestiona las solicitudes.</p>
+<h3 id="pestanas-y-visibilidad">Pestañas y visibilidad</h3>
+<table>
+<thead>
+<tr>
+<th>Valor <code>tab</code></th>
+<th>Texto</th>
+<th>Visibilidad en el módulo</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>periods</code></td>
+<td>Periodos y matrícula</td>
+<td>Gestión académica: administración, jefatura, asistencia.</td>
+</tr>
+<tr>
+<td><code>courses</code></td>
+<td>Mis materias / Inscripciones</td>
+<td>Todos; el título y las acciones cambian para estudiante.</td>
+</tr>
+<tr>
+<td><code>authorizations</code></td>
+<td>Autorizaciones</td>
+<td>No estudiantes.</td>
+</tr>
+<tr>
+<td><code>memberships</code></td>
+<td>Perfiles</td>
+<td>Administración y jefatura.</td>
+</tr>
+<tr>
+<td><code>residencies</code></td>
+<td>Residencias</td>
+<td>Todos, con acciones por relación y rol.</td>
+</tr>
+<tr>
+<td><code>continuity</code></td>
+<td>Continuidad</td>
+<td>No estudiantes.</td>
+</tr>
+</tbody>
+</table>
+<p>Si la pestaña solicitada no está disponible, se elige la primera permitida. Cada renderizado carga el catálogo académico. Las operaciones muestran «Guardando…», «Operación completada» o el error y ofrecen <strong>Reintentar</strong> cuando falla la carga. Las entradas generadas usan nodos de texto para los datos del usuario.</p>
+<h3 id="101-periodos-y-matricula">10.1 Periodos y matrícula</h3>
+<p>Muestra la última preparación automática registrada y cada periodo con estado operativo y conciliación. Las acciones de transición son <strong>Abrir</strong>, <strong>Iniciar cierre</strong> y <strong>Cerrar</strong>, disponibles a manager (administración/jefatura). Que un botón se muestre no elimina las precondiciones de transición en el servidor.</p>
+<p>Administración general puede <strong>Crear periodo</strong> con nombre, inicio y fin. El cliente envía <code>automatic_promotion: false</code>. <strong>Guardar matrícula</strong> asigna alumno a grupo del periodo abierto.</p>
+<p><strong>Conciliar</strong> abre la comparación de matrículas y salas históricas. Para cada estudiante permite confirmar grupo o dejarlo vacío con motivo. En salas requiere periodo, salón institucional y fuente de verificación. Presenta excepciones históricas y una casilla de reconocimiento cuando existen. <strong>Aplicar conciliación</strong> envía resoluciones y el <code>snapshot</code> recibido, para que el servidor detecte información desactualizada.</p>
+<p><strong>Preparar promoción</strong> muestra cada estudiante, semestre origen/destino, pendientes, acción, grupo destino y motivo. Las opciones son avance, permanencia y salida del seguimiento. Sólo manager obtiene el envío <strong>Confirmar lote</strong>; asistencia puede preparar y revisar. El lote incluye UUID de operación y snapshot. La interfaz advierte que noveno permanece en seguimiento y que no se declara egreso.</p>
+<h3 id="102-materias-e-inscripciones">10.2 Materias e inscripciones</h3>
+<p>Cada curso muestra materia, semestre/grupo y ventana de inscripción.</p>
+<p>Para estudiantes, <strong>Inscribirme</strong> pide clave del docente. Si ya está inscrito, muestra el estado y <strong>Solicitar baja directa</strong>, con motivo. La aceptación depende de ventana, matrícula y compromisos que controle la API.</p>
+<p>Para no estudiantes, el formulario <strong>Abrir inscripción / renovar clave</strong> incluye nueva clave (mínimo seis caracteres), apertura y cierre. <strong>Cerrar autorregistro</strong> desactiva la inscripción por clave. <strong>Ver inscritos</strong> carga personas y estado activo/baja. Gestión académica puede registrar baja administrativa seleccionando alumno y motivo. La autorización del curso concreto sigue correspondiendo al servidor.</p>
+<h3 id="103-autorizaciones">10.3 Autorizaciones</h3>
+<p>El formulario permite seleccionar periodo, tipo, proyecto, alumno, etapa 5–8, evaluación de origen, curso, motivo y vigencia. No todos los campos son obligatorios para todos los tipos: la API valida la combinación.</p>
+<p>Tipos visibles: presentación en otra etapa, reprogramación, nuevo intento y, para manager, inscripción en otro semestre. <strong>Registrar solicitud</strong> crea la petición. El texto aclara que indicar un alumno no autoriza automáticamente a todo el equipo.</p>
+<p>Manager puede resolver solicitudes no consumidas: aprobar/rechazar una solicitada o revocar una aprobada. La resolución incluye motivo, versión y casilla de alcance sobre el proyecto. Una autorización consumida ya no recibe esas mismas acciones en la interfaz.</p>
+<h3 id="104-perfiles-y-compromisos">10.4 Perfiles y compromisos</h3>
+<p>Permite elegir una membresía operativa y asignar perfil docente, estudiante, asistencia o coordinación. <strong>Consultar compromisos</strong> muestra cursos, salas, asesorías y residencias vinculados. El texto explica que altas, cambios de carrera, jefaturas y administradores pertenecen al gobierno general y que los compromisos deben reasignarse antes de determinados cambios.</p>
+<p>Administración general dispone también de <strong>Agregar salón</strong>, con nombre del salón institucional. No es el formulario de sala de evaluación: aquí se prepara el catálogo físico.</p>
+<h3 id="105-continuidad">10.5 Continuidad</h3>
+<p><strong>Registrar continuidad</strong> relaciona proyecto y grupo del periodo abierto. La finalidad mostrada es conservar grupo, documentos y evaluaciones de periodos anteriores. La pestaña no implementa una promoción automática de todos los alumnos ni altera por sí sola una rúbrica histórica.</p>
+<h3 id="106-residencias-individuales">10.6 Residencias individuales</h3>
+<p>Estudiante o gestión académica pueden <strong>Crear expediente</strong> con periodo, proyecto, origen (nuevo de empresa o continuación del integrador), asesor y alcance/cambios de al menos veinte caracteres. Para gestión se selecciona además al residente; para estudiante se utiliza su propio ID. La empresa se toma del proyecto elegido.</p>
+<p>Cada expediente muestra estado y requisitos. Cada requisito contiene versiones con número, nombre, estado y observaciones.</p>
+<table>
+<thead>
+<tr>
+<th>Control</th>
+<th>Condición local</th>
+<th>Resultado solicitado</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Descargar</td>
+<td>Versión visible</td>
+<td>Descarga autenticada de esa versión.</td>
+</tr>
+<tr>
+<td>Subir nueva versión</td>
+<td>Expediente abierto y usuario residente</td>
+<td>Carga PDF, DOC o DOCX en el requisito elegido.</td>
+</tr>
+<tr>
+<td>Guardar revisión</td>
+<td>Expediente abierto, asesor asignado y versión pendiente</td>
+<td>Registra correcciones o validación y observaciones.</td>
+</tr>
+<tr>
+<td>Agregar requisito documental</td>
+<td>Abierto y gestión académica o asesor</td>
+<td>Nombre, obligatorio y fecha límite opcional.</td>
+</tr>
+<tr>
+<td>Reasignar asesor</td>
+<td>Abierto y manager</td>
+<td>Nuevo asesor, motivo y versión del expediente.</td>
+</tr>
+<tr>
+<td>Cerrar seguimiento</td>
+<td>Abierto y manager</td>
+<td>Envía motivo y versión para cerrar el expediente.</td>
+</tr>
+</tbody>
+</table>
+<p>El cierre es seguimiento académico; no se presenta como titulación o egreso. Éste es el flujo explícito de residencia individual; la pestaña antigua «Tesis y residencias» de documentos no lo sustituye.</p>
+<h2 id="11-proyectos-modalidades-y-tesis">11. Proyectos, modalidades y tesis</h2>
+<h3 id="listado-de-gestion-pagesadminprojectsphp">Listado de gestión — <code>/pages/admin/projects.php</code></h3>
+<p>La entrada PHP exige sesión. Los controles de gestión usan permisos y datos de la página; el servidor decide sobre cada operación. La interfaz ofrece búsqueda, filtro de semestre, paginación y vistas <strong>Proyecto integrador</strong>, <strong>Modalidad Dual</strong>, <strong>Caso integrador</strong> y <strong>Tesis</strong>.</p>
+<table>
+<thead>
+<tr>
+<th>Acción</th>
+<th>Resultado</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Nuevo Proyecto</td>
+<td>Abre modal adaptado a la vista/modalidad.</td>
+</tr>
+<tr>
+<td>Ver detalles</td>
+<td>Recupera ficha ampliada, integrantes y relaciones.</td>
+</tr>
+<tr>
+<td>Editar</td>
+<td>Carga el proyecto en formulario.</td>
+</tr>
+<tr>
+<td>Materias / Guardar materias</td>
+<td>Selecciona las asignaturas vinculadas.</td>
+</tr>
+<tr>
+<td>Marcar o retirar clasificación de tesis</td>
+<td>Envía el cambio de <code>is_thesis</code>.</td>
+</tr>
+<tr>
+<td>Eliminar</td>
+<td>Solicita confirmación y eliminación; el servidor puede rechazar por historial o relaciones.</td>
+</tr>
+<tr>
+<td>Plantilla Excel / Cargar Excel</td>
+<td>Descarga formato y abre importación.</td>
+</tr>
+<tr>
+<td>Importar</td>
+<td>Envía archivo y muestra resumen/errores del resultado.</td>
+</tr>
+</tbody>
+</table>
+<p>El formulario modal incluye título, descripción, empresa, RFC, giro, contacto, puesto, dirección, modalidad, semestre, año, grupo/carga e integrantes disponibles. La dirección se orienta mediante separadores por comas en los formularios que lo indican. <strong>Agregar</strong> incluye un estudiante en la lista local; quitarlo de esa lista modifica la selección pendiente. <strong>Guardar</strong> envía el conjunto.</p>
+<p>Se consultan alumnos activos y proyectos para calcular disponibilidad de integrantes. El cliente limita esas consultas a los tamaños declarados (por ejemplo, <code>per_page: 500</code> en varios catálogos); no debe asumirse que recorrerá siempre todos los registros de una institución de cualquier tamaño.</p>
+<h3 id="paginas-independientes">Páginas independientes</h3>
+<p><code>project-create.php</code> y <code>project-edit.php?id=...</code> exigen gestión de proyectos. Incluyen título, descripción, empresa y contacto, semestre, año, carga e integrantes. La edición necesita ID; sin él se regresa al listado. Son variantes existentes, con campos que pueden diferir del modal más amplio del listado.</p>
+<h3 id="mis-proyectos-del-docente-pagesteachermy-projectsphp">Mis proyectos del docente — <code>/pages/teacher/my-projects.php</code></h3>
+<p>Lista los proyectos devueltos por <code>/my-projects</code>, con nombre, integrantes activos y datos de seguimiento. Exige perfil docente. Su propósito es consulta de asignaciones; no constituye la misma herramienta de altas/importación del listado administrativo.</p>
+<h2 id="12-registro-y-revision-de-propuestas">12. Registro y revisión de propuestas</h2>
+<h3 id="estudiante-pagesstudentproposal-registerphp">Estudiante — <code>/pages/student/proposal-register.php</code></h3>
+<p>Primero consulta el estado de registro. Puede mostrar que falta completar perfil, que existe un proyecto ligado, que no hay grupo permitido o que no existe ventana abierta. Sólo presenta el formulario cuando los datos de estado lo habilitan.</p>
+<p>Campos: nombre del proyecto, descripción, empresa/negocio, giro, persona a cargo, puesto y dirección. El buscador de integrantes consulta candidatos a partir de dos caracteres; <strong>Agregar</strong> incorpora el seleccionado y el control de retirada lo elimina de la selección local. <strong>Registrar propuesta</strong> envía el proyecto.</p>
+<p>Si el proyecto está en <code>requiere_cambios</code> y la fecha <code>revision_allowed_until</code> todavía no ha pasado, el código intenta precargar sus datos y convertir el envío en corrección. Muestra observaciones y vencimiento. Hay un fallo estático en el selector del botón de envío de esa rama, documentado en hallazgos; el flujo no se certifica operativo sólo por estar escrito.</p>
+<h3 id="gestion-pagesadminproposal-configphp">Gestión — <code>/pages/admin/proposal-config.php</code></h3>
+<p>Exige gestión de proyectos. Permite escoger materia a supervisar, semestre y buscar grupo. Carga grupos, asignaciones y docentes; permite asignar responsable, retirar asignación, crear ventana con inicio/fin y eliminar ventana. La selección de materia determina las asignaciones que se presentan.</p>
+<h3 id="docente-pagesteacherproposal-reviewphp">Docente — <code>/pages/teacher/proposal-review.php</code></h3>
+<p>Presenta periodos de registro de sus grupos y propuestas asignadas. Puede crear/eliminar ventanas conforme a sus grupos y permisos del servidor. En cada propuesta ofrece <strong>Aprobar</strong>, <strong>Solicitar cambios</strong> y <strong>Rechazar</strong>. La revisión recopila observaciones y los datos del flujo de corrección cuando corresponda. El resultado actualiza el estado mostrado; no es una calificación de rúbrica de exposición.</p>
+<h2 id="13-asesores-y-comites-pagesadminadvisorsphp">13. Asesores y comités — <code>/pages/admin/advisors.php</code></h2>
+<p>Exige gestión de proyectos. Ofrece tres perspectivas: <strong>Por proyecto</strong>, <strong>Comité de tesis</strong> y <strong>Por asesor</strong>, con filtros por semestre, búsqueda de asesor y rol. Carga proyectos, tesis y candidatos desde usuarios administrativos/docentes.</p>
+<p>La asignación se realiza mediante selectores por papel. El cliente evita seleccionar repetidamente una misma persona donde bloquea opciones, identifica filas cambiadas y permite guardar o revertir cambios pendientes. <strong>Guardar cambios</strong> puede procesar varias filas; cada asignación o retirada se traduce en solicitudes al proyecto, con contraseña administrativa en el flujo que la solicita.</p>
+<p><strong>Ver detalles</strong> abre el contexto del proyecto. <strong>Ajustar asesores</strong> y <strong>Ajustar comité</strong> llevan a la perspectiva correspondiente. La vista por asesor resume sus proyectos y papeles; no sustituye la verificación de compromisos de una membresía en la consola académica.</p>
+<h2 id="14-entregables">14. Entregables</h2>
+<h3 id="gestion-pagesadmindeliverablesphp">Gestión — <code>/pages/admin/deliverables.php</code></h3>
+<p>La guardia PHP verifica sesión. La pantalla consulta proyectos, competencias y entregables; permite filtrar por materia/competencia y trabajar con filas paginadas.</p>
+<p>El modal <strong>Nuevo Entregable</strong> reúne proyecto opcional, selector rotulado Asignatura (internamente <code>competencia_id</code>), nombre, descripción, tipo, estado, rama asociada y autores. El texto indica que el alcance principal procede de competencia y materia. Tipos ofrecidos: documento, reporte, video, presentación, código y otro. Estados del selector heredado: pendiente, enviado, revisado y aprobado; deben contrastarse con los estados aceptados por la API actual. <strong>Guardar</strong> crea o actualiza. La tabla ofrece edición y eliminación; los modales adicionales permiten calificar y subir archivo para el proyecto correspondiente.</p>
+<p><strong>Calificar</strong> exige un valor entre 0 y 100. <strong>Subir</strong> selecciona archivo y usa el helper común con validación de MIME y tamaño. Un entregable y la entrega de un proyecto se distinguen mediante <code>deliverable_id</code> y <code>project_id</code>.</p>
+<h3 id="estudiante-pagesstudentmy-deliverablesphp">Estudiante — <code>/pages/student/my-deliverables.php</code></h3>
+<p>Exige estudiante. Carga <code>/my-deliverables</code> y muestra datos de actividad, archivo, calificación y docente que calificó cuando están disponibles. <strong>Descargar Archivo</strong> obtiene la evidencia. <strong>Subir/Actualizar Archivo</strong> abre un modal con selección de archivo; <strong>Subir Archivo</strong> valida y solicita la carga. No crea una nueva actividad por seleccionar un archivo.</p>
+<h3 id="docente-pagesteachermy-deliverablesphp">Docente — <code>/pages/teacher/my-deliverables.php</code></h3>
+<p>Exige docente. Ofrece <strong>Buscar alumno</strong>, filtro <strong>Materia</strong> y <strong>Actualizar</strong>. La matriz organiza proyecto → estudiante → actividades. Muestra entregados, faltantes y promedio válido; expande el detalle por alumno. El modal de calificación admite 0–100 y <strong>Guardar calificación</strong> actualiza el elemento de la matriz a partir de la respuesta.</p>
+<h3 id="archivos-y-diferencias-de-validacion">Archivos y diferencias de validación</h3>
+<p><code>app.js</code> construye los tipos permitidos con <code>SGPI_SETTINGS.allowed_file_types</code>; si no hay configuración usa PDF, Word, Excel y ZIP. El tamaño por defecto es 50 MB, modificable por ajustes. Hay formularios con <code>accept</code> fijo que pueden diferir de la configuración. <code>includes/validations.php</code> conserva helpers PHP con 50 MB y una lista fija. La API y el servidor HTTP vuelven a validar; aceptar un archivo en el selector no garantiza su almacenamiento.</p>
+<h2 id="15-salas-turnos-y-horarios-de-evaluacion">15. Salas, turnos y horarios de evaluación</h2>
+<p><strong>Ruta:</strong> <code>/pages/admin/evaluation-rooms.php</code>. Acceso a gestión de proyectos o docente. La gestión de salas se calcula aparte con <code>can_manage_projects()</code>; el docente puede acceder sin recibir todas las acciones administrativas.</p>
+<h3 id="vistas-y-filtros">Vistas y filtros</h3>
+<p><strong>Por sala</strong> muestra la organización, estado y controles; <strong>Por proyecto</strong> permite ver asignación y orden; <strong>Por evaluador</strong> presenta participación de docentes. Los filtros incluyen semestre, estado y búsqueda. <strong>Crear sala</strong> prepara el formulario y <strong>Limpiar</strong> descarta los valores cargados.</p>
+<h3 id="configurar-una-sala">Configurar una sala</h3>
+<p>Campos: nombre de sala, salón institucional, semestre, inicio y fin, minutos de evaluación docente, minutos de presentación, oportunidades, docentes participantes, responsable y proyectos con orden. El cliente comprueba rangos y detecta cruces de horario de salones/docentes/proyectos según los datos cargados. El catálogo institucional y el periodo forman parte del flujo más reciente de esta página.</p>
+<p>Límites HTML: minutos de 1 a 240, oportunidades de 1 a 10. Valores iniciales comunes: 15 minutos de evaluación docente, 20 de presentación y una oportunidad. <strong>Guardar sala</strong> crea o actualiza. El servidor puede rechazar disponibilidad o datos que hayan cambiado desde la consulta.</p>
+<h3 id="operar-la-sesion">Operar la sesión</h3>
+<table>
+<thead>
+<tr>
+<th>Acción</th>
+<th>Efecto solicitado</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Editar</td>
+<td>Recupera configuración en el formulario.</td>
+</tr>
+<tr>
+<td>Bloquear orden</td>
+<td>Fija la secuencia de presentación.</td>
+</tr>
+<tr>
+<td>Siguiente proyecto</td>
+<td>Avanza el turno conforme al estado de sala y la opción de continuidad.</td>
+</tr>
+<tr>
+<td>Iniciar / Pausar / Reanudar</td>
+<td>Controla el temporizador de la sala.</td>
+</tr>
+<tr>
+<td>Reiniciar / Finalizar</td>
+<td>Reinicia o termina la cuenta según acción seleccionada.</td>
+</tr>
+<tr>
+<td>Horario</td>
+<td>Abre fin ordinario y autorización fuera de tiempo.</td>
+</tr>
+<tr>
+<td>Archivar</td>
+<td>Envía la sala al historial.</td>
+</tr>
+<tr>
+<td>Restaurar</td>
+<td>Intenta desarchivar; hay incompatibilidad heredada reportada por la API.</td>
+</tr>
+<tr>
+<td>Eliminar</td>
+<td>Solicita eliminación con confirmación.</td>
+</tr>
+<tr>
+<td>Reporte sala / Reporte docentes</td>
+<td>Descarga PDF para la audiencia correspondiente.</td>
+</tr>
+</tbody>
+</table>
+<p>El temporizador mostrado se actualiza localmente; las acciones de control se envían al servidor. No debe tratarse como un cronómetro aislado del estado compartido. La autorización fuera de horario incluye interruptor, fecha «Autorizada hasta» y motivo; el textarea declara 10–500 caracteres. El formulario sólo representa la solicitud: la API decide quién puede ampliarla y en qué condiciones.</p>
+<p>La vista por proyecto puede retirar de una sala y añadir a otra mediante solicitudes separadas. Por eso un cambio visual de selección no es una transacción global garantizada por el navegador.</p>
+<h2 id="16-evaluaciones-rubricas-e-historial">16. Evaluaciones, rúbricas e historial</h2>
+<p><strong>Rutas:</strong> <code>/pages/admin/evaluations.php</code> y <code>/pages/admin/evaluations-archived.php</code>. Ambas requieren gestión de proyectos o docente. La segunda incluye el mismo código y activa la vista archivada por el nombre del script.</p>
+<h3 id="consulta-y-organizacion">Consulta y organización</h3>
+<p>La pantalla agrupa por semestre y sala, ordena conforme a la secuencia y muestra proyecto, integrantes, contexto, estado, evaluadores y promedio. <strong>Desplegar/Ocultar</strong> cambia el detalle de la sala. <strong>Ver detalles</strong> abre información del proyecto. El desglose muestra resultados de criterios y comentarios disponibles.</p>
+<p>Hay actualización periódica de datos que evita interferir con un modal de evaluación abierto. La página conserva arreglos locales y reemplaza elementos devueltos al guardar para reducir recargas. El estado recibido, como <code>can_score_now</code> o <code>can_manage_evaluations</code>, influye en los botones.</p>
+<h3 id="evaluar">Evaluar</h3>
+<ol>
+<li>Abrir <strong>Evaluar</strong> en un proyecto liberado para evaluación.</li>
+<li>Revisar contexto de proyecto, integrantes y orden.</li>
+<li>Responder criterios según el modo disponible.</li>
+<li>Añadir comentario general.</li>
+<li>En octavo, responder si recomienda continuar el proyecto cuando se solicite.</li>
+<li>Pulsar <strong>Guardar Rúbrica</strong>.</li>
+</ol>
+<p>Hay dos modos: <strong>Acuerdos</strong> y <strong>Puntaje 1 a 5</strong>. La interfaz utiliza niveles/criterios devueltos por la API; no debe asumirse una tabla universal de porcentajes sólo por el texto del modo. Controla oportunidades y advierte si ya se alcanzó el límite. La recomendación de continuidad se presenta expresamente como una respuesta que no acredita titulación ni afecta el puntaje general.</p>
+<h3 id="borradores">Borradores</h3>
+<p>El cliente guarda progreso de la rúbrica en almacenamiento local y puede restaurarlo al abrir. Muestra «Se restauró un progreso guardado en este navegador». El borrador se guarda en <code>localStorage</code> y depende de ese navegador y no constituye evidencia recibida por el servidor. Guardar exitosamente limpia el borrador correspondiente.</p>
+<h3 id="administrar-rubricas">Administrar rúbricas</h3>
+<p><strong>Gestionar Rúbrica</strong> abre semestre 5–8, método de puntuación y, en octavo, proyecto opcional. Sin proyecto se trabaja sobre la rúbrica general; con proyecto se editan preguntas específicas. <strong>Agregar</strong> crea pregunta; los iconos <strong>Guardar</strong> y <strong>Desactivar</strong> modifican texto/orden o retiran criterio. El texto admite hasta 255 caracteres; el orden no negativo se edita en la fila.</p>
+<p><code>CAN_MANAGE_EVALUATIONS</code> se basa en <code>is_evaluation_manager()</code>, no sólo en el directorio <code>admin</code>. La bandera para otras acciones de gestión usa condiciones distintas; por eso se deben revisar las acciones concretas.</p>
+<h3 id="cierre-retroalimentacion-y-reportes">Cierre, retroalimentación y reportes</h3>
+<p><strong>Marcar evaluada</strong> solicita completar la evaluación conservando las rúbricas existentes; la confirmación informa cuántos docentes han respondido y que ausentes quedan sin evaluación. <strong>Guardar retroalimentación</strong> registra comentarios desde el contexto permitido. Reportes por evaluación/sala tienen variante general y para docentes; se descargan como PDF con autenticación y reintento de renovación ante 401 en el helper correspondiente.</p>
+<h3 id="archivo-y-componentes-heredados">Archivo y componentes heredados</h3>
+<p>Se puede activar selección, elegir evaluaciones o grupos por sala/semestre y solicitar archivado masivo. El historial permite consultar archivadas y conserva controles de restauración. También existen un formulario genérico de creación de evaluación y un editor de salas dentro de esta página.</p>
+<p>Es importante no confundir presencia y vigencia: el informe previo de API señala creación genérica y desarchivo como operaciones bloqueadas. Además, el editor de salas embebido y la página independiente tienen implementaciones diferentes; la página independiente consulta el catálogo académico actualizado.</p>
+<h2 id="17-documentos-de-evaluacion-tesis-y-publicacion">17. Documentos de evaluación, tesis y publicación</h2>
+<p><strong>Ruta:</strong> <code>/pages/evaluation-documents.php</code>. Requiere sesión. <strong>Actualizar</strong> recarga documentos y proyectos. La pantalla divide <strong>Entregas de evaluación</strong> y <strong>Tesis y residencias</strong>.</p>
+<h3 id="hoja-de-liberacion-y-presentacion">Hoja de liberación y presentación</h3>
+<p>Organiza proyectos por semestre 5–9. Cada proyecto muestra integrantes y dos espacios: hoja de liberación y presentación. Se indica <strong>Archivo pendiente</strong> o <strong>Archivo cargado</strong>, nombre, fecha y <strong>Descargar</strong>.</p>
+<p>Si <code>puede_subir</code> lo permite, se presenta selector de archivo y <strong>Subir archivo</strong> o <strong>Reemplazar archivo</strong>. Las extensiones vienen de <code>allowed_extensions</code> por tipo de documento. Se valida selección, extensión y tamaño antes de enviar. Los metadatos se construyen a partir del tipo y los integrantes.</p>
+<p>Cuando existe hoja de liberación se muestran interruptores por estudiante. Sólo <code>puede_revisar</code> permite cambiarlos y <strong>Guardar liberación</strong>. La liberación es individual por alumno de esa entrega; no equivale automáticamente a cerrar todas las obligaciones del proyecto.</p>
+<h3 id="tesis-y-residencias-de-noveno">Tesis y residencias de noveno</h3>
+<p>La interfaz heredada ofrece tipo tesis/residencias, nombre del avance, descripción, autores y PDF/DOC/DOCX. La carga se muestra si <code>perfil_id === 3</code> y semestre 9; usa el perfil base, no el helper de perfil activo. Los documentos se muestran con insignias privado/publicado y categoría.</p>
+<p><strong>Descargar</strong> obtiene el archivo. <strong>Publicar / Privado</strong> solicita cambiar visibilidad, pero aquí el botón se limita a <code>perfil_id === 1</code>. Esto difiere de otras pantallas administrativas y se registra como inconsistencia. La opción antigua «Residencias» no debe usarse como descripción del expediente individual moderno; el informe previo de API señala que ese flujo antiguo está bloqueado para residencia.</p>
+<h2 id="18-repositorio-publico-y-privado">18. Repositorio público y privado</h2>
+<h3 id="catalogo-pagesrepositoriophp">Catálogo — <code>/pages/repositorio.php</code></h3>
+<p>No exige sesión para cargar la página. Presenta tarjetas de documentos, texto de búsqueda, selección de orden y paginación. Admite <code>q</code> desde el buscador global. La selección del endpoint y las acciones dependen de si hay sesión y del perfil. Una lista pública vacía no implica que no existan documentos privados.</p>
+<p>Las tarjetas muestran título/nombre, descripción y metadatos disponibles, categorías/etiquetas y enlaces de detalle o descarga. Los estados de carga, sin resultados y error incluyen mensajes y <strong>Reintentar</strong> cuando corresponde. El orden admite recientes, antiguos y nombre ascendente/descendente.</p>
+<h3 id="cargar-y-editar">Cargar y editar</h3>
+<p>Administradores y estudiantes autenticados tienen formulario de carga, con diferencias:</p>
+<table>
+<thead>
+<tr>
+<th>Campo</th>
+<th>Restricción/interacción</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Nombre</td>
+<td>Obligatorio, hasta 255 caracteres.</td>
+</tr>
+<tr>
+<td>Descripción</td>
+<td>Obligatoria, hasta 5.000 caracteres.</td>
+</tr>
+<tr>
+<td>Autores</td>
+<td>Obligatorio, hasta 1.000 caracteres.</td>
+</tr>
+<tr>
+<td>Archivo</td>
+<td>Obligatorio en alta; puede conservarse en edición según el formulario.</td>
+</tr>
+<tr>
+<td>Proyecto asignado</td>
+<td>Selección requerida para estudiante.</td>
+</tr>
+<tr>
+<td>Visibilidad</td>
+<td>Administrador elige público/privado; estudiante envía privado.</td>
+</tr>
+<tr>
+<td>Etiquetas</td>
+<td>Selección administrativa desde catálogo.</td>
+</tr>
+</tbody>
+</table>
+<p>El selector declara PDF, DOC/DOCX, XLS/XLSX, ZIP, TXT, JPG/JPEG, PNG, WebP y EPUB. La aceptación final depende de la validación del servidor. <strong>Subir documento</strong> envía multipart; la edición utiliza el identificador y el mecanismo de actualización definido en el código. <strong>Cancelar</strong> descarta el formulario. <strong>Editar</strong> y <strong>Eliminar</strong> se muestran conforme al contexto administrativo de la vista.</p>
+<h3 id="detalle-pagesrepositorio-detailphpid">Detalle — <code>/pages/repositorio-detail.php?id=...</code></h3>
+<p>Consulta el documento por ID, presenta nombre, vista previa, detalles y etiquetas. Si no se puede cargar muestra «Documento no disponible». La vista previa varía por extensión: PDF, imágenes, texto y DOCX tienen ramas específicas; EPUB y tipos no compatibles ofrecen descarga para lectura externa. DOCX utiliza Mammoth para convertir a HTML.</p>
+<p>Hay diferencias de autenticación entre ramas de vista previa: el helper de blob añade Bearer, mientras otras peticiones/enlaces dependen de URL y cookies. Un documento descargable puede no previsualizarse por esa diferencia o por cabeceras del servidor. No se comprobó la visualización de archivos privados reales.</p>
+<h2 id="19-etiquetas-documentales-pagesadmindocument-tagsphp">19. Etiquetas documentales — <code>/pages/admin/document-tags.php</code></h2>
+<p>Requiere administrador. Incluye búsqueda, tamaño de página, resumen y paginación. <strong>Nueva etiqueta</strong> abre nombre, descripción y color. Hay colores predefinidos, entrada manual, vista previa y cálculo de contraste para el texto. <strong>Guardar</strong> crea/actualiza; <strong>Eliminar</strong> solicita confirmación. <strong>Actualizar</strong>, limpiar búsqueda y cambiar página recargan el listado según parámetros.</p>
+<p>Las etiquetas sirven para identificar documentos visualmente; no otorgan permisos de acceso. El informe previo de API contiene una discrepancia de relaciones del backend que puede afectar el listado; no se ha revalidado en esta revisión del frontend.</p>
+<h2 id="20-avisos-y-notificaciones">20. Avisos y notificaciones</h2>
+<h3 id="avisos-administrables-pagesadminnoticesphp">Avisos administrables — <code>/pages/admin/notices.php</code></h3>
+<p>Exige administrador. <strong>Nuevo aviso</strong> abre título, audiencia, tipo, tiempo de autocierre, activo, inicio de visualización, eliminación/vencimiento y mensaje. Editar, activar/desactivar y eliminar modifican la colección local; el guardado envía el conjunto <code>notices</code> al servidor.</p>
+<p>Los avisos pueden aparecer como notificaciones o toasts. El pie común filtra audiencia, calcula duración y conserva identificadores vistos en <code>sessionStorage</code>. La duración del toast se limita entre 2 y 30 segundos. El aviso global de ajustes es un componente separado, colocado en la parte superior.</p>
+<h3 id="actividad-reciente">Actividad reciente</h3>
+<p><code>activity-notifications.js</code> carga actividad para la sesión, actualiza contador y lista, permite marcar todas leídas y procesa acciones sobre elementos. Se programa consulta cada 30 segundos. El enlace de una notificación navega al destino recibido/gestionado por el módulo; no crea un registro de negocio.</p>
+<h3 id="alertas-operativas">Alertas operativas</h3>
+<p><code>operational-notifications.js</code> alimenta el indicador exclusivo de administración general, con consultas cada 60 segundos y acceso al centro de operaciones. Estas alertas no son los mismos avisos redactados manualmente ni las notificaciones académicas.</p>
+<h2 id="21-ajustes-generales-pagesadminsettingsphp">21. Ajustes generales — <code>/pages/admin/settings.php</code></h2>
+<p>Exige administrador. Carga ajustes y permite <strong>Guardar ajustes</strong>. Campos principales:</p>
+<table>
+<thead>
+<tr>
+<th>Ajuste</th>
+<th>Restricción de la interfaz</th>
+<th>Efecto esperado en el cliente</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Inactividad</td>
+<td>1–480 minutos</td>
+<td>Configura cierre por inactividad.</td>
+</tr>
+<tr>
+<td>Tema predeterminado</td>
+<td>Opciones del selector</td>
+<td>Apariencia cuando no prevalece preferencia local.</td>
+</tr>
+<tr>
+<td>Tamaño de fuente</td>
+<td>85–125 %, paso 5</td>
+<td>Escala tipográfica general.</td>
+</tr>
+<tr>
+<td>Tamaño máximo de archivo</td>
+<td>1–200 MB</td>
+<td>Validación JavaScript en cargas que usan ajustes.</td>
+</tr>
+<tr>
+<td>Máximo de integrantes</td>
+<td>1–10</td>
+<td>Configuración de equipos consumida por el sistema.</td>
+</tr>
+<tr>
+<td>Tipos permitidos</td>
+<td>Selección de extensiones</td>
+<td>Lista usada por helpers de carga.</td>
+</tr>
+<tr>
+<td>Aviso global</td>
+<td>Hasta 1.000 caracteres</td>
+<td>Franja informativa compartida.</td>
+</tr>
+<tr>
+<td>Registro de propuestas</td>
+<td>Interruptor</td>
+<td>Solicita habilitación de la función en configuración.</td>
+</tr>
+<tr>
+<td>Escala de grises</td>
+<td>Interruptor con vista previa</td>
+<td>Modifica presentación visual.</td>
+</tr>
+</tbody>
+</table>
+<p>Los ajustes públicos/actuales se sincronizan desde <code>footer.php</code>, normalmente cada 60 segundos. Se guarda una selección de preferencias visuales localmente para aplicar apariencia antes de terminar la consulta. El límite de archivo de esta pantalla no modifica automáticamente PHP, proxy o infraestructura del backend.</p>
+<h2 id="22-operaciones-auditoria-integridad-y-respaldos">22. Operaciones, auditoría, integridad y respaldos</h2>
+<p>Todas estas páginas exigen administración general.</p>
+<h3 id="centro-de-operaciones-pagesadminoperationsphp">Centro de operaciones — <code>/pages/admin/operations.php</code></h3>
+<p>Muestra alertas e información de continuidad. <strong>Analizar ahora</strong> solicita un análisis; <strong>Atender</strong> marca una alerta como atendida. Atender no significa reparar automáticamente su causa.</p>
+<p><strong>Política</strong> abre objetivo porcentual, umbral crítico, antigüedad máxima y retención. <strong>Guardar política</strong> persiste los valores. <strong>Guardar medición</strong> registra una medición de continuidad y actualiza historial. <strong>Reporte de continuidad</strong> descarga el informe. Las operaciones de análisis pueden usar un timeout mayor al estándar.</p>
+<h3 id="auditoria-pagesadmincareer-auditphp">Auditoría — <code>/pages/admin/career-audit.php</code></h3>
+<p>Permite filtros por carrera, actor, método HTTP, estado HTTP y rango desde/hasta. <strong>Aplicar filtros</strong> consulta el registro. Presenta eventos con sus datos y paginación disponible en la respuesta/vista. Es lectura de auditoría; no permite editar retrospectivamente una acción desde la tabla.</p>
+<h3 id="integridad-pagesadmincareer-integrityphp">Integridad — <code>/pages/admin/career-integrity.php</code></h3>
+<p>Carga diagnóstico e historial, muestra si la integridad es correcta o requiere revisión y presenta comprobaciones individuales. <strong>Ejecutar diagnóstico</strong> solicita nueva ejecución persistida. No hay que interpretar el diagnóstico como reparación automática de filas ni como demostración de cobertura de todas las tablas del sistema.</p>
+<h3 id="respaldos-pagesadmindatabase-backupsphp">Respaldos — <code>/pages/admin/database-backups.php</code></h3>
+<p>Muestra salud del almacenamiento, historial y tamaño de archivos.</p>
+<table>
+<thead>
+<tr>
+<th>Acción</th>
+<th>Significado</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Crear respaldo ahora</td>
+<td>Solicita al servidor generar un respaldo de base de datos.</td>
+</tr>
+<tr>
+<td>Verificar</td>
+<td>Solicita comprobación del respaldo seleccionado.</td>
+</tr>
+<tr>
+<td>Descargar</td>
+<td>Recupera el archivo mediante solicitud autenticada.</td>
+</tr>
+<tr>
+<td>Aplicar retención</td>
+<td>Pide limpieza conforme a días y confirmación introducida.</td>
+</tr>
+</tbody>
+</table>
+<p>Crear y verificar pueden esperar hasta cinco minutos en el cliente. La pantalla no incorpora un flujo completo de restauración productiva ni promete respaldo de todos los documentos subidos: su título y endpoints se refieren a base de datos. No se ejecutó ninguna de estas operaciones al elaborar el manual.</p>
+<h2 id="23-procesos-de-principio-a-fin">23. Procesos de principio a fin</h2>
+<h3 id="preparar-una-carrera-para-trabajar">Preparar una carrera para trabajar</h3>
+<ol>
+<li>Administración general revisa carrera, identidad y accesos.</li>
+<li>Administración carga asignaturas/grupos y prepara rúbricas.</li>
+<li>Se prepara y concilia el periodo con sus matrículas y salones.</li>
+<li>Administración/jefatura abre el periodo.</li>
+<li>Se asignan docentes y se configura inscripción a cursos.</li>
+<li>Se habilitan ventanas de propuesta y módulos aplicables.</li>
+</ol>
+<p>Importar catálogo, abrir periodo y abrir registro de propuestas son acciones diferentes. Completar una no implica completar las demás.</p>
+<h3 id="alumno-propuesta-entregables-y-evaluacion">Alumno: propuesta, entregables y evaluación</h3>
+<ol>
+<li>Accede y completa el perfil inicial si se solicita.</li>
+<li>Consulta materias y se inscribe con clave dentro de la ventana.</li>
+<li>Consulta estado de propuesta, registra empresa/proyecto e integrantes.</li>
+<li>Revisa aprobación u observaciones; corrige dentro del plazo si el flujo está disponible.</li>
+<li>Consulta y sube entregables.</li>
+<li>Sube hoja de liberación y presentación cuando tiene permiso.</li>
+<li>Consulta presentación programada y resultados visibles.</li>
+</ol>
+<p>La interfaz tiene inconsistencias heredadas; antes de usar este recorrido como guion de aceptación debe revisarse el apartado 27.</p>
+<h3 id="docente-seguimiento-y-exposicion">Docente: seguimiento y exposición</h3>
+<ol>
+<li>Revisa proyectos y propuestas asignadas.</li>
+<li>Administra las ventanas de sus grupos cuando corresponde.</li>
+<li>Aprueba, solicita cambios o rechaza propuestas.</li>
+<li>Consulta matriz por alumno/materia y califica entregables.</li>
+<li>Revisa evidencias y liberación de alumnos conforme a permisos.</li>
+<li>Participa en sala y evalúa el turno habilitado.</li>
+<li>Guarda rúbrica y consulta desglose/reportes permitidos.</li>
+</ol>
+<h3 id="cambio-de-periodo-con-conservacion-de-historia">Cambio de periodo con conservación de historia</h3>
+<ol>
+<li>Preparar/conciliar periodo y resolver inconsistencias.</li>
+<li>Revisar promoción y motivos de cada movimiento.</li>
+<li>Confirmar lote con snapshot vigente.</li>
+<li>Registrar continuidad de proyectos en grupos del nuevo periodo.</li>
+<li>Reabrir inscripciones/ventanas conforme al nuevo calendario.</li>
+<li>Usar historial de evaluaciones y documentos sin asumir que son registros nuevos.</li>
+</ol>
+<h3 id="residencia-individual">Residencia individual</h3>
+<ol>
+<li>Crear expediente asociado al proyecto y periodo.</li>
+<li>Establecer requisitos obligatorios y opcionales.</li>
+<li>Residente sube versiones.</li>
+<li>Asesor revisa cada versión pendiente.</li>
+<li>Residente entrega correcciones cuando se solicitan.</li>
+<li>Jefatura/administración gestiona reasignación si es necesaria y solicita cierre con versión vigente.</li>
+</ol>
+<h2 id="24-arquitectura-tecnica-para-mantenimiento">24. Arquitectura técnica para mantenimiento</h2>
+<h3 id="responsabilidades-por-carpeta">Responsabilidades por carpeta</h3>
+<table>
+<thead>
+<tr>
+<th>Ubicación</th>
+<th>Responsabilidad</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>index.php</code></td>
+<td>Portada, acceso y recuperación.</td>
+</tr>
+<tr>
+<td><code>pages/</code></td>
+<td>Páginas comunes y documentos.</td>
+</tr>
+<tr>
+<td><code>pages/admin/</code></td>
+<td>Pantallas de gestión; algunas también accesibles a docentes o cualquier sesión.</td>
+</tr>
+<tr>
+<td><code>pages/student/</code></td>
+<td>Flujos específicos de alumno.</td>
+</tr>
+<tr>
+<td><code>pages/teacher/</code></td>
+<td>Flujos específicos de docente.</td>
+</tr>
+<tr>
+<td><code>includes/config.php</code></td>
+<td>Configuración, cookies, sesión, roles y helpers.</td>
+</tr>
+<tr>
+<td><code>includes/navbar.php</code>, <code>sidebar.php</code></td>
+<td>Navegación compartida.</td>
+</tr>
+<tr>
+<td><code>includes/footer.php</code></td>
+<td>Sesión inicial para JS, ajustes, avisos, diálogos y scripts visuales.</td>
+</tr>
+<tr>
+<td><code>includes/visual-preferences.php</code></td>
+<td>Aplicación temprana de preferencias visuales.</td>
+</tr>
+<tr>
+<td><code>includes/alert.php</code>, <code>modal.php</code></td>
+<td>Helpers reutilizables de interfaz.</td>
+</tr>
+<tr>
+<td><code>includes/validations.php</code></td>
+<td>Validaciones PHP simples, sin consultar base de datos.</td>
+</tr>
+<tr>
+<td><code>api/set-session.php</code></td>
+<td>Puente local para persistir sesión del navegador en PHP.</td>
+</tr>
+<tr>
+<td><code>assets/js/</code></td>
+<td>Cliente HTTP, autenticación, consola y comportamiento común.</td>
+</tr>
+<tr>
+<td><code>assets/css/app.css</code></td>
+<td>Sistema visual, temas y estilos adaptables.</td>
+</tr>
+<tr>
+<td><code>tests/academic-page-smoke.php</code></td>
+<td>Prueba local de renderizado de la consola con sesión sintética.</td>
+</tr>
+<tr>
+<td><code>test-api.php</code></td>
+<td>Página de diagnóstico; no forma parte del recorrido académico habitual.</td>
+</tr>
+</tbody>
+</table>
+<h3 id="entorno-y-arranque">Entorno y arranque</h3>
+<p><code>composer.json</code> declara PHP <code>8.3.*</code> y un script <code>start</code> que ejecuta el servidor integrado en <code>0.0.0.0</code>, puerto tomado de <code>PORT</code> o 8080 y raíz en el proyecto. No hay <code>package.json</code> propio en este frontend: las páginas cargan JavaScript directamente y dependencias por CDN. El servidor integrado sirve para revisión local; la configuración de producción debe comprobarse por separado. El frontend necesita PHP para sesión/plantillas y conectividad del navegador con la API.</p>
+<h3 id="configuracion">Configuración</h3>
+<p><code>SGPI_API_BASE_URL</code> permite sobrescribir la URL de API; se recorta la barra final. Sin variable se usa la URL de producción declarada en el código. <code>API_ORIGIN_URL</code> elimina <code>/api</code> para formar enlaces de archivos. <code>FRONTEND_URL</code> existe como configuración, pero gran parte de la navegación usa rutas absolutas desde <code>/</code>.</p>
+<p>Las cookies se configuran con <code>HttpOnly</code> donde corresponde y <code>SameSite=Lax</code>; <code>Secure</code> depende de HTTPS o del encabezado de proxy. La firma usa <code>SGPI_AUTH_COOKIE_SECRET</code>, luego <code>APP_KEY</code> y finalmente un hash calculado a partir de ruta/API. Los valores de entorno no se copiaron a este informe.</p>
+<h3 id="cliente-http-assetsjsapijs">Cliente HTTP — <code>assets/js/api.js</code></h3>
+<p><code>ApiClient</code> ofrece <code>get</code>, <code>post</code>, <code>put</code>, <code>delete</code> y <code>request</code>; <code>prefetchNextPage</code> precarga páginas. Añade Bearer cuando dispone de token y <code>X-SGPI-Remember</code> cuando procede. Para objetos serializa JSON; para <code>FormData</code> deja que el navegador genere el boundary multipart.</p>
+<p>Maneja timeout con <code>AbortController</code>, errores de validación y traducción de mensajes, renovación de sesión y reintento ante 401. El timeout base es diez segundos; algunas operaciones usan 30, 45, 60, 120 o 300 segundos. Las descargas binarias normalmente usan helpers específicos de <code>fetch</code> y blob, por lo que no todas heredan idéntico manejo de errores.</p>
+<p>La caché combina memoria, almacenamiento de sesión, TTL por recurso y deduplicación de GET pendientes. Existe ventana local de diez segundos para datos actualizados por mutación. <code>_fresh</code> evita la validez normal de caché, pero no necesariamente esa ventana de mutación. Parámetros internos <code>_cache_ttl</code>, <code>_fresh</code>, <code>_timeout</code> y <code>_silent</code> se eliminan antes de construir la consulta de negocio.</p>
+<h3 id="autenticacion-assetsjsauthjs">Autenticación — <code>assets/js/auth.js</code></h3>
+<p><code>AuthManager</code> toma <code>SGPI_SESSION</code>, expone usuario/token/roles, comprueba cookies, realiza login/logout, decodifica expiración JWT, renueva token, mantiene heartbeat y limpia estado local. El token disponible en JavaScript se utiliza para solicitudes autenticadas. No debe confundirse el uso de cookies HttpOnly con que nunca haya token en memoria de la página: el pie genera explícitamente el objeto de sesión.</p>
+<h3 id="funciones-de-apoyo">Funciones de apoyo</h3>
+<p><code>app.js</code> contiene alertas, validación de formularios, fechas/horas <code>es-MX</code>, debounce, previsualización de imagen, portapapeles, validación de archivos/calificaciones, carga y descarga de entregables y tooltips. La existencia de un helper no garantiza que todos los formularios lo invoquen.</p>
+<p><code>table.js</code> y <code>router.js</code> ofrecen abstracciones de tabla y navegación, pero hay que distinguirlas de las implementaciones específicas usadas por las páginas. Por ejemplo, el botón genérico Editar de <code>DynamicTable</code> se genera sin un manejador de negocio; no representa un editor universal. El anexo de funciones identifica definiciones y eventos, y la referencia conserva el código para comprobar usos reales.</p>
+<h2 id="25-estado-local-fechas-y-persistencia">25. Estado local, fechas y persistencia</h2>
+<table>
+<thead>
+<tr>
+<th>Estado</th>
+<th>Ubicación</th>
+<th>Consecuencia</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Sesión PHP y cookies firmadas</td>
+<td>Servidor frontend/navegador</td>
+<td>Permiten reconstruir identidad de la página.</td>
+</tr>
+<tr>
+<td>Token y usuario JavaScript</td>
+<td>Memoria de página / <code>SGPI_SESSION</code></td>
+<td>Se usan en llamadas y controles del cliente.</td>
+</tr>
+<tr>
+<td>Caché de API</td>
+<td>Memoria y <code>sessionStorage</code></td>
+<td>Reduce consultas; puede retrasar cambios observados.</td>
+</tr>
+<tr>
+<td>Preferencias visuales</td>
+<td><code>localStorage</code></td>
+<td>Persisten en ese navegador.</td>
+</tr>
+<tr>
+<td>Avisos vistos</td>
+<td><code>sessionStorage</code></td>
+<td>Evita o controla repetición durante la sesión.</td>
+</tr>
+<tr>
+<td>Borrador de rúbrica</td>
+<td>Almacenamiento local según implementación</td>
+<td>Recupera edición local, no sustituye envío.</td>
+</tr>
+<tr>
+<td>Datos institucionales</td>
+<td>API</td>
+<td>Persistencia de negocio fuera del frontend.</td>
+</tr>
+</tbody>
+</table>
+<p>La mayoría de fechas se presenta con <code>toLocaleString</code>/<code>toLocaleDateString('es-MX')</code> y entradas <code>datetime-local</code>. El idioma <code>es-MX</code> no fija por sí mismo la zona horaria: intervienen navegador, formato recibido y servidor. Al revisar vencimientos o salas, conviene distinguir hora mostrada y valor enviado.</p>
+<h2 id="26-que-revisar-cuando-algo-no-aparece-o-falla">26. Qué revisar cuando algo no aparece o falla</h2>
+<table>
+<thead>
+<tr>
+<th>Síntoma</th>
+<th>Comprobaciones a partir del funcionamiento del cliente</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Una opción no aparece</td>
+<td>Perfil activo, carrera, módulo habilitado, bandera de permiso y asignación concreta.</td>
+</tr>
+<tr>
+<td>Regreso a Inicio al abrir enlace</td>
+<td>Guardia PHP de la página y datos de sesión.</td>
+</tr>
+<tr>
+<td>El menú ofrece algo pero la página no abre</td>
+<td>Diferencia de condiciones entre menú y destino; ver hallazgos.</td>
+</tr>
+<tr>
+<td>Propuesta no disponible</td>
+<td>Perfil inicial, proyecto ya ligado, grupo y ventana activa.</td>
+</tr>
+<tr>
+<td>No puedo evaluar</td>
+<td>Turno, horario, intentos, sala y <code>can_score_now</code>.</td>
+</tr>
+<tr>
+<td>No veo botón de subir</td>
+<td><code>puede_subir</code>, perfil, propiedad del expediente y estado abierto.</td>
+</tr>
+<tr>
+<td>Archivo rechazado</td>
+<td>Extensión, MIME, tamaño configurado y límites reales de servidor.</td>
+</tr>
+<tr>
+<td>Datos parecen antiguos</td>
+<td>Caché local, actualización periódica y respuesta de API.</td>
+</tr>
+<tr>
+<td>Vista previa no abre</td>
+<td>Tipo compatible, autenticación de la rama y cabeceras de servidor.</td>
+</tr>
+<tr>
+<td>Operación rechazada con conflicto</td>
+<td>Estado/version/snapshot cambió; recargar antes de una nueva decisión.</td>
+</tr>
+<tr>
+<td>El formulario ofrece una acción antigua</td>
+<td>Contrastar incompatibilidades con el informe de API.</td>
+</tr>
+</tbody>
+</table>
+<p>La documentación no transforma un mensaje de error en un diagnóstico definitivo. El código exacto y la respuesta real de red son la evidencia necesaria para investigar un caso concreto.</p>
+<h2 id="27-hallazgos-que-delimitan-el-comportamiento-real">27. Hallazgos que delimitan el comportamiento real</h2>
+<p>Estos puntos se documentan sin corregir código de aplicación.</p>
+<h3 id="f01-selector-de-envio-en-correccion-de-propuesta">F01. Selector de envío en corrección de propuesta</h3>
+<p>En <code>student/proposal-register.php</code>, la rama de corrección busca <code>#projectForm button[type="submit"]</code>, pero el botón principal se declara sin atributo <code>type</code>. Aunque el navegador le dé comportamiento submit por defecto, el selector de atributo no lo encuentra. La asignación de <code>innerHTML</code> puede provocar excepción y detener el resto de esa rama. Evidencia estática comprobable; no se reprodujo con una propuesta real.</p>
+<h3 id="f02-destino-fijo-despues-de-cambiar-carrera">F02. Destino fijo después de cambiar carrera</h3>
+<p><code>career-switcher.js</code> termina en <code>/pages/admin/dashboard.php</code> para cualquier cambio exitoso. El tablero sólo acepta personal de gestión. Un docente/estudiante multicarrera puede terminar redirigido a portada. El helper general de tablero sí distingue perfiles, pero ese flujo no lo usa.</p>
+<h3 id="f03-condiciones-diferentes-entre-menu-y-guardias">F03. Condiciones diferentes entre menú y guardias</h3>
+<p>El menú superior presenta Usuarios bajo <code>is_admin()</code>, mientras la página exige administrador general. El buscador filtra <code>/admin/users</code>, pero no elimina necesariamente <code>user-create.php</code>, y genera búsquedas de usuarios para <code>role === 'admin'</code>. También agrupa asistencia/coordinación como admin para su catálogo. Es posible mostrar un enlace cuyo destino redirige por falta de permiso.</p>
+<h3 id="f04-perfil-base-en-documentos">F04. Perfil base en documentos</h3>
+<p><code>evaluation-documents.php</code> limita publicación a <code>perfil_id === 1</code> y carga de noveno a <code>perfil_id === 3</code>. No utiliza de forma uniforme el perfil activo ni la definición compartida de administrador. Puede ocultar controles a otros perfiles administrativos o a membresías con rol distinto del perfil base.</p>
+<h3 id="f05-funciones-heredadas-con-compatibilidad-limitada">F05. Funciones heredadas con compatibilidad limitada</h3>
+<p>El informe de API del 19 de octubre registra bloqueos para mutaciones genéricas de competencias, creación genérica de evaluación, desarchivo y residencia por el flujo antiguo. El cliente conserva controles o funciones para esas operaciones. Esta observación es un contraste documental con el informe previo, no una nueva prueba de endpoints realizada el 23 de octubre.</p>
+<h3 id="f06-htaccess-incluye-php-en-una-regla-de-denegacion">F06. <code>.htaccess</code> incluye PHP en una regla de denegación</h3>
+<p>El <code>FilesMatch</code> declara denegación para <code>.env</code>, <code>.json</code>, <code>.php</code> y <code>.sql</code>. En Apache, si esta configuración se aplica con compatibilidad para esas directivas, podría impedir servir las propias páginas PHP; otros servidores pueden ignorarla. No se certificó el despliegue ni se modificó la regla.</p>
+<h3 id="f07-guardias-locales-basadas-en-sesion-suministrada-al-puente">F07. Guardias locales basadas en sesión suministrada al puente</h3>
+<p><code>api/set-session.php</code> valida forma de JSON y presencia de token/usuario, y persiste esos valores sin una consulta de validación a <code>/auth/me</code> dentro de ese archivo. Las guardias PHP confían en esa sesión; la API debe seguir siendo la autoridad sobre los datos protegidos. La consola académica sí obtiene usuario actualizado antes de montar sus pestañas. No se hizo una prueba de explotación.</p>
+<h3 id="f08-diferencias-en-previsualizacion-y-limites-de-archivos">F08. Diferencias en previsualización y límites de archivos</h3>
+<p>Los helpers de descarga y vistas previas no siempre envían los mismos encabezados. Además, los límites de <code>accept</code>, helpers PHP, configuración JavaScript y servidor pueden ser distintos. Un fallo en una vista previa no prueba que la descarga sea imposible ni que el documento no exista.</p>
+<h3 id="f09-catalogos-limitados-y-dos-implementaciones-de-salas">F09. Catálogos limitados y dos implementaciones de salas</h3>
+<p>Varios selectores piden hasta 100 o 500 elementos sin una iteración global de todas las páginas. Si el servidor pagina o limita más, las opciones pueden ser incompletas. El editor de salas embebido en evaluaciones y la página independiente se mantienen por separado y no incorporan exactamente el mismo contexto académico.</p>
+<h3 id="f10-helpers-genericos-no-equivalen-a-funciones-operativas-completas">F10. Helpers genéricos no equivalen a funciones operativas completas</h3>
+<p><code>Router</code> registra callbacks y cambia historial, pero el portal navega principalmente por PHP y transiciones. <code>DynamicTable</code> genera un botón Editar sin conectar edición y sus métodos de paginación llaman a <code>load()</code> sin conservar explícitamente el endpoint. Deben tratarse como utilidades existentes, no como prueba de capacidades adicionales del sistema.</p>
+<h3 id="f11-destino-de-detalle-sin-identificador">F11. Destino de detalle sin identificador</h3>
+<p>Si falta <code>id</code> en <code>repositorio-detail.php</code>, el código navega a <code>/repositorio</code>, mientras el catálogo real es <code>/pages/repositorio.php</code>. La regla genérica de reescritura no demuestra que exista un manejador de esa ruta amigable. Conviene usar el enlace explícito del catálogo.</p>
+<h2 id="28-alcance-de-la-verificacion-y-trazabilidad">28. Alcance de la verificación y trazabilidad</h2>
+<p>Se inventariaron <strong>97 archivos</strong>, incluidos <strong>42 archivos de páginas</strong>. La referencia conserva <strong>70 archivos de código propio</strong> y <strong>27.255 líneas</strong>. Se detectaron <strong>795 sitios de declaración</strong>, <strong>1.278 etiquetas de controles/estructura HTML</strong> y <strong>73 sitios de construcción dinámica de la consola</strong>. Estas métricas son de extracción documental; no significan 795 operaciones independientes ni cobertura de pruebas del 100 %. Los anexos de controles y funciones son extracciones estáticas: incluyen plantillas dinámicas, nombres técnicos y ubicaciones, y pueden mostrar expresiones <code>${...}</code> o fragmentos PHP cuando el valor depende de ejecución. No constituyen una captura del DOM final para cada combinación de rol y datos.</p>
+<p>La referencia conserva fuentes propias para consultar callbacks anónimos, closures, campos generados y validaciones que un índice de funciones con nombre no puede representar completamente. Se excluyen de esa copia de referencia documentos anteriores, imágenes binarias y la página de diagnóstico <code>test-api.php</code>; esta última sí se inventaría para dejar constancia de su existencia sin reproducir posibles datos de prueba.</p>
+<p>Los resultados concretos de sintaxis y renderizado local están en <a href="VERIFICACION.html">VERIFICACION.md</a>. No se ejecutó una prueba de extremo a extremo contra la API, no se comprobó el correo real, no se descargaron archivos privados y no se modificaron datos institucionales. Los archivos del informe son el único cambio intencional en el proyecto.</p></main></body></html>

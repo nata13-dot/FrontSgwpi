@@ -1,0 +1,303 @@
+<!doctype html><html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>RUTAS​​​​</title><style>body{margin:0;background:#f2f5f9;color:#172334;font:16px/1.65 system-ui,sans-serif}main{max-width:1120px;margin:auto;background:white;padding:48px 56px}h1,h2,h3{color:#1b396a;line-height:1.25;scroll-margin-top:20px}h1{font-size:2.5rem}h2{border-bottom:2px solid #dae4f1;padding-bottom:12px;margin-top:48px}h3{margin-top:30px}a{color:#185ea0}table{border-collapse:collapse;width:100%;font-size:.9rem;display:block;overflow:auto;margin:20px 0}th,td{border:1px solid #d7dfe9;text-align:left;padding:9px 12px;vertical-align:top}th{background:#eaf0f8}tr:nth-child(even){background:#f7f9fc}code{font-family:ui-monospace,monospace;font-size:.87em;overflow-wrap:anywhere}pre{background:#f2f5f9;border:1px solid #d7dfe9;padding:16px;overflow:auto;line-height:1.45}pre code{overflow-wrap:normal}.toc{background:#edf3fa;border-radius:12px;padding:20px;font-size:.9rem}.toc ul{padding-left:22px}nav{margin-bottom:24px;font-size:.9rem}@media(max-width:720px){main{padding:24px 18px}h1{font-size:2rem}}@media print{body,main{background:white}main{max-width:none;padding:0;font-size:10pt}.toc{break-after:page}h2,h3,thead{break-after:avoid}tr{break-inside:avoid}table{display:table;font-size:9pt}a{color:inherit}pre{white-space:pre-wrap}nav{display:none}}</style></head><body><main><nav><a href="MANUAL_FRONTEND_SWGPI.html">Manual principal</a> · <a href="MANUAL_FRONTEND_SWGPI.docx">Versión Word</a></nav><div class="toc">
+<ul>
+<li><a href="#fragmentos-filtros-y-destinos-compartidos">Fragmentos, filtros y destinos compartidos</a></li>
+<li><a href="#reescritura-y-rutas-absolutas">Reescritura y rutas absolutas</a></li>
+</ul>
+</div>
+<h1 id="entradas-php-y-navegacion">Entradas PHP y navegación</h1>
+<p>El frontend es multipágina. Este catálogo usa archivos reales, no rutas hipotéticas del router JavaScript. Las guardias reproducidas se evalúan en PHP; la API conserva autorización sobre cada recurso. Las entradas de diagnóstico y sesión se distinguen de pantallas.</p>
+<table>
+<thead>
+<tr>
+<th>Ruta</th>
+<th>Clase de entrada</th>
+<th>Guardia / comportamiento inicial</th>
+<th>Parámetros GET leídos</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><a href="../../index.php"><code>/index.php</code></a></td>
+<td>pantalla</td>
+<td>Sin guardia de sesión explícita en la cabecera PHP.</td>
+<td>—</td>
+</tr>
+<tr>
+<td><a href="../../pages/academic-workflows.php"><code>/pages/academic-workflows.php</code></a></td>
+<td>pantalla</td>
+<td>if (!is_authenticated()) { header('Location: /pages/login.php'); exit; }</td>
+<td>tab</td>
+</tr>
+<tr>
+<td><a href="../../pages/admin/advisors.php"><code>/pages/admin/advisors.php</code></a></td>
+<td>pantalla</td>
+<td>if (!is_authenticated() &#124;&#124; !can_manage_projects()) { header('Location: /index.php');</td>
+<td>project, view</td>
+</tr>
+<tr>
+<td><a href="../../pages/admin/asignaturas.php"><code>/pages/admin/asignaturas.php</code></a></td>
+<td>pantalla</td>
+<td>if (!is_authenticated() &#124;&#124; !can_manage_academics()) { header('Location: /index.php');</td>
+<td>—</td>
+</tr>
+<tr>
+<td><a href="../../pages/admin/career-audit.php"><code>/pages/admin/career-audit.php</code></a></td>
+<td>pantalla</td>
+<td>if (!is_authenticated() &#124;&#124; !is_general_admin()) { header('Location: ' . dashboard_url());</td>
+<td>/admin/careers</td>
+</tr>
+<tr>
+<td><a href="../../pages/admin/career-integrity.php"><code>/pages/admin/career-integrity.php</code></a></td>
+<td>pantalla</td>
+<td>if (!is_authenticated() &#124;&#124; !is_general_admin()) { header('Location: ' . dashboard_url());</td>
+<td>—</td>
+</tr>
+<tr>
+<td><a href="../../pages/admin/career-modules.php"><code>/pages/admin/career-modules.php</code></a></td>
+<td>pantalla</td>
+<td>requireAdmin();</td>
+<td>valor_actual, valor_meta</td>
+</tr>
+<tr>
+<td><a href="../../pages/admin/career-setup.php"><code>/pages/admin/career-setup.php</code></a></td>
+<td>pantalla</td>
+<td>if (!is_authenticated() &#124;&#124; !is_admin()) { header('Location: ' . dashboard_url());</td>
+<td>—</td>
+</tr>
+<tr>
+<td><a href="../../pages/admin/careers.php"><code>/pages/admin/careers.php</code></a></td>
+<td>pantalla</td>
+<td>if (!is_authenticated() &#124;&#124; !is_general_admin()) { header('Location: ' . dashboard_url());</td>
+<td>—</td>
+</tr>
+<tr>
+<td><a href="../../pages/admin/competencias.php"><code>/pages/admin/competencias.php</code></a></td>
+<td>redirección</td>
+<td>if (!is_authenticated() &#124;&#124; !can_manage_academics()) { header('Location: /index.php'); header('Location: /pages/admin/asignaturas.php#competencias');</td>
+<td>—</td>
+</tr>
+<tr>
+<td><a href="../../pages/admin/dashboard.php"><code>/pages/admin/dashboard.php</code></a></td>
+<td>pantalla</td>
+<td>if (!is_authenticated() &#124;&#124; !is_management_staff()) { header('Location: /index.php');</td>
+<td>/career/modules, /dashboard/stats</td>
+</tr>
+<tr>
+<td><a href="../../pages/admin/database-backups.php"><code>/pages/admin/database-backups.php</code></a></td>
+<td>pantalla</td>
+<td>if (!is_authenticated() &#124;&#124; !is_general_admin()) { header('Location: ' . dashboard_url());</td>
+<td>—</td>
+</tr>
+<tr>
+<td><a href="../../pages/admin/deliverables.php"><code>/pages/admin/deliverables.php</code></a></td>
+<td>pantalla</td>
+<td>if (!is_authenticated()) { header('Location: /index.php');</td>
+<td>competencia_id</td>
+</tr>
+<tr>
+<td><a href="../../pages/admin/document-tags.php"><code>/pages/admin/document-tags.php</code></a></td>
+<td>pantalla</td>
+<td>if (!is_authenticated() &#124;&#124; !is_admin()) { header('Location: /index.php');</td>
+<td>—</td>
+</tr>
+<tr>
+<td><a href="../../pages/admin/evaluation-rooms.php"><code>/pages/admin/evaluation-rooms.php</code></a></td>
+<td>pantalla</td>
+<td>if (!is_authenticated() &#124;&#124; (!can_manage_projects() &amp;&amp; !is_teacher())) { header('Location: /index.php');</td>
+<td>/academic-operations/catalog</td>
+</tr>
+<tr>
+<td><a href="../../pages/admin/evaluations-archived.php"><code>/pages/admin/evaluations-archived.php</code></a></td>
+<td>alias por inclusión</td>
+<td>require <strong>DIR</strong> . '/evaluations.php';</td>
+<td>—</td>
+</tr>
+<tr>
+<td><a href="../../pages/admin/evaluations.php"><code>/pages/admin/evaluations.php</code></a></td>
+<td>pantalla</td>
+<td>if (!is_authenticated() &#124;&#124; (!can_manage_projects() &amp;&amp; !is_teacher())) { header('Location: /index.php');</td>
+<td>—</td>
+</tr>
+<tr>
+<td><a href="../../pages/admin/notices.php"><code>/pages/admin/notices.php</code></a></td>
+<td>pantalla</td>
+<td>if (!is_authenticated() &#124;&#124; !is_admin()) { header('Location: /index.php');</td>
+<td>/notices</td>
+</tr>
+<tr>
+<td><a href="../../pages/admin/operations.php"><code>/pages/admin/operations.php</code></a></td>
+<td>pantalla</td>
+<td>if (!is_authenticated() &#124;&#124; !is_general_admin()) { header('Location: ' . dashboard_url());</td>
+<td>—</td>
+</tr>
+<tr>
+<td><a href="../../pages/admin/project-create.php"><code>/pages/admin/project-create.php</code></a></td>
+<td>pantalla</td>
+<td>if (!is_authenticated() &#124;&#124; !can_manage_projects()) { header('Location: /index.php');</td>
+<td>—</td>
+</tr>
+<tr>
+<td><a href="../../pages/admin/project-edit.php"><code>/pages/admin/project-edit.php</code></a></td>
+<td>pantalla</td>
+<td>if (!is_authenticated() &#124;&#124; !can_manage_projects()) { header('Location: /index.php'); if (!$projectId) { header('Location: /pages/admin/projects.php');</td>
+<td>id</td>
+</tr>
+<tr>
+<td><a href="../../pages/admin/projects.php"><code>/pages/admin/projects.php</code></a></td>
+<td>pantalla</td>
+<td>if (!is_authenticated()) { header('Location: /index.php');</td>
+<td>edit, id, q</td>
+</tr>
+<tr>
+<td><a href="../../pages/admin/proposal-config.php"><code>/pages/admin/proposal-config.php</code></a></td>
+<td>pantalla</td>
+<td>if (!is_authenticated() &#124;&#124; !can_manage_projects()) { header('Location: /index.php'); exit; }</td>
+<td>/proposal/config</td>
+</tr>
+<tr>
+<td><a href="../../pages/admin/semesters.php"><code>/pages/admin/semesters.php</code></a></td>
+<td>alias por inclusión</td>
+<td>require dirname(<strong>DIR</strong>) . '/academic-workflows.php';</td>
+<td>—</td>
+</tr>
+<tr>
+<td><a href="../../pages/admin/settings.php"><code>/pages/admin/settings.php</code></a></td>
+<td>pantalla</td>
+<td>if (!is_authenticated() &#124;&#124; !is_admin()) { header('Location: /index.php');</td>
+<td>/settings</td>
+</tr>
+<tr>
+<td><a href="../../pages/admin/user-create.php"><code>/pages/admin/user-create.php</code></a></td>
+<td>pantalla</td>
+<td>if (!is_authenticated() &#124;&#124; !can_govern_users()) { header('Location: /index.php');</td>
+<td>—</td>
+</tr>
+<tr>
+<td><a href="../../pages/admin/user-edit.php"><code>/pages/admin/user-edit.php</code></a></td>
+<td>pantalla</td>
+<td>if (!is_authenticated() &#124;&#124; !can_govern_users()) { header('Location: /index.php'); if (!$userId) { header('Location: /pages/admin/users.php');</td>
+<td>id</td>
+</tr>
+<tr>
+<td><a href="../../pages/admin/users.php"><code>/pages/admin/users.php</code></a></td>
+<td>pantalla</td>
+<td>if (!is_authenticated() &#124;&#124; !can_govern_users()) { header('Location: /index.php');</td>
+<td>q</td>
+</tr>
+<tr>
+<td><a href="../../pages/evaluation-documents.php"><code>/pages/evaluation-documents.php</code></a></td>
+<td>pantalla</td>
+<td>if (!is_authenticated()) { header('Location: /index.php');</td>
+<td>—</td>
+</tr>
+<tr>
+<td><a href="../../pages/forgot-password.php"><code>/pages/forgot-password.php</code></a></td>
+<td>redirección</td>
+<td>header('Location: /index.php#recover');</td>
+<td>—</td>
+</tr>
+<tr>
+<td><a href="../../pages/login.php"><code>/pages/login.php</code></a></td>
+<td>redirección</td>
+<td>if (is_authenticated()) { header('Location: ' . dashboard_url()); header('Location: /index.php#login');</td>
+<td>—</td>
+</tr>
+<tr>
+<td><a href="../../pages/logout.php"><code>/pages/logout.php</code></a></td>
+<td>salida y limpieza de sesión</td>
+<td>if (ini_get('session.use_cookies')) { header('Cache-Control: no-store, no-cache, must-revalidate, max-age=0'); header('Pragma: no-cache'); header('Expires: 0');</td>
+<td>—</td>
+</tr>
+<tr>
+<td><a href="../../pages/profile.php"><code>/pages/profile.php</code></a></td>
+<td>pantalla</td>
+<td>if (!is_authenticated()) { header('Location: /index.php'); exit; }</td>
+<td>/profile</td>
+</tr>
+<tr>
+<td><a href="../../pages/repositorio-detail.php"><code>/pages/repositorio-detail.php</code></a></td>
+<td>pantalla</td>
+<td>Sin guardia de sesión explícita en la cabecera PHP.</td>
+<td>id</td>
+</tr>
+<tr>
+<td><a href="../../pages/repositorio.php"><code>/pages/repositorio.php</code></a></td>
+<td>pantalla</td>
+<td>Sin guardia de sesión explícita en la cabecera PHP.</td>
+<td>q</td>
+</tr>
+<tr>
+<td><a href="../../pages/reset-password.php"><code>/pages/reset-password.php</code></a></td>
+<td>redirección</td>
+<td>header('Location: /index.php#recover');</td>
+<td>—</td>
+</tr>
+<tr>
+<td><a href="../../pages/student/dashboard.php"><code>/pages/student/dashboard.php</code></a></td>
+<td>pantalla</td>
+<td>if (!is_authenticated() &#124;&#124; !is_student()) { header('Location: /index.php');</td>
+<td>/dashboard/student, /proposal/student-status, /student/evaluation-schedule</td>
+</tr>
+<tr>
+<td><a href="../../pages/student/my-deliverables.php"><code>/pages/student/my-deliverables.php</code></a></td>
+<td>pantalla</td>
+<td>if (!is_authenticated() &#124;&#124; !is_student()) { header('Location: /index.php');</td>
+<td>/my-deliverables</td>
+</tr>
+<tr>
+<td><a href="../../pages/student/proposal-register.php"><code>/pages/student/proposal-register.php</code></a></td>
+<td>pantalla</td>
+<td>if (!is_authenticated() &#124;&#124; !is_student()) { header('Location: /index.php'); exit; }</td>
+<td>/proposal/student-status</td>
+</tr>
+<tr>
+<td><a href="../../pages/teacher/dashboard.php"><code>/pages/teacher/dashboard.php</code></a></td>
+<td>pantalla</td>
+<td>if (!is_authenticated() &#124;&#124; !is_teacher()) { header('Location: /index.php');</td>
+<td>/dashboard/teacher</td>
+</tr>
+<tr>
+<td><a href="../../pages/teacher/my-deliverables.php"><code>/pages/teacher/my-deliverables.php</code></a></td>
+<td>pantalla</td>
+<td>if (!is_authenticated() &#124;&#124; !is_teacher()) { header('Location: /index.php');</td>
+<td>—</td>
+</tr>
+<tr>
+<td><a href="../../pages/teacher/my-projects.php"><code>/pages/teacher/my-projects.php</code></a></td>
+<td>pantalla</td>
+<td>if (!is_authenticated() &#124;&#124; !is_teacher()) { header('Location: /index.php');</td>
+<td>/my-projects</td>
+</tr>
+<tr>
+<td><a href="../../pages/teacher/proposal-review.php"><code>/pages/teacher/proposal-review.php</code></a></td>
+<td>pantalla</td>
+<td>if (!is_authenticated() &#124;&#124; !is_teacher()) { header('Location: /index.php'); exit; }</td>
+<td>/proposal/teacher-projects, /proposal/window-groups</td>
+</tr>
+<tr>
+<td><a href="../../api/set-session.php"><code>/api/set-session.php</code></a></td>
+<td>POST JSON local, no pantalla</td>
+<td>JSON con auth_token y user; persiste sesión. Devuelve 400 ante formato inválido.</td>
+<td>—</td>
+</tr>
+<tr>
+<td><a href="../../test-api.php"><code>/test-api.php</code></a></td>
+<td>diagnóstico, fuera del flujo de negocio</td>
+<td>Diagnóstico técnico; revisar directamente la fuente antes de exponerlo.</td>
+<td>—</td>
+</tr>
+</tbody>
+</table>
+<h2 id="fragmentos-filtros-y-destinos-compartidos">Fragmentos, filtros y destinos compartidos</h2>
+<ul>
+<li><code>/index.php#login</code>: abre acceso.</li>
+<li><code>/index.php#recover</code>: inicia recuperación por modales.</li>
+<li><code>/pages/admin/asignaturas.php#competencias</code>: acceso al gestor de competencias.</li>
+<li><code>/pages/academic-workflows.php?tab=periods|courses|authorizations|memberships|residencies|continuity</code>: pestaña inicial; sólo se conserva si el rol la permite. Los valores se usan individualmente, no unidos por <code>|</code>.</li>
+<li><code>q</code> en repositorio, proyectos y usuarios: preselección de búsqueda cuando la pantalla la implementa.</li>
+<li><code>id</code> en páginas de edición/detalle: identifica el recurso; nunca sustituye la autorización de API.</li>
+<li><code>reason</code> en salida: comunica causa de cierre en los flujos que lo envían.</li>
+</ul>
+<p>La columna de parámetros se extrae estáticamente; puede incluir lecturas <code>.get()</code> no relacionadas con la URL. Los filtros internos de una tabla no necesariamente se reflejan en la barra de dirección. Los enlaces exactos, incluidos los generados por JavaScript, figuran en INTERFACES.md y REFERENCIA.md.</p>
+<h2 id="reescritura-y-rutas-absolutas">Reescritura y rutas absolutas</h2>
+<p><code>.htaccess</code> redirige recursos inexistentes a <code>index.php?path=...</code>; no constituye por sí mismo un catálogo de páginas amigables. La navegación usa principalmente <code>/pages/...</code> y <code>/assets/...</code>, por lo que alojar bajo un subdirectorio requiere verificar las rutas. El bloqueo de PHP declarado en ese mismo archivo se comenta en el manual.</p></main></body></html>

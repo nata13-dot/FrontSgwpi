@@ -15,7 +15,7 @@ if (!is_authenticated()) {
     <?php require_once $_SERVER['DOCUMENT_ROOT'] . '/includes/visual-preferences.php'; ?>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
-    <link rel="stylesheet" href="/assets/css/app.css">
+    <link rel="stylesheet" href="<?= asset('/assets/css/app.css') ?>">
     <style>
         .badge-calificacion { font-size: 0.95rem; padding: 0.45rem 0.65rem; }
         .badge-calificacion.alto { background-color: #28a745; }
@@ -196,11 +196,10 @@ if (!is_authenticated()) {
 
     <?php require_once $_SERVER['DOCUMENT_ROOT'] . '/includes/footer.php'; ?>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
     <script>const API_BASE_URL = '<?= API_BASE_URL ?>';</script>
-    <script src="/assets/js/auth.js"></script>
-    <script src="/assets/js/api.js"></script>
-    <script src="/assets/js/app.js"></script>
+    <script src="<?= asset('/assets/js/auth.js') ?>"></script>
+    <script src="<?= asset('/assets/js/api.js') ?>"></script>
+    <script src="<?= asset('/assets/js/app.js') ?>"></script>
     <script>
         let deliverables = [];
         let projects = [];
@@ -220,8 +219,8 @@ if (!is_authenticated()) {
 
         async function loadCatalogs() {
             const [projectsResponse, competenciasResponse] = await Promise.all([
-                api.get('/projects', { compact: 1, per_page: 500, _cache_ttl: 30000 }),
-                api.get('/competencias', { per_page: 100, _cache_ttl: 60000 })
+                api.getAll('/projects', { compact: 1, per_page: 500, _cache_ttl: 30000 }),
+                api.getAll('/competencias', { per_page: 100, _cache_ttl: 60000 })
             ]);
             projects = projectsResponse.data || [];
             competencias = competenciasResponse.data || [];

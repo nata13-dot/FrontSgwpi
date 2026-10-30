@@ -19,22 +19,23 @@
 
     const roleItems = {
         admin: [
-            item('Usuarios', 'Administrar estudiantes, docentes y administradores', '/pages/admin/users.php', 'bi-people', ['personas', 'alumnos', 'docentes', 'cuentas']),
-            item('Crear usuario', 'Registrar una nueva cuenta', '/pages/admin/user-create.php', 'bi-person-plus', ['alta', 'nuevo estudiante', 'nuevo docente']),
+            item('Usuarios', 'Administrar estudiantes, docentes y administradores', '/pages/admin/users.php', 'bi-people', ['personas', 'alumnos', 'docentes', 'cuentas'], 'govern_users'),
+            item('Crear usuario', 'Registrar una nueva cuenta', '/pages/admin/user-create.php', 'bi-person-plus', ['alta', 'nuevo estudiante', 'nuevo docente'], 'govern_users'),
             item('Asesores', 'Asignar asesores y revisar cargas', '/pages/admin/advisors.php', 'bi-person-check', ['asesorias', 'comites', 'revisores']),
             item('Proyectos y tesis', 'Consultar y administrar proyectos', '/pages/admin/projects.php', 'bi-diagram-3', ['proyectos', 'tesis', 'integrantes', 'empresas']),
             item('Crear proyecto', 'Registrar un proyecto desde administración', '/pages/admin/project-create.php', 'bi-folder-plus', ['nuevo proyecto', 'nueva tesis']),
-            item('Propuestas', 'Configurar grupos, ventanas y revisiónes', '/pages/admin/proposal-config.php', 'bi-calendar-check', ['registro', 'ventanas', 'excepciones']),
+            item('Propuestas', 'Configurar grupos, ventanas y revisiones', '/pages/admin/proposal-config.php', 'bi-calendar-check', ['registro', 'ventanas', 'excepciones']),
             item('Entregables', 'Administrar entregables académicos', '/pages/admin/deliverables.php', 'bi-file-earmark-check', ['entregas', 'fechas límite']),
             item('Evaluaciones', 'Gestionar evaluaciones y salas', '/pages/admin/evaluations.php', 'bi-clipboard-check', ['rúbricas', 'salas', 'calificaciones']),
             item('Evaluaciones archivadas', 'Consultar evaluaciones finalizadas', '/pages/admin/evaluations-archived.php', 'bi-archive-fill', ['historial', 'archivadas']),
-            item('Asignaturas', 'Gestionar asignaturas, cargas y competencias', '/pages/admin/asignaturas.php', 'bi-book', ['materias', 'competencias', 'carga académica']),
-            item('Semestres y periodos', 'Gestionar ciclos, promociones y presentaciones especiales', '/pages/admin/semesters.php', 'bi-calendar3', ['periodos', 'promocion', 'cambio de semestre', 'excepciones']),
-            item('Carga inicial', 'Importar asignaturas y grupos de la carrera activa', '/pages/admin/career-setup.php', 'bi-cloud-arrow-up', ['csv', 'plan de estudios', 'catalogo']),
-            item('Competencias', 'Ir a la gestión de competencias', '/pages/admin/asignaturas.php#competencias', 'bi-star', ['criterios academicos']),
-            item('Etiquetas', 'Administrar etiquetas de documentos', '/pages/admin/document-tags.php', 'bi-tags', ['colores', 'categorias']),
-            item('Avisos', 'Crear y administrar avisos del sistema', '/pages/admin/notices.php', 'bi-megaphone', ['notificaciones', 'anuncios', 'mensajes']),
-            item('Ajustes', 'Configurar preferencias generales del sistema', '/pages/admin/settings.php', 'bi-sliders', ['configuración', 'tema', 'sesión', 'periodo'])
+            item('Salas y turnos', 'Organizar salas, horarios y orden de presentación', '/pages/admin/evaluation-rooms.php', 'bi-door-open', ['horarios', 'turnos', 'presentaciones']),
+            item('Asignaturas', 'Gestionar asignaturas, cargas y competencias', '/pages/admin/asignaturas.php', 'bi-book', ['materias', 'competencias', 'carga académica'], 'manage_academics'),
+            item('Semestres y periodos', 'Gestionar ciclos, promociones y presentaciones especiales', '/pages/admin/semesters.php', 'bi-calendar3', ['periodos', 'promocion', 'cambio de semestre', 'excepciones'], 'manage_academics'),
+            item('Carga inicial', 'Importar asignaturas y grupos de la carrera activa', '/pages/admin/career-setup.php', 'bi-cloud-arrow-up', ['csv', 'plan de estudios', 'catalogo'], 'admin'),
+            item('Competencias', 'Ir a la gestión de competencias', '/pages/admin/asignaturas.php#competencias', 'bi-star', ['criterios academicos'], 'manage_academics'),
+            item('Etiquetas', 'Administrar etiquetas de documentos', '/pages/admin/document-tags.php', 'bi-tags', ['colores', 'categorias'], 'admin'),
+            item('Avisos', 'Crear y administrar avisos del sistema', '/pages/admin/notices.php', 'bi-megaphone', ['notificaciones', 'anuncios', 'mensajes'], 'admin'),
+            item('Ajustes', 'Configurar preferencias generales del sistema', '/pages/admin/settings.php', 'bi-sliders', ['configuración', 'tema', 'sesión', 'periodo'], 'admin')
         ],
         teacher: [
             item('Mis proyectos', 'Consultar proyectos y tesis asignados', '/pages/teacher/my-projects.php', 'bi-folder2-open', ['tesis', 'asesorias']),
@@ -49,20 +50,21 @@
         ]
     };
 
-    // Las opciones de gobierno de cuentas pertenecen exclusivamente al
-    // Administrador General; el resto de autoridades conserva solo consulta.
+    // Los permisos llegan calculados por PHP con los mismos helpers que usan
+    // las guardias de cada página, para no ofrecer destinos que redirigen.
+    const permissions = new Set((shell.dataset.permissions || '').split(/\s+/).filter(Boolean));
     roleItems.general_admin = roleItems.admin;
-    roleItems.admin = roleItems.admin.filter(entry => !entry.url.includes('/admin/users'));
 
-    const catalog = [...commonItems, ...(roleItems[role] || [])];
+    const catalog = [...commonItems, ...(roleItems[role] || [])]
+        .filter(entry => !entry.requires || permissions.has(entry.requires));
 
     window.addEventListener('sgpi:career-modules', event => {
         enabledModules = event.detail?.enabled || null;
         if (!resultsBox.hidden) render(input.value);
     });
 
-    function item(title, description, url, icon, keywords = []) {
-        return { title, description, url, icon, keywords, type: 'option' };
+    function item(title, description, url, icon, keywords = [], requires = null) {
+        return { title, description, url, icon, keywords, requires, type: 'option' };
     }
 
     function dashboardPath(currentRole) {
@@ -127,20 +129,23 @@
             }
         ];
 
-        if (role === 'admin') {
+        if (permissions.has('manage_projects')) {
+            dynamic.unshift({
+                title: `Buscar proyecto "${query.trim()}"`,
+                description: 'Filtrar proyectos, tesis, integrantes o empresas',
+                url: `/pages/admin/projects.php?q=${encoded}`,
+                icon: 'bi-search',
+                type: 'search'
+            });
+        }
+
+        if (permissions.has('govern_users')) {
             dynamic.unshift(
                 {
                     title: `Buscar usuario "${query.trim()}"`,
                     description: 'Filtrar por nombre, control, correo o teléfono',
                     url: `/pages/admin/users.php?q=${encoded}`,
                     icon: 'bi-person-search',
-                    type: 'search'
-                },
-                {
-                    title: `Buscar proyecto "${query.trim()}"`,
-                    description: 'Filtrar proyectos, tesis, integrantes o empresas',
-                    url: `/pages/admin/projects.php?q=${encoded}`,
-                    icon: 'bi-search',
                     type: 'search'
                 }
             );

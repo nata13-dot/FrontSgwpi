@@ -13,7 +13,7 @@ $management_pages = [
 <nav class="navbar navbar-expand-lg navbar-dark sticky-top <?= is_authenticated() ? 'navbar-authenticated' : 'navbar-public' ?>">
     <div class="container-xl">
         <a href="<?= $home_url ?>" class="navbar-brand">
-            <img src="/assets/img/ITSSMT/ITSSMT.webp" alt="ITSSMT">
+            <img src="/assets/img/ITSSMT/ITSSMT-192.webp" alt="ITSSMT">
             <div class="navbar-brand-text">
                 <span>Gestión de Proyectos</span>
                 <span>Integradores ITSSMT</span>
@@ -25,9 +25,15 @@ $management_pages = [
                 <i class="bi bi-list"></i>
             </button>
             <a href="<?= $home_url ?>" class="navbar-mobile-emblem" aria-label="Ir al inicio">
-                <img src="/assets/img/ITSSMT/ITSSMT.webp" alt="ITSSMT">
+                <img src="/assets/img/ITSSMT/ITSSMT-192.webp" alt="ITSSMT">
             </a>
-            <div class="global-search-shell" data-global-search data-role="<?= is_general_admin() ? 'general_admin' : (is_management_staff() ? 'admin' : (is_teacher() ? 'teacher' : 'student')) ?>">
+            <div class="global-search-shell" data-global-search data-role="<?= is_general_admin() ? 'general_admin' : (is_management_staff() ? 'admin' : (is_teacher() ? 'teacher' : 'student')) ?>"
+                 data-permissions="<?= htmlspecialchars(implode(' ', array_keys(array_filter([
+                     'govern_users' => can_govern_users(),
+                     'admin' => is_admin(),
+                     'manage_academics' => can_manage_academics(),
+                     'manage_projects' => can_manage_projects(),
+                 ])))) ?>">
                 <form class="global-search" role="search" action="/pages/repositorio.php" method="get" autocomplete="off">
                     <i class="bi bi-search" aria-hidden="true"></i>
                     <input
@@ -51,18 +57,18 @@ $management_pages = [
         <div class="collapse navbar-collapse" id="navbarNav">
             <ul class="navbar-nav ms-auto">
                 <li class="nav-item">
-                    <a href="<?= $home_url ?>" class="nav-link <?= ($current_page == 'index.php' || $current_page == 'dashboard.php') ? 'active' : '' ?>">
-                        <i class="bi bi-house"></i> Inicio
+                    <a href="<?= $home_url ?>" class="nav-link <?= ($current_page == 'index.php' || $current_page == 'dashboard.php') ? 'active' : '' ?>" title="Inicio">
+                        <i class="bi bi-house" aria-hidden="true"></i> <span class="nav-text">Inicio</span>
                     </a>
                 </li>
                 <li class="nav-item">
-                    <a href="/pages/repositorio.php" class="nav-link <?= $current_page == 'repositorio.php' ? 'active' : '' ?>">
-                        <i class="bi bi-archive"></i> Repositorio
+                    <a href="/pages/repositorio.php" class="nav-link <?= $current_page == 'repositorio.php' ? 'active' : '' ?>" title="Repositorio">
+                        <i class="bi bi-archive" aria-hidden="true"></i> <span class="nav-text">Repositorio</span>
                     </a>
                 </li>
                 
                 <?php if (is_authenticated()): ?>
-                    <?php if (is_general_admin() || count(available_careers()) > 1): ?>
+                    <?php if (!view_as_session() && (is_general_admin() || count(available_careers()) > 1)): ?>
                         <li class="nav-item dropdown career-switcher">
                             <button class="nav-link dropdown-toggle career-switcher-button" type="button" data-bs-toggle="dropdown" aria-expanded="false">
                                 <i class="bi bi-diagram-3"></i>
@@ -70,19 +76,19 @@ $management_pages = [
                             </button>
                             <ul class="dropdown-menu dropdown-menu-end career-switcher-menu">
                                 <li><h6 class="dropdown-header">Administrar como</h6></li>
-                                <?php foreach (available_careers() as $career): ?>
+                                <?php foreach (available_careers() as $careerOption): ?>
                                     <li>
                                         <button
                                             type="button"
-                                            class="dropdown-item career-switch-option <?= (int) ($career['id'] ?? 0) === (int) active_career_id() ? 'active' : '' ?>"
-                                            data-career-id="<?= (int) ($career['id'] ?? 0) ?>"
+                                            class="dropdown-item career-switch-option <?= (int) ($careerOption['id'] ?? 0) === (int) active_career_id() ? 'active' : '' ?>"
+                                            data-career-id="<?= (int) ($careerOption['id'] ?? 0) ?>"
                                         >
-                                            <span class="career-color-dot" style="--dot-color: <?= htmlspecialchars($career['color_acento'] ?? $career['color_primario'] ?? '#1B396A') ?>"></span>
+                                            <span class="career-color-dot" style="--dot-color: <?= htmlspecialchars($careerOption['color_acento'] ?? $careerOption['color_primario'] ?? '#1B396A') ?>"></span>
                                             <span>
-                                                <strong><?= htmlspecialchars($career['nombre_corto'] ?? $career['nombre'] ?? '') ?></strong>
-                                                <small><?= htmlspecialchars($career['clave'] ?? '') ?></small>
+                                                <strong><?= htmlspecialchars($careerOption['nombre_corto'] ?? $careerOption['nombre'] ?? '') ?></strong>
+                                                <small><?= htmlspecialchars($careerOption['clave'] ?? '') ?></small>
                                             </span>
-                                            <?php if ((int) ($career['id'] ?? 0) === (int) active_career_id()): ?>
+                                            <?php if ((int) ($careerOption['id'] ?? 0) === (int) active_career_id()): ?>
                                                 <i class="bi bi-check2 ms-auto"></i>
                                             <?php endif; ?>
                                         </button>
@@ -95,16 +101,44 @@ $management_pages = [
                             </ul>
                         </li>
                     <?php endif; ?>
+                    <?php if (is_general_admin() || view_as_session()): ?>
+                        <?php $levelOptions = [5 => 'Jefe de carrera', 6 => 'Asistente de jefatura', 7 => 'Coordinador de proyectos integradores', 2 => 'Docente', 3 => 'Estudiante']; ?>
+                        <li class="nav-item dropdown level-switcher">
+                            <button class="nav-link dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false" title="Ver el sistema con otro nivel de perfil">
+                                <i class="bi bi-layers"></i>
+                                <span><?= htmlspecialchars(view_as_session() ? profile_role_label() : 'Administrador general') ?></span>
+                            </button>
+                            <ul class="dropdown-menu dropdown-menu-end">
+                                <li><h6 class="dropdown-header">Ver <?= htmlspecialchars(active_career()['nombre_corto'] ?? 'la carrera') ?> como</h6></li>
+                                <li>
+                                    <button type="button" class="dropdown-item <?= view_as_session() ? '' : 'active' ?>" <?= view_as_session() ? 'onclick="exitViewAs(this)"' : 'disabled' ?>>
+                                        <span class="level-number">1</span> Administrador general
+                                    </button>
+                                </li>
+                                <?php $level = 2; foreach ($levelOptions as $profileId => $label): ?>
+                                    <li>
+                                        <button type="button" class="dropdown-item <?= view_as_session() && (int) get_user_role() === $profileId ? 'active' : '' ?>" onclick="startLevelView(<?= $profileId ?>, this)">
+                                            <span class="level-number"><?= $level++ ?></span> <?= htmlspecialchars($label) ?>
+                                        </button>
+                                    </li>
+                                <?php endforeach; ?>
+                                <li><hr class="dropdown-divider"></li>
+                                <li><span class="dropdown-item-text small text-muted">Simulación de sólo lectura con tu cuenta;<br>no muestra datos personales de nadie.</span></li>
+                            </ul>
+                        </li>
+                    <?php endif; ?>
                     <?php if (is_admin()): ?>
                         <li class="nav-item dropdown">
-                            <a class="nav-link dropdown-toggle <?= in_array($current_page, $management_pages) ? 'active' : '' ?>" href="#" id="managementMenu" role="button" data-bs-toggle="dropdown">
-                                <i class="bi bi-grid-3x3-gap"></i> Gestiones
+                            <a class="nav-link dropdown-toggle <?= in_array($current_page, $management_pages) ? 'active' : '' ?>" href="#" id="managementMenu" role="button" data-bs-toggle="dropdown" title="Gestiones">
+                                <i class="bi bi-grid-3x3-gap" aria-hidden="true"></i> <span class="nav-text">Gestiones</span>
                             </a>
                             <div class="dropdown-menu dropdown-menu-end management-menu" aria-labelledby="managementMenu">
                                 <div class="management-menu-grid">
                                     <div>
                                         <h6 class="dropdown-header">Personas</h6>
-                                        <a class="dropdown-item <?= $current_page == 'users.php' ? 'active' : '' ?>" href="/pages/admin/users.php"><i class="bi bi-people"></i> Usuarios</a>
+                                        <?php if (can_govern_users()): ?>
+                                            <a class="dropdown-item <?= $current_page == 'users.php' ? 'active' : '' ?>" href="/pages/admin/users.php"><i class="bi bi-people"></i> Usuarios</a>
+                                        <?php endif; ?>
                                         <a class="dropdown-item <?= $current_page == 'advisors.php' ? 'active' : '' ?>" href="/pages/admin/advisors.php"><i class="bi bi-person-check"></i> Asesores</a>
                                     </div>
                                     <div>
@@ -133,8 +167,8 @@ $management_pages = [
                         </li>
                     <?php elseif (is_teacher()): ?>
                         <li class="nav-item dropdown">
-                            <a class="nav-link dropdown-toggle <?= in_array($current_page, $management_pages) ? 'active' : '' ?>" href="#" id="managementMenu" role="button" data-bs-toggle="dropdown">
-                                <i class="bi bi-grid-3x3-gap"></i> Gestiones
+                            <a class="nav-link dropdown-toggle <?= in_array($current_page, $management_pages) ? 'active' : '' ?>" href="#" id="managementMenu" role="button" data-bs-toggle="dropdown" title="Gestiones">
+                                <i class="bi bi-grid-3x3-gap" aria-hidden="true"></i> <span class="nav-text">Gestiones</span>
                             </a>
                             <div class="dropdown-menu dropdown-menu-end management-menu" aria-labelledby="managementMenu">
                                 <div class="management-menu-grid">
@@ -158,8 +192,8 @@ $management_pages = [
                         </li>
                     <?php elseif (is_student()): ?>
                         <li class="nav-item dropdown">
-                            <a class="nav-link dropdown-toggle <?= in_array($current_page, $management_pages) ? 'active' : '' ?>" href="#" id="managementMenu" role="button" data-bs-toggle="dropdown">
-                                <i class="bi bi-grid-3x3-gap"></i> Gestiones
+                            <a class="nav-link dropdown-toggle <?= in_array($current_page, $management_pages) ? 'active' : '' ?>" href="#" id="managementMenu" role="button" data-bs-toggle="dropdown" title="Gestiones">
+                                <i class="bi bi-grid-3x3-gap" aria-hidden="true"></i> <span class="nav-text">Gestiones</span>
                             </a>
                             <div class="dropdown-menu dropdown-menu-end management-menu" aria-labelledby="managementMenu">
                                 <div class="management-menu-grid">
@@ -277,6 +311,50 @@ $management_pages = [
         </div>
     </div>
 </nav>
+<?php if ($viewAs = view_as_session()): ?>
+<div class="view-as-banner" role="status">
+    <div class="container-xl d-flex flex-wrap align-items-center gap-2">
+        <i class="bi bi-eye"></i>
+        <span>
+            Estás viendo <strong><?= htmlspecialchars(active_career()['nombre_corto'] ?? '') ?></strong> como <strong><?= htmlspecialchars(profile_role_label()) ?></strong>.
+            Es una simulación de sólo lectura con tu cuenta: los cambios están bloqueados y no se muestran datos personales de nadie.
+        </span>
+        <button type="button" class="btn btn-sm btn-dark ms-auto" onclick="exitViewAs(this)"><i class="bi bi-box-arrow-left"></i> Volver a administrador general</button>
+    </div>
+</div>
+
+<?php endif; ?>
+
+<?php if (is_general_admin() || view_as_session()): ?>
+<script>
+async function exitViewAs(button) {
+    button.disabled = true;
+    // Al volver se queda en la misma carrera: en la página de administración actual o en su inicio.
+    const returnTo = location.pathname.startsWith('/pages/admin/') ? location.pathname + location.search : '/pages/admin/dashboard.php';
+    const response = await fetch('/api/view-as.php', { method: 'POST', credentials: 'include', headers: { 'Content-Type': 'application/json', Accept: 'application/json' }, body: JSON.stringify({ action: 'exit', return_to: returnTo }) });
+    const data = await response.json().catch(() => ({}));
+    try { sessionStorage.clear(); } catch (error) { /* la recarga basta */ }
+    window.location.replace(data.dashboard_url || data.redirect || '/index.php');
+}
+
+async function startLevelView(profileId, button) {
+    button.disabled = true;
+    try {
+        const response = await fetch('/api/view-as.php', { method: 'POST', credentials: 'include', headers: { 'Content-Type': 'application/json', Accept: 'application/json' }, body: JSON.stringify({ action: 'start', perfil_id: profileId }) });
+        const data = await response.json().catch(() => ({}));
+        if (!response.ok) {
+            if (data.redirect) return window.location.replace(data.redirect);
+            throw new Error(data.error || 'No se pudo abrir la simulación.');
+        }
+        try { sessionStorage.clear(); } catch (error) { /* la recarga basta */ }
+        window.location.replace(data.dashboard_url || '/index.php');
+    } catch (error) {
+        button.disabled = false;
+        if (window.Swal) Swal.fire('No se cambió el nivel', error.message, 'error'); else window.alert(error.message);
+    }
+}
+</script>
+<?php endif; ?>
 
 <script>
 document.addEventListener('DOMContentLoaded', () => {
@@ -337,11 +415,11 @@ async function logout() {
 }
 </script>
 <?php if (is_authenticated()): ?>
-    <script src="/assets/js/global-search.js"></script>
-    <script src="/assets/js/activity-notifications.js"></script>
+    <script src="<?= asset('/assets/js/global-search.js') ?>"></script>
+    <script src="<?= asset('/assets/js/activity-notifications.js') ?>"></script>
     <?php if (is_general_admin()): ?>
-        <script src="/assets/js/operational-notifications.js"></script>
+        <script src="<?= asset('/assets/js/operational-notifications.js') ?>"></script>
     <?php endif; ?>
-    <script src="/assets/js/career-modules.js"></script>
-    <script src="/assets/js/career-switcher.js"></script>
+    <script src="<?= asset('/assets/js/career-modules.js') ?>"></script>
+    <script src="<?= asset('/assets/js/career-switcher.js') ?>"></script>
 <?php endif; ?>

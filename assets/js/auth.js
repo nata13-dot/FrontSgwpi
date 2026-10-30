@@ -5,10 +5,6 @@
 
 class AuthManager {
     constructor() {
-        if (window.axios) {
-            window.axios.defaults.withCredentials = true;
-        }
-
         const serverSession = window.SGPI_SESSION || {};
         this.token = serverSession.token || null;
         this.user = serverSession.user || null;
@@ -25,23 +21,46 @@ class AuthManager {
      */
     async login(id, password, remember = true) {
         try {
-            const response = await axios.post(`${API_BASE_URL}/auth/login`, {
-                id,
-                password,
-                remember
+            const response = await fetch(`${API_BASE_URL}/auth/login`, {
+                method: 'POST',
+                credentials: 'include',
+                headers: { 'Accept': 'application/json', 'Content-Type': 'application/json' },
+                body: JSON.stringify({ id, password, remember })
             });
+            const data = await response.json().catch(() => ({}));
+            if (!response.ok || !data.access_token) {
+                return { success: false, error: data.error || data.message || 'Error al iniciar sesión' };
+            }
 
-            this.token = response.data.access_token;
-            this.user = response.data.user;
-            this.remember = Boolean(response.data.remember ?? remember);
+            this.token = data.access_token;
+            this.user = data.user;
+            this.remember = Boolean(data.remember ?? remember);
 
-            return { success: true, data: response.data };
+            return { success: true, data };
         } catch (error) {
             return {
                 success: false,
-                error: error.response?.data?.error || 'Error al iniciar sesión'
+                error: 'No fue posible conectar con el servidor. Revisa tu conexión e inténtalo de nuevo.'
             };
         }
+    }
+
+    /**
+     * Guardar la sesión en PHP. El servidor la valida contra /auth/me.
+     */
+    async persistSession() {
+        const response = await fetch('/api/set-session.php', {
+            method: 'POST',
+            credentials: 'include',
+            headers: { 'Accept': 'application/json', 'Content-Type': 'application/json' },
+            body: JSON.stringify({ auth_token: this.token, user: this.user, remember: this.remember })
+        });
+        const data = await response.json().catch(() => ({}));
+        if (!response.ok) {
+            throw new Error(data.error || 'No se pudo guardar la sesión.');
+        }
+        if (data.user) this.user = data.user;
+        return data;
     }
 
     /**
@@ -49,8 +68,10 @@ class AuthManager {
      */
     async logout() {
         try {
-            await axios.post(`${API_BASE_URL}/auth/logout`, {}, {
-                headers: { Authorization: `Bearer ${this.token}` }
+            await fetch(`${API_BASE_URL}/auth/logout`, {
+                method: 'POST',
+                credentials: 'include',
+                headers: { 'Accept': 'application/json', Authorization: `Bearer ${this.token}` }
             });
         } catch (error) {
             console.error('Error al cerrar sesión:', error);
@@ -149,19 +170,8 @@ class AuthManager {
             if (!data.access_token) throw new Error('Respuesta de sesión invalida.');
             this.token = data.access_token;
             if (data.user) this.user = data.user;
-            await fetch('/api/set-session.php', {
-                method: 'POST',
-                credentials: 'include',
-                headers: {
-                    'Accept': 'application/json',
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify({
-                    auth_token: this.token,
-                    user: this.user,
-                    remember: this.remember
-                })
-            });
+            // Un fallo al guardar en PHP no invalida el token renovado en esta página.
+            await this.persistSession().catch(error => console.warn(error.message));
             if (window.SGPI_SESSION) {
                 window.SGPI_SESSION.token = this.token;
                 window.SGPI_SESSION.user = this.user;

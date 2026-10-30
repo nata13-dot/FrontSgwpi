@@ -15,7 +15,7 @@ if (!is_authenticated() || !is_general_admin()) {
     <?php require_once $_SERVER['DOCUMENT_ROOT'] . '/includes/visual-preferences.php'; ?>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
-    <link rel="stylesheet" href="/assets/css/app.css">
+    <link rel="stylesheet" href="<?= asset('/assets/css/app.css') ?>">
 </head>
 <body>
 <?php require_once $_SERVER['DOCUMENT_ROOT'] . '/includes/navbar.php'; ?>
@@ -122,12 +122,11 @@ if (!is_authenticated() || !is_general_admin()) {
                                 <div>
                                     <label class="form-label" for="membershipRole">Rol en esta carrera</label>
                                     <select class="form-select" id="membershipRole" required>
-                                        <option value="1">Administrador</option>
+                                        <option value="5">Jefe de carrera</option>
+                                        <option value="6">Asistente de jefatura</option>
+                                        <option value="7">Coordinador de proyectos integradores</option>
                                         <option value="2">Docente</option>
                                         <option value="3">Estudiante</option>
-                                        <option value="5">Jefe de Carrera</option>
-                                        <option value="6">Asistente de Jefe de Carrera</option>
-                                        <option value="7">Coordinador de Proyectos</option>
                                     </select>
                                 </div>
                                 <label class="form-check mt-4">
@@ -152,12 +151,12 @@ if (!is_authenticated() || !is_general_admin()) {
 <?php require_once $_SERVER['DOCUMENT_ROOT'] . '/includes/footer.php'; ?>
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 <script>const API_BASE_URL = '<?= API_BASE_URL ?>';</script>
-<script src="/assets/js/auth.js"></script>
-<script src="/assets/js/api.js"></script>
-<script src="/assets/js/app.js"></script>
+<script src="<?= asset('/assets/js/auth.js') ?>"></script>
+<script src="<?= asset('/assets/js/api.js') ?>"></script>
+<script src="<?= asset('/assets/js/app.js') ?>"></script>
 <script>
 const careerState = { careers: [], selected: null };
-const roleNames = {1: 'Administrador', 2: 'Docente', 3: 'Estudiante', 5: 'Jefe de Carrera', 6: 'Asistente de Jefe de Carrera', 7: 'Coordinador de Proyectos'};
+const roleNames = {5: 'Jefe de carrera', 6: 'Asistente de jefatura', 7: 'Coordinador de proyectos integradores', 2: 'Docente', 3: 'Estudiante'};
 
 function careerEsc(value) {
     return String(value ?? '').replace(/[&<>'"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'}[c]));

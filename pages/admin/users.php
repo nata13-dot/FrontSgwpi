@@ -1,7 +1,7 @@
 <?php 
 require_once $_SERVER['DOCUMENT_ROOT'] . '/includes/config.php';
 
-if (!is_authenticated() || !can_govern_users()) {
+if (!is_authenticated() || !can_view_users()) {
     header('Location: /index.php');
     exit;
 }
@@ -15,7 +15,7 @@ if (!is_authenticated() || !can_govern_users()) {
     <?php require_once $_SERVER['DOCUMENT_ROOT'] . '/includes/visual-preferences.php'; ?>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
-    <link rel="stylesheet" href="/assets/css/app.css">
+    <link rel="stylesheet" href="<?= asset('/assets/css/app.css') ?>">
 </head>
 <body>
     <?php require_once $_SERVER['DOCUMENT_ROOT'] . '/includes/navbar.php'; ?>
@@ -28,8 +28,8 @@ if (!is_authenticated() || !can_govern_users()) {
                         <h1 class="mb-1">Gestión de Usuarios</h1>
                         <p class="text-muted mb-0" id="statusDescription">Mostrando perfiles activos</p>
                     </div>
-                    <div class="d-flex gap-2 users-desktop-actions">
-                        <button type="button" class="btn btn-outline-primary" onclick="downloadUsersExcelTemplate()">
+                    <?php if (can_govern_users()): ?><div class="d-flex gap-2 users-desktop-actions">
+                        <button type="button" class="btn btn-outline-primary" onclick="openUsersImportModal()" title="Descarga la plantilla de alumnos o de personal">
                             <i class="bi bi-file-earmark-spreadsheet"></i> Plantilla Excel
                         </button>
                         <button type="button" class="btn btn-outline-success" onclick="openUsersImportModal()">
@@ -41,7 +41,7 @@ if (!is_authenticated() || !can_govern_users()) {
                         <button type="button" class="btn btn-primary" onclick="openUserModal()">
                             <i class="bi bi-plus-circle"></i> Nuevo Usuario
                         </button>
-                    </div>
+                    </div><?php endif; ?>
                 </div>
 
                 <button
@@ -62,8 +62,8 @@ if (!is_authenticated() || !can_govern_users()) {
                 </button>
 
                 <div class="users-mobile-options" id="usersMobileOptions">
-                    <div class="users-mobile-actions">
-                        <button type="button" class="btn btn-outline-primary" onclick="downloadUsersExcelTemplate()">
+                    <?php if (can_govern_users()): ?><div class="users-mobile-actions">
+                        <button type="button" class="btn btn-outline-primary" onclick="openUsersImportModal()" title="Descarga la plantilla de alumnos o de personal">
                             <i class="bi bi-file-earmark-spreadsheet"></i> Plantilla Excel
                         </button>
                         <button type="button" class="btn btn-outline-success" onclick="openUsersImportModal()">
@@ -75,7 +75,7 @@ if (!is_authenticated() || !can_govern_users()) {
                         <button type="button" class="btn btn-primary" onclick="openUserModal()">
                             <i class="bi bi-plus-circle"></i> Nuevo Usuario
                         </button>
-                    </div>
+                    </div><?php endif; ?>
 
                     <div class="users-filter-section">
                         <span class="users-filter-label">Estado</span>
@@ -92,7 +92,7 @@ if (!is_authenticated() || !can_govern_users()) {
                             <button type="button" class="btn btn-primary" id="profileAll" onclick="setProfileFilter('all')"><i class="bi bi-list-ul"></i> Todos los perfiles</button>
                             <button type="button" class="btn btn-outline-secondary" id="profileStudents" onclick="setProfileFilter('3')"><i class="bi bi-mortarboard"></i> Estudiantes</button>
                             <button type="button" class="btn btn-outline-secondary" id="profileTeachers" onclick="setProfileFilter('2')"><i class="bi bi-person-workspace"></i> Docentes</button>
-                            <button type="button" class="btn btn-outline-secondary" id="profileAdmins" onclick="setProfileFilter('1')"><i class="bi bi-shield-lock"></i> Administrativos</button>
+                            <button type="button" class="btn btn-outline-secondary" id="profileAdmins" onclick="setProfileFilter('staff')"><i class="bi bi-shield-lock"></i> Jefatura y coordinación</button>
                         </div>
                     </div>
                 </div>
@@ -111,7 +111,7 @@ if (!is_authenticated() || !can_govern_users()) {
                 <div class="row g-3 mb-3 d-none" id="studentGroupFilters">
                     <div class="col-md-3">
                         <label class="form-label" for="semesterFilter">Semestre</label>
-                        <select class="form-select" id="semesterFilter" onchange="loadGroupsForFilter(); loadUsers(1);">
+                        <select data-semester-scope="career" class="form-select" id="semesterFilter" onchange="loadGroupsForFilter(); loadUsers(1);">
                             <option value="">Todos</option>
                             <option value="5">5</option>
                             <option value="6">6</option>
@@ -187,9 +187,20 @@ if (!is_authenticated() || !can_govern_users()) {
                 </div>
                 <div class="modal-body">
                     <div id="usersImportAlert"></div>
-                    <label class="form-label" for="usersImportFile">Archivo de plantilla</label>
+                    <label class="form-label d-block">¿Qué vas a cargar?</label>
+                    <div class="btn-group w-100 mb-3" role="group" aria-label="Tipo de carga">
+                        <input type="radio" class="btn-check" name="usersImportKind" id="usersImportStudents" value="alumnos" checked onchange="renderUsersImportHelp()">
+                        <label class="btn btn-outline-primary" for="usersImportStudents"><i class="bi bi-mortarboard"></i> Alumnos</label>
+                        <input type="radio" class="btn-check" name="usersImportKind" id="usersImportStaff" value="personal" onchange="renderUsersImportHelp()">
+                        <label class="btn btn-outline-primary" for="usersImportStaff"><i class="bi bi-person-badge"></i> Docentes y personal</label>
+                    </div>
+                    <div class="alert alert-light border small" id="usersImportHelp"></div>
+                    <button type="button" class="btn btn-sm btn-outline-secondary mb-3" onclick="downloadUsersExcelTemplate(selectedUsersImportKind())">
+                        <i class="bi bi-download"></i> Descargar plantilla
+                    </button>
+                    <label class="form-label d-block" for="usersImportFile">Archivo</label>
                     <input type="file" class="form-control" id="usersImportFile" accept=".xls,.xlsx,.csv" required>
-                    <div class="form-text">Puedes usar la plantilla descargada o guardarla como .xlsx antes de importarla.</div>
+                    <div class="form-text">Usa la plantilla .xls o guárdala como .xlsx/.csv. La contraseña inicial de cada cuenta es su matrícula o número de empleado.</div>
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancelar</button>
@@ -231,8 +242,8 @@ if (!is_authenticated() || !can_govern_users()) {
                         <label class="form-label d-block">Perfiles para envío por filtro</label>
                         <div class="d-flex flex-wrap gap-2">
                             <label class="form-check border rounded px-3 py-2">
-                                <input class="form-check-input credential-profile-checkbox" type="checkbox" value="1" checked onchange="refreshCredentialScopeText()">
-                                <span class="form-check-label">Administrativos</span>
+                                <input class="form-check-input credential-profile-checkbox" type="checkbox" value="staff" checked onchange="refreshCredentialScopeText()">
+                                <span class="form-check-label">Jefatura y coordinación</span>
                             </label>
                             <label class="form-check border rounded px-3 py-2">
                                 <input class="form-check-input credential-profile-checkbox" type="checkbox" value="2" checked onchange="refreshCredentialScopeText()">
@@ -297,18 +308,17 @@ if (!is_authenticated() || !can_govern_users()) {
                             </div>
                             <div class="col-md-4">
                                 <label class="form-label" for="userPhone">Telefono</label>
-                                <input type="tel" class="form-control" id="userPhone" maxlength="200" required>
+                                <input type="tel" class="form-control" id="userPhone" maxlength="200" placeholder="Opcional">
                             </div>
                             <div class="col-md-4">
                                 <label class="form-label" for="userProfile">Perfil</label>
                                 <select class="form-select" id="userProfile" required onchange="toggleUserStudentFields()">
                                     <option value="">Seleccionar...</option>
-                                    <option value="1">Administrador</option>
+                                    <?php if (is_general_admin()): ?><option value="5">Jefe de carrera</option><?php endif; ?>
+                                    <?php if (is_general_admin()): ?><option value="6">Asistente de jefatura</option><?php endif; ?>
+                                    <option value="7">Coordinador de proyectos integradores</option>
                                     <option value="2">Docente</option>
                                     <option value="3">Estudiante</option>
-                                    <option value="5">Jefe de Carrera</option>
-                                    <option value="6">Asistente de Jefe de Carrera</option>
-                                    <option value="7">Coordinador de Proyectos</option>
                                 </select>
                                 <div class="form-text" id="userProfileHelp"></div>
                             </div>
@@ -344,14 +354,14 @@ if (!is_authenticated() || !can_govern_users()) {
                                 <label class="form-label" for="userAma">Apellido materno</label>
                                 <input type="text" class="form-control" id="userAma">
                             </div>
-                            <div class="col-12">
-                                <label class="form-label" for="userAddress">Dirección</label>
-                                <input type="text" class="form-control" id="userAddress" minlength="10" pattern="(?=.*\d)[A-Za-zÁÉÍÓÚÜÑáéíóúüñ0-9\s#.,\-\/]+" placeholder="Calle, número, colonia, municipio">
-                                <div class="form-text">Separa los datos con comas (,).</div>
+                            <div class="col-12 user-staff-field">
+                                <label class="form-label" for="userSpecialty">Especialidad</label>
+                                <input type="text" class="form-control" id="userSpecialty" maxlength="255" placeholder="Opcional, por ejemplo: Redes, Bases de datos">
                             </div>
                             <div class="col-md-6">
                                 <label class="form-label" for="userPassword">Contraseña</label>
                                 <input type="password" class="form-control" id="userPassword" minlength="6">
+                                <div class="form-text" id="userPasswordHelp">Si la dejas vacía, la contraseña inicial será la matrícula y se pedirá cambiarla al entrar.</div>
                             </div>
                             <div class="col-md-6">
                                 <label class="form-label" for="userPasswordConfirmation">Confirmar contraseña</label>
@@ -379,7 +389,7 @@ if (!is_authenticated() || !can_govern_users()) {
                     <div class="row g-3 mb-3">
                         <div class="col-md-4">
                             <label class="form-label">Semestre</label>
-                            <select class="form-select" id="controlSemester" onchange="loadControlGroups()">
+                            <select data-semester-scope="period" class="form-select" id="controlSemester" onchange="loadControlGroups()">
                                 <option value="5">5</option><option value="6">6</option><option value="7">7</option><option value="8">8</option><option value="9">9</option>
                             </select>
                         </div>
@@ -412,7 +422,7 @@ if (!is_authenticated() || !can_govern_users()) {
                         <div class="row g-3">
                             <div class="col-md-6">
                                 <label class="form-label" for="groupFormSemester">Semestre</label>
-                                <select class="form-select" id="groupFormSemester" required>
+                                <select data-semester-scope="period" class="form-select" id="groupFormSemester" required>
                                     <option value="5">5</option>
                                     <option value="6">6</option>
                                     <option value="7">7</option>
@@ -447,13 +457,14 @@ if (!is_authenticated() || !can_govern_users()) {
     <?php require_once $_SERVER['DOCUMENT_ROOT'] . '/includes/footer.php'; ?>
     <?php require_once $_SERVER['DOCUMENT_ROOT'] . '/includes/modal.php'; ?>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
     <script>const API_BASE_URL = '<?= API_BASE_URL ?>';</script>
-    <script src="/assets/js/auth.js"></script>
-    <script src="/assets/js/api.js"></script>
-    <script src="/assets/js/app.js"></script>
+    <script src="<?= asset('/assets/js/auth.js') ?>"></script>
+    <script src="<?= asset('/assets/js/api.js') ?>"></script>
+    <script src="<?= asset('/assets/js/app.js') ?>"></script>
     <script>
         let currentStatus = 'active';
+        const CAN_GOVERN_USERS = <?= can_govern_users() ? 'true' : 'false' ?>;
+        const IS_GENERAL_ADMIN = <?= is_general_admin() ? 'true' : 'false' ?>;
         let currentProfile = 'all';
         let currentPage = 1;
         const usersPerPage = 12;
@@ -482,7 +493,7 @@ if (!is_authenticated() || !can_govern_users()) {
                 button.className = status === currentStatus ? 'btn btn-primary' : 'btn btn-outline-secondary';
             });
 
-            const profileButtons = { all: 'profileAll', '3': 'profileStudents', '2': 'profileTeachers', '1': 'profileAdmins' };
+            const profileButtons = { all: 'profileAll', '3': 'profileStudents', '2': 'profileTeachers', staff: 'profileAdmins' };
             Object.entries(profileButtons).forEach(([profile, id]) => {
                 const button = document.getElementById(id);
                 button.className = profile === currentProfile ? 'btn btn-primary' : 'btn btn-outline-secondary';
@@ -506,7 +517,9 @@ if (!is_authenticated() || !can_govern_users()) {
             try {
                 const params = { page, per_page: usersPerPage };
                 if (currentStatus !== 'all') params.status = currentStatus;
-                if (currentProfile !== 'all') params.perfil_id = currentProfile;
+                // "Jefatura y coordinación" agrupa jefe de carrera, asistente de jefatura y coordinador (niveles 2 a 4).
+                if (currentProfile === 'staff') params.perfil_ids = '5,6,7';
+                else if (currentProfile !== 'all') params.perfil_id = currentProfile;
                 const search = document.getElementById('userSearchInput')?.value.trim();
                 if (search) params.q = search;
                 if (currentProfile === '3') {
@@ -530,9 +543,10 @@ if (!is_authenticated() || !can_govern_users()) {
                 }
 
                 users.forEach(user => {
-                    const profileNames = { 1: 'Administrador', 2: 'Docente', 3: 'Estudiante', 5: 'Jefe de Carrera', 6: 'Asistente de Jefe de Carrera', 7: 'Coordinador de Proyectos' };
+                    const profileNames = { 5: 'Jefe de carrera', 6: 'Asistente de jefatura', 7: 'Coordinador de proyectos integradores', 2: 'Docente', 3: 'Estudiante' };
                     const isActive = Boolean(user.activo);
-                    const isAdminUser = [1, 5].includes(Number(user.perfil_id));
+                    // Jefatura y asistencia sólo las modifica el administrador general.
+                    const isAdminUser = [5, 6].includes(Number(user.perfil_id));
                     const statusBadge = isActive ? '<span class="badge bg-success">Activo</span>' : '<span class="badge bg-secondary">Inactivo</span>';
                     // El botón refleja el estado actual; el título indica la acción disponible.
                     const toggleClass = isActive ? 'btn-outline-success' : 'btn-outline-danger';
@@ -560,11 +574,13 @@ if (!is_authenticated() || !can_govern_users()) {
                             <td>${Number(user.perfil_id) === 2 ? `<span class="badge bg-info text-dark">${Number(user.advising_projects_count || 0)} asesorías</span>` : (Number(user.perfil_id) === 3 ? (Number(user.student_projects_count || 0) > 0 ? '<span class="badge bg-success">Con proyecto</span>' : '<span class="badge bg-warning text-dark">Sin proyecto</span>') : '<span class="text-muted small">-</span>')}</td>
                             <td>${statusBadge}</td>
                             <td>
-                                <div class="btn-group btn-group-sm" role="group">
+                                ${!CAN_GOVERN_USERS ? '<span class="text-muted small">Sólo consulta</span>' : (isAdminUser && !IS_GENERAL_ADMIN
+                                    ? '<span class="text-muted small" title="Lo administra el administrador general"><i class="bi bi-shield-lock"></i> Protegido</span>'
+                                    : `<div class="btn-group btn-group-sm" role="group">
                                     <button type="button" class="btn btn-outline-primary" onclick="openUserModal('${escapeHtml(user.id)}')" title="Editar"><i class="bi bi-pencil"></i></button>
                                     ${normalToggle}
                                     ${protectedButton}
-                                </div>
+                                </div>`)}
                             </td>
                         </tr>`;
                 });
@@ -765,10 +781,26 @@ if (!is_authenticated() || !can_govern_users()) {
             document.getElementById('userId').readOnly = false;
             document.getElementById('userProfile').disabled = false;
             document.getElementById('userProfileHelp').textContent = '';
-            document.getElementById('userPassword').required = true;
-            document.getElementById('userPasswordConfirmation').required = true;
+            document.getElementById('userPassword').required = false;
+            document.getElementById('userPasswordConfirmation').required = false;
+            document.getElementById('userPasswordHelp').textContent = 'Si la dejas vacía, la contraseña inicial será la matrícula y se pedirá cambiarla al entrar.';
             document.getElementById('userActive').value = '1';
+            loadUserSemesterOptions();
             toggleUserStudentFields();
+        }
+
+        // Sólo se ofrecen los semestres que existen en el periodo abierto (enero–junio pares, julio–diciembre impares).
+        async function loadUserSemesterOptions(selected = '') {
+            const select = document.getElementById('userSemester');
+            try {
+                const policy = await api.get('/semester-management/policy', { _cache_ttl: 60000 });
+                select.innerHTML = '<option value="">Seleccionar...</option>' + policy.period_semesters
+                    .map(semester => `<option value="${semester}">${semester}°</option>`).join('');
+            } catch (error) { /* se conservan las opciones actuales */ }
+            if (selected && ![...select.options].some(option => option.value === String(selected))) {
+                select.add(new Option(`${selected}° (fuera del periodo actual)`, selected));
+            }
+            select.value = selected ? String(selected) : '';
         }
 
         async function openUserModal(userId = null) {
@@ -796,8 +828,9 @@ if (!is_authenticated() || !can_govern_users()) {
                 document.getElementById('userNames').value = loadedModalUser.nombres || '';
                 document.getElementById('userApa').value = loadedModalUser.apa || '';
                 document.getElementById('userAma').value = loadedModalUser.ama || '';
-                document.getElementById('userAddress').value = loadedModalUser.direccion || '';
-                document.getElementById('userSemester').value = loadedModalUser.semestre || '';
+                document.getElementById('userSpecialty').value = loadedModalUser.especialidad || '';
+                await loadUserSemesterOptions(loadedModalUser.semestre || '');
+                document.getElementById('userPasswordHelp').textContent = 'Déjala vacía para conservar la contraseña actual.';
                 await loadUserModalGroups(loadedModalUser.grupo || '');
                 document.getElementById('userPassword').required = false;
                 document.getElementById('userPasswordConfirmation').required = false;
@@ -810,6 +843,7 @@ if (!is_authenticated() || !can_govern_users()) {
         function toggleUserStudentFields() {
             const isStudent = document.getElementById('userProfile').value === '3';
             document.querySelectorAll('.user-student-field').forEach(el => el.classList.toggle('d-none', !isStudent));
+            document.querySelectorAll('.user-staff-field').forEach(el => el.classList.toggle('d-none', isStudent));
         }
 
         async function loadUserModalGroups(selected = '') {
@@ -846,15 +880,17 @@ if (!is_authenticated() || !can_govern_users()) {
                 nombres: document.getElementById('userNames').value.trim(),
                 apa: document.getElementById('userApa').value.trim() || null,
                 ama: document.getElementById('userAma').value.trim() || null,
-                direccion: document.getElementById('userAddress').value.trim() || null,
-                telefonos: document.getElementById('userPhone').value.trim()
+                especialidad: document.getElementById('userProfile').value === '3' ? null : (document.getElementById('userSpecialty').value.trim() || null),
+                telefonos: document.getElementById('userPhone').value.trim() || null
             };
 
             if (!editingId) {
                 payload.id = document.getElementById('userId').value.trim();
                 payload.perfil_id = document.getElementById('userProfile').value;
-                payload.password = password;
-                payload.password_confirmation = passwordConfirmation;
+                if (password) {
+                    payload.password = password;
+                    payload.password_confirmation = passwordConfirmation;
+                }
             } else {
                 payload.perfil_id = document.getElementById('userProfile').value;
                 if (password) {
@@ -864,7 +900,7 @@ if (!is_authenticated() || !can_govern_users()) {
             }
 
             const changesProtectedAuthority = loadedModalUser
-                && [1, 5].includes(Number(loadedModalUser.perfil_id))
+                && Number(loadedModalUser.perfil_id) === 5
                 && (!payload.activo || Number(payload.perfil_id) !== Number(loadedModalUser.perfil_id));
             if (changesProtectedAuthority) {
                 const adminPassword = await promptPassword({
@@ -911,7 +947,7 @@ if (!is_authenticated() || !can_govern_users()) {
             box.innerHTML = '<div class="col-12 text-center py-4"><div class="spinner-border"></div></div>';
             const [semesterGroups, studentsResponse] = await Promise.all([
                 api.get('/subject-groups', { semestre: semester, _cache_ttl: 60000 }),
-                api.get('/users', { perfil_id: 3, status: 'active', compact: 1, per_page: 500, _cache_ttl: 30000 })
+                api.getAll('/users', { perfil_id: 3, status: 'active', compact: 1, per_page: 500, _cache_ttl: 30000 })
             ]);
                 controlGroups = semesterGroups;
                 const students = (studentsResponse.data || []).filter(student => String(student.semestre || '') === String(semester));
@@ -1117,8 +1153,28 @@ if (!is_authenticated() || !can_govern_users()) {
             await toggleUserStatus(userId, password);
         }
 
-        function downloadUsersExcelTemplate() {
-            fetch(`${API_BASE_URL}/users-template.xls`, {
+        function selectedUsersImportKind() {
+            return document.querySelector('input[name="usersImportKind"]:checked')?.value || 'alumnos';
+        }
+
+        async function renderUsersImportHelp() {
+            const help = document.getElementById('usersImportHelp');
+            if (selectedUsersImportKind() === 'personal') {
+                help.innerHTML = '<strong>Columnas:</strong> número de empleado, nombres, apellidos, correo, teléfono, especialidad y perfil (Jefe de carrera, Asistente de jefatura, Coordinador de proyectos integradores o Docente).';
+                return;
+            }
+            let semesters = '';
+            try {
+                const policy = await api.get('/semester-management/policy', { _cache_ttl: 60000 });
+                semesters = policy.period
+                    ? ` En <strong>${escapeHtml(policy.period.nombre)}</strong> sólo existen los semestres <strong>${policy.period_semesters.join(', ')}</strong>.`
+                    : ' La carrera necesita un periodo abierto para asignar grupos.';
+            } catch (error) { /* la ayuda es opcional */ }
+            help.innerHTML = '<strong>Columnas:</strong> matrícula, nombres, apellidos, correo, semestre y grupo (letra). Los grupos que no existan en el periodo abierto se crean automáticamente (por ejemplo 7° A).' + semesters;
+        }
+
+        function downloadUsersExcelTemplate(kind = 'alumnos') {
+            fetch(`${API_BASE_URL}/users-template.xls?tipo=${encodeURIComponent(kind)}`, {
                 credentials: 'include'
             })
                 .then(async response => {
@@ -1132,7 +1188,7 @@ if (!is_authenticated() || !can_govern_users()) {
                     const url = URL.createObjectURL(blob);
                     const link = document.createElement('a');
                     link.href = url;
-                    link.download = 'plantilla_usuarios.xls';
+                    link.download = kind === 'personal' ? 'plantilla_personal.xls' : 'plantilla_alumnos.xls';
                     link.click();
                     URL.revokeObjectURL(url);
                 })
@@ -1143,6 +1199,7 @@ if (!is_authenticated() || !can_govern_users()) {
             if (!usersImportModal) usersImportModal = new bootstrap.Modal(document.getElementById('usersImportModal'));
             document.getElementById('usersImportForm').reset();
             document.getElementById('usersImportAlert').innerHTML = '';
+            renderUsersImportHelp();
             usersImportModal.show();
         }
 
@@ -1150,7 +1207,8 @@ if (!is_authenticated() || !can_govern_users()) {
             const payload = {};
             if (currentStatus !== 'all') payload.status = currentStatus;
             const selectedProfiles = selectedCredentialProfiles();
-            if (selectedProfiles.length > 0 && selectedProfiles.length < 3) {
+            // Con los cinco perfiles marcados no hace falta filtrar.
+            if (selectedProfiles.length > 0 && selectedProfiles.length < 5) {
                 payload.perfil_ids = selectedProfiles;
             }
             const search = document.getElementById('userSearchInput')?.value.trim();
@@ -1170,13 +1228,14 @@ if (!is_authenticated() || !can_govern_users()) {
 
         function selectedCredentialProfiles() {
             return Array.from(document.querySelectorAll('.credential-profile-checkbox:checked'))
-                .map(input => Number(input.value));
+                .flatMap(input => input.value === 'staff' ? [5, 6, 7] : [Number(input.value)]);
         }
 
         function syncCredentialProfileChecksWithCurrentFilter() {
             const checkboxes = document.querySelectorAll('.credential-profile-checkbox');
             checkboxes.forEach(input => {
-                input.checked = currentProfile === 'all' || String(input.value) === String(currentProfile);
+                input.checked = currentProfile === 'all' || String(input.value) === String(currentProfile)
+                    || (input.value === 'staff' && ['5', '6', '7'].includes(String(currentProfile)));
                 input.disabled = false;
             });
         }
@@ -1323,6 +1382,7 @@ if (!is_authenticated() || !can_govern_users()) {
 
             const formData = new FormData();
             formData.append('archivo', file);
+            formData.append('tipo', selectedUsersImportKind());
             const button = document.getElementById('usersImportBtn');
             const originalText = button.innerHTML;
             button.disabled = true;
@@ -1344,7 +1404,7 @@ if (!is_authenticated() || !can_govern_users()) {
             const result = error.result || {};
             const errors = result.errors || error.errors || {};
             const messages = Array.isArray(errors)
-                ? errors.flatMap(item => item.errores || item)
+                ? errors.flatMap(item => item.errores ? [`Fila ${item.fila}: ${item.errores.join(' | ')}`] : item)
                 : Object.values(errors).flat();
             const details = messages.length
                 ? `<hr><div class="small">${messages.slice(0, 12).map(message => `<div>${escapeHtml(message)}</div>`).join('')}${messages.length > 12 ? '<div>...</div>' : ''}</div>`
@@ -1366,6 +1426,7 @@ if (!is_authenticated() || !can_govern_users()) {
                     Registros creados: <strong>${Number(result.created || 0)}</strong>.
                     Cuentas existentes vinculadas: <strong>${Number(result.linked || 0)}</strong>.
                     Errores: <strong>${errors.length}</strong>.
+                    ${(result.groups_created || []).length ? `<br>Grupos creados: <strong>${result.groups_created.map(escapeHtml).join(', ')}</strong>.` : ''}
                     ${details}
                 </div>`;
         }
@@ -1404,7 +1465,7 @@ if (!is_authenticated() || !can_govern_users()) {
             const summary = document.getElementById('usersMobileFilterSummary');
             if (!summary) return;
             const statusLabels = { active: 'Activos', inactive: 'Inactivos', all: 'Todos los estados' };
-            const profileLabels = { all: 'Todos los perfiles', 1: 'Administradores', 2: 'Docentes', 3: 'Estudiantes', 5: 'Jefes de Carrera', 6: 'Asistentes de Jefatura', 7: 'Coordinadores de Proyectos' };
+            const profileLabels = { all: 'Todos los perfiles', staff: 'Jefatura y coordinación', 5: 'Jefes de carrera', 6: 'Asistentes de jefatura', 7: 'Coordinadores de proyectos integradores', 2: 'Docentes', 3: 'Estudiantes' };
             summary.textContent = `${statusLabels[currentStatus] || 'Activos'} · ${profileLabels[currentProfile] || 'Todos los perfiles'}`;
         }
     </script>

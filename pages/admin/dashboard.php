@@ -10,7 +10,7 @@ $career = active_career() ?? [];
 $careerCode = $career['clave'] ?? 'ISC';
 $careerHeroImage = $career['portada_ruta'] ?? ($careerCode === 'ISC' ? '/assets/img/ITSSMT/fondochido2.webp' : null);
 $careerHeroStyle = $careerHeroImage
-    ? "background-image: linear-gradient(90deg, rgba(3, 31, 70, .92), rgba(3, 31, 70, .28)), url('" . htmlspecialchars($careerHeroImage) . "');"
+    ? "background-image: url('" . htmlspecialchars($careerHeroImage) . "');"
     : '';
 $careerFeature = match ($careerCode) {
     'IIND' => ['module' => 'procesos', 'label' => 'Procesos', 'icon' => 'bi-diagram-3'],
@@ -28,7 +28,7 @@ $careerFeature = match ($careerCode) {
     <?php require_once $_SERVER['DOCUMENT_ROOT'] . '/includes/visual-preferences.php'; ?>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
-    <link rel="stylesheet" href="/assets/css/app.css">
+    <link rel="stylesheet" href="<?= asset('/assets/css/app.css') ?>">
 </head>
 <body>
     <?php require_once $_SERVER['DOCUMENT_ROOT'] . '/includes/navbar.php'; ?>
@@ -63,10 +63,12 @@ $careerFeature = match ($careerCode) {
                 <i class="bi bi-grid"></i>
             </div>
             <div class="dashboard-mobile-shortcuts-grid">
+                <?php if (can_govern_users()): ?>
                 <a href="/pages/admin/users.php" class="dashboard-mobile-shortcut">
                     <i class="bi bi-people"></i>
                     <span>Usuarios</span>
                 </a>
+                <?php endif; ?>
                 <a href="/pages/admin/projects.php" class="dashboard-mobile-shortcut">
                     <i class="bi bi-mortarboard"></i>
                     <span>Proyectos y tesis</span>
@@ -83,10 +85,12 @@ $careerFeature = match ($careerCode) {
                     <i class="bi bi-clipboard-check"></i>
                     <span>Evaluaciones</span>
                 </a>
+                <?php if (can_manage_academics()): ?>
                 <a href="/pages/admin/asignaturas.php" class="dashboard-mobile-shortcut">
                     <i class="bi bi-book"></i>
                     <span>Académico</span>
                 </a>
+                <?php endif; ?>
                 <a href="/pages/admin/semesters.php" class="dashboard-mobile-shortcut">
                     <i class="bi bi-calendar3"></i>
                     <span>Semestres</span>
@@ -113,7 +117,7 @@ $careerFeature = match ($careerCode) {
 
         <div class="row g-4 mb-4">
             <div class="col-lg-3 col-md-6">
-                <a href="/pages/admin/users.php" class="text-decoration-none d-block dashboard-stat-link" aria-label="Ir a gestión de usuarios">
+                <<?= can_govern_users() ? 'a href="/pages/admin/users.php" aria-label="Ir a gestión de usuarios"' : 'div' ?> class="text-decoration-none d-block dashboard-stat-link">
                     <div class="card dashboard-stat-card border-0 shadow-sm" style="cursor: pointer;">
                         <div class="card-body">
                             <div class="dashboard-stat-layout">
@@ -126,11 +130,11 @@ $careerFeature = match ($careerCode) {
                             </div>
                         </div>
                     </div>
-                </a>
+                </<?= can_govern_users() ? 'a' : 'div' ?>>
             </div>
 
             <div class="col-lg-3 col-md-6">
-                <a href="/pages/admin/users.php" class="text-decoration-none d-block dashboard-stat-link" aria-label="Ir a usuarios activos">
+                <<?= can_govern_users() ? 'a href="/pages/admin/users.php" aria-label="Ir a usuarios activos"' : 'div' ?> class="text-decoration-none d-block dashboard-stat-link">
                     <div class="card dashboard-stat-card border-0 shadow-sm" style="cursor: pointer;">
                         <div class="card-body">
                             <div class="dashboard-stat-layout">
@@ -143,7 +147,7 @@ $careerFeature = match ($careerCode) {
                             </div>
                         </div>
                     </div>
-                </a>
+                </<?= can_govern_users() ? 'a' : 'div' ?>>
             </div>
 
             <div class="col-lg-3 col-md-6">
@@ -164,8 +168,14 @@ $careerFeature = match ($careerCode) {
                 </a>
             </div>
 
+            <?php
+            // Sólo se enlaza si la guardia del destino admite el perfil activo.
+            $careerFeatureUrl = $careerCode === 'ISC'
+                ? (can_manage_academics() ? '/pages/admin/asignaturas.php' : null)
+                : (is_admin() ? '/pages/admin/career-modules.php' : null);
+            ?>
             <div class="col-lg-3 col-md-6">
-                <a href="<?= $careerCode === 'ISC' ? '/pages/admin/asignaturas.php' : '/pages/admin/career-modules.php' ?>" class="text-decoration-none d-block dashboard-stat-link" aria-label="Ir a <?= htmlspecialchars(strtolower($careerFeature['label'])) ?>">
+                <<?= $careerFeatureUrl ? 'a href="' . $careerFeatureUrl . '" aria-label="Ir a ' . htmlspecialchars(strtolower($careerFeature['label'])) . '"' : 'div' ?> class="text-decoration-none d-block dashboard-stat-link">
                     <div class="card dashboard-stat-card border-0 shadow-sm" style="cursor: pointer;">
                         <div class="card-body">
                             <div class="dashboard-stat-layout">
@@ -175,11 +185,11 @@ $careerFeature = match ($careerCode) {
                                     <div class="dashboard-stat-value mt-2" id="careerFeatureTotal">0</div>
                                     <div class="dashboard-stat-note mt-2"><?= $careerCode === 'ISC' ? 'Catálogo académico' : 'Módulo particular' ?></div>
                                 </div>
-                                <i class="bi bi-chevron-right dashboard-stat-arrow dashboard-stat-arrow-purple"></i>
+                                <?php if ($careerFeatureUrl): ?><i class="bi bi-chevron-right dashboard-stat-arrow dashboard-stat-arrow-purple"></i><?php endif; ?>
                             </div>
                         </div>
                     </div>
-                </a>
+                </<?= $careerFeatureUrl ? 'a' : 'div' ?>>
             </div>
         </div>
         <div class="row g-4 mb-4">
@@ -223,6 +233,7 @@ $careerFeature = match ($careerCode) {
                     </div>
                     <div class="card-body p-0">
                         <div class="list-group list-group-flush">
+                            <?php if (can_govern_users()): ?>
                             <a href="/pages/admin/users.php" class="list-group-item list-group-item-action px-4 py-3 d-flex align-items-center gap-3">
                                 <i class="bi bi-people-fill" style="font-size: 1.5rem; color: #2D5A96;"></i>
                                 <div>
@@ -231,6 +242,7 @@ $careerFeature = match ($careerCode) {
                                 </div>
                                 <i class="bi bi-chevron-right ms-auto"></i>
                             </a>
+                            <?php endif; ?>
                             
                             <a href="/pages/admin/projects.php" class="list-group-item list-group-item-action px-4 py-3 d-flex align-items-center gap-3">
                                 <i class="bi bi-diagram-3" style="font-size: 1.5rem; color: #1B396A;"></i>
@@ -250,6 +262,7 @@ $careerFeature = match ($careerCode) {
                                 <i class="bi bi-chevron-right ms-auto"></i>
                             </a>
 
+                            <?php if (is_admin()): ?>
                             <a href="/pages/admin/document-tags.php" class="list-group-item list-group-item-action px-4 py-3 d-flex align-items-center gap-3">
                                 <i class="bi bi-tags" style="font-size: 1.5rem; color: #1B396A;"></i>
                                 <div>
@@ -258,6 +271,7 @@ $careerFeature = match ($careerCode) {
                                 </div>
                                 <i class="bi bi-chevron-right ms-auto"></i>
                             </a>
+                            <?php endif; ?>
                         </div>
                     </div>
                 </div>
@@ -287,14 +301,16 @@ $careerFeature = match ($careerCode) {
     <?php require_once $_SERVER['DOCUMENT_ROOT'] . '/includes/footer.php'; ?>
     
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
     <script>
         const API_BASE_URL = '<?= API_BASE_URL ?>';
         const ACTIVE_CAREER_CODE = <?= json_encode($careerCode) ?>;
         const CAREER_FEATURE_MODULE = <?= json_encode($careerFeature['module']) ?>;
     </script>
-    <script src="/assets/js/auth.js"></script>
-    <script src="/assets/js/api.js"></script>
+    <script src="<?= asset('/assets/js/auth.js') ?>"></script>
+    <script src="<?= asset('/assets/js/api.js') ?>"></script>
+    <?php if (!is_general_admin() && !view_as_session() && in_array((int) get_user_role(), [1, 5, 6], true)): ?>
+        <script src="<?= asset('/assets/js/irregular-check.js') ?>"></script>
+    <?php endif; ?>
 
     <script>
         function escapeHtml(value) {
@@ -524,6 +540,7 @@ $careerFeature = match ($careerCode) {
                 renderProjectOverview(response);
             } catch (error) {
                 console.error('Error al cargar dashboard:', error);
+                showDashboardLoadError(loadDashboard);
                 renderBarChart('usersRoleChart', {});
                 renderBarChart('proposalStatusChart', {});
                 renderStatusGrid('deliverableStatusGrid', {});

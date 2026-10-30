@@ -48,7 +48,9 @@
 
     document.addEventListener('DOMContentLoaded', () => {
         load();
-        window.setInterval(load, 60000);
+        window.setInterval(() => {
+            if (!document.hidden) load();
+        }, 60000);
         document.addEventListener('visibilitychange', () => {
             if (!document.hidden) load();
         });

@@ -85,6 +85,12 @@
         });
 
         load();
-        window.setInterval(load, 30000);
+        // Sin consultas mientras la pestaña está oculta; al volver se actualiza.
+        window.setInterval(() => {
+            if (!document.hidden) load();
+        }, 30000);
+        document.addEventListener('visibilitychange', () => {
+            if (!document.hidden) load();
+        });
     });
 })();

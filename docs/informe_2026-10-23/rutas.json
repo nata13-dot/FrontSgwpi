@@ -1,0 +1,326 @@
+[
+  {
+    "path": "/index.php",
+    "kind": "pantalla",
+    "guard": "Sin guardia de sesión explícita en la cabecera PHP.",
+    "query_keys_detected": []
+  },
+  {
+    "path": "/pages/academic-workflows.php",
+    "kind": "pantalla",
+    "guard": "if (!is_authenticated()) { header('Location: /pages/login.php'); exit; }",
+    "query_keys_detected": [
+      "tab"
+    ]
+  },
+  {
+    "path": "/pages/admin/advisors.php",
+    "kind": "pantalla",
+    "guard": "if (!is_authenticated() || !can_manage_projects()) { header('Location: /index.php');",
+    "query_keys_detected": [
+      "project",
+      "view"
+    ]
+  },
+  {
+    "path": "/pages/admin/asignaturas.php",
+    "kind": "pantalla",
+    "guard": "if (!is_authenticated() || !can_manage_academics()) { header('Location: /index.php');",
+    "query_keys_detected": []
+  },
+  {
+    "path": "/pages/admin/career-audit.php",
+    "kind": "pantalla",
+    "guard": "if (!is_authenticated() || !is_general_admin()) { header('Location: ' . dashboard_url());",
+    "query_keys_detected": [
+      "/admin/careers"
+    ]
+  },
+  {
+    "path": "/pages/admin/career-integrity.php",
+    "kind": "pantalla",
+    "guard": "if (!is_authenticated() || !is_general_admin()) { header('Location: ' . dashboard_url());",
+    "query_keys_detected": []
+  },
+  {
+    "path": "/pages/admin/career-modules.php",
+    "kind": "pantalla",
+    "guard": "requireAdmin();",
+    "query_keys_detected": [
+      "valor_actual",
+      "valor_meta"
+    ]
+  },
+  {
+    "path": "/pages/admin/career-setup.php",
+    "kind": "pantalla",
+    "guard": "if (!is_authenticated() || !is_admin()) { header('Location: ' . dashboard_url());",
+    "query_keys_detected": []
+  },
+  {
+    "path": "/pages/admin/careers.php",
+    "kind": "pantalla",
+    "guard": "if (!is_authenticated() || !is_general_admin()) { header('Location: ' . dashboard_url());",
+    "query_keys_detected": []
+  },
+  {
+    "path": "/pages/admin/competencias.php",
+    "kind": "redirección",
+    "guard": "if (!is_authenticated() || !can_manage_academics()) { header('Location: /index.php'); header('Location: /pages/admin/asignaturas.php#competencias');",
+    "query_keys_detected": []
+  },
+  {
+    "path": "/pages/admin/dashboard.php",
+    "kind": "pantalla",
+    "guard": "if (!is_authenticated() || !is_management_staff()) { header('Location: /index.php');",
+    "query_keys_detected": [
+      "/career/modules",
+      "/dashboard/stats"
+    ]
+  },
+  {
+    "path": "/pages/admin/database-backups.php",
+    "kind": "pantalla",
+    "guard": "if (!is_authenticated() || !is_general_admin()) { header('Location: ' . dashboard_url());",
+    "query_keys_detected": []
+  },
+  {
+    "path": "/pages/admin/deliverables.php",
+    "kind": "pantalla",
+    "guard": "if (!is_authenticated()) { header('Location: /index.php');",
+    "query_keys_detected": [
+      "competencia_id"
+    ]
+  },
+  {
+    "path": "/pages/admin/document-tags.php",
+    "kind": "pantalla",
+    "guard": "if (!is_authenticated() || !is_admin()) { header('Location: /index.php');",
+    "query_keys_detected": []
+  },
+  {
+    "path": "/pages/admin/evaluation-rooms.php",
+    "kind": "pantalla",
+    "guard": "if (!is_authenticated() || (!can_manage_projects() && !is_teacher())) { header('Location: /index.php');",
+    "query_keys_detected": [
+      "/academic-operations/catalog"
+    ]
+  },
+  {
+    "path": "/pages/admin/evaluations-archived.php",
+    "kind": "alias por inclusión",
+    "guard": "require __DIR__ . '/evaluations.php';",
+    "query_keys_detected": []
+  },
+  {
+    "path": "/pages/admin/evaluations.php",
+    "kind": "pantalla",
+    "guard": "if (!is_authenticated() || (!can_manage_projects() && !is_teacher())) { header('Location: /index.php');",
+    "query_keys_detected": []
+  },
+  {
+    "path": "/pages/admin/notices.php",
+    "kind": "pantalla",
+    "guard": "if (!is_authenticated() || !is_admin()) { header('Location: /index.php');",
+    "query_keys_detected": [
+      "/notices"
+    ]
+  },
+  {
+    "path": "/pages/admin/operations.php",
+    "kind": "pantalla",
+    "guard": "if (!is_authenticated() || !is_general_admin()) { header('Location: ' . dashboard_url());",
+    "query_keys_detected": []
+  },
+  {
+    "path": "/pages/admin/project-create.php",
+    "kind": "pantalla",
+    "guard": "if (!is_authenticated() || !can_manage_projects()) { header('Location: /index.php');",
+    "query_keys_detected": []
+  },
+  {
+    "path": "/pages/admin/project-edit.php",
+    "kind": "pantalla",
+    "guard": "if (!is_authenticated() || !can_manage_projects()) { header('Location: /index.php'); if (!$projectId) { header('Location: /pages/admin/projects.php');",
+    "query_keys_detected": [
+      "id"
+    ]
+  },
+  {
+    "path": "/pages/admin/projects.php",
+    "kind": "pantalla",
+    "guard": "if (!is_authenticated()) { header('Location: /index.php');",
+    "query_keys_detected": [
+      "edit",
+      "id",
+      "q"
+    ]
+  },
+  {
+    "path": "/pages/admin/proposal-config.php",
+    "kind": "pantalla",
+    "guard": "if (!is_authenticated() || !can_manage_projects()) { header('Location: /index.php'); exit; }",
+    "query_keys_detected": [
+      "/proposal/config"
+    ]
+  },
+  {
+    "path": "/pages/admin/semesters.php",
+    "kind": "alias por inclusión",
+    "guard": "require dirname(__DIR__) . '/academic-workflows.php';",
+    "query_keys_detected": []
+  },
+  {
+    "path": "/pages/admin/settings.php",
+    "kind": "pantalla",
+    "guard": "if (!is_authenticated() || !is_admin()) { header('Location: /index.php');",
+    "query_keys_detected": [
+      "/settings"
+    ]
+  },
+  {
+    "path": "/pages/admin/user-create.php",
+    "kind": "pantalla",
+    "guard": "if (!is_authenticated() || !can_govern_users()) { header('Location: /index.php');",
+    "query_keys_detected": []
+  },
+  {
+    "path": "/pages/admin/user-edit.php",
+    "kind": "pantalla",
+    "guard": "if (!is_authenticated() || !can_govern_users()) { header('Location: /index.php'); if (!$userId) { header('Location: /pages/admin/users.php');",
+    "query_keys_detected": [
+      "id"
+    ]
+  },
+  {
+    "path": "/pages/admin/users.php",
+    "kind": "pantalla",
+    "guard": "if (!is_authenticated() || !can_govern_users()) { header('Location: /index.php');",
+    "query_keys_detected": [
+      "q"
+    ]
+  },
+  {
+    "path": "/pages/evaluation-documents.php",
+    "kind": "pantalla",
+    "guard": "if (!is_authenticated()) { header('Location: /index.php');",
+    "query_keys_detected": []
+  },
+  {
+    "path": "/pages/forgot-password.php",
+    "kind": "redirección",
+    "guard": "header('Location: /index.php#recover');",
+    "query_keys_detected": []
+  },
+  {
+    "path": "/pages/login.php",
+    "kind": "redirección",
+    "guard": "if (is_authenticated()) { header('Location: ' . dashboard_url()); header('Location: /index.php#login');",
+    "query_keys_detected": []
+  },
+  {
+    "path": "/pages/logout.php",
+    "kind": "salida y limpieza de sesión",
+    "guard": "if (ini_get('session.use_cookies')) { header('Cache-Control: no-store, no-cache, must-revalidate, max-age=0'); header('Pragma: no-cache'); header('Expires: 0');",
+    "query_keys_detected": []
+  },
+  {
+    "path": "/pages/profile.php",
+    "kind": "pantalla",
+    "guard": "if (!is_authenticated()) { header('Location: /index.php'); exit; }",
+    "query_keys_detected": [
+      "/profile"
+    ]
+  },
+  {
+    "path": "/pages/repositorio-detail.php",
+    "kind": "pantalla",
+    "guard": "Sin guardia de sesión explícita en la cabecera PHP.",
+    "query_keys_detected": [
+      "id"
+    ]
+  },
+  {
+    "path": "/pages/repositorio.php",
+    "kind": "pantalla",
+    "guard": "Sin guardia de sesión explícita en la cabecera PHP.",
+    "query_keys_detected": [
+      "q"
+    ]
+  },
+  {
+    "path": "/pages/reset-password.php",
+    "kind": "redirección",
+    "guard": "header('Location: /index.php#recover');",
+    "query_keys_detected": []
+  },
+  {
+    "path": "/pages/student/dashboard.php",
+    "kind": "pantalla",
+    "guard": "if (!is_authenticated() || !is_student()) { header('Location: /index.php');",
+    "query_keys_detected": [
+      "/dashboard/student",
+      "/proposal/student-status",
+      "/student/evaluation-schedule"
+    ]
+  },
+  {
+    "path": "/pages/student/my-deliverables.php",
+    "kind": "pantalla",
+    "guard": "if (!is_authenticated() || !is_student()) { header('Location: /index.php');",
+    "query_keys_detected": [
+      "/my-deliverables"
+    ]
+  },
+  {
+    "path": "/pages/student/proposal-register.php",
+    "kind": "pantalla",
+    "guard": "if (!is_authenticated() || !is_student()) { header('Location: /index.php'); exit; }",
+    "query_keys_detected": [
+      "/proposal/student-status"
+    ]
+  },
+  {
+    "path": "/pages/teacher/dashboard.php",
+    "kind": "pantalla",
+    "guard": "if (!is_authenticated() || !is_teacher()) { header('Location: /index.php');",
+    "query_keys_detected": [
+      "/dashboard/teacher"
+    ]
+  },
+  {
+    "path": "/pages/teacher/my-deliverables.php",
+    "kind": "pantalla",
+    "guard": "if (!is_authenticated() || !is_teacher()) { header('Location: /index.php');",
+    "query_keys_detected": []
+  },
+  {
+    "path": "/pages/teacher/my-projects.php",
+    "kind": "pantalla",
+    "guard": "if (!is_authenticated() || !is_teacher()) { header('Location: /index.php');",
+    "query_keys_detected": [
+      "/my-projects"
+    ]
+  },
+  {
+    "path": "/pages/teacher/proposal-review.php",
+    "kind": "pantalla",
+    "guard": "if (!is_authenticated() || !is_teacher()) { header('Location: /index.php'); exit; }",
+    "query_keys_detected": [
+      "/proposal/teacher-projects",
+      "/proposal/window-groups"
+    ]
+  },
+  {
+    "path": "/api/set-session.php",
+    "kind": "POST JSON local, no pantalla",
+    "guard": "JSON con auth_token y user; persiste sesión. Devuelve 400 ante formato inválido.",
+    "query_keys_detected": []
+  },
+  {
+    "path": "/test-api.php",
+    "kind": "diagnóstico, fuera del flujo de negocio",
+    "guard": "Diagnóstico técnico; revisar directamente la fuente antes de exponerlo.",
+    "query_keys_detected": []
+  }
+]

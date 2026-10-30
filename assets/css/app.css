@@ -761,16 +761,6 @@ h1, h2, h3, h4, h5, h6 {
     background-size: 34px 34px, cover;
 }
 
-.career-dashboard-hero::after {
-    content: "";
-    position: absolute;
-    inset: 0 0 0 48%;
-    opacity: .2;
-    background:
-        linear-gradient(135deg, transparent 45%, var(--career-accent) 46% 48%, transparent 49%) 0 0 / 80px 80px,
-        linear-gradient(45deg, transparent 45%, #fff 46% 47%, transparent 48%) 0 0 / 120px 120px;
-    pointer-events: none;
-}
 
 .dashboard-career-name {
     margin: 1rem 0 .15rem;
@@ -5366,12 +5356,18 @@ html.sgpi-page-entering.sgpi-page-entered .sgpi-page-transition {
 
 .dashboard-hero {
     display: flex;
-    min-height: 310px !important;
-    padding: 82px 30px 40px !important;
+    min-height: 240px !important;
+    padding: 48px 30px 32px !important;
 }
 
 .dashboard-hero .overlay {
-    background: linear-gradient(90deg, rgba(3, 37, 82, 0.96) 0%, rgba(4, 48, 103, 0.84) 38%, rgba(6, 61, 125, 0.22) 72%, rgba(3, 30, 66, 0.08) 100%);
+    /* Sombra ligera sólo detrás del texto para que la portada de la carrera se aprecie. */
+    background: linear-gradient(90deg, rgba(3, 31, 70, 0.62) 0%, rgba(3, 31, 70, 0.3) 38%, rgba(3, 31, 70, 0) 65%);
+}
+
+.dashboard-hero h1,
+.dashboard-hero p {
+    text-shadow: 0 1px 3px rgba(0, 0, 0, 0.45);
 }
 
 .dashboard-hero h1 {
@@ -6765,4 +6761,283 @@ html.sgpi-page-entering.sgpi-page-entered .sgpi-page-transition {
             min-height: 100dvh;
         }
     }
+}
+
+/* ==========================================================================
+   Ajustes de consistencia visual (revisión del informe 2026-10-23)
+   ========================================================================== */
+
+/* Barra superior: icono y texto en una sola línea, sin saltos al faltar espacio. */
+@media (min-width: 992px) {
+    .navbar-authenticated .navbar-nav {
+        align-items: center;
+        flex-wrap: nowrap;
+    }
+
+    .navbar-authenticated .navbar-nav > .nav-item > .nav-link:not(.nav-icon-link) {
+        align-items: center;
+        display: inline-flex;
+        gap: 0.4rem;
+        white-space: nowrap;
+    }
+
+    .navbar-authenticated .navbar-nav > .nav-item > .dropdown-toggle::after {
+        margin-left: 0.15rem;
+    }
+
+    .navbar-authenticated .navbar-collapse,
+    .navbar-authenticated .navbar-nav > .nav-item {
+        flex-shrink: 0;
+    }
+
+    .navbar-authenticated .global-search-shell {
+        flex: 1 1 auto;
+        min-width: 12rem;
+    }
+
+    .navbar-authenticated .user-nav-name strong,
+    .navbar-authenticated .user-nav-name small {
+        display: block;
+        max-width: 8rem;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+}
+
+/* En anchos intermedios los accesos principales quedan como iconos con título. */
+@media (min-width: 992px) and (max-width: 1399.98px) {
+    .navbar-authenticated .nav-text {
+        clip: rect(0 0 0 0);
+        height: 1px;
+        overflow: hidden;
+        position: absolute;
+        white-space: nowrap;
+        width: 1px;
+    }
+}
+
+/* Tarjetas de indicadores: la decoración queda detrás del contenido. */
+.dashboard-stat-card .card-body {
+    position: relative;
+    z-index: 1;
+}
+
+.dashboard-stat-card::after {
+    height: 84px;
+    inset: auto -30px -38px auto;
+    opacity: 0.7;
+    width: 84px;
+}
+
+/* Panel de siguiente acción sin icono: el texto ocupa el espacio disponible. */
+.dashboard-action-panel:not(:has(> .dashboard-action-icon)) {
+    grid-template-columns: minmax(0, 1fr) auto;
+}
+
+/* Botones de advertencia con contraste legible sobre fondo claro (AA ≥ 4.5:1). */
+:root:not([data-theme="dark"]) .btn-outline-warning {
+    --bs-btn-color: #8a5a00;
+    --bs-btn-border-color: #d39e00;
+    --bs-btn-hover-color: #1f1500;
+    --bs-btn-hover-bg: #ffc107;
+    --bs-btn-hover-border-color: #ffc107;
+    --bs-btn-active-color: #1f1500;
+    --bs-btn-active-bg: #ffc107;
+    --bs-btn-active-border-color: #ffc107;
+}
+
+/* "Ver como" del administrador general: siempre visible y distinto del tema de la carrera. */
+.view-as-banner {
+    position: sticky;
+    top: 0;
+    z-index: 1031;
+    padding: .5rem 0;
+    font-size: .9rem;
+    color: #3d2c00;
+    background: #ffd666;
+    border-bottom: 1px solid #e0b100;
+}
+
+/* Panel institucional del administrador general: neutro, sin colores de ninguna carrera. */
+.general-admin-hero {
+    padding: 1.5rem;
+    border-radius: 1rem;
+    color: #fff;
+    background: linear-gradient(135deg, #1f2937 0%, #334155 100%);
+}
+
+.general-admin-hero small { color: rgba(255, 255, 255, .7); }
+
+.general-kpi {
+    height: 100%;
+    padding: 1rem;
+    border: 1px solid var(--border-color);
+    border-radius: .85rem;
+    background: var(--surface-bg);
+}
+
+.general-kpi strong { display: block; font-size: 1.6rem; color: var(--text-dark); }
+.general-kpi span { font-size: .82rem; color: var(--text-muted); }
+.general-kpi.is-warning { border-color: var(--warning-accent); }
+
+.general-career-card {
+    height: 100%;
+    padding: 1rem;
+    border: 1px solid var(--border-color);
+    border-top: 5px solid var(--card-primary, var(--primary-blue));
+    border-radius: .85rem;
+    background: var(--surface-bg);
+}
+
+.general-quick-link {
+    display: flex;
+    align-items: center;
+    gap: .75rem;
+    height: 100%;
+    padding: .85rem 1rem;
+    color: var(--text-dark);
+    text-decoration: none;
+    border: 1px solid var(--border-color);
+    border-radius: .75rem;
+    background: var(--surface-bg);
+}
+
+.general-quick-link:hover { border-color: var(--primary-blue); color: var(--primary-blue); }
+.general-quick-link i { font-size: 1.35rem; }
+.general-quick-link small { display: block; color: var(--text-muted); }
+
+@media (max-width: 991.98px) {
+    .career-admin-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+
+/* ===== Barra lateral: orden y legibilidad (va al final para prevalecer sobre las capas anteriores) ===== */
+/* La barra es una columna flexible más alta que la pantalla: sin esto el navegador encoge
+   la marca, el perfil y los títulos y el nombre queda tapado. */
+.content-wrapper .sidebar#appSidebar > * {
+    flex-shrink: 0;
+}
+
+.content-wrapper .sidebar#appSidebar:not(.sidebar-collapsed) .sidebar-brand {
+    border-bottom: 1px solid rgba(255, 255, 255, 0.12);
+    gap: 10px;
+    margin: 0 4px 14px;
+    min-height: 0;
+    padding: 0 0 14px;
+}
+
+.content-wrapper .sidebar#appSidebar:not(.sidebar-collapsed) .sidebar-brand img {
+    flex: 0 0 44px;
+    height: 44px;
+    width: 44px;
+}
+
+.sidebar-brand strong {
+    font-size: 0.88rem;
+    line-height: 1.2;
+}
+
+.sidebar-brand small {
+    margin-top: 2px;
+}
+
+.content-wrapper .sidebar#appSidebar:not(.sidebar-collapsed) .sidebar-profile {
+    gap: 10px;
+    margin-bottom: 6px;
+    padding: 0 6px 14px;
+}
+
+.content-wrapper .sidebar#appSidebar:not(.sidebar-collapsed) .sidebar-profile-photo {
+    flex: 0 0 44px;
+    height: 44px;
+    width: 44px;
+}
+
+.sidebar-profile > div {
+    min-width: 0;
+}
+
+.sidebar-profile strong {
+    font-size: 0.92rem;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.sidebar-profile small {
+    font-size: 0.76rem;
+}
+
+.sidebar-section-title {
+    margin: 18px 0 6px !important;
+    padding: 0 12px !important;
+}
+
+.sidebar-section-title h6 {
+    font-size: 0.68rem !important;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    line-height: 1.35;
+    margin: 0;
+}
+
+.content-wrapper .sidebar#appSidebar .sidebar-item,
+.content-wrapper .sidebar#appSidebar .sidebar-group summary {
+    font-size: 0.9rem;
+    gap: 10px;
+    line-height: 1.25;
+    margin: 2px 0;
+    min-height: 40px;
+    padding: 8px 12px;
+}
+
+.content-wrapper .sidebar#appSidebar .sidebar-item > i:first-child,
+.content-wrapper .sidebar#appSidebar .sidebar-group summary > i:first-child {
+    flex: 0 0 20px;
+    font-size: 1.05rem;
+    text-align: center;
+}
+
+.content-wrapper .sidebar#appSidebar:not(.sidebar-collapsed) .sidebar-subitem {
+    font-size: 0.85rem;
+    font-weight: 600;
+    min-height: 36px;
+    padding: 7px 12px 7px 40px;
+}
+
+/* El grupo abierto se distingue sin competir con la página activa. */
+.content-wrapper .sidebar#appSidebar .sidebar-group[open] > summary {
+    background: rgba(255, 255, 255, 0.08);
+    box-shadow: none;
+    color: #fff;
+}
+
+.content-wrapper .sidebar#appSidebar .sidebar-group[open] {
+    border-left: 1px solid rgba(255, 255, 255, 0.14);
+    margin-left: 8px;
+}
+
+.content-wrapper .sidebar#appSidebar:not(.sidebar-collapsed) .sidebar-group[open] .sidebar-subitem {
+    padding-left: 30px;
+}
+
+/* Selector de nivel de perfil del administrador general (menú superior). */
+.level-switcher .dropdown-item {
+    align-items: center;
+    display: flex;
+    gap: .6rem;
+}
+
+.level-switcher .level-number {
+    align-items: center;
+    border: 1px solid currentColor;
+    border-radius: 50%;
+    display: inline-flex;
+    flex: 0 0 1.4rem;
+    font-size: .72rem;
+    font-variant-numeric: tabular-nums;
+    font-weight: 700;
+    height: 1.4rem;
+    justify-content: center;
+    opacity: .75;
 }

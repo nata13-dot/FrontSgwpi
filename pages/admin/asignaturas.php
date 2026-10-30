@@ -15,7 +15,7 @@ if (!is_authenticated() || !can_manage_academics()) {
     <?php require_once $_SERVER['DOCUMENT_ROOT'] . '/includes/visual-preferences.php'; ?>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
-    <link rel="stylesheet" href="/assets/css/app.css">
+    <link rel="stylesheet" href="<?= asset('/assets/css/app.css') ?>">
 </head>
 <body>
     <?php require_once $_SERVER['DOCUMENT_ROOT'] . '/includes/navbar.php'; ?>
@@ -30,7 +30,7 @@ if (!is_authenticated() || !can_manage_academics()) {
                             <i class="bi bi-collection"></i> Gestionar Cargas
                         </button>
                         <button class="btn btn-outline-primary" type="button" onclick="openCompetenciasLaúncher()">
-                            <i class="bi bi-star"></i> Gestionar Competencias
+                            <i class="bi bi-star"></i> Ver competencias
                         </button>
                         <button class="btn btn-primary" onclick="openAsignaturaModal()">
                             <i class="bi bi-plus-circle"></i> Nueva Asignatura
@@ -83,13 +83,18 @@ if (!is_authenticated() || !can_manage_academics()) {
                 <div class="modal-header">
                     <div>
                         <h5 class="modal-title mb-0" id="competenciasTitle">Competencias de asignatura</h5>
-                        <small class="text-muted">Administra las competencias individuales de esta asignatura.</small>
+                        <small class="text-muted">Consulta las competencias de esta asignatura y sus entregables.</small>
                     </div>
                     <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                 </div>
                 <div class="modal-body">
                     <div id="competenciasAlert"></div>
-                    <form id="competenciaForm" class="border rounded p-3 mb-3">
+                    <div class="alert alert-info d-flex gap-2 align-items-start">
+                        <i class="bi bi-info-circle"></i>
+                        <div>En el esquema actual cada competencia corresponde a su asignatura: para cambiar nombre o datos, edita la asignatura.</div>
+                    </div>
+                    <!-- La API rechaza crear, editar o eliminar competencias (422); el formulario se conserva oculto. -->
+                    <form id="competenciaForm" class="border rounded p-3 mb-3" hidden>
                         <input type="hidden" id="competenciaId">
                         <div class="row g-3 align-items-end">
                             <div class="col-md-5">
@@ -135,8 +140,8 @@ if (!is_authenticated() || !can_manage_academics()) {
             <div class="modal-content">
                 <div class="modal-header">
                     <div>
-                        <h5 class="modal-title mb-0">Gestionar competencias</h5>
-                        <small class="text-muted">Selecciona una asignatura para administrar sus competencias y entregables.</small>
+                        <h5 class="modal-title mb-0">Competencias</h5>
+                        <small class="text-muted">Selecciona una asignatura para consultar sus competencias y entregables.</small>
                     </div>
                     <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                 </div>
@@ -194,7 +199,7 @@ if (!is_authenticated() || !can_manage_academics()) {
                     <div class="row g-3 mb-3">
                         <div class="col-md-3">
                             <label for="groupSemestre" class="form-label">Semestre</label>
-                            <select class="form-select" id="groupSemestre" onchange="loadSubjectGroups()">
+                            <select data-semester-scope="period" class="form-select" id="groupSemestre" onchange="loadSubjectGroups()">
                                 <option value="5">5</option>
                                 <option value="6">6</option>
                                 <option value="7">7</option>
@@ -236,11 +241,10 @@ if (!is_authenticated() || !can_manage_academics()) {
 
     <?php require_once $_SERVER['DOCUMENT_ROOT'] . '/includes/footer.php'; ?>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
     <script>const API_BASE_URL = '<?= API_BASE_URL ?>';</script>
-    <script src="/assets/js/auth.js"></script>
-    <script src="/assets/js/api.js"></script>
-    <script src="/assets/js/app.js"></script>
+    <script src="<?= asset('/assets/js/auth.js') ?>"></script>
+    <script src="<?= asset('/assets/js/api.js') ?>"></script>
+    <script src="<?= asset('/assets/js/app.js') ?>"></script>
     <script>
         let asignaturas = [];
         let groupAsignaturas = [];
@@ -311,7 +315,7 @@ if (!is_authenticated() || !can_manage_academics()) {
                             <td><small>${escapeHtml(asignatura.descripción || '-')}</small></td>
                             <td>
                                 <div class="btn-group btn-group-sm" role="group">
-                                    <button class="btn btn-outline-primary" onclick="openCompetenciasModal(${asignatura.id})" title="Gestionar competencias"><i class="bi bi-star"></i></button>
+                                    <button class="btn btn-outline-primary" onclick="openCompetenciasModal(${asignatura.id})" title="Ver competencias"><i class="bi bi-star"></i></button>
                                     <button class="btn btn-outline-info" onclick="viewAsignaturaStructure(${asignatura.id})" title="Ver estructura"><i class="bi bi-diagram-3"></i></button>
                                     <button class="btn btn-outline-secondary" onclick="openAsignaturaModal(${asignatura.id})" title="Editar asignatura"><i class="bi bi-pencil"></i></button>
                                     <button class="btn btn-outline-danger" onclick="deleteAsignatura(${asignatura.id})" title="Eliminar asignatura"><i class="bi bi-trash"></i></button>
@@ -473,7 +477,7 @@ if (!is_authenticated() || !can_manage_academics()) {
             tbody.innerHTML = '<tr><td colspan="5" class="text-center py-4"><div class="spinner-border" role="status"></div></td></tr>';
 
             try {
-                const response = await api.get('/competencias', { asignatura_id: currentAsignatura.id, per_page: 100 });
+                const response = await api.getAll('/competencias', { asignatura_id: currentAsignatura.id, per_page: 100 });
                 competencias = response.data || [];
                 if (!competencias.length) {
                     tbody.innerHTML = '<tr><td colspan="5" class="text-center text-muted py-4">Esta asignatura no tiene competencias registradas.</td></tr>';
@@ -489,8 +493,6 @@ if (!is_authenticated() || !can_manage_academics()) {
                         <td>
                             <div class="btn-group btn-group-sm">
                                 <a class="btn btn-outline-info" href="/pages/admin/deliverables.php?competencia_id=${competencia.id}" title="Gestionar entregables"><i class="bi bi-file-earmark"></i></a>
-                                <button class="btn btn-outline-secondary" onclick="editCompetencia(${competencia.id})" title="Editar"><i class="bi bi-pencil"></i></button>
-                                <button class="btn btn-outline-danger" onclick="deleteCompetencia(${competencia.id})" title="Eliminar"><i class="bi bi-trash"></i></button>
                             </div>
                         </td>
                     </tr>

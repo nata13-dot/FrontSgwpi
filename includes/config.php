@@ -7,7 +7,10 @@ header('Expires: 0');
 define('APP_NAME', 'Sistema de Gestión de Proyectos Integradores');
 $productionApiUrl = 'https://apiswgpi-production-0e59.up.railway.app/api';
 $environmentApiUrl = trim((string) getenv('SGPI_API_BASE_URL'));
-$configuredApiUrl = $environmentApiUrl !== '' ? $environmentApiUrl : $productionApiUrl;
+// Desarrollo: includes/api-local.php (ignorado por git) apunta a una API local sin tocar el despliegue.
+$localApiFile = __DIR__ . '/api-local.php';
+$localApiUrl = is_file($localApiFile) ? trim((string) (require $localApiFile)) : '';
+$configuredApiUrl = $environmentApiUrl !== '' ? $environmentApiUrl : ($localApiUrl !== '' ? $localApiUrl : $productionApiUrl);
 
 $configuredApiUrl = rtrim($configuredApiUrl, '/');
 define('API_BASE_URL', $configuredApiUrl);
@@ -18,6 +21,7 @@ define('SGPI_AUTH_USER_COOKIE', 'sgpi_auth_user');
 define('SGPI_AUTH_SIGNATURE_COOKIE', 'sgpi_auth_signature');
 define('SGPI_AUTH_REMEMBER_COOKIE', 'sgpi_auth_remember');
 define('SGPI_COOKIE_SUPPORT_COOKIE', 'sgpi_cookie_support');
+define('SGPI_VIEW_AS_ORIGIN_COOKIE', 'sgpi_view_as_origin');
 define('SGPI_AUTH_COOKIE_TTL', 60 * 60 * 24 * 28);
 define('SGPI_AUTH_COOKIE_SECRET', getenv('SGPI_AUTH_COOKIE_SECRET') ?: getenv('APP_KEY') ?: hash('sha256', __DIR__ . '|' . API_BASE_URL));
 
@@ -92,7 +96,31 @@ function persist_auth_session($token, $user, $remember = true) {
     return true;
 }
 
+/**
+ * Sesión original del administrador general durante "ver como". Va firmada en una cookie HttpOnly igual que
+ * las de autenticación, porque la sesión PHP no siempre persiste entre peticiones.
+ */
+function save_view_as_origin(array $origin) {
+    $encoded = sgpi_base64url_encode(json_encode($origin, JSON_UNESCAPED_UNICODE));
+    $value = $encoded . '.' . hash_hmac('sha256', 'view-as|' . $encoded, SGPI_AUTH_COOKIE_SECRET);
+    setcookie(SGPI_VIEW_AS_ORIGIN_COOKIE, $value, sgpi_cookie_options(0));
+    $_COOKIE[SGPI_VIEW_AS_ORIGIN_COOKIE] = $value;
+}
+
+function read_view_as_origin() {
+    [$encoded, $signature] = array_pad(explode('.', (string) ($_COOKIE[SGPI_VIEW_AS_ORIGIN_COOKIE] ?? ''), 2), 2, '');
+    if ($encoded === '' || !hash_equals(hash_hmac('sha256', 'view-as|' . $encoded, SGPI_AUTH_COOKIE_SECRET), $signature)) return null;
+    $origin = json_decode(sgpi_base64url_decode($encoded) ?? '', true);
+    return is_array($origin) && !empty($origin['token']) ? $origin : null;
+}
+
+function clear_view_as_origin() {
+    setcookie(SGPI_VIEW_AS_ORIGIN_COOKIE, '', sgpi_cookie_options(time() - 42000));
+    unset($_COOKIE[SGPI_VIEW_AS_ORIGIN_COOKIE]);
+}
+
 function clear_auth_session_cookies() {
+    clear_view_as_origin();
     foreach ([SGPI_AUTH_TOKEN_COOKIE, SGPI_AUTH_USER_COOKIE, SGPI_AUTH_REMEMBER_COOKIE, SGPI_AUTH_SIGNATURE_COOKIE, SGPI_COOKIE_SUPPORT_COOKIE] as $cookie) {
         $options = sgpi_cookie_options(time() - 42000);
         if ($cookie === SGPI_COOKIE_SUPPORT_COOKIE) $options['httponly'] = false;
@@ -199,19 +227,29 @@ function is_management_staff() {
     return can_manage_projects();
 }
 
+// Registran usuarios el administrador general, la jefatura y la asistencia (éstas, sólo coordinador, docente y estudiante).
 function can_govern_users() {
-    return is_general_admin();
+    return is_general_admin() || in_array((int) get_user_role(), [5, 6], true);
+}
+
+// Reporte de evaluación con nombres de evaluadores: sólo administración general y jefatura (la API lo vuelve a comprobar).
+function can_download_full_evaluation_reports() {
+    return is_general_admin() || (int) get_user_role() === 5;
+}
+
+// El coordinador de proyectos consulta la lista de usuarios sin poder modificarla.
+function can_view_users() {
+    return can_govern_users() || is_project_coordinator();
 }
 
 function profile_role_label() {
     return match ((int) get_user_role()) {
-        1 => 'Administrador',
+        4 => 'Administrador general',
+        5 => 'Jefe de carrera',
+        6 => 'Asistente de jefatura',
+        7 => 'Coordinador de proyectos integradores',
         2 => 'Docente',
         3 => 'Estudiante',
-        4 => 'Administrador general',
-        5 => 'Jefe de Carrera',
-        6 => 'Asistente de Jefe de Carrera',
-        7 => 'Coordinador de Proyectos',
         default => 'Usuario',
     };
 }
@@ -219,7 +257,19 @@ function profile_role_label() {
 function is_evaluation_manager() {
     return is_admin() || !empty($_SESSION['user']['is_evaluation_manager']);
 }
+/** Sesión de sólo lectura abierta por el administrador general con "Ver como". */
+function view_as_session() {
+    return is_authenticated() && !empty($_SESSION['user']['view_as']) ? $_SESSION['user']['view_as'] : null;
+}
+
+function must_change_password() {
+    return is_authenticated() && !empty($_SESSION['user']['must_change_password']);
+}
+
 function dashboard_url() {
+    if (must_change_password() && !view_as_session()) return '/pages/change-password.php';
+    // El administrador general entra a su panel institucional, separado de las vistas de cada carrera.
+    if (is_general_admin()) return '/pages/admin/general.php';
     if (is_management_staff()) return '/pages/admin/dashboard.php';
     if (is_teacher()) return '/pages/teacher/dashboard.php';
     if (is_student()) return '/pages/student/dashboard.php';
@@ -238,10 +288,23 @@ function available_careers() {
     return $_SESSION['user']['careers'] ?? [];
 }
 
+/**
+ * URL de un recurso local con versión por fecha de modificación, para que el
+ * navegador pueda cachearlo de forma prolongada sin servir copias antiguas.
+ */
+function asset($path) {
+    static $versions = [];
+    if (!isset($versions[$path])) {
+        $file = $_SERVER['DOCUMENT_ROOT'] . $path;
+        $versions[$path] = is_file($file) ? '?v=' . filemtime($file) : '';
+    }
+    return $path . $versions[$path];
+}
+
 function profile_photo_url($user = null) {
     $user = $user ?? ($_SESSION['user'] ?? null);
     $path = $user['photo_path'] ?? null;
-    return $path ? API_ORIGIN_URL . '/storage/' . ltrim($path, '/') : '/assets/img/ITSSMT/ISC.webp';
+    return $path ? API_ORIGIN_URL . '/storage/' . ltrim($path, '/') : '/assets/img/ITSSMT/ISC-256.webp';
 }
 
 /**
@@ -284,5 +347,13 @@ function requireGuest() {
         header('Location: ' . dashboard_url());
         exit;
     }
+}
+
+// Con la contraseña temporal sólo se puede abrir la pantalla para cambiarla (o cerrar sesión).
+$sgpiScript = $_SERVER['SCRIPT_NAME'] ?? '';
+if (must_change_password() && !view_as_session() && str_starts_with($sgpiScript, '/pages/')
+    && !in_array($sgpiScript, ['/pages/change-password.php', '/pages/logout.php'], true)) {
+    header('Location: /pages/change-password.php');
+    exit;
 }
 ?>

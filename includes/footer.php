@@ -1,4 +1,4 @@
-<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11.14.5/dist/sweetalert2.all.min.js"></script>
 <script>
 window.SGPI_SETTINGS = window.SGPI_SETTINGS || {};
 window.SGPI_API_BASE_URL = '<?= API_BASE_URL ?>';
@@ -647,7 +647,7 @@ window.promptAdminAction = async function () {
     <div class="container-xl">
         <div class="row">
             <div class="col-lg-8">
-                <p class="mb-2"><strong>© 2025 SGPI ITSSMT</strong></p>
+                <p class="mb-2"><strong>© <?= date('Y') ?> SGPI ITSSMT</strong></p>
                 <p class="small mb-0">
                     Sistema de Gestión de Proyectos Integradores del Instituto Tecnológico Superior de San Martín Texmelucan
                 </p>
@@ -658,6 +658,43 @@ window.promptAdminAction = async function () {
         </div>
     </div>
 </footer>
-<script src="/assets/js/skeleton-loader.js"></script>
-<script src="/assets/js/view-transitions.js"></script>
-<script src="/assets/js/responsive.js"></script>
+<script>
+/**
+ * Aviso de carga fallida en tableros: sustituye los valores iniciales (0) por
+ * un guion para no mostrarlos como datos reales y ofrece reintentar.
+ */
+window.showDashboardLoadError = function (retry, message = 'No se pudieron cargar los datos del panel. Revisa tu conexión e inténtalo de nuevo.') {
+    const anchor = document.querySelector('.dashboard-action-panel');
+    if (!anchor) return;
+    document.querySelectorAll('.dashboard-stat-value').forEach(value => { value.textContent = '—'; });
+    let alert = document.getElementById('dashboardLoadError');
+    if (!alert) {
+        alert = document.createElement('div');
+        alert.id = 'dashboardLoadError';
+        alert.className = 'alert alert-danger d-flex flex-wrap align-items-center gap-3 mb-4';
+        alert.setAttribute('role', 'alert');
+        anchor.before(alert);
+    }
+    alert.replaceChildren();
+    const text = document.createElement('span');
+    text.className = 'flex-grow-1';
+    text.innerHTML = '<i class="bi bi-exclamation-triangle me-2"></i>';
+    text.append(document.createTextNode(message));
+    const button = document.createElement('button');
+    button.type = 'button';
+    button.className = 'btn btn-sm btn-outline-danger';
+    button.innerHTML = '<i class="bi bi-arrow-clockwise"></i> Reintentar';
+    button.addEventListener('click', async () => {
+        button.disabled = true;
+        alert.remove();
+        await retry();
+    });
+    alert.append(text, button);
+};
+window.clearDashboardLoadError = function () {
+    document.getElementById('dashboardLoadError')?.remove();
+};
+</script>
+<script src="<?= asset('/assets/js/skeleton-loader.js') ?>"></script>
+<script src="<?= asset('/assets/js/view-transitions.js') ?>"></script>
+<script src="<?= asset('/assets/js/responsive.js') ?>"></script>

@@ -1,0 +1,387 @@
+[
+  {
+    "file": "Frontend_Swgpi/api/set-session.php",
+    "exit": 0,
+    "output": "No syntax errors detected in Frontend_Swgpi/api/set-session.php"
+  },
+  {
+    "file": "Frontend_Swgpi/includes/alert.php",
+    "exit": 0,
+    "output": "No syntax errors detected in Frontend_Swgpi/includes/alert.php"
+  },
+  {
+    "file": "Frontend_Swgpi/includes/config.php",
+    "exit": 0,
+    "output": "No syntax errors detected in Frontend_Swgpi/includes/config.php"
+  },
+  {
+    "file": "Frontend_Swgpi/includes/footer.php",
+    "exit": 0,
+    "output": "No syntax errors detected in Frontend_Swgpi/includes/footer.php"
+  },
+  {
+    "file": "Frontend_Swgpi/includes/head-responsive.php",
+    "exit": 0,
+    "output": "No syntax errors detected in Frontend_Swgpi/includes/head-responsive.php"
+  },
+  {
+    "file": "Frontend_Swgpi/includes/modal.php",
+    "exit": 0,
+    "output": "No syntax errors detected in Frontend_Swgpi/includes/modal.php"
+  },
+  {
+    "file": "Frontend_Swgpi/includes/navbar.php",
+    "exit": 0,
+    "output": "No syntax errors detected in Frontend_Swgpi/includes/navbar.php"
+  },
+  {
+    "file": "Frontend_Swgpi/includes/scripts-responsive.php",
+    "exit": 0,
+    "output": "No syntax errors detected in Frontend_Swgpi/includes/scripts-responsive.php"
+  },
+  {
+    "file": "Frontend_Swgpi/includes/sidebar.php",
+    "exit": 0,
+    "output": "No syntax errors detected in Frontend_Swgpi/includes/sidebar.php"
+  },
+  {
+    "file": "Frontend_Swgpi/includes/validations.php",
+    "exit": 0,
+    "output": "No syntax errors detected in Frontend_Swgpi/includes/validations.php"
+  },
+  {
+    "file": "Frontend_Swgpi/includes/visual-preferences.php",
+    "exit": 0,
+    "output": "No syntax errors detected in Frontend_Swgpi/includes/visual-preferences.php"
+  },
+  {
+    "file": "Frontend_Swgpi/index.php",
+    "exit": 0,
+    "output": "No syntax errors detected in Frontend_Swgpi/index.php"
+  },
+  {
+    "file": "Frontend_Swgpi/pages/academic-workflows.php",
+    "exit": 0,
+    "output": "No syntax errors detected in Frontend_Swgpi/pages/academic-workflows.php"
+  },
+  {
+    "file": "Frontend_Swgpi/pages/admin/advisors.php",
+    "exit": 0,
+    "output": "No syntax errors detected in Frontend_Swgpi/pages/admin/advisors.php"
+  },
+  {
+    "file": "Frontend_Swgpi/pages/admin/asignaturas.php",
+    "exit": 0,
+    "output": "No syntax errors detected in Frontend_Swgpi/pages/admin/asignaturas.php"
+  },
+  {
+    "file": "Frontend_Swgpi/pages/admin/career-audit.php",
+    "exit": 0,
+    "output": "No syntax errors detected in Frontend_Swgpi/pages/admin/career-audit.php"
+  },
+  {
+    "file": "Frontend_Swgpi/pages/admin/career-integrity.php",
+    "exit": 0,
+    "output": "No syntax errors detected in Frontend_Swgpi/pages/admin/career-integrity.php"
+  },
+  {
+    "file": "Frontend_Swgpi/pages/admin/career-modules.php",
+    "exit": 0,
+    "output": "No syntax errors detected in Frontend_Swgpi/pages/admin/career-modules.php"
+  },
+  {
+    "file": "Frontend_Swgpi/pages/admin/career-setup.php",
+    "exit": 0,
+    "output": "No syntax errors detected in Frontend_Swgpi/pages/admin/career-setup.php"
+  },
+  {
+    "file": "Frontend_Swgpi/pages/admin/careers.php",
+    "exit": 0,
+    "output": "No syntax errors detected in Frontend_Swgpi/pages/admin/careers.php"
+  },
+  {
+    "file": "Frontend_Swgpi/pages/admin/competencias.php",
+    "exit": 0,
+    "output": "No syntax errors detected in Frontend_Swgpi/pages/admin/competencias.php"
+  },
+  {
+    "file": "Frontend_Swgpi/pages/admin/dashboard.php",
+    "exit": 0,
+    "output": "No syntax errors detected in Frontend_Swgpi/pages/admin/dashboard.php"
+  },
+  {
+    "file": "Frontend_Swgpi/pages/admin/database-backups.php",
+    "exit": 0,
+    "output": "No syntax errors detected in Frontend_Swgpi/pages/admin/database-backups.php"
+  },
+  {
+    "file": "Frontend_Swgpi/pages/admin/deliverables.php",
+    "exit": 0,
+    "output": "No syntax errors detected in Frontend_Swgpi/pages/admin/deliverables.php"
+  },
+  {
+    "file": "Frontend_Swgpi/pages/admin/document-tags.php",
+    "exit": 0,
+    "output": "No syntax errors detected in Frontend_Swgpi/pages/admin/document-tags.php"
+  },
+  {
+    "file": "Frontend_Swgpi/pages/admin/evaluation-rooms.php",
+    "exit": 0,
+    "output": "No syntax errors detected in Frontend_Swgpi/pages/admin/evaluation-rooms.php"
+  },
+  {
+    "file": "Frontend_Swgpi/pages/admin/evaluations-archived.php",
+    "exit": 0,
+    "output": "No syntax errors detected in Frontend_Swgpi/pages/admin/evaluations-archived.php"
+  },
+  {
+    "file": "Frontend_Swgpi/pages/admin/evaluations.php",
+    "exit": 0,
+    "output": "No syntax errors detected in Frontend_Swgpi/pages/admin/evaluations.php"
+  },
+  {
+    "file": "Frontend_Swgpi/pages/admin/notices.php",
+    "exit": 0,
+    "output": "No syntax errors detected in Frontend_Swgpi/pages/admin/notices.php"
+  },
+  {
+    "file": "Frontend_Swgpi/pages/admin/operations.php",
+    "exit": 0,
+    "output": "No syntax errors detected in Frontend_Swgpi/pages/admin/operations.php"
+  },
+  {
+    "file": "Frontend_Swgpi/pages/admin/project-create.php",
+    "exit": 0,
+    "output": "No syntax errors detected in Frontend_Swgpi/pages/admin/project-create.php"
+  },
+  {
+    "file": "Frontend_Swgpi/pages/admin/project-edit.php",
+    "exit": 0,
+    "output": "No syntax errors detected in Frontend_Swgpi/pages/admin/project-edit.php"
+  },
+  {
+    "file": "Frontend_Swgpi/pages/admin/projects.php",
+    "exit": 0,
+    "output": "No syntax errors detected in Frontend_Swgpi/pages/admin/projects.php"
+  },
+  {
+    "file": "Frontend_Swgpi/pages/admin/proposal-config.php",
+    "exit": 0,
+    "output": "No syntax errors detected in Frontend_Swgpi/pages/admin/proposal-config.php"
+  },
+  {
+    "file": "Frontend_Swgpi/pages/admin/semesters.php",
+    "exit": 0,
+    "output": "No syntax errors detected in Frontend_Swgpi/pages/admin/semesters.php"
+  },
+  {
+    "file": "Frontend_Swgpi/pages/admin/settings.php",
+    "exit": 0,
+    "output": "No syntax errors detected in Frontend_Swgpi/pages/admin/settings.php"
+  },
+  {
+    "file": "Frontend_Swgpi/pages/admin/user-create.php",
+    "exit": 0,
+    "output": "No syntax errors detected in Frontend_Swgpi/pages/admin/user-create.php"
+  },
+  {
+    "file": "Frontend_Swgpi/pages/admin/user-edit.php",
+    "exit": 0,
+    "output": "No syntax errors detected in Frontend_Swgpi/pages/admin/user-edit.php"
+  },
+  {
+    "file": "Frontend_Swgpi/pages/admin/users.php",
+    "exit": 0,
+    "output": "No syntax errors detected in Frontend_Swgpi/pages/admin/users.php"
+  },
+  {
+    "file": "Frontend_Swgpi/pages/evaluation-documents.php",
+    "exit": 0,
+    "output": "No syntax errors detected in Frontend_Swgpi/pages/evaluation-documents.php"
+  },
+  {
+    "file": "Frontend_Swgpi/pages/forgot-password.php",
+    "exit": 0,
+    "output": "No syntax errors detected in Frontend_Swgpi/pages/forgot-password.php"
+  },
+  {
+    "file": "Frontend_Swgpi/pages/login.php",
+    "exit": 0,
+    "output": "No syntax errors detected in Frontend_Swgpi/pages/login.php"
+  },
+  {
+    "file": "Frontend_Swgpi/pages/logout.php",
+    "exit": 0,
+    "output": "No syntax errors detected in Frontend_Swgpi/pages/logout.php"
+  },
+  {
+    "file": "Frontend_Swgpi/pages/profile.php",
+    "exit": 0,
+    "output": "No syntax errors detected in Frontend_Swgpi/pages/profile.php"
+  },
+  {
+    "file": "Frontend_Swgpi/pages/repositorio-detail.php",
+    "exit": 0,
+    "output": "No syntax errors detected in Frontend_Swgpi/pages/repositorio-detail.php"
+  },
+  {
+    "file": "Frontend_Swgpi/pages/repositorio.php",
+    "exit": 0,
+    "output": "No syntax errors detected in Frontend_Swgpi/pages/repositorio.php"
+  },
+  {
+    "file": "Frontend_Swgpi/pages/reset-password.php",
+    "exit": 0,
+    "output": "No syntax errors detected in Frontend_Swgpi/pages/reset-password.php"
+  },
+  {
+    "file": "Frontend_Swgpi/pages/student/dashboard.php",
+    "exit": 0,
+    "output": "No syntax errors detected in Frontend_Swgpi/pages/student/dashboard.php"
+  },
+  {
+    "file": "Frontend_Swgpi/pages/student/my-deliverables.php",
+    "exit": 0,
+    "output": "No syntax errors detected in Frontend_Swgpi/pages/student/my-deliverables.php"
+  },
+  {
+    "file": "Frontend_Swgpi/pages/student/proposal-register.php",
+    "exit": 0,
+    "output": "No syntax errors detected in Frontend_Swgpi/pages/student/proposal-register.php"
+  },
+  {
+    "file": "Frontend_Swgpi/pages/teacher/dashboard.php",
+    "exit": 0,
+    "output": "No syntax errors detected in Frontend_Swgpi/pages/teacher/dashboard.php"
+  },
+  {
+    "file": "Frontend_Swgpi/pages/teacher/my-deliverables.php",
+    "exit": 0,
+    "output": "No syntax errors detected in Frontend_Swgpi/pages/teacher/my-deliverables.php"
+  },
+  {
+    "file": "Frontend_Swgpi/pages/teacher/my-projects.php",
+    "exit": 0,
+    "output": "No syntax errors detected in Frontend_Swgpi/pages/teacher/my-projects.php"
+  },
+  {
+    "file": "Frontend_Swgpi/pages/teacher/proposal-review.php",
+    "exit": 0,
+    "output": "No syntax errors detected in Frontend_Swgpi/pages/teacher/proposal-review.php"
+  },
+  {
+    "file": "Frontend_Swgpi/test-api.php",
+    "exit": 0,
+    "output": "No syntax errors detected in Frontend_Swgpi/test-api.php"
+  },
+  {
+    "file": "Frontend_Swgpi/tests/academic-page-smoke.php",
+    "exit": 0,
+    "output": "No syntax errors detected in Frontend_Swgpi/tests/academic-page-smoke.php"
+  },
+  {
+    "file": "Frontend_Swgpi/assets/js/academic-console.js",
+    "exit": 0,
+    "output": "Sintaxis válida"
+  },
+  {
+    "file": "Frontend_Swgpi/assets/js/activity-notifications.js",
+    "exit": 0,
+    "output": "Sintaxis válida"
+  },
+  {
+    "file": "Frontend_Swgpi/assets/js/api.js",
+    "exit": 0,
+    "output": "Sintaxis válida"
+  },
+  {
+    "file": "Frontend_Swgpi/assets/js/app.js",
+    "exit": 0,
+    "output": "Sintaxis válida"
+  },
+  {
+    "file": "Frontend_Swgpi/assets/js/auth.js",
+    "exit": 0,
+    "output": "Sintaxis válida"
+  },
+  {
+    "file": "Frontend_Swgpi/assets/js/career-modules.js",
+    "exit": 0,
+    "output": "Sintaxis válida"
+  },
+  {
+    "file": "Frontend_Swgpi/assets/js/career-switcher.js",
+    "exit": 0,
+    "output": "Sintaxis válida"
+  },
+  {
+    "file": "Frontend_Swgpi/assets/js/global-search.js",
+    "exit": 0,
+    "output": "Sintaxis válida"
+  },
+  {
+    "file": "Frontend_Swgpi/assets/js/operational-notifications.js",
+    "exit": 0,
+    "output": "Sintaxis válida"
+  },
+  {
+    "file": "Frontend_Swgpi/assets/js/responsive.js",
+    "exit": 0,
+    "output": "Sintaxis válida"
+  },
+  {
+    "file": "Frontend_Swgpi/assets/js/router.js",
+    "exit": 0,
+    "output": "Sintaxis válida"
+  },
+  {
+    "file": "Frontend_Swgpi/assets/js/skeleton-loader.js",
+    "exit": 0,
+    "output": "Sintaxis válida"
+  },
+  {
+    "file": "Frontend_Swgpi/assets/js/table.js",
+    "exit": 0,
+    "output": "Sintaxis válida"
+  },
+  {
+    "file": "Frontend_Swgpi/assets/js/view-transitions.js",
+    "exit": 0,
+    "output": "Sintaxis válida"
+  },
+  {
+    "file": "academic-page-smoke perfil 1",
+    "exit": 0,
+    "output": "PHP academic page profile 1: OK"
+  },
+  {
+    "file": "academic-page-smoke perfil 2",
+    "exit": 0,
+    "output": "PHP academic page profile 2: OK"
+  },
+  {
+    "file": "academic-page-smoke perfil 3",
+    "exit": 0,
+    "output": "PHP academic page profile 3: OK"
+  },
+  {
+    "file": "academic-page-smoke perfil 4",
+    "exit": 0,
+    "output": "PHP academic page profile 4: OK"
+  },
+  {
+    "file": "academic-page-smoke perfil 5",
+    "exit": 0,
+    "output": "PHP academic page profile 5: OK"
+  },
+  {
+    "file": "academic-page-smoke perfil 6",
+    "exit": 0,
+    "output": "PHP academic page profile 6: OK"
+  },
+  {
+    "file": "academic-page-smoke perfil 7",
+    "exit": 0,
+    "output": "PHP academic page profile 7: OK"
+  }
+]

@@ -17,7 +17,7 @@ $is_archived_view = basename($_SERVER['PHP_SELF']) === 'evaluations-archived.php
     <?php require_once $_SERVER['DOCUMENT_ROOT'] . '/includes/visual-preferences.php'; ?>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
-    <link rel="stylesheet" href="/assets/css/app.css">
+    <link rel="stylesheet" href="<?= asset('/assets/css/app.css') ?>">
     <style>
         .room-panel {
             background: var(--surface-bg);
@@ -115,6 +115,37 @@ $is_archived_view = basename($_SERVER['PHP_SELF']) === 'evaluations-archived.php
             border-radius: 8px;
             padding: 1rem;
         }
+        .score-question-card.is-answered { border-color: var(--success-accent); }
+        .score-question-card.is-missing { border-color: var(--bs-danger); }
+        .score-question-head { display: flex; gap: .75rem; align-items: flex-start; margin-bottom: .75rem; }
+        .score-question-number {
+            align-items: center; background: var(--primary-blue); border-radius: 50%; color: #fff; display: inline-flex;
+            flex: 0 0 1.9rem; font-size: .85rem; font-variant-numeric: tabular-nums; font-weight: 700; height: 1.9rem; justify-content: center;
+        }
+        .scale-options { display: grid; gap: .4rem; }
+        .scale-options.scale-acuerdo { grid-template-columns: repeat(5, minmax(0, 1fr)); }
+        .scale-options.scale-puntos_5 { grid-template-columns: repeat(5, minmax(0, 1fr)); }
+        .scale-options.scale-puntos_10 { grid-template-columns: repeat(10, minmax(0, 1fr)); }
+        .scale-options .btn { font-size: .82rem; line-height: 1.2; min-height: 2.6rem; padding: .35rem .25rem; white-space: normal; }
+        .scale-options.scale-puntos_5 .btn, .scale-options.scale-puntos_10 .btn { font-size: 1rem; font-variant-numeric: tabular-nums; font-weight: 700; }
+        .scale-ends { color: var(--text-muted); display: flex; font-size: .75rem; justify-content: space-between; margin-top: .25rem; }
+        .score-summary-bar {
+            align-items: center; background: var(--soft-bg); border: 1px solid var(--border-color); border-radius: 8px;
+            display: flex; flex-wrap: wrap; gap: .75rem 1.25rem; padding: .65rem 1rem; position: sticky; top: -1rem; z-index: 2;
+        }
+        .score-summary-bar strong { font-variant-numeric: tabular-nums; }
+        .rubric-chip-row { display: flex; flex-wrap: wrap; gap: .5rem; }
+        .rubric-chip { background: var(--surface-bg); border: 1px solid var(--border-color); border-radius: 8px; color: var(--text-dark); font-weight: 600; min-width: 7rem; padding: .45rem .8rem; text-align: left; }
+        .rubric-chip small { color: var(--text-muted); display: block; font-weight: 500; }
+        .rubric-chip[aria-checked="true"] { background: var(--primary-blue); border-color: var(--primary-blue); color: #fff; }
+        .rubric-chip[aria-checked="true"] small { color: rgba(255, 255, 255, .8); }
+        .rubric-question { background: var(--surface-bg); border: 1px solid var(--border-color); border-radius: 8px; padding: .75rem 1rem; }
+        .rubric-question + .rubric-question { margin-top: .5rem; }
+        .scale-preview { color: var(--text-muted); font-size: .78rem; }
+        @media (max-width: 767.98px) {
+            .scale-options.scale-acuerdo { grid-template-columns: 1fr; }
+            .scale-options.scale-puntos_10 { grid-template-columns: repeat(5, minmax(0, 1fr)); }
+        }
         @media (max-width: 991.98px) {
             .room-meta-grid {
                 grid-template-columns: 1fr;
@@ -135,13 +166,13 @@ $is_archived_view = basename($_SERVER['PHP_SELF']) === 'evaluations-archived.php
                 <div class="d-flex align-items-center justify-content-between mb-4">
                     <div>
                         <h1 class="mb-1"><?= $is_archived_view ? 'Evaluaciones archivadas' : 'Evaluaciones' ?></h1>
-                        <p class="text-muted mb-0"><?= $is_archived_view ? 'Consulta evaluaciones finalizadas que ya no aparecen en la vista principal.' : 'Rubricas unicas por semestre, con comentarios opcionales' ?></p>
+                        <p class="text-muted mb-0"><?= $is_archived_view ? 'Consulta evaluaciones finalizadas que ya no aparecen en la vista principal. El historial no se restaura: para repetir una presentación registra una autorización de nuevo intento en Seguimiento académico.' : 'Rúbricas únicas por semestre, con comentarios opcionales' ?></p>
                     </div>
                     <div class="d-flex gap-2">
                         <a class="btn btn-outline-secondary" href="/pages/admin/<?= $is_archived_view ? 'evaluations.php' : 'evaluations-archived.php' ?>">
                             <i class="bi <?= $is_archived_view ? 'bi-arrow-left' : 'bi-archive' ?>"></i> <?= $is_archived_view ? 'Volver a evaluaciones' : 'Ver archivadas' ?>
                         </a>
-                        <?php if (is_evaluation_manager()): ?>
+                        <?php if (is_evaluation_manager() && !$is_archived_view): ?>
                         <button class="btn btn-outline-secondary" id="archiveSelectionBtn" onclick="handleArchiveSelectionButton()">
                             <i class="bi <?= $is_archived_view ? 'bi-arrow-counterclockwise' : 'bi-archive' ?>"></i> <span id="archiveSelectionButtonText"><?= $is_archived_view ? 'Desarchivar' : 'Archivar' ?></span>
                         </button>
@@ -167,7 +198,7 @@ $is_archived_view = basename($_SERVER['PHP_SELF']) === 'evaluations-archived.php
                 <div class="row g-3 mb-4">
                     <div class="col-md-4">
                         <label class="form-label" for="semesterFilter">Semestre</label>
-                        <select class="form-select" id="semesterFilter" onchange="loadEvaluations()">
+                        <select data-semester-scope="career" data-semester-max="8" data-semester-min="5" class="form-select" id="semesterFilter" onchange="loadEvaluations()">
                             <option value="">Todos los semestres</option>
                             <option value="5">5 - Propuesta</option>
                             <option value="6">6 - Avance</option>
@@ -230,7 +261,7 @@ $is_archived_view = basename($_SERVER['PHP_SELF']) === 'evaluations-archived.php
                     <div class="row">
                         <div class="col-md-6 mb-3">
                             <label class="form-label" for="semestre">Semestre</label>
-                            <select class="form-select" id="semestre" required>
+                            <select data-semester-scope="period" data-semester-max="8" data-semester-min="5" class="form-select" id="semestre" required>
                                 <option value="5">5 - Propuesta</option>
                                 <option value="6">6 - Avance</option>
                                 <option value="7">7 - Avance</option>
@@ -256,55 +287,67 @@ $is_archived_view = basename($_SERVER['PHP_SELF']) === 'evaluations-archived.php
     </div>
 
     <div class="modal fade" id="rubricModal" tabindex="-1">
-        <div class="modal-dialog modal-lg modal-dialog-scrollable">
+        <div class="modal-dialog modal-xl modal-dialog-scrollable">
             <div class="modal-content">
                 <div class="modal-header">
-                    <h5 class="modal-title">Gestionar Rúbrica por Semestre</h5>
+                    <div>
+                        <h5 class="modal-title mb-0">Rúbricas por semestre</h5>
+                        <small style="opacity: .82">Cada pregunta tiene su propia escala. Al calificar, cada respuesta se convierte de 0 a 100 % y todas pesan igual en el promedio.</small>
+                    </div>
                     <button type="button" class="btn-close" data-bs-dismiss="modal" onmousedown="this.blur()" onclick="this.blur()"></button>
                 </div>
                 <div class="modal-body">
-                    <div class="row g-3 align-items-end mb-3">
-                        <div class="col-md-2">
-                            <label class="form-label" for="rubricSemester">Semestre</label>
-                            <select class="form-select" id="rubricSemester" onchange="onRubricScopeChange()">
-                                <option value="5">5</option>
-                                <option value="6">6</option>
-                                <option value="7">7</option>
-                                <option value="8">8</option>
+                    <div class="d-flex flex-wrap gap-3 align-items-end mb-3">
+                        <div>
+                            <span class="form-label d-block">Semestre</span>
+                            <div class="rubric-chip-row" id="rubricSemesterChips" role="radiogroup" aria-label="Semestre de la rúbrica"></div>
+                            <select class="d-none" id="rubricSemester" onchange="onRubricScopeChange()" aria-hidden="true" tabindex="-1">
+                                <option value="5">5</option><option value="6">6</option><option value="7">7</option><option value="8">8</option>
                             </select>
                         </div>
-                        <div class="col-md-3">
-                            <label class="form-label" for="rubricScoreMode">Método</label>
-                            <select class="form-select" id="rubricScoreMode" onchange="saveRubricScoreMode()">
-                                <option value="levels">Acuerdos</option>
-                                <option value="numeric">Puntaje 1 a 5</option>
-                            </select>
-                        </div>
-                        <div class="col-md-4 d-none" id="rubricProjectBox">
-                            <label class="form-label" for="rubricProjectId">Proyecto 8vo</label>
+                        <div class="d-none flex-grow-1" id="rubricProjectBox" style="max-width: 28rem">
+                            <label class="form-label" for="rubricProjectId">Proyecto de 8° (rúbrica personalizada)</label>
                             <select class="form-select" id="rubricProjectId" onchange="loadRubricCriteria()">
-                                <option value="">Rúbrica general de 8vo</option>
+                                <option value="">Rúbrica general de 8°</option>
                             </select>
-                            <div class="form-text">Sin proyecto seleccionado editas la general; puede quedar vacía.</div>
-                        </div>
-                        <div class="col-md-3">
-                            <label class="form-label" for="newCriterionText">Nueva pregunta</label>
-                            <input type="text" class="form-control" id="newCriterionText" maxlength="255">
-                        </div>
-                        <div class="col-md-1">
-                            <button type="button" class="btn btn-primary w-100" onclick="addCriterion()">
-                                <i class="bi bi-plus-circle"></i>
-                            </button>
                         </div>
                     </div>
-                    <div id="rubricCriteriaList" style="max-height: 60vh; overflow:auto;"></div>
+
+                    <section class="border rounded p-3 mb-3" aria-labelledby="newQuestionTitle">
+                        <h6 id="newQuestionTitle" class="mb-2"><i class="bi bi-plus-circle"></i> Nueva pregunta</h6>
+                        <div class="row g-2 align-items-start">
+                            <div class="col-lg-6">
+                                <label class="form-label small" for="newCriterionText">Pregunta</label>
+                                <input type="text" class="form-control" id="newCriterionText" maxlength="255" placeholder="Ej. El problema está bien delimitado y justificado">
+                            </div>
+                            <div class="col-lg-4">
+                                <label class="form-label small" for="newCriterionScale">Escala de respuesta</label>
+                                <select class="form-select" id="newCriterionScale" onchange="renderScalePreview()">
+                                    <option value="acuerdo">Nivel de acuerdo</option>
+                                    <option value="puntos_5">Puntaje del 1 al 5</option>
+                                    <option value="puntos_10">Puntaje del 1 al 10</option>
+                                </select>
+                                <div class="scale-preview mt-1" id="newCriterionScalePreview"></div>
+                            </div>
+                            <div class="col-lg-2 d-grid">
+                                <label class="form-label small d-none d-lg-block">&nbsp;</label>
+                                <button type="button" class="btn btn-primary" onclick="addCriterion()"><i class="bi bi-plus-lg"></i> Agregar</button>
+                            </div>
+                        </div>
+                    </section>
+
+                    <div class="d-flex justify-content-between align-items-center mb-2">
+                        <h6 class="mb-0" id="rubricListTitle">Preguntas</h6>
+                        <small class="text-muted" id="rubricListSummary"></small>
+                    </div>
+                    <div id="rubricCriteriaList"></div>
                 </div>
             </div>
         </div>
     </div>
 
     <div class="modal fade" id="scoreModal" tabindex="-1">
-        <div class="modal-dialog modal-lg">
+        <div class="modal-dialog modal-xl modal-dialog-scrollable">
             <form class="modal-content" id="scoreForm">
                 <div class="modal-header">
                     <h5 class="modal-title">Rúbrica de Evaluación</h5>
@@ -313,6 +356,7 @@ $is_archived_view = basename($_SERVER['PHP_SELF']) === 'evaluations-archived.php
                 <div class="modal-body">
                     <input type="hidden" id="scoreEvaluationId">
                     <div id="scoreProjectContext" class="border rounded p-3 mb-3"></div>
+                    <div class="score-summary-bar mb-3" id="scoreSummaryBar" aria-live="polite"></div>
                     <div id="scoreDraftStatus" class="small text-muted mb-2"></div>
                     <div id="scoreFields"></div>
                     <div class="border rounded p-3 mt-3">
@@ -331,7 +375,7 @@ $is_archived_view = basename($_SERVER['PHP_SELF']) === 'evaluations-archived.php
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
-                    <button type="submit" class="btn btn-primary">Guardar Rúbrica</button>
+                    <button type="submit" class="btn btn-primary"><i class="bi bi-send-check"></i> Enviar evaluación</button>
                 </div>
             </form>
         </div>
@@ -360,7 +404,7 @@ $is_archived_view = basename($_SERVER['PHP_SELF']) === 'evaluations-archived.php
                                     <div class="col-12"><div class="room-section-title">Datos generales</div></div>
                                     <div class="col-md-6"><label class="form-label">Sala</label><input class="form-control" id="roomName" placeholder="Sala 1" required><div class="invalid-feedback">Nombre obligatorio y no repetido.</div></div>
                                     <div class="col-md-6"><label class="form-label">Salon</label><input class="form-control" id="roomClassroom" placeholder="Salon/Laboratorio" required></div>
-                                    <div class="col-md-4"><label class="form-label">Semestre</label><select class="form-select" id="roomSemester" onchange="loadRoomProjects()"><option value="5">5</option><option value="6">6</option><option value="7">7</option><option value="8">8</option></select></div>
+                                    <div class="col-md-4"><label class="form-label">Semestre</label><select data-semester-scope="period" data-semester-max="8" data-semester-min="5" class="form-select" id="roomSemester" onchange="loadRoomProjects()"><option value="5">5</option><option value="6">6</option><option value="7">7</option><option value="8">8</option></select></div>
                                     <div class="col-md-4"><label class="form-label">Inicio</label><input type="datetime-local" class="form-control" id="roomDate" required onchange="updateRoomAvailability()"><div class="form-text">Posterior a la fecha actual.</div></div>
                                     <div class="col-md-4"><label class="form-label">Fin</label><input type="datetime-local" class="form-control" id="roomEndDate" required onchange="updateRoomAvailability()"><div class="form-text">Debe ser posterior al inicio.</div></div>
                                     <div class="col-12"><div class="room-section-title">Tiempos</div></div>
@@ -420,14 +464,15 @@ $is_archived_view = basename($_SERVER['PHP_SELF']) === 'evaluations-archived.php
 
     <?php require_once $_SERVER['DOCUMENT_ROOT'] . '/includes/footer.php'; ?>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
     <script>const API_BASE_URL = '<?= API_BASE_URL ?>';</script>
-    <script src="/assets/js/auth.js"></script>
-    <script src="/assets/js/api.js"></script>
-    <script src="/assets/js/app.js"></script>
+    <script src="<?= asset('/assets/js/auth.js') ?>"></script>
+    <script src="<?= asset('/assets/js/api.js') ?>"></script>
+    <script src="<?= asset('/assets/js/app.js') ?>"></script>
     <script>
         const IS_ADMIN = <?= can_manage_projects() ? 'true' : 'false' ?>;
         const CAN_MANAGE_EVALUATIONS = <?= is_evaluation_manager() ? 'true' : 'false' ?>;
+        // Con nombres de evaluadores sólo descargan jefatura y administración general; los demás, el informe limitado.
+        const FULL_EVALUATION_REPORTS = <?= can_download_full_evaluation_reports() ? 'true' : 'false' ?>;
         const IS_ARCHIVED_VIEW = <?= $is_archived_view ? 'true' : 'false' ?>;
     </script>
     <script>
@@ -619,31 +664,69 @@ $is_archived_view = basename($_SERVER['PHP_SELF']) === 'evaluations-archived.php
             return points === null ? levelLabel(level) : `${levelLabel(level)} (${points} pts)`;
         }
 
-        function rubricModeKey(semester) {
-            return `sgpi-rubric-score-mode:${semester}`;
+        // Escalas por pregunta (las mismas reglas que App\Support\RubricScale en la API).
+        const SCALE_NAMES = { acuerdo: 'Nivel de acuerdo', puntos_5: 'Puntaje del 1 al 5', puntos_10: 'Puntaje del 1 al 10' };
+        const AGREEMENT_OPTIONS = [
+            { value: 'completamente_en_desacuerdo', points: 1, label: 'Completamente en desacuerdo' },
+            { value: 'en_desacuerdo', points: 2, label: 'En desacuerdo' },
+            { value: 'nulo', points: 3, label: 'Nulo' },
+            { value: 'de_acuerdo', points: 4, label: 'De acuerdo' },
+            { value: 'completamente_de_acuerdo', points: 5, label: 'Completamente de acuerdo' }
+        ];
+        const STAGE_NAMES = { 5: 'Propuesta', 6: 'Avance', 7: 'Avance', 8: 'Titulación' };
+
+        function scaleOf(criterion) {
+            return SCALE_NAMES[criterion?.scale] ? criterion.scale : 'acuerdo';
         }
 
-        function currentRubricMode(semester) {
-            return rubricScoreModes[String(semester)] || localStorage.getItem(rubricModeKey(semester)) || 'levels';
+        function scaleOptions(scale) {
+            if (scale === 'acuerdo') return AGREEMENT_OPTIONS;
+            const max = scale === 'puntos_10' ? 10 : 5;
+            return Array.from({ length: max }, (_, index) => ({ value: String(index + 1), points: index + 1, label: String(index + 1) }));
         }
 
-        async function saveRubricScoreMode() {
-            const semester = document.getElementById('rubricSemester').value;
-            const mode = document.getElementById('rubricScoreMode').value;
-            localStorage.setItem(rubricModeKey(semester), mode);
-            rubricScoreModes[String(semester)] = mode;
-            try {
-                const response = await api.put('/evaluations/rubric-score-modes', { semester: Number(semester), mode });
-                rubricScoreModes = response.score_modes || rubricScoreModes;
-                swalToast('success', 'Método de rúbrica guardado');
-            } catch (error) {
-                showAlert('#alertContainer', 'danger', error.message || 'No se pudo guardar el método de rúbrica.');
-            }
+        // La respuesta más baja vale 0 % y la más alta 100 %; así se pueden promediar escalas distintas.
+        function scalePercentage(scale, value) {
+            const option = scaleOptions(scale).find(item => item.value === String(value));
+            if (!option) return null;
+            const max = scale === 'puntos_10' ? 10 : 5;
+            return Math.round(((option.points - 1) / (max - 1)) * 10000) / 100;
         }
 
-        function numericLevelOptions() {
-            const orderedKeys = ['totalmente_en_desacuerdo', 'en_desacuerdo', 'neutral', 'de_acuerdo', 'totalmente_de_acuerdo'];
-            return orderedKeys.map((key, index) => ({ score: index + 1, level: levels.find(item => levelValue(item) === key) || key }));
+        function verdictFor(average) {
+            if (average === null || average === undefined || Number.isNaN(Number(average))) return { key: 'sin_resultado', label: 'Sin resultado', tone: 'secondary' };
+            if (average >= 80) return { key: 'aprobado', label: 'Aprobado', tone: 'success' };
+            if (average >= 70) return { key: 'apenas_cumple', label: 'Apenas cumple', tone: 'warning' };
+            return { key: 'reprobado', label: 'Reprobado', tone: 'danger' };
+        }
+
+        function verdictBadge(verdict, average = null) {
+            const value = verdict || verdictFor(average);
+            return `<span class="badge text-bg-${value.tone}">${escapeHtml(value.label)}</span>`;
+        }
+
+        function scalePreviewText(scale) {
+            return scale === 'acuerdo'
+                ? 'Completamente en desacuerdo · En desacuerdo · Nulo · De acuerdo · Completamente de acuerdo'
+                : (scale === 'puntos_10' ? '1 (0 %) a 10 (100 %)' : '1 (0 %) a 5 (100 %)');
+        }
+
+        function renderScalePreview() {
+            const scale = document.getElementById('newCriterionScale').value;
+            document.getElementById('newCriterionScalePreview').textContent = scalePreviewText(scale);
+        }
+
+        function renderRubricSemesterChips() {
+            const current = document.getElementById('rubricSemester').value;
+            document.getElementById('rubricSemesterChips').innerHTML = [5, 6, 7, 8].map(semester => `
+                <button type="button" class="rubric-chip" role="radio" aria-checked="${String(semester) === current}" onclick="chooseRubricSemester(${semester})">
+                    ${semester}°<small>${STAGE_NAMES[semester]}</small>
+                </button>`).join('');
+        }
+
+        function chooseRubricSemester(semester) {
+            document.getElementById('rubricSemester').value = String(semester);
+            onRubricScopeChange();
         }
 
         function scoreDraftKey(evaluationId) {
@@ -664,7 +747,7 @@ $is_archived_view = basename($_SERVER['PHP_SELF']) === 'evaluations-archived.php
                 apto_titulacion: document.getElementById('apto_titulacion').value,
                 scores: [...document.querySelectorAll('[data-criterion]')].map(row => ({
                     criterio: row.dataset.criterion,
-                    nivel: row.querySelector('.criterion-level')?.value || '',
+                    valor: row.querySelector('.criterion-value:checked')?.value || '',
                     comentario: row.querySelector('.criterion-comment')?.value || ''
                 }))
             };
@@ -709,7 +792,7 @@ $is_archived_view = basename($_SERVER['PHP_SELF']) === 'evaluations-archived.php
 
             if (CAN_MANAGE_EVALUATIONS) {
                 try {
-                    const staffResponse = await api.get('/users', {
+                    const staffResponse = await api.getAll('/users', {
                         perfil_ids: '1,2',
                         status: 'active',
                         compact: 1,
@@ -849,7 +932,8 @@ $is_archived_view = basename($_SERVER['PHP_SELF']) === 'evaluations-archived.php
         }
 
         function canUseArchiveSelection() {
-            return CAN_MANAGE_EVALUATIONS;
+            // La API no desarchiva (409): la selección sólo sirve para archivar.
+            return CAN_MANAGE_EVALUATIONS && !IS_ARCHIVED_VIEW;
         }
 
         function archiveSelectionAction() {
@@ -1106,8 +1190,10 @@ $is_archived_view = basename($_SERVER['PHP_SELF']) === 'evaluations-archived.php
                     const stats = roomGroups[roomKey] || { total: 0, evaluated: 0, active: 0, pending: 0, canAdvance: false, sequenceLocked: false, completed: false };
                     const canAdvanceRoom = room?.id && stats.canAdvance && stats.sequenceLocked && !stats.completed;
                     const roomReportButton = room?.id
-                        ? `<button type="button" class="btn btn-sm btn-outline-secondary d-inline-flex align-items-center gap-2" onclick="downloadRoomReport(${room.id})" title="Reporte PDF de sala"><i class="bi bi-file-earmark-pdf"></i><span>Reporte sala</span></button>
-                           <button type="button" class="btn btn-sm btn-outline-info d-inline-flex align-items-center gap-2" onclick="downloadRoomTeacherReport(${room.id})" title="Reporte PDF para docentes"><i class="bi bi-people"></i><span>Reporte docentes</span></button>`
+                        ? (FULL_EVALUATION_REPORTS
+                            ? `<button type="button" class="btn btn-sm btn-outline-secondary d-inline-flex align-items-center gap-2" onclick="downloadRoomReport(${room.id})" title="Reporte completo con nombres de evaluadores"><i class="bi bi-file-earmark-pdf"></i><span>Reporte completo</span></button>
+                           <button type="button" class="btn btn-sm btn-outline-info d-inline-flex align-items-center gap-2" onclick="downloadRoomTeacherReport(${room.id})" title="Informe limitado para compartir"><i class="bi bi-incognito"></i><span>Informe limitado</span></button>`
+                            : `<button type="button" class="btn btn-sm btn-outline-info d-inline-flex align-items-center gap-2" onclick="downloadRoomTeacherReport(${room.id})" title="Evaluadores sin nombre y sólo comentarios generales"><i class="bi bi-incognito"></i><span>Informe de sala</span></button>`)
                         : '';
                     const roomSelection = renderArchiveGroupCheckbox('room', roomKey, archiveableEvaluationIdsForRoom(roomKey), 'Seleccionar sala');
                     tbody.innerHTML += `
@@ -1178,14 +1264,14 @@ $is_archived_view = basename($_SERVER['PHP_SELF']) === 'evaluations-archived.php
                         <td class="evaluation-cell-average">
                             <button class="btn btn-sm evaluation-average-btn evaluation-average-${averageColor}" onclick="showBreakdown(${evaluation.id})">
                                 ${evaluation.evaluators_count > 0
-                                    ? `${evaluation.global_average}% · ${evaluation.evaluators_count}/${evaluation.expected_evaluators_count || 0} evaluadores`
+                                    ? `<strong>${escapeHtml(evaluation.verdict?.label || verdictFor(evaluation.global_average).label)}</strong> · ${evaluation.global_average}% · ${evaluation.evaluators_count}/${evaluation.expected_evaluators_count || 0} evaluadores`
                                     : `Sin calificaciones · 0/${evaluation.expected_evaluators_count || 0} evaluadores`}
                             </button>
                         </td>
                         <td class="evaluation-cell-actions">
                             <div class="evaluation-actions">
                                 <button class="btn btn-sm btn-success evaluation-start-btn" onclick="openScoreModal(${evaluation.id})"
-                                    title="${evaluation.document_readiness?.all_students_released ? 'Evaluar' : 'No se puede evaluar: hay alumnos sin liberar'}" ${disabled}>
+                                    title="${escapeHtml(evaluation.score_block_reason || 'Evaluar')}" ${disabled}>
                                     <i class="bi bi-clipboard-check"></i><span>Evaluar</span>
                                 </button>
                                 ${evaluation.can_mark_completed ? `
@@ -1195,10 +1281,10 @@ $is_archived_view = basename($_SERVER['PHP_SELF']) === 'evaluations-archived.php
                                     </button>` : ''}
                                 <div class="evaluation-secondary-actions">
                                     <button class="btn btn-sm btn-outline-secondary" onclick="showProjectDetails(${evaluation.id})" title="Detalles del proyecto"><i class="bi bi-info-circle"></i></button>
-                                    <button class="btn btn-sm btn-outline-secondary evaluation-report-btn" onclick="downloadEvaluationReport(${evaluation.id})" title="Reporte PDF"><i class="bi bi-file-earmark-pdf"></i></button>
-                                    <button class="btn btn-sm btn-outline-info" onclick="downloadEvaluationTeacherReport(${evaluation.id})" title="Reporte PDF para docentes"><i class="bi bi-people"></i></button>
+                                    ${FULL_EVALUATION_REPORTS ? `<button class="btn btn-sm btn-outline-secondary evaluation-report-btn" onclick="downloadEvaluationReport(${evaluation.id})" title="Reporte completo con nombres de evaluadores"><i class="bi bi-file-earmark-pdf"></i></button>` : ''}
+                                    <button class="btn btn-sm btn-outline-info" onclick="downloadEvaluationTeacherReport(${evaluation.id})" title="Informe limitado: evaluadores sin nombre y sólo comentarios generales"><i class="bi bi-incognito"></i></button>
                                     ${(evaluation.can_manage_evaluations && Number(evaluation.semestre) === 8) ? `<button class="btn btn-sm btn-outline-primary" onclick="openRubricModal(${evaluation.project_id})" title="Rubrica personalizada"><i class="bi bi-ui-checks-grid"></i></button>` : ''}
-                                    ${evaluation.can_manage_evaluations ? `<button class="btn btn-sm btn-outline-secondary" onclick="${IS_ARCHIVED_VIEW ? 'unarchiveEvaluation' : 'archiveEvaluation'}(${evaluation.id})" title="${IS_ARCHIVED_VIEW ? 'Restaurar a vista principal' : 'Archivar'}"><i class="bi ${IS_ARCHIVED_VIEW ? 'bi-arrow-counterclockwise' : 'bi-archive'}"></i></button>` : ''}
+                                    ${evaluation.can_manage_evaluations && !IS_ARCHIVED_VIEW ? `<button class="btn btn-sm btn-outline-secondary" onclick="archiveEvaluation(${evaluation.id})" title="Archivar"><i class="bi bi-archive"></i></button>` : ''}
                                     ${evaluation.can_manage_evaluations ? `<button class="btn btn-sm btn-outline-danger" onclick="deleteEvaluation(${evaluation.id})" title="Eliminar"><i class="bi bi-trash"></i></button>` : ''}
                                 </div>
                             </div>
@@ -1328,6 +1414,7 @@ $is_archived_view = basename($_SERVER['PHP_SELF']) === 'evaluations-archived.php
 
         function onRubricScopeChange() {
             const semester = document.getElementById('rubricSemester').value;
+            renderRubricSemesterChips();
             const projectBox = document.getElementById('rubricProjectBox');
             projectBox.classList.toggle('d-none', Number(semester) !== 8);
             if (Number(semester) !== 8) document.getElementById('rubricProjectId').value = '';
@@ -1339,6 +1426,8 @@ $is_archived_view = basename($_SERVER['PHP_SELF']) === 'evaluations-archived.php
             document.getElementById('rubricSemester').value = projectId ? '8' : '5';
             document.getElementById('rubricProjectId').value = projectId ? String(projectId) : '';
             document.getElementById('rubricProjectBox').classList.toggle('d-none', !projectId);
+            renderRubricSemesterChips();
+            renderScalePreview();
             loadRubricCriteria();
             rubricModal.show();
         }
@@ -1542,13 +1631,13 @@ $is_archived_view = basename($_SERVER['PHP_SELF']) === 'evaluations-archived.php
             const badge = document.getElementById('roomsCountBadge');
             if (badge) badge.textContent = `${rooms.length} sala${rooms.length === 1 ? '' : 's'}`;
             const roomActions = room => `
-                            <button class="btn btn-sm btn-outline-dark" onclick="downloadRoomReport(${room.id})" title="Reporte PDF de sala"><i class="bi bi-file-earmark-pdf"></i></button>
-                            <button class="btn btn-sm btn-outline-info" onclick="downloadRoomTeacherReport(${room.id})" title="Reporte PDF para docentes"><i class="bi bi-people"></i></button>
+                            ${FULL_EVALUATION_REPORTS ? `<button class="btn btn-sm btn-outline-dark" onclick="downloadRoomReport(${room.id})" title="Reporte completo con nombres de evaluadores"><i class="bi bi-file-earmark-pdf"></i></button>` : ''}
+                            <button class="btn btn-sm btn-outline-info" onclick="downloadRoomTeacherReport(${room.id})" title="Informe limitado: evaluadores sin nombre y sólo comentarios generales"><i class="bi bi-incognito"></i></button>
                             ${CAN_MANAGE_EVALUATIONS ? `
                             <button class="btn btn-sm btn-outline-primary" onclick="editRoom(${room.id})" title="Editar"><i class="bi bi-pencil"></i></button>
                             <button class="btn btn-sm btn-outline-success" onclick="lockRoomSequence(${room.id})" title="Bloquear orden"><i class="bi bi-lock"></i></button>
                             ${room.sequence_locked && !room.completed_at ? `<button class="btn btn-sm btn-outline-warning" onclick="advanceRoom(${room.id})" title="Siguiente proyecto"><i class="bi bi-skip-forward"></i></button>` : ''}
-                            <button class="btn btn-sm btn-outline-secondary" onclick="${IS_ARCHIVED_VIEW ? 'unarchiveRoom' : 'archiveRoom'}(${room.id})" title="${IS_ARCHIVED_VIEW ? 'Restaurar sala' : 'Archivar sala'}"><i class="bi ${IS_ARCHIVED_VIEW ? 'bi-arrow-counterclockwise' : 'bi-archive'}"></i></button>
+                            ${IS_ARCHIVED_VIEW ? '' : `<button class="btn btn-sm btn-outline-secondary" onclick="archiveRoom(${room.id})" title="Archivar sala"><i class="bi bi-archive"></i></button>`}
                             <button class="btn btn-sm btn-outline-danger" onclick="deleteRoom(${room.id})" title="Eliminar"><i class="bi bi-trash"></i></button>
                             ` : ''}
             `;
@@ -1779,7 +1868,7 @@ $is_archived_view = basename($_SERVER['PHP_SELF']) === 'evaluations-archived.php
         }
 
         async function downloadRoomTeacherReport(id) {
-            await downloadPdf(`/evaluations/rooms/${id}/report.pdf?audience=teachers`, `reporte_sala_${id}_docentes.pdf`, 'No se pudo generar el reporte PDF para docentes.');
+            await downloadPdf(`/evaluations/rooms/${id}/report.pdf?audience=teachers`, `reporte_sala_${id}_limitado.pdf`, 'No se pudo generar el reporte PDF para docentes.');
         }
 
         async function downloadEvaluationReport(id) {
@@ -1787,7 +1876,7 @@ $is_archived_view = basename($_SERVER['PHP_SELF']) === 'evaluations-archived.php
         }
 
         async function downloadEvaluationTeacherReport(id) {
-            await downloadPdf(`/evaluations/${id}/report.pdf?audience=teachers`, `reporte_evaluacion_${id}_docentes.pdf`, 'No se pudo generar el reporte PDF para docentes.');
+            await downloadPdf(`/evaluations/${id}/report.pdf?audience=teachers`, `reporte_evaluacion_${id}_limitado.pdf`, 'No se pudo generar el reporte PDF para docentes.');
         }
 
         async function downloadPdf(endpoint, filename, fallbackMessage) {
@@ -1831,39 +1920,48 @@ $is_archived_view = basename($_SERVER['PHP_SELF']) === 'evaluations-archived.php
                 const criteriaResponse = await api.get('/evaluations/criteria', { _fresh: 1, _timeout: 30000 });
                 criteria = criteriaResponse.criteria || [];
                 levels = criteriaResponse.levels || levels;
-                rubricScoreModes = criteriaResponse.score_modes || rubricScoreModes;
             }
             groupCriteria();
             const semester = document.getElementById('rubricSemester').value;
             const selectedProjectId = Number(semester) === 8 ? document.getElementById('rubricProjectId').value : '';
-            document.getElementById('rubricScoreMode').value = currentRubricMode(semester);
             const list = document.getElementById('rubricCriteriaList');
             const semesterCriteria = (criteriaBySemester[semester] || []).filter(criterion => {
                 const criterionProjectId = criterion.project_id === null || criterion.project_id === undefined ? '' : String(criterion.project_id);
                 return criterionProjectId === String(selectedProjectId || '');
-            });
+            }).sort((a, b) => Number(a.orden || 0) - Number(b.orden || 0) || Number(a.id) - Number(b.id));
+            const byScale = semesterCriteria.reduce((counts, criterion) => ({ ...counts, [scaleOf(criterion)]: (counts[scaleOf(criterion)] || 0) + 1 }), {});
+            document.getElementById('rubricListTitle').textContent = `Preguntas de ${semester}° · ${STAGE_NAMES[semester] || ''}${selectedProjectId ? ' (personalizadas del proyecto)' : ''}`;
+            document.getElementById('rubricListSummary').textContent = semesterCriteria.length
+                ? `${semesterCriteria.length} pregunta(s): ${Object.entries(byScale).map(([scale, count]) => `${count} de ${SCALE_NAMES[scale].toLowerCase()}`).join(', ')}`
+                : '';
 
             if (semesterCriteria.length === 0) {
-                list.innerHTML = `<p class="text-muted mb-0">${selectedProjectId ? 'Este proyecto aún no tiene preguntas personalizadas.' : 'No hay preguntas para esta rúbrica general.'}</p>`;
+                list.innerHTML = `<p class="text-muted mb-0">${selectedProjectId ? 'Este proyecto aún no tiene preguntas personalizadas.' : 'Esta rúbrica todavía no tiene preguntas. Agrega la primera arriba.'}</p>`;
                 return;
             }
 
-            list.innerHTML = semesterCriteria.map(criterion => `
-                <div class="border rounded p-3 mb-2" data-rubric-id="${criterion.id}">
-                    <div class="row g-2 align-items-center">
-                        <div class="col-md-2">
-                            <input type="number" class="form-control criterion-order" value="${criterion.orden || 0}" min="0">
+            list.innerHTML = semesterCriteria.map((criterion, index) => `
+                <div class="rubric-question" data-rubric-id="${criterion.id}">
+                    <div class="d-flex flex-wrap gap-2 align-items-start">
+                        <span class="score-question-number">${index + 1}</span>
+                        <div class="flex-grow-1" style="min-width: 14rem">
+                            <input type="text" class="form-control criterion-question" value="${escapeHtml(criterion.label)}" maxlength="255" aria-label="Pregunta ${index + 1}">
+                            <div class="d-flex flex-wrap gap-2 align-items-center mt-1">
+                                <select class="form-select form-select-sm criterion-scale" style="width: auto" aria-label="Escala de la pregunta ${index + 1}">
+                                    ${Object.entries(SCALE_NAMES).map(([value, label]) => `<option value="${value}" ${scaleOf(criterion) === value ? 'selected' : ''}>${label}</option>`).join('')}
+                                </select>
+                                <span class="scale-preview">${escapeHtml(scalePreviewText(scaleOf(criterion)))}</span>
+                                ${criterion.project_id ? '<span class="badge text-bg-info">Personalizada</span>' : ''}
+                            </div>
                         </div>
-                        <div class="col-md-8">
-                            <input type="text" class="form-control criterion-question" value="${escapeHtml(criterion.label)}" maxlength="255">
-                            <div class="form-text">${criterion.project_id ? 'Personalizada del proyecto' : 'General del semestre'}</div>
-                        </div>
-                        <div class="col-md-2 d-flex gap-1">
-                            <button type="button" class="btn btn-sm btn-outline-primary" onclick="updateCriterion(${criterion.id})" title="Guardar"><i class="bi bi-save"></i></button>
-                            <button type="button" class="btn btn-sm btn-outline-danger" onclick="deleteCriterion(${criterion.id})" title="Desactivar"><i class="bi bi-trash"></i></button>
+                        <div class="btn-group btn-group-sm">
+                            <button type="button" class="btn btn-outline-secondary" onclick="moveCriterion(${criterion.id}, -1)" ${index === 0 ? 'disabled' : ''} title="Subir" aria-label="Subir"><i class="bi bi-chevron-up"></i></button>
+                            <button type="button" class="btn btn-outline-secondary" onclick="moveCriterion(${criterion.id}, 1)" ${index === semesterCriteria.length - 1 ? 'disabled' : ''} title="Bajar" aria-label="Bajar"><i class="bi bi-chevron-down"></i></button>
+                            <button type="button" class="btn btn-outline-primary" onclick="updateCriterion(${criterion.id})" title="Guardar cambios"><i class="bi bi-save"></i></button>
+                            <button type="button" class="btn btn-outline-danger" onclick="deleteCriterion(${criterion.id})" title="Desactivar"><i class="bi bi-trash"></i></button>
                         </div>
                     </div>
-                </div>`).join('');
+                </div>`).join('') + '<p class="small text-muted mt-2 mb-0">Una pregunta que ya tiene calificaciones no se puede editar: conserva el historial. Desactívala y crea una nueva.</p>';
         }
 
         async function addCriterion() {
@@ -1871,32 +1969,63 @@ $is_archived_view = basename($_SERVER['PHP_SELF']) === 'evaluations-archived.php
             const semester = document.getElementById('rubricSemester').value;
             const projectId = Number(semester) === 8 ? document.getElementById('rubricProjectId').value : '';
             const text = document.getElementById('newCriterionText').value.trim();
-            if (!text) return;
+            if (!text) {
+                showAlert('#alertContainer', 'warning', 'Escribe la pregunta antes de agregarla.');
+                return;
+            }
             try {
-                const payload = {
-                    semestre: semester,
-                    pregunta: text
-                };
+                const payload = { semestre: semester, pregunta: text, escala: document.getElementById('newCriterionScale').value };
                 if (projectId) payload.project_id = Number(projectId);
                 const response = await api.post('/evaluations/rubric-criteria', payload);
                 criteria.push(response.criterion);
                 document.getElementById('newCriterionText').value = '';
                 await loadRubricCriteria(true);
-                showAlert('#alertContainer', 'success', 'Pregunta agregada a la rúbrica.');
+                swalToast('success', 'Pregunta agregada');
             } catch (error) {
                 showAlert('#alertContainer', 'danger', error.message || 'No se pudo agregar la pregunta.');
             }
         }
 
-        async function updateCriterion(id) {
+        async function saveCriterion(id, changes) {
             const row = document.querySelector(`[data-rubric-id="${id}"]`);
+            const current = criteria.find(criterion => Number(criterion.id) === Number(id)) || {};
             const response = await api.put(`/evaluations/rubric-criteria/${id}`, {
-                pregunta: row.querySelector('.criterion-question').value.trim(),
-                orden: row.querySelector('.criterion-order').value || 0
+                pregunta: row?.querySelector('.criterion-question').value.trim() || current.label,
+                escala: row?.querySelector('.criterion-scale').value || scaleOf(current),
+                orden: current.orden || 0,
+                ...changes
             });
             const index = criteria.findIndex(criterion => Number(criterion.id) === Number(id));
             if (index >= 0) criteria[index] = response.criterion;
-            loadRubricCriteria(true);
+        }
+
+        async function updateCriterion(id) {
+            try {
+                await saveCriterion(id, {});
+                await loadRubricCriteria(true);
+                swalToast('success', 'Pregunta guardada');
+            } catch (error) {
+                showAlert('#alertContainer', 'danger', error.message || 'No se pudo guardar la pregunta.');
+            }
+        }
+
+        // Cambia el orden intercambiando posiciones con la pregunta vecina.
+        async function moveCriterion(id, delta) {
+            const rows = [...document.querySelectorAll('[data-rubric-id]')].map(row => Number(row.dataset.rubricId));
+            const index = rows.indexOf(Number(id));
+            const target = index + delta;
+            if (index < 0 || target < 0 || target >= rows.length) return;
+            [rows[index], rows[target]] = [rows[target], rows[index]];
+            try {
+                for (const [position, criterionId] of rows.entries()) {
+                    const current = criteria.find(criterion => Number(criterion.id) === criterionId);
+                    if (Number(current?.orden) !== position + 1) await saveCriterion(criterionId, { orden: position + 1 });
+                }
+                await loadRubricCriteria(true);
+            } catch (error) {
+                showAlert('#alertContainer', 'danger', error.message || 'No se pudo cambiar el orden.');
+                await loadRubricCriteria();
+            }
         }
 
         async function deleteCriterion(id) {
@@ -1938,8 +2067,6 @@ $is_archived_view = basename($_SERVER['PHP_SELF']) === 'evaluations-archived.php
                 return;
             }
             const semesterCriteria = criteriaForEvaluation(evaluation);
-            const rubricMode = evaluation?.score_mode || currentRubricMode(evaluation?.semestre);
-            const numericOptions = numericLevelOptions();
             const container = document.getElementById('scoreFields');
             container.innerHTML = '';
 
@@ -1949,45 +2076,73 @@ $is_archived_view = basename($_SERVER['PHP_SELF']) === 'evaluations-archived.php
                 return;
             }
 
-            semesterCriteria.forEach(criterion => {
+            container.innerHTML = semesterCriteria.map((criterion, index) => {
                 const draftScore = (draft.scores || []).find(score => score.criterio === criterion.key) || {};
-                container.innerHTML += `
-                    <div class="score-question-card mb-3" data-criterion="${criterion.key}">
-                        <label class="form-label fw-semibold">${escapeHtml(criterion.label)} ${criterion.project_id ? '<span class="badge bg-info text-dark ms-1">Proyecto</span>' : '<span class="badge bg-secondary ms-1">General</span>'}</label>
-                        <select class="form-select mb-2 criterion-level" required>
-                            <option value="" ${draftScore.nivel ? '' : 'selected'} disabled>Seleccionar respuesta</option>
-                            ${(rubricMode === 'numeric' ? numericOptions : levels).map(option => {
-                                const value = rubricMode === 'numeric' ? levelValue(option.level) : levelValue(option);
-                                const label = rubricMode === 'numeric' ? `${option.score} punto${option.score === 1 ? '' : 's'}` : levelText(option);
-                                return `<option value="${escapeHtml(value)}" ${String(draftScore.nivel || '') === String(value) ? 'selected' : ''}>${escapeHtml(label)}</option>`;
-                            }).join('')}
-                        </select>
-                        <textarea class="form-control criterion-comment" rows="2" placeholder="Comentario opcional, no afecta el puntaje">${escapeHtml(draftScore.comentario || '')}</textarea>
+                const scale = scaleOf(criterion);
+                const options = scaleOptions(scale);
+                const name = `score-${criterion.key}`;
+                return `
+                    <div class="score-question-card mb-3 ${draftScore.valor ? 'is-answered' : ''}" data-criterion="${escapeHtml(criterion.key)}" data-scale="${scale}" role="group" aria-labelledby="${escapeHtml(name)}-title">
+                        <div class="score-question-head" id="${escapeHtml(name)}-title">
+                            <span class="score-question-number">${index + 1}</span>
+                            <span>
+                                <strong class="d-block">${escapeHtml(criterion.label)}</strong>
+                                <small class="text-muted">${escapeHtml(SCALE_NAMES[scale])}${criterion.project_id ? ' · Pregunta personalizada del proyecto' : ''}</small>
+                            </span>
+                        </div>
+                        <div class="scale-options scale-${scale}" role="radiogroup" aria-label="${escapeHtml(criterion.label)}">
+                            ${options.map(option => `
+                                <input type="radio" class="btn-check criterion-value" name="${escapeHtml(name)}" id="${escapeHtml(name)}-${option.value}" value="${option.value}" ${String(draftScore.valor || '') === option.value ? 'checked' : ''}>
+                                <label class="btn btn-outline-primary" for="${escapeHtml(name)}-${option.value}">${escapeHtml(option.label)}</label>`).join('')}
+                        </div>
+                        ${scale !== 'acuerdo' ? `<div class="scale-ends"><span>${options[0].label} = 0 %</span><span>${options[options.length - 1].label} = 100 %</span></div>` : ''}
+                        <details class="mt-2" ${draftScore.comentario ? 'open' : ''}>
+                            <summary class="small text-muted">Comentario de esta pregunta (opcional, no afecta el puntaje)</summary>
+                            <textarea class="form-control criterion-comment mt-1" rows="2">${escapeHtml(draftScore.comentario || '')}</textarea>
+                        </details>
                     </div>`;
-            });
-            container.querySelectorAll('select, textarea').forEach(input => {
-                input.oninput = saveScoreDraft;
-                input.onchange = saveScoreDraft;
+            }).join('');
+            container.querySelectorAll('input, textarea').forEach(input => {
+                input.addEventListener('input', saveScoreDraft);
+                input.addEventListener('change', () => { saveScoreDraft(); renderScoreSummary(); });
             });
             document.getElementById('generalEvaluationComment').oninput = saveScoreDraft;
             document.getElementById('apto_titulacion').onchange = saveScoreDraft;
+            renderScoreSummary();
             scoreModal.show();
+        }
+
+        // Progreso y promedio estimado mientras se califica (el resultado oficial lo calcula la API).
+        function renderScoreSummary() {
+            const cards = [...document.querySelectorAll('#scoreFields [data-criterion]')];
+            const percentages = cards.map(card => {
+                const value = card.querySelector('.criterion-value:checked')?.value;
+                card.classList.toggle('is-answered', Boolean(value));
+                if (value) card.classList.remove('is-missing');
+                return value ? scalePercentage(card.dataset.scale, value) : null;
+            }).filter(value => value !== null);
+            const average = percentages.length ? Math.round(percentages.reduce((sum, value) => sum + value, 0) / percentages.length * 100) / 100 : null;
+            document.getElementById('scoreSummaryBar').innerHTML = cards.length ? `
+                <span><i class="bi bi-ui-checks"></i> Respondidas <strong>${percentages.length} de ${cards.length}</strong></span>
+                <span>Promedio ${percentages.length === cards.length ? '' : 'parcial '}<strong>${average === null ? '—' : `${average.toFixed(2)} %`}</strong></span>
+                ${average === null ? '' : verdictBadge(null, average)}
+                <span class="small text-muted ms-auto">Aprobado desde 80 % · Apenas cumple de 70 a 79 %</span>` : '';
         }
 
         document.getElementById('scoreForm').addEventListener('submit', async (event) => {
             event.preventDefault();
             const evaluationId = document.getElementById('scoreEvaluationId').value;
-            const scores = [...document.querySelectorAll('[data-criterion]')].map(row => ({
+            const rows = [...document.querySelectorAll('#scoreFields [data-criterion]')];
+            const scores = rows.map(row => ({
                 criterio: row.dataset.criterion,
-                nivel: row.querySelector('.criterion-level').value,
+                valor: row.querySelector('.criterion-value:checked')?.value || '',
                 comentario: row.querySelector('.criterion-comment').value.trim() || null
             }));
-            const missingScores = scores.filter(score => !score.nivel);
-            document.querySelectorAll('.criterion-level').forEach(select => {
-                select.classList.toggle('is-invalid', !select.value);
-            });
-            if (missingScores.length) {
-                showAlert('#alertContainer', 'warning', 'Selecciona una respuesta en todas las preguntas antes de guardar la rúbrica.');
+            rows.forEach(row => row.classList.toggle('is-missing', !row.querySelector('.criterion-value:checked')));
+            const firstMissing = rows.find(row => !row.querySelector('.criterion-value:checked'));
+            if (firstMissing) {
+                firstMissing.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                showAlert('#alertContainer', 'warning', `Faltan ${rows.filter(row => !row.querySelector('.criterion-value:checked')).length} pregunta(s) por responder.`);
                 return;
             }
             try {
@@ -2048,8 +2203,8 @@ $is_archived_view = basename($_SERVER['PHP_SELF']) === 'evaluations-archived.php
                                 <div class="d-flex flex-wrap justify-content-between gap-2">
                                     <strong>${escapeHtml(score.criterio_label)}</strong>
                                     <span>
-                                        <span class="badge bg-secondary">${score.score_mode === 'numeric' ? `${Number(score.puntaje ?? 0)} de ${Number(score.puntaje_max || teacher.max_score || 5)}` : escapeHtml(score.nivel_label || levelLabel(score.nivel))}</span>
-                                        <span class="small text-muted ms-1">${Number(score.puntaje ?? 0)} pts</span>
+                                        <span class="badge bg-secondary">${escapeHtml(score.nivel_label || levelLabel(score.nivel))}</span>
+                                        <span class="small text-muted ms-1">${Number(score.porcentaje ?? 0).toFixed(0)} %</span>
                                     </span>
                                 </div>
                                 <div class="small text-muted mt-2">Comentario de la pregunta</div>
@@ -2063,7 +2218,7 @@ $is_archived_view = basename($_SERVER['PHP_SELF']) === 'evaluations-archived.php
                 <div class="border rounded p-3 mb-3">
                     <div class="d-flex justify-content-between align-items-center mb-2">
                         <h6 class="mb-0">${escapeHtml(teacher.teacher_name)}</h6>
-                        <span class="badge bg-primary">${teacher.average}%</span>
+                        <span><span class="badge bg-primary">${teacher.average}%</span> ${verdictBadge(teacher.verdict, teacher.average)}</span>
                     </div>
                     ${aptSummary.applies ? `<div class="small text-muted mb-2"><strong>Recomendación del proyecto (sin efecto de egreso):</strong> ${escapeHtml(renderAptVote(teacher.apto_titulacion))}</div>` : ''}
                     ${teacher.general_comment ? `<div class="alert alert-light border py-2 mb-3"><strong>Comentario general:</strong><div class="mt-1" style="white-space:pre-wrap">${escapeHtml(teacher.general_comment)}</div></div>` : ''}
@@ -2078,7 +2233,12 @@ $is_archived_view = basename($_SERVER['PHP_SELF']) === 'evaluations-archived.php
                         <button class="btn btn-sm btn-primary" onclick="saveRoomFeedback(${evaluation.id})"><i class="bi bi-save"></i> Guardar retroalimentacion</button>
                     ` : ''}
                 </div>`;
-            container.innerHTML = aptSummaryBox + teacherBlocks + feedbackBox;
+            const resultBox = evaluation.evaluators_count > 0 ? `
+                <div class="d-flex flex-wrap align-items-center gap-2 border rounded p-3 mb-3">
+                    <strong>Resultado del proyecto:</strong> <span class="fs-5">${evaluation.global_average}%</span> ${verdictBadge(evaluation.verdict, evaluation.global_average)}
+                    <small class="text-muted ms-auto">Aprobado desde 80 % · Apenas cumple de 70 a 79 % · Reprobado menos de 70 %</small>
+                </div>` : '';
+            container.innerHTML = resultBox + aptSummaryBox + teacherBlocks + feedbackBox;
             breakdownModal.show();
         }
 

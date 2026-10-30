@@ -322,3 +322,41 @@ document.addEventListener('DOMContentLoaded', () => {
     const tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
     tooltipTriggerList.map(tooltipTriggerEl => new bootstrap.Tooltip(tooltipTriggerEl));
 });
+
+/**
+ * Semestres según la regla de la carrera: enero–junio pares, julio–diciembre impares; 1°–4° sólo si el
+ * administrador general los habilitó. <select data-semester-scope="period"> (formularios de alta) usa los
+ * del periodo abierto; "career" (filtros) todos los de la carrera. data-semester-max limita, p. ej. salas (8).
+ */
+window.SGPISemesters = {
+    policyPromise: null,
+    policy() {
+        if (!this.policyPromise) {
+            this.policyPromise = api.get('/semester-management/policy', { _cache_ttl: 60000 }).catch(() => null);
+        }
+        return this.policyPromise;
+    },
+    async apply(select) {
+        const policy = await this.policy();
+        if (!policy || !(select instanceof HTMLSelectElement)) return;
+        const scope = select.dataset.semesterScope === 'career' ? 'career_semesters' : 'period_semesters';
+        const max = Number(select.dataset.semesterMax || 9);
+        const min = Number(select.dataset.semesterMin || 1);
+        const allowed = (policy[scope] || []).filter(semester => semester >= min && semester <= max);
+        const labels = new Map([...select.options].map(option => [option.value, option.textContent]));
+        const current = select.value;
+        [...select.options].forEach(option => { if (/^\d+$/.test(option.value)) option.remove(); });
+        allowed.forEach(semester => select.add(new Option(labels.get(String(semester)) || `${semester}°`, String(semester))));
+        if (allowed.map(String).includes(current)) select.value = current;
+        // Si el valor previo ya no existe en el periodo, la página recarga lo que dependía de él.
+        if (select.value !== current) select.dispatchEvent(new Event('change'));
+        select.dispatchEvent(new CustomEvent('sgpi:semesters-ready', { detail: policy }));
+    },
+    applyAll(root = document) {
+        root.querySelectorAll('select[data-semester-scope]').forEach(select => this.apply(select));
+    }
+};
+
+document.addEventListener('DOMContentLoaded', () => {
+    if (window.SGPI_SESSION?.authenticated) window.SGPISemesters.applyAll();
+});

@@ -15,7 +15,7 @@ if (!is_authenticated()) {
     <?php require_once $_SERVER['DOCUMENT_ROOT'] . '/includes/visual-preferences.php'; ?>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
-    <link rel="stylesheet" href="/assets/css/app.css">
+    <link rel="stylesheet" href="<?= asset('/assets/css/app.css') ?>">
     <style>
         .document-card { border-radius: 8px; background: var(--surface-bg); color: var(--text-dark); }
         .document-row { background: var(--surface-bg); border: 1px solid var(--border-color); border-radius: 8px; color: var(--text-dark); padding: 1rem; }
@@ -34,6 +34,8 @@ if (!is_authenticated()) {
             max-width: 240px;
         }
         .delivery-slot { border: 1px solid var(--border-color); border-radius: 10px; padding: 1rem; height: 100%; }
+        .delivery-slot.is-done { border-color: var(--success-accent); }
+        .readiness-missing { font-size: .85rem; }
         .release-student { display: flex; align-items: center; justify-content: space-between; gap: 1rem; padding: .5rem 0; border-bottom: 1px solid var(--border-color); }
         .release-student:last-child { border-bottom: 0; }
         @media (max-width: 767.98px) {
@@ -75,10 +77,12 @@ if (!is_authenticated()) {
 
 <?php require_once $_SERVER['DOCUMENT_ROOT'] . '/includes/footer.php'; ?>
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-<script>const API_BASE_URL = '<?= API_BASE_URL ?>';</script>
-<script src="/assets/js/auth.js"></script>
-<script src="/assets/js/api.js"></script>
-<script src="/assets/js/app.js"></script>
+<script>const API_BASE_URL = '<?= API_BASE_URL ?>';
+// Mismo criterio que role:admin en la API (administración, jefatura o administración general).
+const CAN_PUBLISH_REPOSITORY = <?= is_admin() ? 'true' : 'false' ?>;</script>
+<script src="<?= asset('/assets/js/auth.js') ?>"></script>
+<script src="<?= asset('/assets/js/api.js') ?>"></script>
+<script src="<?= asset('/assets/js/app.js') ?>"></script>
 <script>
 const state = { projects: [], thesisDocs: [], section: 'evaluations' };
 
@@ -99,8 +103,10 @@ async function loadDocuments(forceFresh = false) {
             api.get('/repositorio/evaluation-documents', forceFresh ? { _fresh: true } : {}),
             api.get('/repositorio/thesis-documents', forceFresh ? { _fresh: true } : {})
         ]);
+        state.presentationMaxMb = Number(projectResponse.presentation_max_mb || 100);
+        // Se agrupa por la etapa que presentará el proyecto este periodo (incluye casos especiales).
         state.projects = (projectResponse.data || []).filter(item => {
-            const semester = Number(item?.project?.semestre);
+            const semester = evaluationSemester(item);
             return Number.isInteger(semester) && semester >= 5 && semester <= 9;
         });
         state.thesisDocs = thesisResponse.data?.data || thesisResponse.data || [];
@@ -115,33 +121,11 @@ function renderDocuments() {
 
     const currentUser = auth.getCurrentUser() || {};
     const canUploadThesis = Number(currentUser.perfil_id) === 3 && Number(currentUser.semestre) === 9;
-    const semesters = [...new Set(state.projects
-        .map(item => Number(item.project.semestre))
-        .filter(semester => Number.isInteger(semester) && semester >= 5 && semester <= 9))]
-        .sort((a, b) => a - b);
+    const semesters = [...new Set(state.projects.map(evaluationSemester))].sort((a, b) => a - b);
     const projectSection = semesters.length ? semesters.map(semester => `
         <div class="mb-4">
-            <h4 class="mb-3">Semestre ${semester}</h4>
-            ${state.projects.filter(item => Number(item.project.semestre) === semester).map(project => `
-        <div class="card border-0 shadow-sm document-card mb-3">
-            <div class="card-body">
-                <div class="d-flex flex-column flex-lg-row justify-content-between gap-3">
-                    <div>
-                        <h5 class="mb-2">${esc(project.project.title)}</h5>
-                        <div class="project-meta">
-                            <span class="badge text-bg-light border"><i class="bi bi-people"></i> ${esc(memberNames(project.integrantes))}</span>
-                            <span class="badge text-bg-secondary">Semestre ${esc(project.project.semestre)}</span>
-                        </div>
-                    </div>
-                </div>
-                <hr>
-                <div class="row g-3">
-                    <div class="col-xl-6">${renderEvaluationDelivery(project, 'release_sheet')}</div>
-                    <div class="col-xl-6">${renderEvaluationDelivery(project, 'presentation')}</div>
-                </div>
-            </div>
-        </div>
-            `).join('')}
+            <h4 class="mb-3">${semester}° · ${esc(STAGE_LABELS[semester] || 'Evaluación')}</h4>
+            ${state.projects.filter(item => evaluationSemester(item) === semester).map(renderProjectCard).join('')}
         </div>
     `).join('') : '<div class="card border-0 shadow-sm mb-4"><div class="card-body text-center py-5"><i class="bi bi-file-earmark-ppt display-4 text-muted"></i><h5 class="mt-3">Sin proyectos disponibles</h5></div></div>';
 
@@ -157,7 +141,7 @@ function renderDocuments() {
 
         <section class="${state.section === 'evaluations' ? '' : 'd-none'}">
             <h3 class="mb-1">Entregas de evaluación</h3>
-            <p class="text-muted mb-4">Hoja de liberación y presentación, organizadas por semestre.</p>
+            <p class="text-muted mb-4">Lo que cada proyecto necesita para presentar: hoja de liberación y presentación; desde 6° también el enlace de Drive y el documento de reporte. Sólo presentan los alumnos liberados.</p>
             ${projectSection}
         </section>
 
@@ -182,18 +166,145 @@ function setDocumentSection(section) {
     }, document.getElementById('documentsContainer'));
 }
 
+const STAGE_LABELS = { 5: 'Propuesta', 6: 'Avance', 7: 'Avance', 8: 'Titulación', 9: 'Residencia o tesis' };
+
+function evaluationSemester(item) {
+    return Number(item?.evaluation_semester ?? item?.project?.semestre);
+}
+
+function renderProjectCard(project) {
+    const readiness = project.readiness || {};
+    const requirements = readiness.requirements || {};
+    const badge = readiness.ready
+        ? '<span class="badge text-bg-success"><i class="bi bi-check2-circle"></i> Listo para evaluar</span>'
+        : '<span class="badge text-bg-warning"><i class="bi bi-hourglass-split"></i> Incompleto</span>';
+    const missing = readiness.ready || !(readiness.missing || []).length ? ''
+        : `<div class="readiness-missing text-muted mt-1">Falta: ${esc(readiness.missing.join(', '))}.</div>`;
+    const released = readiness.release_sheet_uploaded
+        ? `<span class="badge text-bg-light border"><i class="bi bi-person-check"></i> ${Number(readiness.released_count || 0)} de ${(readiness.students || []).length} liberados</span>` : '';
+    const slots = [renderEvaluationDelivery(project, 'release_sheet'), renderEvaluationDelivery(project, 'presentation')];
+    if (requirements.link) slots.push(renderLinkSlot(project));
+    if (requirements.report) slots.push(renderEvaluationDelivery(project, 'report'));
+
+    return `
+        <div class="card border-0 shadow-sm document-card mb-3">
+            <div class="card-body">
+                <div class="d-flex flex-column flex-lg-row justify-content-between gap-3">
+                    <div>
+                        <h5 class="mb-2">${esc(project.project.title)}</h5>
+                        <div class="project-meta">
+                            <span class="badge text-bg-light border"><i class="bi bi-people"></i> ${esc(memberNames(project.integrantes))}</span>
+                            <span class="badge text-bg-secondary">Se evalúa en ${evaluationSemester(project)}° · ${esc(STAGE_LABELS[evaluationSemester(project)] || '')}</span>
+                            ${released}
+                        </div>
+                    </div>
+                    <div class="text-lg-end">${badge}${missing}</div>
+                </div>
+                <hr>
+                <div class="row g-3">${slots.map(slot => `<div class="col-xl-6">${slot}</div>`).join('')}</div>
+            </div>
+        </div>`;
+}
+
+function renderLinkSlot(project) {
+    const link = project.readiness?.link || '';
+    return `
+        <div class="delivery-slot ${reviewState(project, 'link').state === 'aprobada' ? 'is-done' : ''}">
+            <div class="d-flex justify-content-between align-items-center gap-2 mb-3">
+                <h5 class="mb-0"><i class="bi bi-link-45deg"></i> 3. Enlace de Drive</h5>
+                ${reviewBadge(project, 'link')}
+            </div>
+            <p class="small text-muted">Carpeta de Google Drive con el video de la presentación y la presentación con el video agregado. Compártela para que la vean los evaluadores.</p>
+            ${link ? `<p class="small mb-2 text-break"><a href="${escAttr(link)}" target="_blank" rel="noopener noreferrer"><i class="bi bi-box-arrow-up-right"></i> ${esc(link)}</a></p>` : ''}
+            ${project.puede_subir ? `
+                <div class="input-group input-group-sm">
+                    <input class="form-control" type="url" id="link-${project.project.id}" placeholder="https://drive.google.com/..." value="${escAttr(link)}" maxlength="500">
+                    <button class="btn btn-primary" type="button" onclick="saveEvaluationLink(${project.project.id})"><i class="bi bi-save"></i> Guardar</button>
+                </div>` : ''}
+            ${renderReview(project, 'link')}
+        </div>`;
+}
+
+const REVIEW_BADGES = {
+    faltante: ['danger', 'Pendiente de entregar'],
+    pendiente: ['info', 'En revisión'],
+    con_observaciones: ['warning', 'Con observaciones'],
+    aprobada: ['success', 'Aprobada']
+};
+
+function reviewState(project, type) {
+    return project.readiness?.deliveries?.[type] || { state: 'faltante' };
+}
+
+function reviewBadge(project, type) {
+    const [tone, label] = REVIEW_BADGES[reviewState(project, type).state] || REVIEW_BADGES.faltante;
+    return `<span class="badge text-bg-${tone}">${label}</span>`;
+}
+
+// Comentario del encargado y, para quien revisa, los botones para aprobar o devolver con observaciones.
+function renderReview(project, type) {
+    const review = reviewState(project, type);
+    const comment = review.comment ? `
+        <div class="alert ${review.state === 'con_observaciones' ? 'alert-warning' : 'alert-light border'} py-2 px-3 small mb-2">
+            <strong>${review.state === 'con_observaciones' ? 'Observaciones' : 'Comentario'}${review.reviewed_by ? ` de ${esc(review.reviewed_by)}` : ''}:</strong> ${esc(review.comment)}
+        </div>` : '';
+    const actions = project.puede_revisar && review.state !== 'faltante' ? `
+        <div class="d-flex flex-wrap gap-2">
+            <button class="btn btn-sm btn-success" type="button" onclick="reviewDelivery(${project.project.id}, '${type}', 'aprobada')" ${review.state === 'aprobada' ? 'disabled' : ''}><i class="bi bi-check2"></i> Aprobar</button>
+            <button class="btn btn-sm btn-outline-warning" type="button" onclick="reviewDelivery(${project.project.id}, '${type}', 'con_observaciones')"><i class="bi bi-chat-left-text"></i> Con observaciones</button>
+        </div>` : '';
+    return comment || actions ? `<div class="mt-2">${comment}${actions}</div>` : '';
+}
+
+async function reviewDelivery(projectId, type, status) {
+    let comment = null;
+    if (status === 'con_observaciones') {
+        const result = await Swal.fire({
+            title: 'Observaciones para el equipo',
+            input: 'textarea',
+            inputPlaceholder: 'Qué deben corregir antes de presentar',
+            inputAttributes: { maxlength: 1000 },
+            showCancelButton: true,
+            confirmButtonText: 'Enviar observaciones',
+            cancelButtonText: 'Cancelar',
+            inputValidator: value => (value || '').trim().length < 5 ? 'Escribe qué deben corregir.' : undefined
+        });
+        if (!result.isConfirmed) return;
+        comment = result.value.trim();
+    }
+    try {
+        const response = await api.put('/repositorio/evaluation-documents/review', { project_id: projectId, delivery: type, status, comment });
+        showAlert('#alertContainer', 'success', response.message || 'Revisión guardada.');
+        await loadDocuments(true);
+    } catch (error) {
+        showAlert('#alertContainer', 'danger', error.message || 'No se pudo guardar la revisión.');
+    }
+}
+
+function deliveryFor(project, type) {
+    return type === 'release_sheet' ? project?.release_sheet : (type === 'presentation' ? project?.presentation : project?.report);
+}
+
 function renderEvaluationDelivery(project, type) {
-    const delivery = type === 'release_sheet' ? project.release_sheet : project.presentation;
-    const title = type === 'release_sheet' ? '1. Hoja de liberación' : '2. Presentación';
-    const icon = type === 'release_sheet' ? 'bi-file-earmark-check' : 'bi-file-earmark-slides';
+    const delivery = deliveryFor(project, type) || { allowed_extensions: [] };
+    const reportStage = project.readiness?.requirements?.report;
+    const title = { release_sheet: '1. Hoja de liberación', presentation: '2. Presentación', report: `4. Documento de reporte (${reportStage === 'final' ? 'final' : 'avance'})` }[type];
+    const icon = { release_sheet: 'bi-file-earmark-check', presentation: 'bi-file-earmark-slides', report: 'bi-file-earmark-text' }[type];
+    const hint = {
+        release_sheet: 'Formatos: PDF, DOC o DOCX.',
+        presentation: `Sólo PPTX, hasta ${Number(delivery.max_mb || state.presentationMaxMb || 100)} MB y sin video; el video va en el enlace de Drive.`,
+        report: `Formatos: PDF, DOC o DOCX, hasta ${Number(delivery.max_mb || 25)} MB.`
+    }[type];
     const accepted = (delivery.allowed_extensions || []).map(ext => `.${ext}`).join(',');
-    const status = delivery.uploaded
+    const reviewed = type !== 'release_sheet';
+    const status = reviewed ? reviewBadge(project, type) : (delivery.uploaded
         ? '<span class="badge text-bg-success">Archivo cargado</span>'
-        : '<span class="badge text-bg-danger">Archivo pendiente</span>';
+        : '<span class="badge text-bg-danger">Archivo pendiente</span>');
+    const done = reviewed ? reviewState(project, type).state === 'aprobada' : delivery.uploaded;
     const document = delivery.document;
 
     return `
-        <div class="delivery-slot">
+        <div class="delivery-slot ${done ? 'is-done' : ''}">
             <div class="d-flex justify-content-between align-items-center gap-2 mb-3">
                 <h5 class="mb-0"><i class="bi ${icon}"></i> ${title}</h5>
                 ${status}
@@ -209,12 +320,12 @@ function renderEvaluationDelivery(project, type) {
             ${project.puede_subir ? `
                 <div class="mb-3">
                     <input class="form-control form-control-sm" type="file" id="${type}-file-${project.project.id}" accept="${accepted}">
-                    <div class="form-text">Formatos: ${(delivery.allowed_extensions || []).join(', ').toUpperCase()}.</div>
+                    <div class="form-text">${esc(hint)}</div>
                     <button class="btn btn-sm btn-primary mt-2" onclick="uploadEvaluationDelivery(${project.project.id}, '${type}')">
                         <i class="bi bi-upload"></i> ${delivery.uploaded ? 'Reemplazar archivo' : 'Subir archivo'}
                     </button>
                 </div>` : ''}
-            ${type === 'release_sheet' ? renderReleaseReview(project, delivery) : ''}
+            ${type === 'release_sheet' ? renderReleaseReview(project, delivery) : renderReview(project, type)}
         </div>
     `;
 }
@@ -227,6 +338,7 @@ function renderReleaseReview(project, delivery) {
     return `
         <div class="mt-3">
             <h6>Alumnos liberados</h6>
+            ${project.puede_revisar ? '' : '<p class="small text-muted mb-1">La liberación la deciden la jefatura, la asistencia o la coordinación de proyectos.</p>'}
             ${(delivery.students || []).map(student => `
                 <label class="release-student">
                     <span>${esc(fullName(student))}</span>
@@ -252,12 +364,13 @@ function documentId(delivery) {
 function renderThesisUploadBox() {
     return `
         <div class="document-row mb-3 bg-light">
-            <h6><i class="bi bi-cloud-arrow-up"></i> Subir avance de 9no</h6>
+            <h6><i class="bi bi-cloud-arrow-up"></i> Subir avance de tesis de 9no</h6>
+            <p class="small text-muted mb-2">¿Haces residencia? Sube tus documentos en <a href="/pages/academic-workflows.php?tab=residencies">Seguimiento académico → Residencias</a>.</p>
             <div class="row g-2">
                 <div class="col-md-3">
+                    <!-- La API rechaza tipo=residencias (409); las residencias usan el expediente individual. -->
                     <select class="form-select form-select-sm" id="thesisTipo">
                         <option value="tesis">Tesis general</option>
-                        <option value="residencias">Residencias</option>
                     </select>
                 </div>
                 <div class="col-md-3">
@@ -291,7 +404,7 @@ function renderThesisDocument(document) {
         ? '<span class="badge text-bg-info">Residencias</span>'
         : '<span class="badge text-bg-primary">Tesis</span>';
     const submittedBy = document.uploader ? fullName(document.uploader) : 'Sin carga';
-    const canPublish = Number(auth.getCurrentUser()?.perfil_id) === 1;
+    const canPublish = CAN_PUBLISH_REPOSITORY;
 
     return `
         <div class="document-row mb-3">
@@ -322,8 +435,9 @@ async function uploadEvaluationDelivery(projectId, type) {
     const input = document.getElementById(`${type}-file-${projectId}`);
     const file = input?.files?.[0];
     const project = state.projects.find(item => Number(item.project.id) === Number(projectId));
-    const delivery = type === 'release_sheet' ? project?.release_sheet : project?.presentation;
+    const delivery = deliveryFor(project, type);
     const allowed = delivery?.allowed_extensions || [];
+    const maxMb = Number(delivery?.max_mb || window.SGPI_SETTINGS?.max_file_size_mb || 50);
 
     if (!file) {
         showAlert('#alertContainer', 'warning', 'Selecciona un archivo antes de guardar.');
@@ -336,27 +450,42 @@ async function uploadEvaluationDelivery(projectId, type) {
         return;
     }
 
-    if (!validarTamañoArchivo(file.size)) {
-        showAlert('#alertContainer', 'danger', `Archivo muy grande. Máximo ${Number(window.SGPI_SETTINGS?.max_file_size_mb || 50)}MB.`);
+    if (file.size > maxMb * 1024 * 1024) {
+        showAlert('#alertContainer', 'danger', `El archivo pesa ${(file.size / 1048576).toFixed(1)} MB; el máximo es ${maxMb} MB.`);
         return;
     }
 
     const formData = new FormData();
     formData.append('project_id', projectId);
     formData.append('document_type', type);
-    formData.append('nombre', type === 'release_sheet' ? 'Hoja de liberación' : 'Presentación');
-    formData.append('descripcion', `Entrega de evaluación: ${type === 'release_sheet' ? 'hoja de liberación' : 'presentación'}.`);
+    const names = { release_sheet: 'Hoja de liberación', presentation: 'Presentación', report: 'Documento de reporte' };
+    formData.append('nombre', names[type]);
+    formData.append('descripcion', `Entrega de evaluación: ${names[type].toLowerCase()}.`);
     formData.append('autores', memberNames(project?.integrantes || []));
     formData.append('archivo', file);
 
     try {
-        const result = await api.post('/repositorio/evaluation-documents', formData, { _timeout: 120000 });
-        const projectEntry = state.projects.find(item => String(item.project.id) === String(projectId));
-        if (projectEntry) projectEntry[type === 'release_sheet' ? 'release_sheet' : 'presentation'] = result.document;
+        // Una presentación de hasta 100 MB puede tardar en subir.
+        await api.post('/repositorio/evaluation-documents', formData, { _timeout: 600000 });
         showAlert('#alertContainer', 'success', 'Entrega guardada correctamente.');
-        renderDocuments();
+        await loadDocuments(true);
     } catch (error) {
         showAlert('#alertContainer', 'danger', error.message || 'Error al guardar el documento.');
+    }
+}
+
+async function saveEvaluationLink(projectId) {
+    const url = document.getElementById(`link-${projectId}`)?.value.trim() || '';
+    if (!/^https:\/\/(drive|docs)\.google\.com\//i.test(url)) {
+        showAlert('#alertContainer', 'warning', 'Pega un enlace de Google Drive que empiece con https://drive.google.com o https://docs.google.com.');
+        return;
+    }
+    try {
+        await api.post('/repositorio/evaluation-documents/link', { project_id: projectId, url });
+        showAlert('#alertContainer', 'success', 'Enlace guardado.');
+        await loadDocuments(true);
+    } catch (error) {
+        showAlert('#alertContainer', 'danger', error.message || 'No se pudo guardar el enlace.');
     }
 }
 
@@ -367,11 +496,9 @@ async function saveReleaseReview(documentId) {
     }));
 
     try {
-        const result = await api.put(`/repositorio/evaluation-documents/${documentId}/release-status`, { students });
-        const projectEntry = state.projects.find(item => String(item.release_sheet?.document?.id) === String(documentId));
-        if (projectEntry) projectEntry.release_sheet = result.document;
-        showAlert('#alertContainer', 'success', 'Liberacion actualizada.');
-        renderDocuments();
+        await api.put(`/repositorio/evaluation-documents/${documentId}/release-status`, { students });
+        showAlert('#alertContainer', 'success', 'Liberación actualizada.');
+        await loadDocuments(true);
     } catch (error) {
         showAlert('#alertContainer', 'danger', error.message || 'No se pudo guardar la liberacion.');
     }
@@ -450,7 +577,7 @@ async function toggleRepositoryPublication(documentId, makePublic) {
         const thesisIndex = state.thesisDocs.findIndex(document => String(document.id) === String(documentId));
         if (thesisIndex >= 0) state.thesisDocs[thesisIndex] = result.document;
         state.projects.forEach(project => {
-            ['release_sheet', 'presentation'].forEach(type => {
+            ['release_sheet', 'presentation', 'report'].forEach(type => {
                 if (String(project[type]?.document?.id) === String(documentId)) {
                     project[type].document = { ...project[type].document, ...result.document };
                 }

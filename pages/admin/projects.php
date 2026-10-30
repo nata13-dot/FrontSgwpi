@@ -16,7 +16,7 @@ if (!is_authenticated()) {
     <?php require_once $_SERVER['DOCUMENT_ROOT'] . '/includes/visual-preferences.php'; ?>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
-    <link rel="stylesheet" href="/assets/css/app.css">
+    <link rel="stylesheet" href="<?= asset('/assets/css/app.css') ?>">
 </head>
 <body>
     <?php require_once $_SERVER['DOCUMENT_ROOT'] . '/includes/navbar.php'; ?>
@@ -53,7 +53,7 @@ if (!is_authenticated()) {
                     <button type="button" class="btn btn-outline-secondary" id="caseViewBtn" onclick="setProjectManagementView('case')">
                         <i class="bi bi-lightbulb"></i> Caso integrador
                     </button>
-                    <button type="button" class="btn btn-outline-secondary" id="thesisViewBtn" onclick="setProjectManagementView('thesis')">
+                    <button type="button" class="btn btn-outline-secondary" id="thesisViewBtn" <?= is_project_coordinator() ? 'hidden title="Las tesis las administra la jefatura"' : '' ?> onclick="setProjectManagementView('thesis')">
                         <i class="bi bi-mortarboard"></i> Tesis
                     </button>
                 </div>
@@ -61,7 +61,7 @@ if (!is_authenticated()) {
                 <div class="row g-3 mb-3">
                     <div class="col-md-4">
                         <label for="semesterFilter" class="form-label">Filtrar por semestre</label>
-                        <select id="semesterFilter" class="form-select" onchange="loadProjects(1)">
+                        <select data-semester-scope="career" id="semesterFilter" class="form-select" onchange="loadProjects(1)">
                             <option value="">Todos los semestres</option>
                         </select>
                     </div>
@@ -209,7 +209,7 @@ if (!is_authenticated()) {
                             </div>
                             <div class="col-md-4">
                                 <label class="form-label" for="projectSemester">Semestre</label>
-                                <select class="form-select" id="projectSemester" required onchange="loadProjectModalGroups()">
+                                <select data-semester-scope="period" class="form-select" id="projectSemester" required onchange="loadProjectModalGroups()">
                                     <option value="">Seleccionar...</option>
                                     <option value="5">5 - Propuesta</option>
                                     <option value="6">6 - Avance</option>
@@ -275,11 +275,10 @@ if (!is_authenticated()) {
 
     <?php require_once $_SERVER['DOCUMENT_ROOT'] . '/includes/footer.php'; ?>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
     <script>const API_BASE_URL = '<?= API_BASE_URL ?>';</script>
-    <script src="/assets/js/auth.js"></script>
-    <script src="/assets/js/api.js"></script>
-    <script src="/assets/js/app.js"></script>
+    <script src="<?= asset('/assets/js/auth.js') ?>"></script>
+    <script src="<?= asset('/assets/js/api.js') ?>"></script>
+    <script src="<?= asset('/assets/js/app.js') ?>"></script>
     <script>
         let isAdmin = false;
         let isTeacher = false;
@@ -361,8 +360,13 @@ if (!is_authenticated()) {
 
         function setProjectManagementView(view) {
             if (projectManagementView === view) return;
+            // El estado cambia antes de pedir datos: la transición es asíncrona y loadProjects debe usar la vista nueva.
+            projectManagementView = view;
+            document.getElementById('projectsTable').innerHTML = '<tr><td colspan="7" class="text-center text-muted py-4">Cargando...</td></tr>';
+            loadProjects(1);
+            // La animación aplica el cambio de forma asíncrona: se dibuja con el estado vigente, no con el de este clic.
             SGPIViewTransition.run(() => {
-                projectManagementView = view;
+                const view = projectManagementView;
                 document.getElementById('projectManagementView').classList.toggle('d-none', view === 'thesis');
                 document.getElementById('thesisManagementView').classList.toggle('d-none', view !== 'thesis');
                 ['integrator', 'dual', 'case'].forEach(item => {
@@ -383,7 +387,6 @@ if (!is_authenticated()) {
                     : 'Proyecto, estudiante, asesor, empresa o año';
                 renderSemesterFilter();
             });
-            loadProjects(1);
         }
 
         function renderSemesterFilter() {
@@ -488,10 +491,11 @@ if (!is_authenticated()) {
                     ? Boolean(project.is_thesis) || project.tipo === 'tesis'
                     : !project.is_thesis && project.tipo !== 'tesis' && project.modalidad === currentProjectModality().value
                 );
+                // Se filtra sobre la categoría ya elegida para no mezclar tesis, dual, casos e integradores.
                 if (isTeacher) {
-                    proyectosFiltrados = response.data.filter(p => p.advisors && p.advisors.some(a => a.id === currentUserId));
+                    proyectosFiltrados = proyectosFiltrados.filter(p => p.advisors && p.advisors.some(a => a.id === currentUserId));
                 } else if (isStudent) {
-                    proyectosFiltrados = response.data.filter(p => p.students && p.students.some(s => s.id === currentUserId));
+                    proyectosFiltrados = proyectosFiltrados.filter(p => p.students && p.students.some(s => s.id === currentUserId));
                 }
 
                 if (proyectosFiltrados.length === 0) {
@@ -666,8 +670,8 @@ if (!is_authenticated()) {
 
         async function loadProjectModalStudents(currentProjectId = null) {
             const [usersResponse, projectsResponse] = await Promise.all([
-                api.get('/users', { perfil_id: 3, status: 'active', compact: 1, per_page: 500, _cache_ttl: 60000 }),
-                api.get('/projects', { compact: 1, per_page: 500, _cache_ttl: 30000 })
+                api.getAll('/users', { perfil_id: 3, status: 'active', compact: 1, per_page: 500, _cache_ttl: 60000 }),
+                api.getAll('/projects', { compact: 1, per_page: 500, _cache_ttl: 30000 })
             ]);
             projectStudents = usersResponse.data || [];
             assignedStudentProject = {};
@@ -824,7 +828,7 @@ if (!is_authenticated()) {
             try {
                 const [project, subjectsResponse] = await Promise.all([
                     api.get(`/projects/${projectId}`),
-                    api.get('/asignaturas', { per_page: 100, _cache_ttl: 60000 })
+                    api.getAll('/asignaturas', { per_page: 100, _cache_ttl: 60000 })
                 ]);
                 projectSubjectsCatalog = subjectsResponse.data || [];
                 const selected = (project.asignaturas || []).map(item => Number(item.id));

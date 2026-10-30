@@ -63,6 +63,24 @@ class ApiClient {
     }
 
     /**
+     * GET de un catálogo completo: recorre todas las páginas de una respuesta
+     * paginada para que los selectores no queden truncados por per_page.
+     */
+    async getAll(endpoint, params = {}, { maxPages = 50 } = {}) {
+        const first = await this.get(endpoint, { ...params, page: 1 });
+        if (!first || !Array.isArray(first.data)) return first;
+
+        const lastPage = Math.min(Number(first.last_page || 1), maxPages);
+        if (lastPage <= 1) return first;
+
+        const rest = await Promise.all(
+            Array.from({ length: lastPage - 1 }, (_, index) => this.get(endpoint, { ...params, page: index + 2 }))
+        );
+        const data = first.data.concat(...rest.map(response => response?.data || []));
+        return { ...first, data, current_page: 1, last_page: 1, total: data.length };
+    }
+
+    /**
      * Precarga la siguiente página de una respuesta paginada.
      */
     prefetchNextPage(endpoint, params = {}, pagination = {}) {
@@ -200,6 +218,13 @@ class ApiClient {
             }
 
             const result = await response.json().catch(() => ({}));
+
+            // Contraseña temporal (la matrícula): la API sólo permite cambiarla.
+            if (response.status === 428 && result.requires_password_change) {
+                if (!window.location.pathname.startsWith('/pages/change-password.php')) {
+                    window.location.href = '/pages/change-password.php';
+                }
+            }
 
             if (!response.ok) {
                 const validationMessage = result.errors ? Object.values(result.errors).flat().join(' ') : '';

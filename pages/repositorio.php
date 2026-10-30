@@ -8,7 +8,7 @@
     <?php require_once $_SERVER['DOCUMENT_ROOT'] . '/includes/visual-preferences.php'; ?>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
-    <link rel="stylesheet" href="/assets/css/app.css">
+    <link rel="stylesheet" href="<?= asset('/assets/css/app.css') ?>">
 </head>
 <body class="repository-shell">
     <?php require_once $_SERVER['DOCUMENT_ROOT'] . '/includes/navbar.php'; ?>
@@ -166,7 +166,6 @@
     <?php require_once $_SERVER['DOCUMENT_ROOT'] . '/includes/footer.php'; ?>
     
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
     <script>
         const API_BASE_URL = '<?= API_BASE_URL ?>';
         const CAN_MANAGE_REPOSITORY = <?= (is_authenticated() && is_admin()) ? 'true' : 'false' ?>;
@@ -291,7 +290,7 @@
 
         async function loadRepositoryAdminData(selectedTagIds = []) {
             if (!document.getElementById('repositoryUploadModal')) return;
-            const tagsResponse = await api.get('/document-tags', { per_page: 100 });
+            const tagsResponse = await api.getAll('/document-tags', { per_page: 100 });
 
             const tagsBox = document.getElementById('repoTags');
             const tags = tagsResponse.data || [];
@@ -356,7 +355,7 @@
         async function loadStudentRepositoryProjects() {
             const select = document.getElementById('repoProjectId');
             if (!select) return;
-            const response = await api.get('/my-projects', { compact: 1, per_page: 100, _fresh: 1 });
+            const response = await api.getAll('/my-projects', { compact: 1, per_page: 100, _fresh: 1 });
             const projects = response.data || [];
             select.innerHTML = projects.length
                 ? '<option value="">Selecciona un proyecto</option>' + projects.map(project => `<option value="${Number(project.id)}">${escapeHtml(project.title || `Proyecto ${project.id}`)}</option>`).join('')
@@ -481,8 +480,8 @@
             loadDocumentos(1);
         });
     </script>
-    <script src="/assets/js/auth.js"></script>
-    <script src="/assets/js/api.js"></script>
-    <script src="/assets/js/app.js"></script>
+    <script src="<?= asset('/assets/js/auth.js') ?>"></script>
+    <script src="<?= asset('/assets/js/api.js') ?>"></script>
+    <script src="<?= asset('/assets/js/app.js') ?>"></script>
 </body>
 </html>

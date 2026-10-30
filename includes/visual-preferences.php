@@ -1,6 +1,6 @@
-<link rel="icon" type="image/webp" href="/assets/img/ITSSMT/ITSSMT.webp">
-<link rel="shortcut icon" type="image/webp" href="/assets/img/ITSSMT/ITSSMT.webp">
-<link rel="apple-touch-icon" href="/assets/img/ITSSMT/ITSSMT.webp">
+<link rel="icon" type="image/webp" href="/assets/img/ITSSMT/ITSSMT-192.webp">
+<link rel="shortcut icon" type="image/webp" href="/assets/img/ITSSMT/ITSSMT-192.webp">
+<link rel="apple-touch-icon" href="/assets/img/ITSSMT/ITSSMT-192.webp">
 <style>
 :root {
     --career-primary: <?= htmlspecialchars(active_career()['color_primario'] ?? '#1B396A') ?> !important;

@@ -21,7 +21,7 @@ if (!$userId) {
     <?php require_once $_SERVER['DOCUMENT_ROOT'] . '/includes/visual-preferences.php'; ?>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
-    <link rel="stylesheet" href="/assets/css/app.css">
+    <link rel="stylesheet" href="<?= asset('/assets/css/app.css') ?>">
 </head>
 <body>
     <?php require_once $_SERVER['DOCUMENT_ROOT'] . '/includes/navbar.php'; ?>
@@ -38,19 +38,11 @@ if (!$userId) {
                         <div id="alertBox"></div>
 
                         <form id="userForm" class="needs-validation" novalidate>
-                            <div class="row">
-                                <div class="col-12 mb-3">
-                                    <label for="direccion" class="form-label">Dirección</label>
-                                    <input type="text" class="form-control" id="direccion" name="direccion" minlength="10" pattern="(?=.*\d)[A-Za-zÁÉÍÓÚbÜñáéíóúüñ0-9\s#.,\-\/]+" placeholder="Calle, número, colonia, municipio">
-                                    <div class="form-text">Debe incluir calle y número. Ej. Av. Reforma 123, Col. Centro.</div>
-                                    <div class="invalid-feedback">Ingresa un domicilio válido con al menos un número.</div>
-                                </div>
-                            </div>
 
                             <div class="row">
                                 <div class="col-md-6 mb-3 student-group-field d-none">
                                     <label for="semestre" class="form-label">Semestre</label>
-                                    <select class="form-select" id="semestre" name="semestre">
+                                    <select data-semester-scope="period" class="form-select" id="semestre" name="semestre">
                                         <option value="">Seleccionar...</option>
                                         <option value="5">5</option>
                                         <option value="6">6</option>
@@ -83,12 +75,11 @@ if (!$userId) {
                                 <div class="col-md-4 mb-3">
                                     <label for="perfil_id" class="form-label">Perfil</label>
                                     <select class="form-select" id="perfil_id" name="perfil_id" required>
-                                        <option value="1">Administrador</option>
+                                        <?php if (is_general_admin()): ?><option value="5">Jefe de carrera</option><?php endif; ?>
+                                        <?php if (is_general_admin()): ?><option value="6">Asistente de jefatura</option><?php endif; ?>
+                                        <option value="7">Coordinador de proyectos integradores</option>
                                         <option value="2">Docente</option>
                                         <option value="3">Estudiante</option>
-                                        <option value="5">Jefe de Carrera</option>
-                                        <option value="6">Asistente de Jefe de Carrera</option>
-                                        <option value="7">Coordinador de Proyectos</option>
                                     </select>
                                 </div>
                                 <div class="col-md-4 mb-3">
@@ -144,10 +135,9 @@ if (!$userId) {
     <?php require_once $_SERVER['DOCUMENT_ROOT'] . '/includes/footer.php'; ?>
     
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
     <script>const API_BASE_URL = '<?= API_BASE_URL ?>';</script>
-    <script src="/assets/js/auth.js"></script>
-    <script src="/assets/js/api.js"></script>
+    <script src="<?= asset('/assets/js/auth.js') ?>"></script>
+    <script src="<?= asset('/assets/js/api.js') ?>"></script>
 
     <script>
         const form = document.getElementById('userForm');
@@ -170,7 +160,6 @@ if (!$userId) {
                 document.getElementById('apa').value = user.apa || '';
                 document.getElementById('ama').value = user.ama || '';
                 document.getElementById('telefonos').value = user.telefonos || '';
-                document.getElementById('direccion').value = user.direccion || '';
                 document.getElementById('semestre').value = user.semestre || '';
                 await loadGroupsForSemester(user.grupo || '');
                 toggleStudentFields();
@@ -207,8 +196,7 @@ if (!$userId) {
                 grupo: document.getElementById('grupo').value || null,
                 nombres: document.getElementById('nombres').value,
                 apa: document.getElementById('apa').value,
-                ama: document.getElementById('ama').value
-                ,direccion: document.getElementById('direccion').value.trim() || null,
+                ama: document.getElementById('ama').value,
                 telefonos: document.getElementById('telefonos').value.trim()
             };
 

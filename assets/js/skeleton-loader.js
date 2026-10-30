@@ -107,6 +107,10 @@
         root.querySelectorAll('p, div').forEach(element => {
             if (element.children.length > 1 || element.hasAttribute(processedAttribute)) return;
             const text = element.textContent.trim().replace(/\s+/g, ' ');
+            // Si el texto viene de su único hijo, se reemplaza el hijo: así no se borran
+            // contenedores con id que la página llena después (p. ej. #evaluationScheduleList).
+            const child = element.firstElementChild;
+            if (child && child.textContent.trim().replace(/\s+/g, ' ') === text) return;
             if (/^cargando(?:\.\.\.|…)?$/i.test(text) || /^cargando\s+[\p{L}\s]+(?:\.\.\.|…)?$/iu.test(text)) {
                 replaceLoadingElement(element);
             }

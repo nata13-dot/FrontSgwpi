@@ -14,14 +14,23 @@
             })
         });
 
+        const result = await response.json().catch(() => ({}));
         if (!response.ok) {
-            throw new Error('No se pudo guardar el nuevo contexto de carrera.');
+            throw new Error(result.error || 'No se pudo guardar el nuevo contexto de carrera.');
         }
+        return result;
     }
 
     async function switchCareer(button) {
         const careerId = Number(button.dataset.careerId || 0);
         const currentId = Number(window.SGPI_SESSION?.user?.active_career?.id || 0);
+        // El administrador general entra al tablero de la carrera; su inicio es el panel institucional.
+        const careerHome = window.SGPI_SESSION?.user?.is_general_admin ? '/pages/admin/dashboard.php' : null;
+        const target = button.dataset.redirect || careerHome;
+        if (careerId && careerId === currentId && target) {
+            window.location.href = target;
+            return;
+        }
         if (!careerId || careerId === currentId || button.disabled) return;
 
         button.disabled = true;
@@ -44,13 +53,14 @@
                 throw new Error(data.error || 'No fue posible cambiar de carrera.');
             }
 
-            await persistSession(data);
+            const session = await persistSession(data);
             try {
                 sessionStorage.clear();
             } catch (error) {
                 // La recarga completa evita reutilizar el estado anterior.
             }
-            window.location.replace('/pages/admin/dashboard.php');
+            // El tablero depende del perfil que tenga la persona en la nueva carrera.
+            window.location.replace(target || session.dashboard_url || '/index.php');
         } catch (error) {
             button.disabled = false;
             button.classList.remove('is-switching');
@@ -65,6 +75,14 @@
             }
         }
     }
+
+    // Usado por el panel institucional: entra a una carrera y abre la página indicada.
+    window.SGPICareerSwitch = (careerId, redirect = null) => {
+        const button = document.createElement('button');
+        button.dataset.careerId = String(careerId);
+        if (redirect) button.dataset.redirect = redirect;
+        return switchCareer(button);
+    };
 
     function initialize() {
         document.querySelectorAll('.career-switch-option[data-career-id]').forEach(button => {

@@ -10,9 +10,20 @@
     RewriteRule ^(.*)$ index.php?path=$1 [QSA,L]
 </IfModule>
 
-# Seguridad
-<FilesMatch "\.(env|json|php|sql)$">
-    Deny from all
+# Seguridad: las páginas .php deben poder servirse; sólo se bloquean
+# archivos internos (mismas reglas que router.php para el servidor integrado).
+<IfModule mod_alias.c>
+    RedirectMatch 404 (^|/)\.
+    RedirectMatch 404 ^/(includes|tests|docs|vendor)(/|$)
+    RedirectMatch 404 ^/(test-api|router)\.php$
+</IfModule>
+<FilesMatch "\.(env|json|lock|sql|md|log|key|crt|p12)$">
+    <IfModule mod_authz_core.c>
+        Require all denied
+    </IfModule>
+    <IfModule !mod_authz_core.c>
+        Deny from all
+    </IfModule>
 </FilesMatch>
 
 # Caché
@@ -22,6 +33,7 @@
     ExpiresByType image/jpeg "access plus 1 year"
     ExpiresByType image/gif "access plus 1 year"
     ExpiresByType image/png "access plus 1 year"
+    ExpiresByType image/webp "access plus 1 year"
     ExpiresByType text/css "access plus 1 month"
     ExpiresByType text/javascript "access plus 1 month"
     ExpiresByType application/javascript "access plus 1 month"
