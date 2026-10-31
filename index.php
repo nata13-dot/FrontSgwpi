@@ -555,6 +555,7 @@ $serverDashboardUrl = dashboard_url();
                     </form>
 
                     <div class="text-center mt-3">
+                        <a href="/pages/register.php" id="selfRegistrationLink" class="d-none btn btn-outline-primary w-100 mb-2"><i class="bi bi-person-plus"></i> ¿Eres alumno y no tienes cuenta? Crear cuenta</a>
                         <small class="text-muted">Acceso exclusivo para usuarios registrados del sistema.</small>
                     </div>
                 </div>
@@ -662,6 +663,11 @@ $serverDashboardUrl = dashboard_url();
     <script src="<?= asset('/assets/js/app.js') ?>"></script>
     <script src="<?= asset('/assets/js/responsive.js') ?>"></script>
     <script>
+        // "Crear cuenta" sólo aparece mientras alguna carrera tenga abierto el autoregistro.
+        api.get('/self-registration', { _fresh: true, _silent: true })
+            .then(data => document.getElementById('selfRegistrationLink').classList.toggle('d-none', !data.open))
+            .catch(() => {});
+
         const loginForm = document.getElementById('loginForm');
         const loginSubmitBtn = document.getElementById('loginSubmitBtn');
         const loginMessageContainer = document.getElementById('loginMessageContainer');

@@ -90,10 +90,7 @@ if (!is_authenticated() || !is_admin()) {
                                     <textarea class="form-control" id="global_notice" rows="3" maxlength="1000" placeholder="Mensaje visible para usuarios en la parte superior del sistema"></textarea>
                                 </div>
                                 <div class="col-12">
-                                    <div class="form-check form-switch">
-                                        <input class="form-check-input" type="checkbox" role="switch" id="proposal_registration_enabled">
-                                        <label class="form-check-label" for="proposal_registration_enabled">Activar registro de propuestas</label>
-                                    </div>
+                                    <div class="form-text"><i class="bi bi-info-circle"></i> El registro de propuestas y el autoregistro de alumnos se abren por carrera, con fecha de cierre, en Propuestas → Ventanas y validadores.</div>
                                 </div>
                                 <div class="col-12">
                                     <div class="form-check form-switch mb-1">
@@ -110,6 +107,17 @@ if (!is_authenticated() || !is_admin()) {
                     </form>
                 </div>
 
+                <?php if (is_general_admin()): ?>
+                <div class="col-12">
+                    <div class="card border-0 shadow-sm">
+                        <div class="card-header bg-light">
+                            <h5 class="mb-0"><i class="bi bi-envelope-check"></i> Autoregistro: formato del correo por carrera</h5>
+                            <small class="text-muted">El correo es el prefijo seguido del número de control completo. Ej. 22240022 → l22240022@smartin.tecnm.mx.</small>
+                        </div>
+                        <div class="card-body"><div id="ruleEditors" class="row g-3"><div class="text-muted">Cargando reglas...</div></div></div>
+                    </div>
+                </div>
+                <?php endif; ?>
             </div>
         </div>
     </main>
@@ -135,7 +143,6 @@ async function loadSettings() {
         ['session_timeout_minutes', 'default_theme', 'font_scale', 'max_file_size_mb', 'max_project_members', 'global_notice'].forEach(id => {
             document.getElementById(id).value = settings[id] ?? '';
         });
-        document.getElementById('proposal_registration_enabled').checked = Boolean(settings.proposal_registration_enabled);
         document.getElementById('grayscale_mode').checked = Boolean(settings.grayscale_mode);
         previewGrayscaleMode();
         document.querySelectorAll('.allowed-file-type').forEach(input => {
@@ -157,7 +164,6 @@ document.getElementById('settingsForm').addEventListener('submit', async event =
         allowed_file_types: allowed,
         max_project_members: Number(document.getElementById('max_project_members').value),
         global_notice: document.getElementById('global_notice').value.trim(),
-        proposal_registration_enabled: document.getElementById('proposal_registration_enabled').checked,
         grayscale_mode: document.getElementById('grayscale_mode').checked
     };
 
@@ -177,7 +183,58 @@ document.getElementById('settingsForm').addEventListener('submit', async event =
     }
 });
 
-document.addEventListener('DOMContentLoaded', loadSettings);
+function ruleSample(rule) {
+    const digits = Number(rule.digits) || 8;
+    return `${rule.email_prefix}${String(rule.number_prefix || '').padEnd(digits - 2, '0').slice(0, digits - 2)}22@${rule.domain}`;
+}
+
+async function loadRules() {
+    const container = document.getElementById('ruleEditors');
+    if (!container) return;
+    try {
+        const rules = await api.get('/admin/self-registration-rules', { _fresh: true });
+        container.innerHTML = rules.map(({ career, rule, open_until }) => `
+            <div class="col-lg-6"><form class="border rounded-3 p-3 h-100" data-career="${career.id}" onsubmit="saveRule(event)">
+                <div class="d-flex flex-wrap justify-content-between gap-2 mb-2"><strong>${esc(career.nombre)}</strong>${open_until && new Date(open_until) > new Date() ? `<span class="badge bg-success">Abierto hasta ${new Date(open_until).toLocaleString('es-MX')}</span>` : ''}</div>
+                <div class="row g-2">
+                    <div class="col-sm-6"><label class="form-label small">Prefijo del correo</label><input class="form-control" name="email_prefix" value="${esc(rule.email_prefix)}" oninput="updateRuleSample(this.form)"></div>
+                    <div class="col-sm-6"><label class="form-label small">El número inicia con</label><input class="form-control" name="number_prefix" inputmode="numeric" value="${esc(rule.number_prefix)}" placeholder="Vacío para no exigirlo" oninput="updateRuleSample(this.form)"></div>
+                    <div class="col-sm-6"><label class="form-label small">Dígitos del número de control</label><input class="form-control" name="digits" type="number" min="4" max="12" value="${esc(rule.digits)}" oninput="updateRuleSample(this.form)"></div>
+                    <div class="col-sm-6"><label class="form-label small">Dominio</label><input class="form-control" name="domain" value="${esc(rule.domain)}" oninput="updateRuleSample(this.form)"></div>
+                    <div class="col-12"><div class="form-check form-switch"><input class="form-check-input" type="checkbox" role="switch" name="allow_b" id="allowB${career.id}" ${rule.allow_b ? 'checked' : ''}><label class="form-check-label" for="allowB${career.id}">Permitir números de control que inician con b</label></div></div>
+                </div>
+                <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mt-2"><small class="text-muted" data-sample>Ejemplo: ${esc(ruleSample(rule))}</small><button class="btn btn-sm btn-primary"><i class="bi bi-save"></i> Guardar</button></div>
+            </form></div>`).join('');
+    } catch (error) {
+        container.innerHTML = `<div class="alert alert-danger">${esc(error.message)}</div>`;
+    }
+}
+
+function ruleFromForm(form) {
+    return {
+        email_prefix: form.email_prefix.value.trim(),
+        number_prefix: form.number_prefix.value.trim(),
+        digits: Number(form.digits.value),
+        domain: form.domain.value.trim(),
+        allow_b: form.allow_b.checked
+    };
+}
+
+function updateRuleSample(form) {
+    form.querySelector('[data-sample]').textContent = `Ejemplo: ${ruleSample(ruleFromForm(form))}`;
+}
+
+async function saveRule(event) {
+    event.preventDefault();
+    try {
+        await api.put(`/admin/self-registration-rules/${event.target.dataset.career}`, ruleFromForm(event.target));
+        swalToast('success', 'Regla guardada');
+    } catch (error) {
+        Swal.fire('Error', error.message, 'error');
+    }
+}
+
+document.addEventListener('DOMContentLoaded', () => { loadSettings(); loadRules(); });
 </script>
 </body>
 </html>
