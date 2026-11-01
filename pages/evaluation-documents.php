@@ -549,14 +549,11 @@ async function downloadRepositoryDocument(documentId, name) {
             headers: { Authorization: `Bearer ${auth.getToken()}` },
             credentials: 'include'
         });
-        if (!response.ok) throw new Error('No se pudo descargar el documento.');
-        const blob = await response.blob();
-        const url = URL.createObjectURL(blob);
-        const link = document.createElement('a');
-        link.href = url;
-        link.download = name || 'documento';
-        link.click();
-        URL.revokeObjectURL(url);
+        if (!response.ok) {
+            const payload = await response.json().catch(() => ({}));
+            throw new Error(payload.error || payload.message || 'No se pudo descargar el documento.');
+        }
+        saveBlob(await response.blob(), downloadFilename(response, name || 'documento'));
     } catch (error) {
         showAlert('#alertContainer', 'danger', error.message || 'Error descargando documento.');
     }

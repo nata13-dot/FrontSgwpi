@@ -147,7 +147,7 @@ async function scanOperations() {
     try {
         renderOperations(await api.post('/admin/operational-alerts/scan', {}, {_timeout: 300000}));
     } catch (error) {
-        alert(error.message);
+        swalToast('error', error.message, 7000) || alert(error.message);
     } finally {
         button.disabled = false;
         button.innerHTML = '<i class="bi bi-arrow-clockwise"></i> Analizar ahora';
@@ -192,7 +192,7 @@ async function storeContinuityMeasurement() {
         await api.post('/admin/continuity-history', {}, {_timeout: 300000});
         await loadContinuityHistory();
     } catch (error) {
-        alert(error.message);
+        swalToast('error', error.message, 7000) || alert(error.message);
     } finally {
         button.disabled = false;
         button.innerHTML = original;
@@ -206,7 +206,7 @@ async function loadContinuityPolicy() {
         document.getElementById('policyBackupAge').value = policy.max_backup_age_hours;
         document.getElementById('policyRetention').value = policy.backup_retention_days;
     } catch (error) {
-        alert(error.message);
+        swalToast('error', error.message, 7000) || alert(error.message);
     }
 }
 async function saveContinuityPolicy(event) {
@@ -228,7 +228,7 @@ async function saveContinuityPolicy(event) {
         renderOperations(await api.post('/admin/operational-alerts/scan', {}, {_timeout: 300000}));
         await loadContinuityHistory();
     } catch (error) {
-        alert(error.message);
+        swalToast('error', error.message, 7000) || alert(error.message);
     } finally {
         button.disabled = false;
     }
@@ -240,7 +240,7 @@ async function acknowledgeAlert(id, button) {
         await loadOperations();
     } catch (error) {
         button.disabled = false;
-        alert(error.message);
+        swalToast('error', error.message, 7000) || alert(error.message);
     }
 }
 async function downloadContinuityReport() {
@@ -257,15 +257,9 @@ async function downloadContinuityReport() {
             const result = await response.json().catch(() => ({}));
             throw new Error(result.message || 'No se pudo generar el reporte de continuidad.');
         }
-        const link = document.createElement('a');
-        link.href = URL.createObjectURL(await response.blob());
-        link.download = `continuidad_operativa_${new Date().toISOString().slice(0, 10)}.pdf`;
-        document.body.appendChild(link);
-        link.click();
-        link.remove();
-        URL.revokeObjectURL(link.href);
+        saveBlob(await response.blob(), downloadFilename(response, `continuidad_operativa_${new Date().toISOString().slice(0, 10)}.pdf`));
     } catch (error) {
-        alert(error.message);
+        swalToast('error', error.message, 7000) || alert(error.message);
     } finally {
         button.disabled = false;
         button.innerHTML = original;

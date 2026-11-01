@@ -1184,14 +1184,7 @@ if (!is_authenticated() || !can_view_users()) {
                     }
                     return response.blob();
                 })
-                .then(blob => {
-                    const url = URL.createObjectURL(blob);
-                    const link = document.createElement('a');
-                    link.href = url;
-                    link.download = kind === 'personal' ? 'plantilla_personal.xls' : 'plantilla_alumnos.xls';
-                    link.click();
-                    URL.revokeObjectURL(url);
-                })
+                .then(blob => saveBlob(blob, kind === 'personal' ? 'plantilla_personal.xls' : 'plantilla_alumnos.xls'))
                 .catch(error => showError(error.message || 'No se pudo generar la plantilla Excel'));
         }
 

@@ -110,31 +110,40 @@ async function loadBackupHealth() {
         container.innerHTML = `<div class="alert alert-danger mb-0">${backupEscape(error.message)}</div>`;
     }
 }
+function backupDate(value) {
+    return value ? new Date(String(value).replace(' ', 'T')).toLocaleString('es-MX', {dateStyle: 'medium', timeStyle: 'short'}) : '—';
+}
+function backupNotice(type, title, text) {
+    if (window.Swal) return stableSwalFire({icon: type, title, text});
+    alert(`${title}\n${text || ''}`);
+}
+let backupRows = [];
 async function loadBackups() {
     const body = document.getElementById('backupHistory');
     try {
         const response = await api.get('/admin/database-backups', {_fresh: true});
-        body.innerHTML = (response.data || []).map(backup => {
+        backupRows = response.data || [];
+        body.innerHTML = backupRows.map(backup => {
             const actor = [backup.actor_nombres, backup.actor_apellido].filter(Boolean).join(' ') || backup.creado_por || 'Sistema';
             const completed = backup.estado === 'completado';
             const checksum = backup.checksum_sha256 || '';
             const verification = backup.estado_verificacion === 'correcto'
-                ? `<span class="badge text-bg-success" title="${Number(backup.tablas_encontradas)} tablas esenciales y ${Number(backup.filas_verificadas)} filas comprobadas">Restaurable</span>`
+                ? `<span class="badge text-bg-success">Restaurable</span><div class="small text-muted mt-1">${Number(backup.tablas_encontradas)} tablas · ${Number(backup.filas_verificadas).toLocaleString('es-MX')} filas<br>${backupEscape(backupDate(backup.verificado_en))}</div>`
                 : (backup.estado_verificacion === 'fallido'
-                    ? `<span class="badge text-bg-danger" title="${backupEscape(backup.error_verificacion || '')}">Falló prueba</span>`
+                    ? `<button class="btn btn-link btn-sm p-0 text-danger text-decoration-none" type="button" onclick="showBackupError(${Number(backup.id)}, 'verification')"><span class="badge text-bg-danger">Falló prueba</span> <i class="bi bi-info-circle"></i></button>`
                     : '<span class="badge text-bg-secondary">Sin verificar</span>');
             return `<tr>
-                <td>${backupEscape(new Date(backup.creado_en).toLocaleString('es-MX'))}</td>
-                <td><span class="badge text-bg-light">${backupEscape(backup.origen)}</span></td>
+                <td class="text-nowrap">${backupEscape(backupDate(backup.creado_en))}</td>
+                <td><span class="badge text-bg-light text-capitalize">${backupEscape(backup.origen)}</span></td>
                 <td>${backupEscape(actor)}</td>
-                <td>${formatBackupSize(backup.tamano_bytes)}</td>
+                <td class="text-nowrap">${formatBackupSize(backup.tamano_bytes)}</td>
                 <td><code title="${backupEscape(checksum)}">${backupEscape(checksum ? `${checksum.slice(0, 12)}…` : '—')}</code></td>
                 <td>${verification}</td>
                 <td><span class="badge text-bg-${completed ? 'success' : 'danger'}">${completed ? 'Completado' : 'Fallido'}</span></td>
                 <td class="text-end"><div class="d-flex justify-content-end gap-2">${completed
-                    ? `<button class="btn btn-sm btn-outline-success" type="button" onclick="verifyBackup(${Number(backup.id)}, this)"><i class="bi bi-shield-check"></i> Verificar</button>
-                       <button class="btn btn-sm btn-outline-primary" type="button" onclick="downloadBackup(${Number(backup.id)}, '${backupEscape(backup.nombre_archivo)}')"><i class="bi bi-download"></i> Descargar</button>`
-                    : `<span class="small text-danger" title="${backupEscape(backup.mensaje_error || '')}">Ver error</span>`}
+                    ? `<button class="btn btn-sm btn-outline-success text-nowrap" type="button" onclick="verifyBackup(${Number(backup.id)}, this)"><i class="bi bi-shield-check"></i> Verificar</button>
+                       <button class="btn btn-sm btn-outline-primary text-nowrap" type="button" onclick="downloadBackup(${Number(backup.id)}, this)"><i class="bi bi-download"></i> Descargar</button>`
+                    : `<button class="btn btn-sm btn-outline-danger text-nowrap" type="button" onclick="showBackupError(${Number(backup.id)}, 'backup')"><i class="bi bi-exclamation-octagon"></i> Ver error</button>`}
                 </div></td>
             </tr>`;
         }).join('') || '<tr><td colspan="8" class="text-center text-muted py-4">Aún no existen respaldos.</td></tr>';
@@ -142,18 +151,27 @@ async function loadBackups() {
         body.innerHTML = `<tr><td colspan="8" class="text-center text-danger py-4">${backupEscape(error.message)}</td></tr>`;
     }
 }
+function refreshBackupPage() {
+    return Promise.all([loadBackups(), loadBackupHealth()]);
+}
+function showBackupError(id, kind) {
+    const backup = backupRows.find(row => Number(row.id) === Number(id)) || {};
+    const message = kind === 'verification' ? backup.error_verificacion : backup.mensaje_error;
+    backupNotice('error', kind === 'verification' ? 'La prueba de restauración falló' : 'El respaldo no se generó', message || 'No se registró el detalle del error.');
+}
 async function createBackup() {
     const button = document.getElementById('createBackupButton');
     button.disabled = true;
     button.innerHTML = '<span class="spinner-border spinner-border-sm"></span> Generando...';
     try {
-        await api.post('/admin/database-backups', {}, {_timeout: 300000});
-        await loadBackups();
+        const response = await api.post('/admin/database-backups', {}, {_timeout: 300000});
+        swalToast('success', `Respaldo generado (${formatBackupSize(response.backup?.tamano_bytes)}). Verifícalo para comprobar que se puede restaurar.`, 6000);
     } catch (error) {
-        alert(error.message);
+        backupNotice('error', 'No se pudo generar el respaldo', error.message);
     } finally {
         button.disabled = false;
         button.innerHTML = '<i class="bi bi-database-add"></i> Crear respaldo ahora';
+        refreshBackupPage();
     }
 }
 async function verifyBackup(id, button) {
@@ -161,51 +179,50 @@ async function verifyBackup(id, button) {
     const original = button.innerHTML;
     button.innerHTML = '<span class="spinner-border spinner-border-sm"></span> Probando...';
     try {
-        await api.post(`/admin/database-backups/${id}/verify`, {}, {_timeout: 300000});
-        await loadBackups();
+        const response = await api.post(`/admin/database-backups/${id}/verify`, {}, {_timeout: 300000});
+        const result = response.verification || {};
+        swalToast('success', `Restaurable: ${Number(result.tablas_encontradas)} tablas esenciales y ${Number(result.filas_verificadas).toLocaleString('es-MX')} filas comprobadas.`, 6000);
     } catch (error) {
-        alert(error.message);
+        backupNotice('error', 'La prueba de restauración falló', error.message);
+    } finally {
         button.disabled = false;
         button.innerHTML = original;
+        refreshBackupPage();
     }
 }
 async function cleanupBackups(days) {
     const phrase = `DEPURAR RESPALDOS ANTERIORES A ${days} DIAS`;
-    const confirmation = prompt(`Esta acción elimina únicamente archivos elegibles y conserva las copias protegidas. Escribe:\n${phrase}`);
+    const confirmation = await promptText({
+        title: 'Aplicar retención',
+        inputPlaceholder: phrase,
+        confirmButtonText: 'Depurar',
+        inputValidator: value => value === phrase ? null : `Escribe exactamente: ${phrase}`
+    });
     if (confirmation === null) return;
     try {
-        await api.post('/admin/database-backups-cleanup', {retention_days: days, confirmation});
-        await Promise.all([loadBackups(), loadBackupHealth()]);
+        const response = await api.post('/admin/database-backups-cleanup', {retention_days: days, confirmation});
+        swalToast('success', `Retención aplicada: ${Number(response.result?.deleted || 0)} copias eliminadas, ${formatBackupSize(response.result?.released_bytes)} liberados.`, 6000);
+        await refreshBackupPage();
     } catch (error) {
-        alert(error.message);
+        backupNotice('error', 'No se aplicó la retención', error.message);
     }
 }
-async function downloadBackup(id, filename) {
+async function downloadBackup(id, button) {
+    const original = button.innerHTML;
+    button.disabled = true;
+    button.innerHTML = '<span class="spinner-border spinner-border-sm"></span> Descargando...';
     try {
-        const response = await fetch(`${API_BASE_URL}/admin/database-backups/${id}/download`, {
-            headers: {Authorization: `Bearer ${auth.getToken()}`, Accept: 'application/gzip'},
-            credentials: 'include'
-        });
-        if (!response.ok) {
-            const result = await response.json().catch(() => ({}));
-            throw new Error(result.message || 'No se pudo descargar el respaldo.');
-        }
-        const link = document.createElement('a');
-        link.href = URL.createObjectURL(await response.blob());
-        link.download = filename || `respaldo_${id}.sql.gz`;
-        document.body.appendChild(link);
-        link.click();
-        link.remove();
-        URL.revokeObjectURL(link.href);
+        const backup = backupRows.find(row => Number(row.id) === Number(id)) || {};
+        await downloadApiFile(`/admin/database-backups/${id}/download`, backup.nombre_archivo || `respaldo_${id}.sql.gz`, 'No se pudo descargar el respaldo.');
     } catch (error) {
-        alert(error.message);
+        backupNotice('error', 'No se pudo descargar', error.message);
+    } finally {
+        button.disabled = false;
+        button.innerHTML = original;
     }
 }
 document.getElementById('createBackupButton').addEventListener('click', createBackup);
-document.addEventListener('DOMContentLoaded', () => {
-    loadBackups();
-    loadBackupHealth();
-});
+document.addEventListener('DOMContentLoaded', refreshBackupPage);
 </script>
 </body>
 </html>

@@ -1661,14 +1661,11 @@ $canManageRooms = can_manage_projects();
                     headers: { Authorization: `Bearer ${auth.getToken()}` },
                     credentials: 'include'
                 });
-                if (!response.ok) throw new Error(fallbackMessage);
-                const blob = await response.blob();
-                const url = URL.createObjectURL(blob);
-                const link = document.createElement('a');
-                link.href = url;
-                link.download = filename;
-                link.click();
-                URL.revokeObjectURL(url);
+                if (!response.ok) {
+                    const payload = await response.json().catch(() => ({}));
+                    throw new Error(payload.error || payload.message || fallbackMessage);
+                }
+                saveBlob(await response.blob(), filename);
             } catch (error) {
                 showAlert('#alertContainer', 'danger', error.message || fallbackMessage);
             }

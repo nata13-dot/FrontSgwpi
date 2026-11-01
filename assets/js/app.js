@@ -204,13 +204,7 @@ async function descargarEntregable(deliverable_id, nombre = null, project_id = n
             return;
         }
 
-        const blob = await response.blob();
-        const url = window.URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = nombre || `entregable_${deliverable_id}.pdf`;
-        a.click();
-        window.URL.revokeObjectURL(url);
+        saveBlob(await response.blob(), downloadFilename(response, nombre || `entregable_${deliverable_id}.pdf`));
         
         showAlert('#alertContainer', 'success', 'Archivo descargado exitosamente.');
     } catch (error) {

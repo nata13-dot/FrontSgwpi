@@ -23,9 +23,7 @@ try {
         if (method === 'DOWNLOAD') {
             const response = await fetch(API_BASE_URL + url, { headers: { Authorization: `Bearer ${auth.getToken()}` } });
             if (!response.ok) throw new Error('No fue posible descargar el documento.');
-            const href = URL.createObjectURL(await response.blob());
-            const link = document.createElement('a'); link.href = href; link.download = body.name; link.click();
-            setTimeout(() => URL.revokeObjectURL(href), 1000); return;
+            saveBlob(await response.blob(), downloadFilename(response, body.name)); return;
         }
         return api.request(method, url, body, { _cache_ttl: 0 });
     }, response.user, new URLSearchParams(location.search).get('tab') || 'periods');

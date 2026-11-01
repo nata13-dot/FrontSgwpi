@@ -146,12 +146,7 @@ function downloadTemplate(type) {
     const content = type === 'subjects'
         ? 'clave,nombre,descripcion\nCLAVE-01,Nombre de la asignatura,Descripción opcional\n'
         : 'nombre,semestre,grupo,periodo,asignaturas\nGrupo 5A,5,A,2026-2,CLAVE-01|CLAVE-02\n';
-    const blob = new Blob(['\uFEFF' + content], {type: 'text/csv;charset=utf-8'});
-    const link = document.createElement('a');
-    link.href = URL.createObjectURL(blob);
-    link.download = type === 'subjects' ? 'plantilla_asignaturas.csv' : 'plantilla_grupos.csv';
-    link.click();
-    URL.revokeObjectURL(link.href);
+    saveBlob(new Blob(['\uFEFF' + content], {type: 'text/csv;charset=utf-8'}), type === 'subjects' ? 'plantilla_asignaturas.csv' : 'plantilla_grupos.csv');
 }
 
 async function downloadCareerPackage() {
@@ -160,12 +155,7 @@ async function downloadCareerPackage() {
             headers: {Authorization: `Bearer ${window.SGPI_SESSION?.token || ''}`, Accept: 'application/zip'}
         });
         if (!response.ok) throw new Error('No se pudo generar el paquete de la carrera.');
-        const blob = await response.blob();
-        const link = document.createElement('a');
-        link.href = URL.createObjectURL(blob);
-        link.download = `sgpi_${window.SGPI_SESSION?.user?.active_career?.clave || 'carrera'}_${new Date().toISOString().slice(0, 10)}.zip`;
-        link.click();
-        URL.revokeObjectURL(link.href);
+        saveBlob(await response.blob(), downloadFilename(response, `sgpi_${window.SGPI_SESSION?.user?.active_career?.clave || 'carrera'}_${new Date().toISOString().slice(0, 10)}.zip`));
     } catch (error) {
         document.getElementById('setupAlert').innerHTML = `<div class="alert alert-danger">${setupEscape(error.message)}</div>`;
     }

@@ -650,3 +650,47 @@ class ApiClient {
 
 // Instancia global
 const api = new ApiClient();
+
+/**
+ * Guarda un Blob como archivo. El enlace temporal se libera unos segundos después del clic:
+ * si se libera de inmediato, Firefox y Safari cancelan la descarga.
+ */
+function saveBlob(blob, filename) {
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = filename || 'descarga';
+    link.style.display = 'none';
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+    setTimeout(() => URL.revokeObjectURL(url), 10000);
+}
+
+/** Nombre real del archivo según la API (Content-Disposition), o el sugerido si no viene. */
+function downloadFilename(response, fallback) {
+    const header = response.headers.get('Content-Disposition') || '';
+    const encoded = header.match(/filename\*=UTF-8''([^;]+)/i);
+    if (encoded) return decodeURIComponent(encoded[1].replace(/["']/g, ''));
+    const plain = header.match(/filename="?([^";]+)"?/i);
+    return plain ? plain[1] : fallback;
+}
+
+/**
+ * Descarga un archivo protegido de la API con la sesión actual. Si la API responde con error,
+ * lanza el mensaje que envía el servidor en lugar de uno genérico.
+ */
+async function downloadApiFile(endpoint, fallbackName, fallbackMessage = 'No se pudo descargar el archivo.') {
+    // Se acepta JSON primero para que, si hay error, Laravel responda con el mensaje y no con una página HTML.
+    const response = await fetch(`${API_BASE_URL}${endpoint}`, {
+        headers: { Authorization: `Bearer ${auth.getToken()}`, Accept: 'application/json, */*' },
+        credentials: 'include'
+    });
+    if (!response.ok) {
+        const payload = await response.json().catch(() => ({}));
+        throw new Error(payload.error || payload.message || fallbackMessage);
+    }
+    const filename = downloadFilename(response, fallbackName);
+    saveBlob(await response.blob(), filename);
+    return filename;
+}

@@ -254,12 +254,7 @@ async function downloadInstitutionalSummary() {
             headers: {Authorization: `Bearer ${window.SGPI_SESSION?.token || ''}`, Accept: 'text/csv'}
         });
         if (!response.ok) throw new Error('No se pudo generar el resumen institucional.');
-        const blob = await response.blob();
-        const link = document.createElement('a');
-        link.href = URL.createObjectURL(blob);
-        link.download = `resumen_carreras_${new Date().toISOString().slice(0, 10)}.csv`;
-        link.click();
-        URL.revokeObjectURL(link.href);
+        saveBlob(await response.blob(), downloadFilename(response, `resumen_carreras_${new Date().toISOString().slice(0, 10)}.csv`));
     } catch (error) {
         careerMessage('danger', error.message);
     }

@@ -112,7 +112,7 @@ if (!is_authenticated() || !is_admin()) {
                     <div class="card border-0 shadow-sm">
                         <div class="card-header bg-light">
                             <h5 class="mb-0"><i class="bi bi-envelope-check"></i> Autoregistro: formato del correo por carrera</h5>
-                            <small class="text-muted">El correo es el prefijo seguido del número de control completo. Ej. 22240022 → l22240022@smartin.tecnm.mx.</small>
+                            <small class="text-muted">El correo siempre es «l» seguida del número de control completo: 22240022 → l22240022@smartin.tecnm.mx; b22240022 → lb22240022@smartin.tecnm.mx.</small>
                         </div>
                         <div class="card-body"><div id="ruleEditors" class="row g-3"><div class="text-muted">Cargando reglas...</div></div></div>
                     </div>
@@ -183,9 +183,11 @@ document.getElementById('settingsForm').addEventListener('submit', async event =
     }
 });
 
+// La «l» del correo es fija y todas las carreras aceptan números con b al inicio (correo «lb…»).
 function ruleSample(rule) {
     const digits = Number(rule.digits) || 8;
-    return `${rule.email_prefix}${String(rule.number_prefix || '').padEnd(digits - 2, '0').slice(0, digits - 2)}22@${rule.domain}`;
+    const number = `${String(rule.number_prefix || '').padEnd(digits - 2, '0').slice(0, digits - 2)}22`;
+    return `l${number}@${rule.domain} · lb${number}@${rule.domain}`;
 }
 
 async function loadRules() {
@@ -197,11 +199,9 @@ async function loadRules() {
             <div class="col-lg-6"><form class="border rounded-3 p-3 h-100" data-career="${career.id}" onsubmit="saveRule(event)">
                 <div class="d-flex flex-wrap justify-content-between gap-2 mb-2"><strong>${esc(career.nombre)}</strong>${open_until && new Date(open_until) > new Date() ? `<span class="badge bg-success">Abierto hasta ${new Date(open_until).toLocaleString('es-MX')}</span>` : ''}</div>
                 <div class="row g-2">
-                    <div class="col-sm-6"><label class="form-label small">Prefijo del correo</label><input class="form-control" name="email_prefix" value="${esc(rule.email_prefix)}" oninput="updateRuleSample(this.form)"></div>
                     <div class="col-sm-6"><label class="form-label small">El número inicia con</label><input class="form-control" name="number_prefix" inputmode="numeric" value="${esc(rule.number_prefix)}" placeholder="Vacío para no exigirlo" oninput="updateRuleSample(this.form)"></div>
                     <div class="col-sm-6"><label class="form-label small">Dígitos del número de control</label><input class="form-control" name="digits" type="number" min="4" max="12" value="${esc(rule.digits)}" oninput="updateRuleSample(this.form)"></div>
                     <div class="col-sm-6"><label class="form-label small">Dominio</label><input class="form-control" name="domain" value="${esc(rule.domain)}" oninput="updateRuleSample(this.form)"></div>
-                    <div class="col-12"><div class="form-check form-switch"><input class="form-check-input" type="checkbox" role="switch" name="allow_b" id="allowB${career.id}" ${rule.allow_b ? 'checked' : ''}><label class="form-check-label" for="allowB${career.id}">Permitir números de control que inician con b</label></div></div>
                 </div>
                 <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mt-2"><small class="text-muted" data-sample>Ejemplo: ${esc(ruleSample(rule))}</small><button class="btn btn-sm btn-primary"><i class="bi bi-save"></i> Guardar</button></div>
             </form></div>`).join('');
@@ -212,11 +212,9 @@ async function loadRules() {
 
 function ruleFromForm(form) {
     return {
-        email_prefix: form.email_prefix.value.trim(),
         number_prefix: form.number_prefix.value.trim(),
         digits: Number(form.digits.value),
         domain: form.domain.value.trim(),
-        allow_b: form.allow_b.checked
     };
 }
 

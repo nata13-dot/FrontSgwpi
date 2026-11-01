@@ -906,14 +906,7 @@ if (!is_authenticated()) {
                     }
                     return response.blob();
                 })
-                .then(blob => {
-                    const url = URL.createObjectURL(blob);
-                    const link = document.createElement('a');
-                    link.href = url;
-                    link.download = 'plantilla_proyectos.xls';
-                    link.click();
-                    URL.revokeObjectURL(url);
-                })
+                .then(blob => saveBlob(blob, 'plantilla_proyectos.xls'))
                 .catch(error => showAlert('#alertContainer', 'danger', error.message || 'No se pudo generar la plantilla Excel'));
         }
 

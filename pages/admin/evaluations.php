@@ -1905,14 +1905,7 @@ $is_archived_view = basename($_SERVER['PHP_SELF']) === 'evaluations-archived.php
                 showAlert('#alertContainer', 'danger', message || fallbackMessage);
                 return;
             }
-            const content = await response.blob();
-            const blob = new Blob([content], { type: 'application/pdf' });
-            const url = URL.createObjectURL(blob);
-            const link = document.createElement('a');
-            link.href = url;
-            link.download = filename;
-            link.click();
-            URL.revokeObjectURL(url);
+            saveBlob(new Blob([await response.blob()], { type: 'application/pdf' }), filename);
         }
 
         async function loadRubricCriteria(useLocal = false) {

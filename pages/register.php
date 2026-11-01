@@ -103,7 +103,7 @@ function renderGroups() {
 
 function checkEmail() {
     const expected = expectedEmail();
-    $('emailHint').textContent = expected || career()?.rule.example || '';
+    $('emailHint').textContent = expected || [career()?.rule.example, career()?.rule.example_b].filter(Boolean).join(' o ');
     const mismatch = Boolean(normalizedEmail() && expected && normalizedEmail() !== expected);
     $('email').classList.toggle('is-invalid', mismatch);
     $('emailFeedback').textContent = mismatch ? `Debe ser ${expected}` : '';
