@@ -694,3 +694,20 @@ async function downloadApiFile(endpoint, fallbackName, fallbackMessage = 'No se 
     saveBlob(await response.blob(), filename);
     return filename;
 }
+
+/** Informes que se generan en segundo plano: los pide, espera a que estén listos y los descarga. */
+async function downloadBackgroundReport(startEndpoint, fallbackName) {
+    const started = await api.get(startEndpoint, { _fresh: true, _timeout: 60000 });
+    const deadline = Date.now() + 6 * 60000;
+    while (Date.now() < deadline) {
+        await new Promise(resolve => setTimeout(resolve, 2500));
+        // Un corte momentáneo de red no cancela el informe: se sigue consultando hasta el límite.
+        const check = await api.get(`/evaluations/report-jobs/${started.job}`, { _fresh: true, _silent: true }).catch(error => {
+            if (error.status) throw error;
+            return null;
+        });
+        if (check?.status === 'failed') throw new Error('No se pudo generar el informe. Intenta de nuevo; si se repite, avisa a sistemas.');
+        if (check?.status === 'ready') return downloadApiFile(`/evaluations/report-jobs/${started.job}/download`, check.filename || fallbackName, 'No se pudo descargar el informe.');
+    }
+    throw new Error('El informe está tardando demasiado. Intenta de nuevo en unos minutos.');
+}

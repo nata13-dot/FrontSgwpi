@@ -46,9 +46,10 @@ $section = isset($_GET['section']) ? $_GET['section'] : '';
             <?= $academicWorkflowsLink ?>
         <?php endif; ?>
         <?php if (can_view_users()): ?>
-        <details class="sidebar-group" data-career-module="usuarios" <?= in_array($current_page, ['users.php', 'advisors.php']) ? 'open' : '' ?>>
+        <details class="sidebar-group" data-career-module="usuarios" <?= in_array($current_page, ['users.php', 'advisors.php', 'registration-requests.php']) ? 'open' : '' ?>>
             <summary><i class="bi bi-people"></i><span>Personas</span><i class="bi bi-chevron-down ms-auto"></i></summary>
             <a href="/pages/admin/users.php" class="sidebar-item sidebar-subitem <?= $current_page == 'users.php' ? 'active' : '' ?>"><i class="bi bi-people"></i><span>Usuarios</span></a>
+            <?php if (can_manage_academics()): ?><a href="/pages/admin/registration-requests.php" class="sidebar-item sidebar-subitem <?= $current_page == 'registration-requests.php' ? 'active' : '' ?>"><i class="bi bi-person-plus"></i><span>Solicitudes de cuenta</span></a><?php endif; ?>
             <a href="/pages/admin/advisors.php" class="sidebar-item sidebar-subitem <?= $current_page == 'advisors.php' ? 'active' : '' ?>"><i class="bi bi-person-check"></i><span>Asesores</span></a>
         </details>
         <?php else: ?>

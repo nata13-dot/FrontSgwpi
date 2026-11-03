@@ -1864,11 +1864,11 @@ $is_archived_view = basename($_SERVER['PHP_SELF']) === 'evaluations-archived.php
         }
 
         async function downloadRoomReport(id) {
-            await downloadPdf(`/evaluations/rooms/${id}/report.pdf`, `reporte_sala_${id}.pdf`, 'No se pudo generar el reporte PDF de la sala.');
+            await generateRoomReport(id, '', `reporte_sala_${id}.pdf`);
         }
 
         async function downloadRoomTeacherReport(id) {
-            await downloadPdf(`/evaluations/rooms/${id}/report.pdf?audience=teachers`, `reporte_sala_${id}_limitado.pdf`, 'No se pudo generar el reporte PDF para docentes.');
+            await generateRoomReport(id, '?audience=teachers', `reporte_sala_${id}_limitado.pdf`);
         }
 
         async function downloadEvaluationReport(id) {
@@ -1877,6 +1877,16 @@ $is_archived_view = basename($_SERVER['PHP_SELF']) === 'evaluations-archived.php
 
         async function downloadEvaluationTeacherReport(id) {
             await downloadPdf(`/evaluations/${id}/report.pdf?audience=teachers`, `reporte_evaluacion_${id}_limitado.pdf`, 'No se pudo generar el reporte PDF para docentes.');
+        }
+
+        // Una sala reúne muchos proyectos y docentes: su informe se genera en segundo plano.
+        async function generateRoomReport(id, query, filename) {
+            swalToast('info', 'Generando el informe de la sala. Se descargará al terminar.', 6000);
+            try {
+                await downloadBackgroundReport(`/evaluations/rooms/${id}/report-job${query}`, filename);
+            } catch (error) {
+                showAlert('#alertContainer', 'danger', error.message || 'No se pudo generar el informe de la sala.');
+            }
         }
 
         async function downloadPdf(endpoint, filename, fallbackMessage) {

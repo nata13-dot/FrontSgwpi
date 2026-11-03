@@ -44,7 +44,7 @@ if (is_authenticated()) { header('Location: ' . dashboard_url()); exit; }
                 <p class="text-muted"><i class="bi bi-envelope-check"></i> Enviamos un código de seis dígitos a <strong id="sentTo"></strong>. Vence en 15 minutos.</p>
                 <label class="form-label" for="code">Código de seis dígitos</label>
                 <input class="form-control form-control-lg text-center fw-bold" id="code" inputmode="numeric" maxlength="6" minlength="6" autocomplete="one-time-code" required style="letter-spacing: .5em">
-                <div class="d-grid mt-3"><button class="btn btn-primary btn-lg" id="verifyBtn">Activar cuenta</button></div>
+                <div class="d-grid mt-3"><button class="btn btn-primary btn-lg" id="verifyBtn">Confirmar correo</button></div>
                 <div class="d-flex justify-content-between mt-2">
                     <button type="button" class="btn btn-link btn-sm" id="backBtn">Corregir datos</button>
                     <button type="button" class="btn btn-link btn-sm" id="resendBtn"><i class="bi bi-arrow-clockwise"></i> Reenviar código</button>
@@ -52,8 +52,8 @@ if (is_authenticated()) { header('Location: ' . dashboard_url()); exit; }
             </form>
 
             <div id="doneBox" class="d-none">
-                <div class="alert alert-success"><i class="bi bi-check-circle"></i> Tu cuenta quedó activa. Inicia sesión con tu número de control <strong id="doneId"></strong> y tu contraseña.</div>
-                <div class="d-grid"><a class="btn btn-primary btn-lg" href="/index.php#login">Iniciar sesión</a></div>
+                <div class="alert alert-success"><i class="bi bi-check-circle"></i> Confirmamos tu correo. Tu solicitud quedó en revisión: te avisaremos por correo cuando la jefatura de tu carrera la responda. Después podrás iniciar sesión con tu número de control <strong id="doneId"></strong> y tu contraseña.</div>
+                <div class="d-grid"><a class="btn btn-outline-primary btn-lg" href="/index.php#login">Volver al inicio de sesión</a></div>
             </div>
 
             <p class="text-center mt-3 mb-0"><a href="/index.php#login">Ya tengo cuenta · Iniciar sesión</a></p>

@@ -34,7 +34,7 @@ if (!is_authenticated() || !is_general_admin()) {
                 <form class="row g-3" id="emailFilters">
                     <div class="col-md-6"><label class="form-label" for="filterSearch">Destinatario</label><input class="form-control" id="filterSearch" type="search" placeholder="Buscar por correo"></div>
                     <div class="col-md-3"><label class="form-label" for="filterStatus">Estado</label><select class="form-select" id="filterStatus"><option value="">Todos</option><option value="queued">En cola</option><option value="sending">Enviando</option><option value="sent">Enviado</option><option value="failed">Falló</option></select></div>
-                    <div class="col-md-3"><label class="form-label" for="filterCategory">Tipo</label><select class="form-select" id="filterCategory"><option value="">Todos</option><option value="credenciales">Credenciales</option><option value="codigo_registro">Código de registro</option><option value="recuperacion">Recuperación de contraseña</option><option value="general">General</option></select></div>
+                    <div class="col-md-3"><label class="form-label" for="filterCategory">Tipo</label><select class="form-select" id="filterCategory"><option value="">Todos</option><option value="credenciales">Credenciales</option><option value="codigo_registro">Código de registro</option><option value="recuperacion">Recuperación de contraseña</option><option value="resultado_registro">Resultado de solicitud</option><option value="general">General</option></select></div>
                 </form>
             </div></section>
 
@@ -65,7 +65,7 @@ if (!is_authenticated() || !is_general_admin()) {
 <script>
 const emailEscape = value => String(value ?? '').replace(/[&<>'"]/g, character => ({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'}[character]));
 const emailDate = value => value ? new Date(value).toLocaleString('es-MX', {dateStyle: 'medium', timeStyle: 'short'}) : '—';
-const EMAIL_CATEGORIES = {credenciales: 'Credenciales', codigo_registro: 'Código de registro', recuperacion: 'Recuperación de contraseña', general: 'General'};
+const EMAIL_CATEGORIES = {credenciales: 'Credenciales', codigo_registro: 'Código de registro', recuperacion: 'Recuperación de contraseña', resultado_registro: 'Resultado de solicitud', general: 'General'};
 const EMAIL_STATUS = {queued: ['En cola', 'secondary'], sending: ['Enviando', 'secondary'], sent: ['Enviado', 'success'], failed: ['Falló', 'danger']};
 const SENT_COPY = {removed: ['Borrada', 'success'], pending: ['Por borrar', 'warning'], failed: ['No se pudo borrar', 'danger']};
 let emailPage = 1;
