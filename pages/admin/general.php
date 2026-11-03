@@ -64,6 +64,7 @@ if (!is_general_admin()) {
                     <div class="col-md-6 col-xl-4"><a class="general-quick-link" href="/pages/admin/career-audit.php"><i class="bi bi-shield-lock"></i><span>Auditoría<small>Quién cambió qué, por carrera</small></span></a></div>
                     <div class="col-md-6 col-xl-4"><a class="general-quick-link" href="/pages/admin/career-integrity.php"><i class="bi bi-shield-check"></i><span>Integridad<small>Verificaciones entre carreras</small></span></a></div>
                     <div class="col-md-6 col-xl-4"><a class="general-quick-link" href="/pages/admin/database-backups.php"><i class="bi bi-database-check"></i><span>Respaldos<small>Copias y verificación</small></span></a></div>
+                    <div class="col-md-6 col-xl-4"><a class="general-quick-link" href="/pages/admin/sent-emails.php"><i class="bi bi-envelope-check"></i><span>Correos enviados<small>A quién se envió, sin contenido</small></span></a></div>
                 </div>
             </section>
         </div>

@@ -30,11 +30,12 @@ $section = isset($_GET['section']) ? $_GET['section'] : '';
             <a href="/pages/admin/general.php" class="sidebar-item <?= $current_page == 'general.php' ? 'active' : '' ?>"><i class="bi bi-buildings"></i><span>Panel institucional</span></a>
             <a href="/pages/admin/careers.php" class="sidebar-item <?= $current_page == 'careers.php' ? 'active' : '' ?>"><i class="bi bi-diagram-3"></i><span>Carreras y accesos</span></a>
             <a href="/pages/admin/operations.php" class="sidebar-item <?= $current_page == 'operations.php' ? 'active' : '' ?>"><i class="bi bi-activity"></i><span>Operaciones</span></a>
-            <details class="sidebar-group" <?= in_array($current_page, ['career-audit.php', 'career-integrity.php', 'database-backups.php']) ? 'open' : '' ?>>
+            <details class="sidebar-group" <?= in_array($current_page, ['career-audit.php', 'career-integrity.php', 'database-backups.php', 'sent-emails.php']) ? 'open' : '' ?>>
                 <summary><i class="bi bi-shield-check"></i><span>Seguridad y continuidad</span><i class="bi bi-chevron-down ms-auto"></i></summary>
                 <a href="/pages/admin/career-audit.php" class="sidebar-item sidebar-subitem <?= $current_page == 'career-audit.php' ? 'active' : '' ?>"><i class="bi bi-shield-lock"></i><span>Auditoría</span></a>
                 <a href="/pages/admin/career-integrity.php" class="sidebar-item sidebar-subitem <?= $current_page == 'career-integrity.php' ? 'active' : '' ?>"><i class="bi bi-shield-check"></i><span>Integridad</span></a>
                 <a href="/pages/admin/database-backups.php" class="sidebar-item sidebar-subitem <?= $current_page == 'database-backups.php' ? 'active' : '' ?>"><i class="bi bi-database-check"></i><span>Respaldos</span></a>
+                <a href="/pages/admin/sent-emails.php" class="sidebar-item sidebar-subitem <?= $current_page == 'sent-emails.php' ? 'active' : '' ?>"><i class="bi bi-envelope-check"></i><span>Correos enviados</span></a>
             </details>
             <div class="sidebar-section-title"><h6 class="text-uppercase">Carrera: <?= htmlspecialchars(active_career()['nombre_corto'] ?? 'sin seleccionar') ?></h6></div>
             <a href="/pages/admin/dashboard.php" class="sidebar-item <?= $current_page == 'dashboard.php' ? 'active' : '' ?>"><i class="bi bi-speedometer2"></i><span>Inicio de la carrera</span></a>
