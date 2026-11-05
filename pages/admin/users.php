@@ -546,7 +546,12 @@ if (!is_authenticated() || !can_view_users()) {
                     const profileNames = { 5: 'Jefe de carrera', 6: 'Asistente de jefatura', 7: 'Coordinador de proyectos integradores', 2: 'Docente', 3: 'Estudiante' };
                     const isActive = Boolean(user.activo);
                     // Jefatura y asistencia sólo las modifica el administrador general.
-                    const isAdminUser = [5, 6].includes(Number(user.perfil_id));
+                    const isGeneralAdminRow = Boolean(user.es_administrador_general);
+                    const isAdminUser = [5, 6].includes(Number(user.perfil_id)) || isGeneralAdminRow;
+                    const canSetGeneralAdmin = IS_GENERAL_ADMIN && String(user.id) !== String(auth.getCurrentUser()?.id) && Number(user.perfil_id) !== 3;
+                    const generalAdminButton = canSetGeneralAdmin
+                        ? `<button class="btn ${isGeneralAdminRow ? 'btn-success' : 'btn-outline-secondary'}" onclick="setGeneralAdmin('${escapeHtml(user.id)}', ${isGeneralAdminRow ? 'false' : 'true'})" title="${isGeneralAdminRow ? 'Administrador general. Clic para retirarlo' : 'Nombrar administrador general'}"><i class="bi bi-award"></i></button>`
+                        : '';
                     const statusBadge = isActive ? '<span class="badge bg-success">Activo</span>' : '<span class="badge bg-secondary">Inactivo</span>';
                     // El botón refleja el estado actual; el título indica la acción disponible.
                     const toggleClass = isActive ? 'btn-outline-success' : 'btn-outline-danger';
@@ -569,7 +574,7 @@ if (!is_authenticated() || !can_view_users()) {
                             <td><strong>${escapeHtml(user.id)}</strong></td>
                             <td>${escapeHtml(user.nombres)} ${escapeHtml(user.apa)} ${escapeHtml(user.ama)}</td>
                             <td>${escapeHtml(user.email)}</td>
-                            <td><span class="badge bg-secondary">${profileNames[user.perfil_id] || 'N/A'}</span></td>
+                            <td><span class="badge bg-secondary">${profileNames[user.perfil_id] || 'N/A'}</span>${isGeneralAdminRow ? ' <span class="badge bg-info text-dark"><i class="bi bi-award"></i> Admin. general</span>' : ''}</td>
                             <td>${Number(user.perfil_id) === 3 ? `<span class="badge bg-primary">${escapeHtml(user.semestre || '-')} ${escapeHtml(user.grupo || '')}</span>` : '<span class="text-muted small">-</span>'}</td>
                             <td>${Number(user.perfil_id) === 2 ? `<span class="badge bg-info text-dark">${Number(user.advising_projects_count || 0)} asesorías</span>` : (Number(user.perfil_id) === 3 ? (Number(user.student_projects_count || 0) > 0 ? '<span class="badge bg-success">Con proyecto</span>' : '<span class="badge bg-warning text-dark">Sin proyecto</span>') : '<span class="text-muted small">-</span>')}</td>
                             <td>${statusBadge}</td>
@@ -580,6 +585,7 @@ if (!is_authenticated() || !can_view_users()) {
                                     <button type="button" class="btn btn-outline-primary" onclick="openUserModal('${escapeHtml(user.id)}')" title="Editar"><i class="bi bi-pencil"></i></button>
                                     ${normalToggle}
                                     ${protectedButton}
+                                    ${generalAdminButton}
                                 </div>`)}
                             </td>
                         </tr>`;
@@ -1140,6 +1146,21 @@ if (!is_authenticated() || !can_view_users()) {
                 await loadUsers(currentPage);
             } catch (error) {
                 showError(error.message || 'Error al cambiar el estado del usuario');
+            }
+        }
+
+        async function setGeneralAdmin(userId, grant) {
+            const password = await promptPassword({
+                title: grant ? 'Nombrar administrador general' : 'Retirar administración general',
+                inputPlaceholder: 'Tu contraseña de administrador'
+            });
+            if (!password) return;
+            try {
+                const response = await api.put(`/users/${encodeURIComponent(userId)}/general-admin`, { grant, admin_password: password });
+                swalToast('success', response.message);
+                loadUsers();
+            } catch (error) {
+                Swal.fire('Error', error.message, 'error');
             }
         }
 
