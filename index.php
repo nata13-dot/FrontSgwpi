@@ -369,6 +369,9 @@ $serverDashboardUrl = dashboard_url();
                     <button type="button" class="btn btn-outline-light btn-lg" data-bs-toggle="modal" data-bs-target="#loginModal">
                         <i class="bi bi-box-arrow-in-right"></i> Iniciar sesión
                     </button>
+                    <a href="/pages/register.php" id="selfRegistrationHero" class="btn btn-outline-light btn-lg d-none">
+                        <i class="bi bi-person-plus" aria-hidden="true"></i> Crear cuenta de alumno
+                    </a>
                 </div>
             </div>
         </div>
@@ -561,90 +564,80 @@ $serverDashboardUrl = dashboard_url();
 
     <div class="modal fade" id="passwordRecoveryModal" tabindex="-1" aria-labelledby="passwordRecoveryModalLabel" aria-hidden="true">
         <div class="modal-dialog modal-dialog-centered">
-            <div class="modal-content login-modal">
+            <div class="modal-content login-modal recovery-modal">
                 <div class="modal-header">
-                    <h5 class="modal-title" id="passwordRecoveryModalLabel"><i class="bi bi-shield-lock"></i> Recuperar contraseña</h5>
+                    <h5 class="modal-title" id="passwordRecoveryModalLabel"><i class="bi bi-shield-lock" aria-hidden="true"></i> Recupera tu acceso</h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
                 </div>
                 <div class="modal-body">
-                    <p class="text-muted small">Ingresa tu No. de Control o No. de empleado y el correo registrado en tu perfil.</p>
-                    <div id="passwordRecoveryMessage" class="mb-3"></div>
-                    <form id="passwordRecoveryForm" class="needs-validation" novalidate>
+                    <ol class="recovery-steps" id="recoverySteps">
+                        <li class="current"><span>1</span><small>Tus datos</small></li>
+                        <li><span>2</span><small>Código</small></li>
+                        <li><span>3</span><small>Contraseña</small></li>
+                    </ol>
+                    <div id="recoveryMessage" aria-live="polite"></div>
+
+                    <form id="recoveryDataForm" class="needs-validation" novalidate>
+                        <p class="text-muted small">Confirma los datos de tu cuenta y te enviaremos un código a tu correo.</p>
                         <div class="mb-3">
                             <label class="form-label" for="recoveryUserId">Número de control o empleado</label>
-                            <input type="text" class="form-control" id="recoveryUserId" name="username" placeholder="Ejemplo: 20260001" required autocomplete="username" autocapitalize="none" spellcheck="false">
-                            <div class="invalid-feedback">Ingresa tu No. de Control o No. de empleado.</div>
+                            <input type="text" class="form-control" id="recoveryUserId" name="username" placeholder="Ejemplo: 22240022" maxlength="10" required autocomplete="username" autocapitalize="none" spellcheck="false">
+                            <div class="invalid-feedback">Escribe tu número de control o empleado.</div>
                         </div>
                         <div class="mb-3">
-                            <label class="form-label" for="recoveryEmail">Correo registrado</label>
-                            <input type="email" class="form-control" id="recoveryEmail" name="email" placeholder="correo@dominio.com" required autocomplete="email" autocapitalize="none" spellcheck="false">
-                            <div class="invalid-feedback">Ingresa un correo válido.</div>
+                            <label class="form-label" for="recoveryEmail">Correo de tu cuenta</label>
+                            <input type="email" class="form-control" id="recoveryEmail" name="email" placeholder="l22240022@smartin.tecnm.mx" required autocomplete="email" autocapitalize="none" spellcheck="false">
+                            <div class="invalid-feedback">Escribe un correo válido.</div>
                         </div>
                         <div class="d-grid">
-                            <button type="submit" class="btn btn-primary btn-lg" id="passwordRecoverySubmitBtn">
-                                <i class="bi bi-send"></i> Enviar token
-                            </button>
+                            <button type="submit" class="btn btn-primary btn-lg" id="recoverySendBtn"><i class="bi bi-send" aria-hidden="true"></i> Enviarme el código</button>
                         </div>
                     </form>
-                </div>
-            </div>
-        </div>
-    </div>
 
-    <div class="modal fade" id="passwordTokenModal" tabindex="-1" aria-labelledby="passwordTokenModalLabel" aria-hidden="true">
-        <div class="modal-dialog modal-dialog-centered">
-            <div class="modal-content login-modal">
-                <div class="modal-header">
-                    <h5 class="modal-title" id="passwordTokenModalLabel"><i class="bi bi-envelope-check"></i> Validar token</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
-                </div>
-                <div class="modal-body">
-                    <p class="text-muted small">Escribe el token de 6 digitos que enviamos al correo registrado.</p>
-                    <div id="passwordTokenMessage" class="mb-3"></div>
-                    <form id="passwordTokenForm" class="needs-validation" novalidate>
+                    <form id="recoveryCodeForm" class="needs-validation" novalidate hidden>
+                        <p class="text-muted small">Escribe el código de seis dígitos que enviamos a <strong id="recoveryEmailShown"></strong>. Vence en 15 minutos; si no lo ves, revisa tu carpeta de spam.</p>
                         <div class="mb-3">
-                            <label class="form-label" for="recoveryToken">Token de verificación</label>
-                            <input type="text" inputmode="numeric" maxlength="6" pattern="[0-9]{6}" class="form-control text-center fs-4" id="recoveryToken" name="one-time-code" placeholder="000000" required autocomplete="one-time-code">
-                            <div class="invalid-feedback">Ingresa el token de 6 digitos.</div>
+                            <label class="form-label" for="recoveryCode">Código</label>
+                            <input type="text" inputmode="numeric" maxlength="6" pattern="[0-9]{6}" class="form-control recovery-code" id="recoveryCode" name="one-time-code" placeholder="000000" required autocomplete="one-time-code">
+                            <div class="invalid-feedback">Escribe los seis dígitos.</div>
                         </div>
-                        <div class="d-grid">
-                            <button type="submit" class="btn btn-primary btn-lg" id="passwordTokenSubmitBtn">
-                                <i class="bi bi-check2-circle"></i> Validar token
-                            </button>
+                        <div class="d-grid mb-2">
+                            <button type="submit" class="btn btn-primary btn-lg" id="recoveryVerifyBtn"><i class="bi bi-check2-circle" aria-hidden="true"></i> Verificar código</button>
+                        </div>
+                        <div class="recovery-links">
+                            <button type="button" class="btn btn-link btn-sm p-0" id="recoveryResend" disabled>Reenviar código</button>
+                            <button type="button" class="btn btn-link btn-sm p-0" id="recoveryChangeData">Corregir mis datos</button>
                         </div>
                     </form>
-                </div>
-            </div>
-        </div>
-    </div>
 
-    <div class="modal fade" id="passwordResetModal" tabindex="-1" aria-labelledby="passwordResetModalLabel" aria-hidden="true">
-        <div class="modal-dialog modal-dialog-centered">
-            <div class="modal-content login-modal">
-                <div class="modal-header">
-                    <h5 class="modal-title" id="passwordResetModalLabel"><i class="bi bi-person-lock"></i> Nueva contraseña</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
-                </div>
-                <div class="modal-body">
-                    <p class="text-muted small">Define tu nueva contraseña antes de entrar al sistema.</p>
-                    <div id="passwordResetMessage" class="mb-3"></div>
-                    <form id="passwordResetForm" class="needs-validation" novalidate>
+                    <form id="recoveryPasswordForm" novalidate hidden>
+                        <p class="text-muted small">Crea tu nueva contraseña. Al guardarla entrarás al sistema y se cerrará tu sesión en la app.</p>
                         <div class="mb-3">
-                            <label class="form-label" for="newRecoveryPassword">Nueva contraseña</label>
-                            <input type="password" class="form-control" id="newRecoveryPassword" name="new-password" placeholder="Mínimo 6 caracteres" minlength="6" required autocomplete="new-password">
-                            <div class="invalid-feedback">La contraseña debe tener al menos 6 caracteres.</div>
+                            <label class="form-label" for="recoveryPassword">Nueva contraseña</label>
+                            <div class="input-group">
+                                <input type="password" class="form-control" id="recoveryPassword" placeholder="Escribe tu nueva contraseña" required autocomplete="new-password">
+                                <button type="button" class="btn btn-outline-secondary" data-recovery-toggle="recoveryPassword" aria-label="Mostrar contraseña"><i class="bi bi-eye" aria-hidden="true"></i></button>
+                            </div>
                         </div>
                         <div class="mb-3">
-                            <label class="form-label" for="newRecoveryPasswordConfirmation">Confirmar contraseña</label>
-                            <input type="password" class="form-control" id="newRecoveryPasswordConfirmation" name="new-password-confirmation" placeholder="Repite la contraseña" minlength="6" required autocomplete="new-password">
-                            <div class="invalid-feedback">Confirma tu nueva contraseña.</div>
+                            <label class="form-label" for="recoveryPasswordConfirm">Confirmar contraseña</label>
+                            <div class="input-group">
+                                <input type="password" class="form-control" id="recoveryPasswordConfirm" placeholder="Repite la contraseña" required autocomplete="new-password">
+                                <button type="button" class="btn btn-outline-secondary" data-recovery-toggle="recoveryPasswordConfirm" aria-label="Mostrar contraseña"><i class="bi bi-eye" aria-hidden="true"></i></button>
+                            </div>
                         </div>
+                        <ul class="recovery-rules">
+                            <li id="recoveryRuleLength"><i class="bi bi-circle" aria-hidden="true"></i> Al menos 8 caracteres</li>
+                            <li id="recoveryRuleMatch"><i class="bi bi-circle" aria-hidden="true"></i> Las dos contraseñas coinciden</li>
+                        </ul>
                         <div class="d-grid">
-                            <button type="submit" class="btn btn-primary btn-lg" id="passwordResetSubmitBtn">
-                                <i class="bi bi-save"></i> Cambiar contraseña
-                            </button>
+                            <button type="submit" class="btn btn-primary btn-lg" id="recoverySaveBtn"><i class="bi bi-save" aria-hidden="true"></i> Guardar y entrar</button>
                         </div>
                     </form>
+
+                    <div class="text-center mt-3">
+                        <button type="button" class="btn btn-link btn-sm text-muted text-decoration-none" id="recoveryBackToLogin"><i class="bi bi-arrow-left" aria-hidden="true"></i> Volver a iniciar sesión</button>
+                    </div>
                 </div>
             </div>
         </div>
@@ -659,20 +652,16 @@ $serverDashboardUrl = dashboard_url();
 <?php if (!is_authenticated()): ?><script src="<?= asset('/assets/js/help-center.js') ?>" data-guest="1"></script><?php endif; ?>
     <script src="<?= asset('/assets/js/app.js') ?>"></script>
     <script src="<?= asset('/assets/js/responsive.js') ?>"></script>
+    <script src="<?= asset('/assets/js/password-recovery.js') ?>"></script>
     <script>
         // "Crear cuenta" sólo aparece mientras alguna carrera tenga abierto el autoregistro.
         api.get('/self-registration', { _fresh: true, _silent: true })
-            .then(data => document.getElementById('selfRegistrationLink').classList.toggle('d-none', !data.open))
+            .then(data => ['selfRegistrationLink', 'selfRegistrationHero'].forEach(id => document.getElementById(id)?.classList.toggle('d-none', !data.open)))
             .catch(() => {});
 
         const loginForm = document.getElementById('loginForm');
         const loginSubmitBtn = document.getElementById('loginSubmitBtn');
         const loginMessageContainer = document.getElementById('loginMessageContainer');
-        const passwordRecoveryModal = bootstrap.Modal.getOrCreateInstance(document.getElementById('passwordRecoveryModal'));
-        const passwordTokenModal = bootstrap.Modal.getOrCreateInstance(document.getElementById('passwordTokenModal'));
-        const passwordResetModal = bootstrap.Modal.getOrCreateInstance(document.getElementById('passwordResetModal'));
-        const recoveryState = { id: '', email: '', token: '' };
-
         function dashboardUrlForCurrentUser() {
             if (auth.isAdmin()) return '/pages/admin/dashboard.php';
             if (auth.isTeacher()) return '/pages/teacher/dashboard.php';
@@ -685,25 +674,6 @@ $serverDashboardUrl = dashboard_url();
 
         function modalAlert(type, message) {
             return `<div class="alert alert-${type} py-2 mb-0" role="alert">${escapeHtml(message)}</div>`;
-        }
-
-        function setButtonLoading(button, loadingText, originalText = null) {
-            if (!button.dataset.originalText) button.dataset.originalText = originalText || button.innerHTML;
-            button.disabled = true;
-            button.innerHTML = `<span class="spinner-border spinner-border-sm me-2"></span>${loadingText}`;
-        }
-
-        function restoreButton(button) {
-            button.disabled = false;
-            button.innerHTML = button.dataset.originalText || button.innerHTML;
-        }
-
-        function openPasswordRecoveryModal() {
-            bootstrap.Modal.getInstance(document.getElementById('loginModal'))?.hide();
-            document.getElementById('passwordRecoveryMessage').innerHTML = '';
-            document.getElementById('passwordRecoveryForm').classList.remove('was-validated');
-            document.getElementById('passwordRecoveryForm').reset();
-            passwordRecoveryModal.show();
         }
 
         document.addEventListener('DOMContentLoaded', () => {
@@ -752,117 +722,6 @@ $serverDashboardUrl = dashboard_url();
 
             if (window.location.hash === '#recover') {
                 openPasswordRecoveryModal();
-            }
-        });
-
-        document.getElementById('passwordRecoveryForm').addEventListener('submit', async (event) => {
-            event.preventDefault();
-            const form = event.target;
-            const button = document.getElementById('passwordRecoverySubmitBtn');
-            const message = document.getElementById('passwordRecoveryMessage');
-            message.innerHTML = '';
-
-            if (!form.checkValidity()) {
-                form.classList.add('was-validated');
-                return;
-            }
-
-            recoveryState.id = document.getElementById('recoveryUserId').value.trim();
-            recoveryState.email = document.getElementById('recoveryEmail').value.trim();
-
-            try {
-                setButtonLoading(button, 'Enviando...');
-                await api.post('/auth/password/request-token', {
-                    id: recoveryState.id,
-                    email: recoveryState.email
-                }, { _timeout: 20000 });
-                passwordRecoveryModal.hide();
-                document.getElementById('passwordTokenForm').reset();
-                document.getElementById('passwordTokenForm').classList.remove('was-validated');
-                document.getElementById('passwordTokenMessage').innerHTML = modalAlert('success', 'Token enviado. Revisa tu correo registrado.');
-                passwordTokenModal.show();
-            } catch (error) {
-                message.innerHTML = modalAlert('danger', error.message || 'No se pudo enviar el token.');
-            } finally {
-                restoreButton(button);
-            }
-        });
-
-        document.getElementById('passwordTokenForm').addEventListener('submit', async (event) => {
-            event.preventDefault();
-            const form = event.target;
-            const button = document.getElementById('passwordTokenSubmitBtn');
-            const message = document.getElementById('passwordTokenMessage');
-            message.innerHTML = '';
-
-            if (!form.checkValidity()) {
-                form.classList.add('was-validated');
-                return;
-            }
-
-            recoveryState.token = document.getElementById('recoveryToken').value.trim();
-
-            try {
-                setButtonLoading(button, 'Validando...');
-                await api.post('/auth/password/verify-token', recoveryState);
-                passwordTokenModal.hide();
-                document.getElementById('passwordResetForm').reset();
-                document.getElementById('passwordResetForm').classList.remove('was-validated');
-                document.getElementById('passwordResetMessage').innerHTML = '';
-                passwordResetModal.show();
-            } catch (error) {
-                message.innerHTML = modalAlert('danger', error.message || 'Token no válido.');
-            } finally {
-                restoreButton(button);
-            }
-        });
-
-        document.getElementById('passwordResetForm').addEventListener('submit', async (event) => {
-            event.preventDefault();
-            const form = event.target;
-            const button = document.getElementById('passwordResetSubmitBtn');
-            const message = document.getElementById('passwordResetMessage');
-            message.innerHTML = '';
-
-            if (!form.checkValidity()) {
-                form.classList.add('was-validated');
-                return;
-            }
-
-            const password = document.getElementById('newRecoveryPassword').value;
-            const confirmation = document.getElementById('newRecoveryPasswordConfirmation').value;
-
-            if (password !== confirmation) {
-                message.innerHTML = modalAlert('danger', 'La nueva contraseña y su confirmación deben ser idénticas.');
-                return;
-            }
-
-            try {
-                setButtonLoading(button, 'Actualizando...');
-                const response = await api.post('/auth/password/reset', {
-                    ...recoveryState,
-                    password,
-                    password_confirmation: confirmation
-                });
-
-                auth.token = response.access_token;
-                auth.user = response.user;
-                auth.remember = false;
-                await auth.persistSession();
-
-                await Swal.fire({
-                    icon: 'success',
-                    title: 'Contraseña actualizada',
-                    text: 'Entrando al sistema...',
-                    timer: 900,
-                    showConfirmButton: false
-                });
-
-                window.location.replace(dashboardUrlForCurrentUser());
-            } catch (error) {
-                message.innerHTML = modalAlert('danger', error.message || 'No se pudo cambiar la contraseña.');
-            } finally {
-                restoreButton(button);
             }
         });
 
