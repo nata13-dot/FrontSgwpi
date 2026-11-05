@@ -39,7 +39,7 @@ $management_pages = [
                     <input
                         type="search"
                         name="q"
-                        placeholder="Buscar páginas, opciones o registros..."
+                        placeholder="Buscar pantallas y registros..."
                         aria-label="Buscar páginas, opciones o registros en el sistema"
                         aria-controls="globalSearchResults"
                         aria-expanded="false"
@@ -50,6 +50,10 @@ $management_pages = [
             </div>
         <?php endif; ?>
         
+        <?php if (is_authenticated()): ?>
+            <button type="button" class="global-search-open" data-global-search-open aria-label="Buscar"><i class="bi bi-search" aria-hidden="true"></i></button>
+        <?php endif; ?>
+
         <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Abrir navegación">
             <span class="navbar-toggler-icon"></span>
         </button>
@@ -416,6 +420,8 @@ async function logout() {
 </script>
 <?php if (is_authenticated()): ?>
     <script src="<?= asset('/assets/js/global-search.js') ?>"></script>
+    <script src="<?= asset('/assets/js/upload-guard.js') ?>"></script>
+    <script src="<?= asset('/assets/js/help-center.js') ?>"></script>
     <script src="<?= asset('/assets/js/activity-notifications.js') ?>"></script>
     <?php if (is_general_admin()): ?>
         <script src="<?= asset('/assets/js/operational-notifications.js') ?>"></script>

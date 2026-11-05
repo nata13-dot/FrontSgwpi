@@ -651,6 +651,15 @@ class ApiClient {
 // Instancia global
 const api = new ApiClient();
 
+/** Cada palabra buscada debe aparecer en el texto, sin importar acentos, mayúsculas ni el orden. */
+function sgpiPlainText(value) {
+    return String(value ?? '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase();
+}
+function sgpiMatches(text, term) {
+    const haystack = sgpiPlainText(text);
+    return sgpiPlainText(term).split(/\s+/).filter(Boolean).every(word => haystack.includes(word));
+}
+
 /**
  * Guarda un Blob como archivo. El enlace temporal se libera unos segundos después del clic:
  * si se libera de inmediato, Firefox y Safari cancelan la descarga.

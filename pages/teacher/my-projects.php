@@ -134,7 +134,9 @@ if (!is_authenticated() || !is_teacher()) {
 
         function renderProjects() {
             const container = document.getElementById('projectsContainer');
-            const projects = teacherProjects.filter(project => projectCategory(project) === activeCategory);
+            const search = new URLSearchParams(window.location.search).get('q');
+            // Al llegar desde el buscador general se muestra el proyecto, sea cual sea su categoría.
+            const projects = teacherProjects.filter(project => (search ? sgpiMatches(project.title, search) : projectCategory(project) === activeCategory));
             container.innerHTML = projects.length
                 ? projects.map(projectCard).join('')
                 : '<div class="col-12"><p class="text-center text-muted">No tienes proyectos en esta categoría</p></div>';

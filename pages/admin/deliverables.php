@@ -45,6 +45,10 @@ if (!is_authenticated()) {
                 </div>
                 <div id="alertContainer"></div>
                 <div class="row g-3 mb-3">
+                    <div class="col-12">
+                        <label class="form-label" for="deliverableSearch">Buscar</label>
+                        <input type="search" class="form-control" id="deliverableSearch" placeholder="Nombre del entregable" oninput="clearTimeout(window.deliverableSearchTimer); window.deliverableSearchTimer = setTimeout(() => loadDeliverables(), 300)">
+                    </div>
                     <div class="col-md-6">
                         <label class="form-label">Materia</label>
                         <select class="form-select" id="subjectFilter" onchange="onSubjectFilterChange()">
@@ -134,6 +138,11 @@ if (!is_authenticated()) {
                                 <option value="revisado">Revisado</option>
                                 <option value="aprobado">Aprobado</option>
                             </select>
+                        </div>
+                        <div class="col-md-4 mb-3">
+                            <label for="fecha_limite" class="form-label">Fecha límite</label>
+                            <input type="datetime-local" class="form-control" id="fecha_limite">
+                            <div class="form-text">Los alumnos inscritos reciben recordatorios 7, 3 y 1 día antes.</div>
                         </div>
                         <div class="col-md-4 mb-3">
                             <label for="rama_asociada" class="form-label">Rama asociada</label>
@@ -267,6 +276,8 @@ if (!is_authenticated()) {
         async function loadDeliverables(page = 1) {
             try {
                 const params = { page };
+                const search = document.getElementById('deliverableSearch').value.trim();
+                if (search) params.q = search;
                 const subjectId = document.getElementById('subjectFilter').value;
                 const competenceId = document.getElementById('competenceFilter').value;
                 if (subjectId) params.asignatura_id = subjectId;
@@ -343,6 +354,13 @@ if (!is_authenticated()) {
                 document.getElementById('rama_asociada').value = deliverable?.rama_asociada || '';
                 document.getElementById('autores').value = deliverable?.autores || '';
             }
+            const deadline = document.getElementById('fecha_limite');
+            const savedDeadline = String(deliverable?.fecha_limite || '').replace(' ', 'T').slice(0, 16);
+            deadline.value = savedDeadline;
+            // Una fecha ya guardada se conserva; una nueva no puede ser anterior al momento actual.
+            const minDeadline = new Date(Date.now() - new Date().getTimezoneOffset() * 60000).toISOString().slice(0, 16);
+            deadline.oninput = () => { deadline.min = deadline.value === savedDeadline ? '' : minDeadline; };
+            deadline.min = savedDeadline ? '' : minDeadline;
             deliverableModal.show();
         }
 
@@ -357,7 +375,8 @@ if (!is_authenticated()) {
                 tipo_documento: document.getElementById('tipo_documento').value,
                 estado: document.getElementById('estado').value,
                 rama_asociada: document.getElementById('rama_asociada').value.trim() || null,
-                autores: document.getElementById('autores').value.trim() || null
+                autores: document.getElementById('autores').value.trim() || null,
+                fecha_limite: document.getElementById('fecha_limite').value || null
             };
 
             try {
@@ -419,6 +438,8 @@ if (!is_authenticated()) {
         }
 
         document.addEventListener('DOMContentLoaded', async () => {
+            const initialSearch = new URLSearchParams(window.location.search).get('q');
+            if (initialSearch) document.getElementById('deliverableSearch').value = initialSearch;
             deliverableModal = new bootstrap.Modal(document.getElementById('deliverableModal'));
             modalCalificar = new bootstrap.Modal(document.getElementById('modalCalificar'));
             modalSubirArchivo = new bootstrap.Modal(document.getElementById('modalSubirArchivo'));

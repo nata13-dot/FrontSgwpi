@@ -32,8 +32,7 @@ if (is_authenticated()) { header('Location: ' . dashboard_url()); exit; }
                     <div class="col-md-4"><label class="form-label" for="nombres">Nombre(s)</label><input class="form-control" id="nombres" required autocomplete="given-name"></div>
                     <div class="col-md-4"><label class="form-label" for="apa">Apellido paterno</label><input class="form-control" id="apa" required autocomplete="family-name"></div>
                     <div class="col-md-4"><label class="form-label" for="ama">Apellido materno</label><input class="form-control" id="ama"></div>
-                    <div class="col-md-6"><label class="form-label" for="semestre">Semestre</label><select class="form-select" id="semestre" required></select></div>
-                    <div class="col-md-6"><label class="form-label" for="grupo_id">Grupo</label><select class="form-select" id="grupo_id" required disabled></select></div>
+                    <div class="col-12"><label class="form-label" for="grupo_id">Grupo</label><select class="form-select" id="grupo_id" required disabled></select><div class="form-text">Los alumnos nuevos entran a 5° semestre.</div></div>
                     <div class="col-md-6"><label class="form-label" for="password">Contraseña</label><input class="form-control" id="password" type="password" minlength="8" required autocomplete="new-password"><div class="form-text">Mínimo 8 caracteres.</div></div>
                     <div class="col-md-6"><label class="form-label" for="password_confirmation">Confirmar contraseña</label><input class="form-control" id="password_confirmation" type="password" required autocomplete="new-password"></div>
                 </div>
@@ -89,15 +88,13 @@ function renderCareer() {
     const current = career();
     $('careerInfo').textContent = current ? `${current.nombre} · periodo ${current.period} · registro abierto hasta ${new Date(current.closes_at).toLocaleString('es-MX')}` : '';
     $('ruleHint').textContent = current?.rule.description || '';
-    const semesters = [...new Set((current?.groups || []).map(group => group.semestre))];
-    $('semestre').innerHTML = '<option value="">Elige tu semestre</option>' + semesters.map(value => `<option value="${value}">${value}° semestre</option>`).join('');
     renderGroups();
     checkEmail();
 }
 
 function renderGroups() {
-    const groups = (career()?.groups || []).filter(group => String(group.semestre) === $('semestre').value);
-    $('grupo_id').innerHTML = '<option value="">Elige tu grupo</option>' + groups.map(group => `<option value="${group.id}">${esc(group.grupo)} · ${esc(group.nombre)}</option>`).join('');
+    const groups = career()?.groups || [];
+    $('grupo_id').innerHTML = '<option value="">Elige tu grupo</option>' + groups.map(group => `<option value="${group.id}">${Number(group.semestre)}° ${esc(group.grupo)}</option>`).join('');
     $('grupo_id').disabled = !groups.length;
 }
 
@@ -148,7 +145,6 @@ async function sendData() {
 }
 
 $('carrera_id').addEventListener('change', renderCareer);
-$('semestre').addEventListener('change', renderGroups);
 $('controlNumber').addEventListener('input', checkEmail);
 $('email').addEventListener('input', checkEmail);
 $('code').addEventListener('input', () => { $('code').value = $('code').value.replace(/\D/g, ''); });

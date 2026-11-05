@@ -127,7 +127,7 @@ const ProposalUI = (() => {
                 ${data.period ? '' : '<div class="alert alert-warning">La carrera no tiene un periodo abierto. Ábrelo en Operación académica antes de habilitar el autoregistro.</div>'}
                 <div class="row g-3 mb-3">
                     ${windowCard('Autoregistro de alumnos', 'Mientras esté abierto, el inicio de sesión muestra «Crear cuenta».', self, '/proposal/settings/self-registration', !self.can_manage,
-                        `<p class="text-muted small mb-0">Correo esperado: <strong>${esc(self.rule.example)}</strong>. ${esc(self.rule.description)}</p>${self.can_manage ? '' : '<p class="text-muted small mb-0">Lo abre la administración general o la jefatura.</p>'}`)}
+                        `<p class="text-muted small mb-0">Correo esperado: <strong>${esc(self.rule.example)}</strong>. ${esc(self.rule.description)}</p><div class="mt-2"><label class="form-label small mb-1" for="newStudentGroups">Grupos de 5° para alumnos nuevos</label><div class="input-group input-group-sm"><input class="form-control" id="newStudentGroups" value="${esc((self.groups || []).join(', '))}" ${self.can_manage ? '' : 'disabled'}>${self.can_manage ? '<button class="btn btn-outline-primary" type="button" onclick="ProposalUI.saveNewStudentGroups()">Guardar grupos</button>' : ''}</div><div class="form-text">Separados por coma. El registro sólo se abre de julio a diciembre.</div></div>${self.can_manage ? '' : '<p class="text-muted small mb-0">Lo abre la administración general o la jefatura.</p>'}`)}
                     ${windowCard('Registro de propuestas', `Los alumnos registran su propuesta o piden unirse a la de un compañero (máximo ${data.max_project_members} integrantes).`, data.proposal_window, '/proposal/settings/proposal-window', false)}
                 </div>
                 <div class="card border-0 shadow-sm"><div class="card-body">
@@ -158,6 +158,17 @@ const ProposalUI = (() => {
         }
     }
 
+    async function saveNewStudentGroups() {
+        try {
+            const groups = document.getElementById('newStudentGroups').value.split(/[\s,]+/).filter(Boolean);
+            const response = await api.put('/proposal/settings/new-student-groups', { groups });
+            swalToast('success', response.message);
+            loadSettings();
+        } catch (error) {
+            Swal.fire('Error', error.message, 'error');
+        }
+    }
+
     async function saveValidators() {
         const ids = [...document.querySelectorAll('.validator-option:checked')].map(input => input.value);
         try {
@@ -169,7 +180,7 @@ const ProposalUI = (() => {
     }
 
     return {
-        STATUS, esc, fullName, dateTime, badge, details, loadReview, review, loadSettings, saveWindow, saveValidators,
+        STATUS, esc, fullName, dateTime, badge, details, loadReview, review, loadSettings, saveWindow, saveNewStudentGroups, saveValidators,
         setFilter(value) { filter = value; renderList(); }
     };
 })();

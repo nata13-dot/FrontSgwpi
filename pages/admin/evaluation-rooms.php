@@ -608,7 +608,7 @@ $canManageRooms = can_manage_projects();
         }
 
         function searchText() {
-            return document.getElementById('roomSearch').value.trim().toLowerCase();
+            return document.getElementById('roomSearch').value;
         }
 
         function filteredRooms() {
@@ -623,8 +623,8 @@ $canManageRooms = can_manage_projects();
                     fullName(room.responsible_teacher),
                     ...(room.teachers || []).map(fullName),
                     ...(room.projects || []).map(project => project.title)
-                ].join(' ').toLowerCase();
-                return haystack.includes(search);
+                ].join(' ');
+                return sgpiMatches(haystack, search);
             });
         }
 
@@ -635,8 +635,8 @@ $canManageRooms = can_manage_projects();
                 if (semester && String(projectSemester(project)) !== String(semester)) return false;
                 if (!search) return true;
                 const currentRoom = roomForProject(project.id);
-                const haystack = `${project.title} ${projectActiveAuthors(project)} ${projectCompany(project)} ${currentRoom?.nombre || ''}`.toLowerCase();
-                return haystack.includes(search);
+                const haystack = `${project.title} ${projectActiveAuthors(project)} ${projectCompany(project)} ${currentRoom?.nombre || ''}`;
+                return sgpiMatches(haystack, search);
             });
         }
 
@@ -662,9 +662,8 @@ $canManageRooms = can_manage_projects();
         }
 
         function filterRoomOptions(containerId, text) {
-            const needle = String(text || '').trim().toLowerCase();
             document.querySelectorAll(`#${containerId} > *`).forEach(item => {
-                item.classList.toggle('d-none', Boolean(needle) && !item.textContent.toLowerCase().includes(needle));
+                item.classList.toggle('d-none', !sgpiMatches(item.textContent, text));
             });
         }
 
@@ -890,8 +889,8 @@ $canManageRooms = can_manage_projects();
             }).filter(item => {
                 if (!item.evaluatorRooms.length && !item.responsibleRooms.length) return false;
                 if (!search) return true;
-                return `${item.teacher.id} ${fullName(item.teacher)} ${(item.teacher.email || '')}`.toLowerCase().includes(search)
-                    || item.evaluatorRooms.some(room => String(room.nombre || '').toLowerCase().includes(search));
+                return sgpiMatches(`${item.teacher.id} ${fullName(item.teacher)} ${(item.teacher.email || '')}`, search)
+                    || item.evaluatorRooms.some(room => sgpiMatches(room.nombre, search));
             }).sort((a, b) => (b.evaluatorRooms.length + b.responsibleRooms.length) - (a.evaluatorRooms.length + a.responsibleRooms.length) || fullName(a.teacher).localeCompare(fullName(b.teacher)));
 
             document.getElementById('teacherRoomContainer').innerHTML = cards.map(item => `
@@ -1574,12 +1573,21 @@ $canManageRooms = can_manage_projects();
             const room = rooms.find(item => Number(item.id) === Number(id));
             if (!room) return;
             document.getElementById('scheduleRoomId').value = room.id;
-            document.getElementById('scheduleStart').value = room.fecha_evaluacion?.slice(0, 16) || '';
+            document.getElementById('scheduleStart').value = toDateTimeInput(room.fecha_evaluacion);
             document.getElementById('scheduleStart').disabled = room.evaluation_window?.status !== 'scheduled';
-            document.getElementById('scheduleEnd').value = room.fecha_fin_evaluacion?.slice(0, 16) || '';
+            // Lo ya guardado se puede conservar; un valor nuevo no puede ser anterior al momento actual.
+            const syncMin = (id, saved) => {
+                const field = document.getElementById(id);
+                const apply = () => { field.min = field.value === toDateTimeInput(saved) ? '' : nextMinuteInput(); };
+                field.oninput = apply;
+                apply();
+            };
+            document.getElementById('scheduleEnd').value = toDateTimeInput(room.fecha_fin_evaluacion);
             document.getElementById('scheduleAllowLate').checked = Boolean(room.allow_late_evaluations);
-            document.getElementById('scheduleLateUntil').value = room.late_evaluation_until?.slice(0, 16) || '';
+            document.getElementById('scheduleLateUntil').value = toDateTimeInput(room.late_evaluation_until);
             document.getElementById('scheduleLateReason').value = room.late_evaluation_reason || '';
+            syncMin('scheduleStart', room.fecha_evaluacion);
+            syncMin('scheduleLateUntil', room.late_evaluation_until);
             toggleLateScheduleFields();
             roomScheduleModal.show();
         }
@@ -1682,6 +1690,8 @@ $canManageRooms = can_manage_projects();
         }
 
         document.addEventListener('DOMContentLoaded', async () => {
+            const initialSearch = new URLSearchParams(window.location.search).get('q');
+            if (initialSearch) document.getElementById('roomSearch').value = initialSearch;
             document.getElementById('roomSemester')?.addEventListener('sgpi:semesters-ready', renderRoomSemesterChips);
             try {
                 await loadInitialData();

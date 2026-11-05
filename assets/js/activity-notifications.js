@@ -2,8 +2,39 @@
     const icons = {
         actividad_habilitada: 'bi-journal-plus',
         actividad_entregada: 'bi-cloud-check',
-        evaluacion_realizada: 'bi-clipboard-check'
+        evaluacion_realizada: 'bi-clipboard-check',
+        entrega_calificada: 'bi-patch-check',
+        recordatorio_entrega: 'bi-alarm',
+        recordatorio_evaluacion: 'bi-calendar-event',
+        sala_asignada: 'bi-door-open',
+        presentacion_asignada: 'bi-easel',
+        sala_reprogramada: 'bi-calendar-x',
+        turno_proximo: 'bi-megaphone',
+        solicitud_cuenta: 'bi-person-plus',
+        alerta_sistema: 'bi-exclamation-triangle',
+        resumen_semanal: 'bi-bar-chart',
+        resumen_revision: 'bi-list-check'
     };
+
+    // Los avisos usan las rutas de la app; aquí se traducen a las páginas de este front según el perfil.
+    function pageFor(url) {
+        const profile = Number(window.SGPI_SESSION?.user?.active_profile_id ?? window.SGPI_SESSION?.user?.perfil_id);
+        const role = profile === 3 ? 'student' : (profile === 2 ? 'teacher' : 'admin');
+        const pages = {
+            '/dashboard': `/pages/${role}/dashboard.php`,
+            '/deliverables': { student: '/pages/student/my-deliverables.php', teacher: '/pages/teacher/my-deliverables.php', admin: '/pages/admin/deliverables.php' }[role],
+            '/proposals': { student: '/pages/student/proposal-register.php', teacher: '/pages/teacher/proposal-review.php', admin: '/pages/admin/proposal-config.php' }[role],
+            '/projects': '/pages/admin/projects.php',
+            '/evaluation-rooms': '/pages/admin/evaluation-rooms.php',
+            '/evaluations': '/pages/admin/evaluations.php',
+            '/companies': '/pages/admin/projects.php',
+            '/registration-requests': '/pages/admin/registration-requests.php',
+            '/semesters': '/pages/academic-workflows.php?tab=periods',
+            '/academic-workflows': '/pages/academic-workflows.php',
+            '/operations': '/pages/admin/operations.php'
+        };
+        return pages[url] || url;
+    }
 
     function escapeHtml(value) {
         const element = document.createElement('div');
@@ -76,7 +107,7 @@
             try {
                 await api.put(`/activity-notifications/${item.dataset.notificationId}/read`);
             } finally {
-                if (url) window.location.href = url;
+                if (url) window.location.href = pageFor(url);
             }
         });
         markAll.addEventListener('click', async () => {

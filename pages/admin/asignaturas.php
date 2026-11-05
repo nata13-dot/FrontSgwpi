@@ -284,6 +284,7 @@ if (!is_authenticated() || !can_manage_academics()) {
                 const response = await api.get('/asignaturas', {
                     page,
                     per_page: asignaturasPerPage,
+                    q: new URLSearchParams(window.location.search).get('q') || undefined,
                     _cache_ttl: 30000
                 });
                 api.prefetchNextPage('/asignaturas', {
@@ -446,9 +447,9 @@ if (!is_authenticated() || !can_manage_academics()) {
         }
 
         function renderCompetenciasSubjects() {
-            const query = document.getElementById('competenciasSubjectSearch').value.trim().toLowerCase();
+            const query = document.getElementById('competenciasSubjectSearch').value;
             const filtered = competenciasAsignaturas.filter(asignatura =>
-                `${asignatura.clave || ''} ${asignatura.nombre || ''}`.toLowerCase().includes(query)
+                sgpiMatches(`${asignatura.clave || ''} ${asignatura.nombre || ''}`, query)
             );
             const container = document.getElementById('competenciasSubjectsList');
 

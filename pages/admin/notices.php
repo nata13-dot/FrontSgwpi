@@ -215,7 +215,11 @@ function openNoticeModal(index = null) {
     document.getElementById('noticeAudience').value = notice?.audience || 'all';
     document.getElementById('noticeType').value = notice?.type || 'info';
     document.getElementById('noticeDuration').value = notice?.duration_seconds || 4;
-    document.getElementById('noticeStartsAt').value = notice?.starts_at || '';
+    const startsAt = document.getElementById('noticeStartsAt');
+    startsAt.value = notice?.starts_at || '';
+    // Un inicio ya guardado se conserva; uno nuevo no puede ser anterior a hoy.
+    startsAt.oninput = () => { startsAt.min = startsAt.value === (notice?.starts_at || '') ? '' : new Date().toLocaleDateString('en-CA'); };
+    startsAt.min = notice?.starts_at ? '' : new Date().toLocaleDateString('en-CA');
     document.getElementById('noticeEndsAt').value = notice?.ends_at || '';
     document.getElementById('noticeActive').checked = notice?.active ?? true;
     document.getElementById('noticeMessage').value = notice?.message || '';

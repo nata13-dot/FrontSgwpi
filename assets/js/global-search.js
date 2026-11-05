@@ -53,7 +53,20 @@
     // Los permisos llegan calculados por PHP con los mismos helpers que usan
     // las guardias de cada página, para no ofrecer destinos que redirigen.
     const permissions = new Set((shell.dataset.permissions || '').split(/\s+/).filter(Boolean));
-    roleItems.general_admin = roleItems.admin;
+    roleItems.admin.splice(2, 0, item('Solicitudes de cuenta', 'Aprobar el autoregistro de alumnos', '/pages/admin/registration-requests.php', 'bi-person-check', ['autoregistro', 'aprobar', 'alumnos'], 'manage_academics'));
+    roleItems.teacher.push(item('Salas y turnos', 'Consultar salas, horarios y turnos', '/pages/admin/evaluation-rooms.php', 'bi-door-open', ['horarios', 'presentaciones']));
+    [roleItems.admin, roleItems.teacher, roleItems.student].forEach(list => list.push(item('Seguimiento académico', 'Inscripción a materias, residencias y servicio', '/pages/academic-workflows.php', 'bi-calendar-check', ['residencias', 'servicio', 'inscripcion', 'clave'])));
+    roleItems.general_admin = [
+        item('Panel institucional', 'Resumen de todas las carreras', '/pages/admin/general.php', 'bi-speedometer2', ['institucional', 'carreras']),
+        item('Carreras y accesos', 'Administrar carreras y membresías', '/pages/admin/careers.php', 'bi-layers', ['membresias', 'colores']),
+        item('Operaciones', 'Alertas y continuidad del sistema', '/pages/admin/operations.php', 'bi-activity', ['alertas', 'continuidad']),
+        item('Auditoría', 'Bitácora de cambios', '/pages/admin/career-audit.php', 'bi-shield-check', ['bitacora']),
+        item('Integridad', 'Verificación de datos', '/pages/admin/career-integrity.php', 'bi-check2-square', ['verificacion']),
+        item('Respaldos', 'Generar y descargar respaldos de la base de datos', '/pages/admin/database-backups.php', 'bi-database', ['backup', 'base de datos']),
+        item('Correos enviados', 'Consultar destinatarios de los correos', '/pages/admin/sent-emails.php', 'bi-envelope', ['correo', 'email', 'destinatarios']),
+        item('Módulos de carrera', 'Habilitar módulos de la carrera activa', '/pages/admin/career-modules.php', 'bi-grid'),
+        ...roleItems.admin
+    ];
 
     const catalog = [...commonItems, ...(roleItems[role] || [])]
         .filter(entry => !entry.requires || permissions.has(entry.requires));
@@ -105,6 +118,7 @@
                 const title = normalize(entry.title);
                 const haystack = normalize([entry.title, entry.description, ...entry.keywords].join(' '));
                 let score = 0;
+                if (term.split(/\s+/).every(word => haystack.includes(word))) score += 10;
                 if (title === term) score += 100;
                 if (title.startsWith(term)) score += 60;
                 if (title.includes(term)) score += 35;
@@ -114,65 +128,92 @@
             .filter(entry => entry.score > 0)
             .sort((a, b) => b.score - a.score || a.title.localeCompare(b.title));
 
-        return [...matched, ...dynamicSearchItems(query).filter(moduleAllowed)].slice(0, 9);
+        return matched.slice(0, 6);
     }
 
-    function dynamicSearchItems(query) {
-        const encoded = encodeURIComponent(query.trim());
-        const dynamic = [
-            {
-                title: `Buscar "${query.trim()}" en el repositorio`,
-                description: 'Filtrar documentos por título, descripción o autor',
-                url: `/pages/repositorio.php?q=${encoded}`,
-                icon: 'bi-archive',
-                type: 'search'
+    /** Página donde se abre un resultado del buscador general, según el perfil. */
+    function recordUrl(type, record) {
+        const filter = encodeURIComponent(record.filter ?? '');
+        const staff = ['admin', 'general_admin'].includes(role);
+        const studentOrTeacher = role === 'student' ? 'student' : 'teacher';
+        switch (type) {
+            case 'users': return `/pages/admin/users.php?q=${encodeURIComponent(record.id)}`;
+            case 'projects':
+                if (staff) return `/pages/admin/projects.php?id=${encodeURIComponent(record.id)}`;
+                return role === 'teacher' ? `/pages/teacher/my-projects.php?q=${filter}` : '/pages/student/proposal-register.php';
+            case 'deliverables': return staff ? `/pages/admin/deliverables.php?q=${filter}` : `/pages/${studentOrTeacher}/my-deliverables.php`;
+            case 'rooms': return `/pages/admin/evaluation-rooms.php?q=${filter}`;
+            case 'documents': return `/pages/repositorio-detail.php?id=${encodeURIComponent(record.id)}`;
+            // La web no tiene pantalla de empresas: se listan sus proyectos.
+            case 'companies': return `/pages/admin/projects.php?q=${filter}`;
+            case 'subjects': return `/pages/admin/asignaturas.php?q=${filter}`;
+            default: return dashboardPath(role);
+        }
+    }
+
+    let recordGroups = [];
+    let recordsTerm = '';
+    let searching = false;
+    let searchTimer = null;
+    let searchTicket = 0;
+
+    function scheduleRecordSearch(query) {
+        const term = query.trim();
+        clearTimeout(searchTimer);
+        const ticket = ++searchTicket;
+        if (term.length < 2) {
+            recordGroups = [];
+            recordsTerm = '';
+            searching = false;
+            return;
+        }
+        searching = true;
+        searchTimer = setTimeout(async () => {
+            try {
+                const data = await api.get('/search', { q: term, _silent: true, _cache_ttl: 30000 });
+                if (ticket !== searchTicket) return;
+                recordGroups = data.groups || [];
+            } catch {
+                if (ticket !== searchTicket) return;
+                recordGroups = [];
             }
-        ];
-
-        if (permissions.has('manage_projects')) {
-            dynamic.unshift({
-                title: `Buscar proyecto "${query.trim()}"`,
-                description: 'Filtrar proyectos, tesis, integrantes o empresas',
-                url: `/pages/admin/projects.php?q=${encoded}`,
-                icon: 'bi-search',
-                type: 'search'
-            });
-        }
-
-        if (permissions.has('govern_users')) {
-            dynamic.unshift(
-                {
-                    title: `Buscar usuario "${query.trim()}"`,
-                    description: 'Filtrar por nombre, control, correo o teléfono',
-                    url: `/pages/admin/users.php?q=${encoded}`,
-                    icon: 'bi-person-search',
-                    type: 'search'
-                }
-            );
-        }
-
-        return dynamic;
+            recordsTerm = term;
+            searching = false;
+            if (!resultsBox.hidden) render(input.value);
+        }, 280);
     }
 
     function render(query = '') {
-        results = searchCatalog(query);
+        const pages = searchCatalog(query);
+        const groups = recordsTerm === query.trim() ? recordGroups : [];
+        results = [...pages, ...groups.flatMap(group => group.items.map(record => ({
+            title: record.title, description: record.subtitle, url: recordUrl(group.type, record), icon: 'bi-arrow-right-short', group: group.label, type: 'record'
+        })))];
         activeIndex = results.length ? 0 : -1;
         input.setAttribute('aria-expanded', 'true');
         resultsBox.hidden = false;
 
-        const heading = query.trim() ? 'Resultados y búsquedas' : 'Accesos frecuentes';
-        resultsBox.innerHTML = `
-            <div class="global-search-heading">${heading}</div>
-            ${results.map((entry, index) => `
+        const resultHtml = (entry, index) => `
                 <a class="global-search-result${index === activeIndex ? ' active' : ''}" href="${escapeHtml(entry.url)}" role="option" aria-selected="${index === activeIndex}" data-search-index="${index}">
                     <span class="global-search-result-icon"><i class="bi ${escapeHtml(entry.icon)}"></i></span>
                     <span class="global-search-result-copy">
                         <strong>${escapeHtml(entry.title)}</strong>
                         <small>${escapeHtml(entry.description)}</small>
                     </span>
-                    <span class="global-search-result-action">${entry.type === 'search' ? 'Filtrar' : 'Abrir'}</span>
-                </a>
-            `).join('')}
+                    <span class="global-search-result-action">Abrir</span>
+                </a>`;
+        let lastGroup = null;
+        const typed = query.trim();
+        const status = searching ? 'Buscando en el sistema...'
+            : (!results.length ? (typed.length < 2 ? 'Escribe al menos dos letras.' : 'Sin coincidencias. Sólo aparece lo que tu perfil puede consultar.') : '');
+        resultsBox.innerHTML = `
+            <div class="global-search-heading">${typed ? 'Pantallas' : 'Accesos frecuentes'}</div>
+            ${results.map((entry, index) => {
+                const title = entry.group && entry.group !== lastGroup ? `<div class="global-search-group">${escapeHtml(entry.group)}</div>` : '';
+                lastGroup = entry.group || lastGroup;
+                return title + resultHtml(entry, index);
+            }).join('')}
+            ${status ? `<div class="global-search-status">${status}</div>` : ''}
             <div class="global-search-help"><span><kbd>↑</kbd><kbd>↓</kbd> navegar</span><span><kbd>Enter</kbd> abrir</span><span><kbd>Esc</kbd> cerrar</span></div>`;
     }
 
@@ -188,19 +229,21 @@
     }
 
     function closeResults() {
+        shell.classList.remove('is-open');
         resultsBox.hidden = true;
         input.setAttribute('aria-expanded', 'false');
         activeIndex = -1;
     }
 
     function openSearch() {
+        shell.classList.add('is-open');
         input.focus();
         input.select();
         render(input.value);
     }
 
     input.addEventListener('focus', () => render(input.value));
-    input.addEventListener('input', () => render(input.value));
+    input.addEventListener('input', () => { scheduleRecordSearch(input.value); render(input.value); });
     input.addEventListener('keydown', event => {
         if (event.key === 'ArrowDown') {
             event.preventDefault();
@@ -240,8 +283,11 @@
     });
 
     document.addEventListener('click', event => {
-        if (!shell.contains(event.target)) closeResults();
+        if (event.target.closest('[data-global-search-open]')) openSearch();
+        else if (!shell.contains(event.target)) closeResults();
     });
+
+    window.SGPIGlobalSearch = { open: openSearch };
 
     function escapeHtml(value) {
         return String(value ?? '').replace(/[&<>"']/g, character => ({

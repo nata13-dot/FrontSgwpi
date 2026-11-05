@@ -92,7 +92,27 @@ document.getElementById('profileForm').addEventListener('submit', async e => {
         await loadProfile();
     } catch (error) { Swal.fire('Error', error.message, 'error'); }
 });
+async function loadNotificationPreferences() {
+    let items = [];
+    try { items = (await api.get('/notifications/preferences', { _fresh: true })).data || []; } catch (error) { return; }
+    if (!items.length) return;
+    document.getElementById('notificationPreferences')?.remove();
+    document.getElementById('profileForm').insertAdjacentHTML('afterend', `<section class="card border-0 shadow-sm mt-4" id="notificationPreferences"><div class="card-body">
+        <h2 class="h5">Avisos</h2>
+        <p class="text-muted small">Los avisos sobre algo que requiere tu atención (calificaciones, cambios de sala, solicitudes) siempre llegan. De 22:00 a 7:00 sólo llegan cambios urgentes.</p>
+        ${items.map(item => `<div class="form-check form-switch mb-2"><input class="form-check-input notification-preference" type="checkbox" role="switch" id="pref-${item.key}" data-event="${item.key}" ${item.enabled ? 'checked' : ''}><label class="form-check-label" for="pref-${item.key}">${item.label}<small class="d-block text-muted">${item.hint}</small></label></div>`).join('')}
+    </div></section>`);
+    document.querySelectorAll('.notification-preference').forEach(input => input.addEventListener('change', async () => {
+        try {
+            await api.put('/notifications/preferences', { event: input.dataset.event, enabled: input.checked });
+        } catch (error) {
+            input.checked = !input.checked;
+            swalToast('error', error.message);
+        }
+    }));
+}
 document.addEventListener('DOMContentLoaded', loadProfile);
+document.addEventListener('DOMContentLoaded', loadNotificationPreferences);
 </script>
 </body>
 </html>
