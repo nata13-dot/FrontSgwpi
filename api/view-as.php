@@ -78,7 +78,7 @@ if ($action === 'exit') {
         sgpi_session_response(401, ['error' => 'La sesión del administrador expiró. Inicia sesión de nuevo.', 'redirect' => '/index.php']);
     }
     persist_auth_session($origin['token'], $verified['user'], $origin['remember']);
-    $target = is_string($data['return_to'] ?? null) && str_starts_with($data['return_to'], '/pages/') ? $data['return_to'] : '/pages/admin/general.php';
+    $target = is_string($data['return_to'] ?? null) && preg_match('#^/[a-zA-Z0-9][a-zA-Z0-9/_.-]*(\?[^\r\n]*)?$#', $data['return_to']) ? $data['return_to'] : '/pages/admin/general.php';
     echo json_encode(['success' => true, 'dashboard_url' => $target], JSON_UNESCAPED_UNICODE);
     exit;
 }

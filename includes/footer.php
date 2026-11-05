@@ -48,22 +48,12 @@ function applySystemSettings(settings) {
     window.SGPI_SETTINGS_SIGNATURE = systemSettingsSignature(settings);
 
     localStorage.setItem('sgpi-public-settings', JSON.stringify({
-        default_theme: settings.default_theme || 'system',
         grayscale_mode: Boolean(settings.grayscale_mode),
-        font_scale: Number(settings.font_scale || 100),
         global_notice: settings.global_notice || '',
         system_notices: settings.system_notices || []
     }));
 
-    const storedTheme = localStorage.getItem('sgpi-theme');
-    let theme = storedTheme || settings.default_theme || 'light';
-    if (theme === 'system') {
-        theme = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
-    }
-    document.documentElement.dataset.theme = theme;
-    document.documentElement.style.colorScheme = theme;
     document.documentElement.classList.toggle('grayscale-mode', Boolean(settings.grayscale_mode));
-    document.documentElement.style.fontSize = `${settings.font_scale || 100}%`;
 
     const globalNoticeText = String(settings.global_notice || '').trim();
     const existing = document.getElementById('globalSystemNotice');
@@ -94,9 +84,7 @@ function applySystemSettings(settings) {
 function systemSettingsSignature(settings) {
     try {
         return JSON.stringify({
-            default_theme: settings?.default_theme || 'system',
             grayscale_mode: Boolean(settings?.grayscale_mode),
-            font_scale: Number(settings?.font_scale || 100),
             global_notice: settings?.global_notice || '',
             session_timeout_minutes: Number(settings?.session_timeout_minutes || 30),
             system_notices: settings?.system_notices || []
@@ -208,7 +196,7 @@ function currentAudienceContext() {
     const user = window.SGPI_SESSION?.user || null;
 
     const roleId = Number(user?.active_profile_id || user?.perfil_id || 0);
-    const pathname = window.location.pathname.replace(/\/+$/, '') || '/';
+    const pathname = <?= json_encode($_SERVER['PHP_SELF'] ?? '/') ?>;
     const isIndex = pathname === '/' || pathname.endsWith('/index.php');
     const isDashboard = /\/pages\/(admin|teacher|student)\/dashboard\.php$/.test(pathname);
 

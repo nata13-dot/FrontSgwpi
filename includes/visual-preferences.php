@@ -27,29 +27,36 @@ html.grayscale-mode {
 }
 </style>
 <script>
-(function () {
-    try {
-        var root = document.documentElement;
-        var cached = JSON.parse(localStorage.getItem('sgpi-public-settings') || '{}');
-        var storedTheme = localStorage.getItem('sgpi-theme');
-        var theme = storedTheme || cached.default_theme || root.dataset.theme || 'light';
+// Apariencia: tema claro, oscuro o según el dispositivo, y escala personal sobre la letra del navegador.
+// Se guarda en la cuenta (/appearance) y se copia aquí para aplicarla antes de pintar la página.
+window.SGPIAppearance = (function () {
+    var root = document.documentElement;
+    var media = window.matchMedia ? window.matchMedia('(prefers-color-scheme: dark)') : null;
+    var read = function (key) { try { return localStorage.getItem(key); } catch (error) { return null; } };
+    var write = function (key, value) { try { localStorage.setItem(key, value); } catch (error) { /* Dura hasta cerrar. */ } };
 
-        if (theme === 'system') {
-            theme = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
-        }
-
-        root.dataset.theme = theme;
-        root.style.colorScheme = theme;
-
-        if (cached.grayscale_mode) {
-            root.classList.add('grayscale-mode');
-        }
-
-        if (cached.font_scale) {
-            root.style.fontSize = cached.font_scale + '%';
-        }
-    } catch (error) {
-        document.documentElement.dataset.theme = localStorage.getItem('sgpi-theme') || 'light';
+    function theme() {
+        var value = read('sgpi-theme');
+        return value === 'dark' || value === 'system' ? value : 'light';
     }
+    function fontScale() { return Number(read('sgpi-font-scale')) || 100; }
+    function apply() {
+        var resolved = theme() === 'system' ? (media && media.matches ? 'dark' : 'light') : theme();
+        root.dataset.theme = resolved;
+        root.style.colorScheme = resolved;
+        root.style.fontSize = fontScale() + '%';
+        window.dispatchEvent(new CustomEvent('sgpi:appearance'));
+    }
+    function set(next) {
+        if (next.theme) write('sgpi-theme', next.theme);
+        if (next.fontScale) write('sgpi-font-scale', String(next.fontScale));
+        apply();
+    }
+    if (media && media.addEventListener) media.addEventListener('change', apply);
+    try {
+        if (JSON.parse(read('sgpi-public-settings') || '{}').grayscale_mode) root.classList.add('grayscale-mode');
+    } catch (error) { /* Sin ajustes guardados se muestra a color. */ }
+    apply();
+    return { theme: theme, fontScale: fontScale, set: set };
 })();
 </script>

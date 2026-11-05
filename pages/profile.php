@@ -112,7 +112,36 @@ async function loadNotificationPreferences() {
     }));
 }
 document.addEventListener('DOMContentLoaded', loadProfile);
-document.addEventListener('DOMContentLoaded', loadNotificationPreferences);
+function renderAppearance() {
+    const option = (group, value, label, current) => `<input type="radio" class="btn-check" name="${group}" id="${group}-${value}" value="${value}" ${String(current) === String(value) ? 'checked' : ''}><label class="btn btn-outline-primary btn-sm" for="${group}-${value}">${label}</label>`;
+    document.getElementById('appearancePreferences')?.remove();
+    document.getElementById('profileForm').insertAdjacentHTML('afterend', `<section class="card border-0 shadow-sm mt-4" id="appearancePreferences"><div class="card-body">
+        <h2 class="h5">Apariencia</h2>
+        <p class="text-muted small">Se guarda en tu cuenta y te acompaña en tus otros dispositivos.</p>
+        <div class="mb-3"><div class="form-label">Tema</div><div class="d-flex flex-wrap gap-2">
+            ${option('appearanceTheme', 'light', 'Claro', SGPIAppearance.theme())}${option('appearanceTheme', 'dark', 'Oscuro', SGPIAppearance.theme())}${option('appearanceTheme', 'system', 'Según el dispositivo', SGPIAppearance.theme())}
+        </div></div>
+        <div><div class="form-label">Tamaño de letra</div><div class="d-flex flex-wrap gap-2">
+            ${[[90, 'Chica'], [100, 'Normal'], [115, 'Grande'], [130, 'Muy grande']].map(([value, label]) => option('appearanceFont', value, label, SGPIAppearance.fontScale())).join('')}
+        </div><div class="form-text">Se suma al tamaño de letra de tu navegador.</div></div>
+    </div></section>`);
+    document.getElementById('appearancePreferences').addEventListener('change', event => {
+        if (event.target.name === 'appearanceTheme') SGPIAppearance.set({ theme: event.target.value });
+        if (event.target.name === 'appearanceFont') SGPIAppearance.set({ fontScale: Number(event.target.value) });
+        if (!document.querySelector('.view-as-banner')) window.SGPISaveAppearance?.();
+    });
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+    renderAppearance();
+    // La apariencia de la cuenta puede llegar después de pintar las opciones.
+    window.addEventListener('sgpi:appearance', () => {
+        const check = (name, value) => { const input = document.querySelector(`input[name="${name}"][value="${value}"]`); if (input) input.checked = true; };
+        check('appearanceTheme', SGPIAppearance.theme());
+        check('appearanceFont', SGPIAppearance.fontScale());
+    });
+    loadNotificationPreferences();
+});
 </script>
 </body>
 </html>

@@ -72,8 +72,11 @@ function sgpi_cookie_options($expires = 0) {
     ];
 }
 
-function persist_auth_session($token, $user, $remember = true) {
+function persist_auth_session($token, $user, $remember = false) {
     if (!$token || !is_array($user)) return false;
+
+    // En el navegador la sesión nunca se recuerda: las cookies mueren al cerrarlo.
+    $remember = false;
 
     $encodedUser = sgpi_base64url_encode(json_encode($user, JSON_UNESCAPED_UNICODE));
     $expires = $remember ? time() + SGPI_AUTH_COOKIE_TTL : 0;
@@ -136,6 +139,12 @@ function restore_auth_session_from_cookies() {
     $remember = ($_COOKIE[SGPI_AUTH_REMEMBER_COOKIE] ?? '1') === '1';
 
     if (!$token || !$encodedUser || !$signature) return false;
+    // Sesiones creadas cuando el navegador podía recordarlas: se piden credenciales de nuevo.
+    if ($remember) {
+        clear_auth_session_cookies();
+        unset($_SESSION['auth_token'], $_SESSION['user'], $_SESSION['auth_remember']);
+        return false;
+    }
     $validSignature = hash_equals(sgpi_auth_signature_v2($token, $encodedUser, $remember), $signature)
         || hash_equals(sgpi_auth_signature($token, $encodedUser), $signature);
     if (!$validSignature) {

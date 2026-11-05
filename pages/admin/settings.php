@@ -49,21 +49,6 @@ if (!is_authenticated() || !is_admin()) {
                                     </div>
                                 </div>
                                 <div class="col-md-6">
-                                    <label class="form-label" for="default_theme">Tema por defecto</label>
-                                    <select class="form-select" id="default_theme" required>
-                                        <option value="system">Preferencia del navegador</option>
-                                        <option value="light">Claro</option>
-                                        <option value="dark">Oscuro</option>
-                                    </select>
-                                </div>
-                                <div class="col-md-6">
-                                    <label class="form-label" for="font_scale">Tamaño de fuente general</label>
-                                    <div class="input-group">
-                                        <input type="number" class="form-control" id="font_scale" min="85" max="125" step="5" required>
-                                        <span class="input-group-text">%</span>
-                                    </div>
-                                </div>
-                                <div class="col-md-6">
                                     <label class="form-label" for="max_file_size_mb">Tamaño máximo de archivo</label>
                                     <div class="input-group">
                                         <input type="number" class="form-control" id="max_file_size_mb" min="1" max="200" required>
@@ -140,7 +125,7 @@ function previewGrayscaleMode() {
 async function loadSettings() {
     try {
         const settings = await api.get('/settings');
-        ['session_timeout_minutes', 'default_theme', 'font_scale', 'max_file_size_mb', 'max_project_members', 'global_notice'].forEach(id => {
+        ['session_timeout_minutes', 'max_file_size_mb', 'max_project_members', 'global_notice'].forEach(id => {
             document.getElementById(id).value = settings[id] ?? '';
         });
         document.getElementById('grayscale_mode').checked = Boolean(settings.grayscale_mode);
@@ -158,8 +143,6 @@ document.getElementById('settingsForm').addEventListener('submit', async event =
     const allowed = [...document.querySelectorAll('.allowed-file-type:checked')].map(input => input.value);
     const payload = {
         session_timeout_minutes: Number(document.getElementById('session_timeout_minutes').value),
-        default_theme: document.getElementById('default_theme').value,
-        font_scale: Number(document.getElementById('font_scale').value),
         max_file_size_mb: Number(document.getElementById('max_file_size_mb').value),
         allowed_file_types: allowed,
         max_project_members: Number(document.getElementById('max_project_members').value),

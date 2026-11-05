@@ -23,8 +23,8 @@ if ($verified['status'] !== 200 || !$verified['user']) {
     sgpi_session_response(503, ['error' => 'No fue posible verificar la sesión con el servidor.']);
 }
 
-$remember = array_key_exists('remember', $data) ? !empty($data['remember']) : true;
-persist_auth_session($data['auth_token'], $verified['user'], $remember);
+$remember = false;
+persist_auth_session($data['auth_token'], $verified['user']);
 
 echo json_encode([
     'success' => true,

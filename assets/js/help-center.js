@@ -1,5 +1,6 @@
-// Asistente de ayuda y guía de inicio. Los textos y la comparación de preguntas viven en la API
-// (config/help.php), así que la app y la web responden lo mismo; no intervienen servicios externos.
+// Asistente de ayuda y guía de inicio. Los temas y la comparación de preguntas viven en la API
+// (resources/help), así que la app y la web responden lo mismo; no intervienen servicios externos.
+// Sin sesión (data-guest en el script) solo ofrece los temas de acceso y registro.
 (() => {
     const TARGETS = {
         menu: ['#appSidebar', '.navbar-sidebar-toggle'],
@@ -9,7 +10,10 @@
         account: ['#userMenu'],
         help: ['.help-fab']
     };
-    const page = window.location.pathname;
+    // La página real, no la URL visible: los temas se identifican por su archivo.
+    const page = window.SGPI_PAGE || window.location.pathname;
+    const guest = Boolean(document.currentScript?.dataset.guest);
+    const endpoint = guest ? '/help/public' : '/help';
     let tour = [];
 
     const escapeHtml = value => String(value ?? '').replace(/[&<>"']/g, character => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[character]));
@@ -105,7 +109,7 @@
     panel.setAttribute('aria-label', 'Asistente de ayuda');
     panel.innerHTML = `
         <header>
-            <div><strong>Asistente de ayuda</strong><small>Respuestas sobre cómo usar el SGPI.</small></div>
+            <div><strong>Asistente de ayuda</strong><small>Elige un tema o escribe tu pregunta.</small></div>
             <button type="button" class="btn-close" aria-label="Cerrar" data-help="close"></button>
         </header>
         <div class="help-chat" aria-live="polite"></div>
@@ -116,10 +120,10 @@
     const chat = panel.querySelector('.help-chat');
     const form = panel.querySelector('form');
     const field = form.querySelector('input');
-    const topics = new Map();
 
-    const remember = topic => { topics.set(topic.id, topic); return topic; };
-    const suggestions = list => `<div class="help-suggestions">${list.map(topic => `<button type="button" data-topic="${escapeHtml(remember(topic).id)}">${escapeHtml(topic.question)}</button>`).join('')}</div>`;
+    let categories = [];
+    const choices = list => `<div class="help-suggestions">${list.map(item => `<button type="button" data-${item.topics ? 'category' : 'topic'}="${escapeHtml(item.id)}" data-label="${escapeHtml(item.question || item.title)}">${escapeHtml(item.question || item.title)}</button>`).join('')}</div>`;
+    const caption = text => `<small class="d-block mt-2 text-muted">${text}</small>`;
 
     function addBubble(from, html) {
         const bubble = document.createElement('div');
@@ -129,28 +133,45 @@
         bubble.scrollIntoView({ block: 'nearest' });
         return bubble;
     }
+    const addUser = text => addBubble('user', `<p>${escapeHtml(text)}</p>`);
 
     function answerHtml(topic, withTitle = false) {
         const link = topic.web && !topic.here && topic.web !== page
             ? `<a class="btn btn-outline-primary btn-sm" href="${escapeHtml(topic.web)}">Ir a la pantalla <i class="bi bi-arrow-right" aria-hidden="true"></i></a>` : '';
-        return `${withTitle ? `<strong>${escapeHtml(topic.question)}</strong>` : ''}<ol class="help-steps">${topic.steps.map(step => `<li>${escapeHtml(step)}</li>`).join('')}</ol>${link}`;
+        const body = topic.personal
+            ? topic.steps.map(line => `<p>${escapeHtml(line)}</p>`).join('')
+            : `<ol class="help-steps">${topic.steps.map(step => `<li>${escapeHtml(step)}</li>`).join('')}</ol>`;
+        return `${withTitle ? `<strong>${escapeHtml(topic.question)}</strong>` : ''}${body}${link}
+            ${topic.next ? `${caption('¿Qué sigue?')}${choices([topic.next])}` : ''}
+            ${topic.related?.length ? `${caption('También puede servirte')}${choices(topic.related)}` : ''}`;
     }
 
-    function showTopic(topic) {
-        addBubble('user', `<p>${escapeHtml(topic.question)}</p>`);
-        addBubble('bot', answerHtml(topic));
+    async function respond(params, render) {
+        const waiting = addBubble('bot', '<p class="text-muted mb-0">Buscando...</p>');
+        try {
+            waiting.innerHTML = render(await api.get(endpoint, { ...params, page, _silent: true, _fresh: true }));
+        } catch {
+            waiting.innerHTML = '<p>No se pudo consultar la ayuda. Intenta de nuevo.</p>';
+        }
+        waiting.scrollIntoView({ block: 'start' });
     }
+    const openTopic = (id, label) => {
+        addUser(label);
+        respond({ topic: id }, data => answerHtml(data.topic));
+    };
 
     let loaded = false;
     async function loadHelp() {
-        const data = await api.get('/help', { page, _silent: true, _cache_ttl: 300000 });
+        const data = await api.get(endpoint, { page, _silent: true, _cache_ttl: 300000 });
         tour = data.tour || [];
+        categories = data.categories || [];
         if (!loaded) {
             loaded = true;
-            const first = (currentUser().nombres || '').split(' ')[0];
-            addBubble('bot', `<p>Hola${first ? `, ${escapeHtml(first)}` : ''}. Pregúntame cómo hacer algo o elige un tema:</p>
-                ${suggestions(data.topics || [])}
-                <button type="button" class="btn btn-outline-primary btn-sm" data-help="tour"><i class="bi bi-compass" aria-hidden="true"></i> Ver la guía de inicio</button>`);
+            const first = guest ? '' : (currentUser().nombres || '').split(' ')[0];
+            addBubble('bot', `<p>Hola${first ? `, ${escapeHtml(first)}` : ''}. ¿En qué te ayudo?</p>
+                ${choices(data.suggested || [])}
+                ${caption('Todos los temas')}${choices(categories)}
+                ${guest ? '' : '<button type="button" class="btn btn-outline-primary btn-sm" data-help="tour"><i class="bi bi-compass" aria-hidden="true"></i> Ver la guía de inicio</button>'}`);
         }
         return data;
     }
@@ -168,35 +189,37 @@
         if (action === 'close') closePanel();
         if (action === 'tour') startTour();
         if (action === 'search') { closePanel(); window.SGPIGlobalSearch?.open(); }
-        const topic = topics.get(event.target.closest('[data-topic]')?.dataset.topic);
-        if (topic) showTopic(topic);
+        if (action === 'menu') { addUser('Ver todos los temas'); addBubble('bot', `<p>Elige una sección:</p>${choices(categories)}`); }
+        const topic = event.target.closest('[data-topic]');
+        if (topic) openTopic(topic.dataset.topic, topic.dataset.label);
+        const categoryButton = event.target.closest('[data-category]');
+        const category = categories.find(item => item.id === categoryButton?.dataset.category);
+        if (category) {
+            addUser(category.title);
+            addBubble('bot', `<p>Temas de ${escapeHtml(category.title)}:</p>${choices(category.topics)}`);
+        }
     });
     panel.addEventListener('keydown', event => { if (event.key === 'Escape') { closePanel(); fab.focus(); } });
 
-    form.addEventListener('submit', async event => {
+    form.addEventListener('submit', event => {
         event.preventDefault();
         const question = field.value.trim();
         if (!question) return;
         field.value = '';
-        addBubble('user', `<p>${escapeHtml(question)}</p>`);
-        const waiting = addBubble('bot', '<p class="text-muted mb-0">Buscando...</p>');
-        try {
-            const data = await api.get('/help', { q: question, page, _silent: true, _fresh: true });
-            const [best, ...others] = data.topics || [];
-            waiting.innerHTML = best
-                ? `${answerHtml(best, true)}${others.length ? `<small class="d-block mt-2 text-muted">También puede servirte:</small>${suggestions(others.slice(0, 3))}` : ''}`
-                : `<p>No encontré una respuesta para eso. Intenta con otras palabras, o búscalo en el sistema. Si es un problema con tu cuenta o tus datos, acude a tu jefatura.</p>
-                   <button type="button" class="btn btn-outline-primary btn-sm" data-help="search"><i class="bi bi-search" aria-hidden="true"></i> Abrir el buscador</button>`;
-        } catch {
-            waiting.innerHTML = '<p>No se pudo consultar la ayuda. Intenta de nuevo.</p>';
-        }
-        waiting.scrollIntoView({ block: 'start' });
+        addUser(question);
+        respond({ q: question }, data => {
+            if (data.topic) return `${answerHtml(data.topic, true)}${data.options?.length ? `${caption('¿Buscabas otra cosa?')}${choices(data.options)}` : ''}`;
+            if (data.options?.length) return `<p>No estoy seguro de haberte entendido. ¿Te refieres a alguna de estas?</p>${choices(data.options)}`;
+            return `<p>No encontré una respuesta para eso. Intenta con otras palabras o revisa los temas. Si es un problema con tu cuenta o tus datos, acude a tu jefatura.</p>
+                <button type="button" class="btn btn-outline-primary btn-sm" data-help="menu">Ver todos los temas</button>
+                ${guest ? '' : '<button type="button" class="btn btn-outline-primary btn-sm" data-help="search"><i class="bi bi-search" aria-hidden="true"></i> Abrir el buscador</button>'}`;
+        });
     });
 
     document.addEventListener('DOMContentLoaded', async () => {
         document.body.append(fab, panel);
         // La primera vez que entra con este perfil en este navegador; la vista simulada no la activa.
-        if (document.querySelector('.view-as-banner') || tourSeen()) return;
+        if (guest || document.querySelector('.view-as-banner') || tourSeen()) return;
         try {
             await loadHelp();
             if (tour.length) startTour();

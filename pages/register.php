@@ -64,6 +64,7 @@ if (is_authenticated()) { header('Location: ' . dashboard_url()); exit; }
 <script>const API_BASE_URL = '<?= API_BASE_URL ?>';</script>
 <script src="<?= asset('/assets/js/auth.js') ?>"></script>
 <script src="<?= asset('/assets/js/api.js') ?>"></script>
+<script src="<?= asset('/assets/js/help-center.js') ?>" data-guest="1"></script>
 <script>
 const $ = id => document.getElementById(id);
 const esc = value => String(value ?? '').replace(/[&<>'"]/g, char => ({'&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;'}[char]));

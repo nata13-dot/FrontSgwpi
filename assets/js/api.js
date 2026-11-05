@@ -221,7 +221,7 @@ class ApiClient {
 
             // Contraseña temporal (la matrícula): la API sólo permite cambiarla.
             if (response.status === 428 && result.requires_password_change) {
-                if (!window.location.pathname.startsWith('/pages/change-password.php')) {
+                if (!['/pages/change-password.php', '/cambiar-contrasena'].includes(window.location.pathname)) {
                     window.location.href = '/pages/change-password.php';
                 }
             }

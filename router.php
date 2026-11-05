@@ -3,6 +3,16 @@
 // lee .htaccess, así que aquí se replican las mismas restricciones.
 $path = rawurldecode(parse_url($_SERVER['REQUEST_URI'] ?? '/', PHP_URL_PATH) ?: '/');
 
+// Mismas direcciones limpias que deploy/nginx-clean-urls.conf.
+$cleanFile = array_search(rtrim($path, '/'), require __DIR__.'/includes/clean-urls.php', true);
+if ($cleanFile !== false) {
+    $_SERVER['SCRIPT_NAME'] = $_SERVER['PHP_SELF'] = $cleanFile;
+    $_SERVER['SCRIPT_FILENAME'] = __DIR__.$cleanFile;
+    chdir(dirname(__DIR__.$cleanFile));
+    require __DIR__.$cleanFile;
+    return;
+}
+
 $blocked = [
     '#(^|/)\.#',                                  // .git, .htaccess, .vscode, .env
     '#^/(includes|tests|docs|vendor)(/|$)#',      // código interno, pruebas e informes

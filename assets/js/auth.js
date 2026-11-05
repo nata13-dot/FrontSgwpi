@@ -19,7 +19,7 @@ class AuthManager {
     /**
      * Iniciar sesión
      */
-    async login(id, password, remember = true) {
+    async login(id, password, remember = false) {
         try {
             const response = await fetch(`${API_BASE_URL}/auth/login`, {
                 method: 'POST',

@@ -539,11 +539,7 @@ $serverDashboardUrl = dashboard_url();
                             <div class="invalid-feedback">Ingresa tu contraseña.</div>
                         </div>
 
-                        <div class="d-flex justify-content-between align-items-center mb-3">
-                            <div class="form-check">
-                                <input class="form-check-input" type="checkbox" value="1" id="rememberCheck" checked>
-                                <label class="form-check-label text-muted" for="rememberCheck">Recuerdame</label>
-                            </div>
+                        <div class="d-flex justify-content-end align-items-center mb-3">
                             <button type="button" class="btn btn-link text-muted small p-0 text-decoration-none" onclick="openPasswordRecoveryModal()">¿Olvidaste tu contraseña?</button>
                         </div>
 
@@ -660,6 +656,7 @@ $serverDashboardUrl = dashboard_url();
     <script>const API_BASE_URL = '<?= API_BASE_URL ?>';</script>
     <script src="<?= asset('/assets/js/auth.js') ?>"></script>
     <script src="<?= asset('/assets/js/api.js') ?>"></script>
+<?php if (!is_authenticated()): ?><script src="<?= asset('/assets/js/help-center.js') ?>" data-guest="1"></script><?php endif; ?>
     <script src="<?= asset('/assets/js/app.js') ?>"></script>
     <script src="<?= asset('/assets/js/responsive.js') ?>"></script>
     <script>
@@ -850,7 +847,7 @@ $serverDashboardUrl = dashboard_url();
 
                 auth.token = response.access_token;
                 auth.user = response.user;
-                auth.remember = true;
+                auth.remember = false;
                 await auth.persistSession();
 
                 await Swal.fire({
@@ -900,8 +897,7 @@ $serverDashboardUrl = dashboard_url();
             loginSubmitBtn.disabled = true;
             loginSubmitBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Iniciando...';
 
-            const remember = document.getElementById('rememberCheck')?.checked !== false;
-            const result = await auth.login(id, password, remember);
+            const result = await auth.login(id, password);
 
             if (!result.success) {
                 showLoginError(result.error);

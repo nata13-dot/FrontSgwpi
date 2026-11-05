@@ -334,7 +334,7 @@ $management_pages = [
 async function exitViewAs(button) {
     button.disabled = true;
     // Al volver se queda en la misma carrera: en la página de administración actual o en su inicio.
-    const returnTo = location.pathname.startsWith('/pages/admin/') ? location.pathname + location.search : '/pages/admin/dashboard.php';
+    const returnTo = <?= json_encode(str_starts_with($_SERVER['PHP_SELF'] ?? '', '/pages/admin/')) ?> ? location.pathname + location.search : '/pages/admin/dashboard.php';
     const response = await fetch('/api/view-as.php', { method: 'POST', credentials: 'include', headers: { 'Content-Type': 'application/json', Accept: 'application/json' }, body: JSON.stringify({ action: 'exit', return_to: returnTo }) });
     const data = await response.json().catch(() => ({}));
     try { sessionStorage.clear(); } catch (error) { /* la recarga basta */ }
@@ -363,8 +363,8 @@ async function startLevelView(profileId, button) {
 <script>
 document.addEventListener('DOMContentLoaded', () => {
     const toggle = document.getElementById('themeToggle');
-    const storedTheme = localStorage.getItem('sgpi-theme') || document.documentElement.dataset.theme || 'light';
-    document.documentElement.dataset.theme = storedTheme;
+    const saveAppearance = () => api.put('/appearance', { theme: SGPIAppearance.theme(), font_scale: SGPIAppearance.fontScale() }).catch(() => {});
+    window.SGPISaveAppearance = saveAppearance;
 
     if (toggle) {
         const setLabel = () => {
@@ -372,14 +372,22 @@ document.addEventListener('DOMContentLoaded', () => {
             toggle.innerHTML = `<i class="bi ${dark ? 'bi-sun' : 'bi-moon-stars'}"></i> ${dark ? 'Modo claro' : 'Modo oscuro'}`;
         };
         setLabel();
+        window.addEventListener('sgpi:appearance', setLabel);
         toggle.addEventListener('click', () => {
-            const nextTheme = document.documentElement.dataset.theme === 'dark' ? 'light' : 'dark';
-            document.documentElement.dataset.theme = nextTheme;
-            document.documentElement.style.colorScheme = nextTheme;
-            localStorage.setItem('sgpi-theme', nextTheme);
-            setLabel();
+            SGPIAppearance.set({ theme: document.documentElement.dataset.theme === 'dark' ? 'light' : 'dark' });
+            if (!document.querySelector('.view-as-banner')) saveAppearance();
         });
     }
+
+    // La apariencia de la cuenta se consulta una vez por pestaña; mientras tanto se usa la copia de este navegador.
+    <?php if (is_authenticated()): ?>
+    if (sessionStorage.getItem('sgpi-appearance-loaded') !== <?= json_encode((string) ($current_user['id'] ?? '')) ?>) {
+        api.get('/appearance', { _fresh: true, _silent: true }).then(response => {
+            sessionStorage.setItem('sgpi-appearance-loaded', <?= json_encode((string) ($current_user['id'] ?? '')) ?>);
+            if (response.data) SGPIAppearance.set({ theme: response.data.theme, fontScale: response.data.font_scale });
+        }).catch(() => {});
+    }
+    <?php endif; ?>
 
     document.querySelectorAll('[data-open-login]').forEach(link => {
         link.addEventListener('click', event => {
@@ -420,6 +428,7 @@ async function logout() {
 </script>
 <?php if (is_authenticated()): ?>
     <script src="<?= asset('/assets/js/global-search.js') ?>"></script>
+    <script>window.SGPI_PAGE = <?= json_encode($_SERVER['PHP_SELF'] ?? '') ?>;</script>
     <script src="<?= asset('/assets/js/upload-guard.js') ?>"></script>
     <script src="<?= asset('/assets/js/help-center.js') ?>"></script>
     <script src="<?= asset('/assets/js/activity-notifications.js') ?>"></script>
