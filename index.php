@@ -532,7 +532,7 @@ $serverDashboardUrl = dashboard_url();
                     <form id="loginForm" class="needs-validation" novalidate>
                         <div class="mb-3">
                             <label class="form-label" for="loginUserId">Número de control o empleado</label>
-                            <input type="text" class="form-control" id="loginUserId" name="username" placeholder="Ejemplo: 20260001" required autocomplete="username" autocapitalize="none" spellcheck="false">
+                            <input type="text" class="form-control" id="loginUserId" name="username" placeholder="Escribe tu número" required autocomplete="username" autocapitalize="none" spellcheck="false">
                             <div class="invalid-feedback">Ingresa tu número de control o empleado.</div>
                         </div>
 
@@ -581,12 +581,12 @@ $serverDashboardUrl = dashboard_url();
                         <p class="text-muted small">Confirma los datos de tu cuenta y te enviaremos un código a tu correo.</p>
                         <div class="mb-3">
                             <label class="form-label" for="recoveryUserId">Número de control o empleado</label>
-                            <input type="text" class="form-control" id="recoveryUserId" name="username" placeholder="Ejemplo: 22240022" maxlength="10" required autocomplete="username" autocapitalize="none" spellcheck="false">
+                            <input type="text" class="form-control" id="recoveryUserId" name="username" placeholder="Escribe tu número" maxlength="10" required autocomplete="username" autocapitalize="none" spellcheck="false">
                             <div class="invalid-feedback">Escribe tu número de control o empleado.</div>
                         </div>
                         <div class="mb-3">
                             <label class="form-label" for="recoveryEmail">Correo de tu cuenta</label>
-                            <input type="email" class="form-control" id="recoveryEmail" name="email" placeholder="l22240022@smartin.tecnm.mx" required autocomplete="email" autocapitalize="none" spellcheck="false">
+                            <input type="email" class="form-control" id="recoveryEmail" name="email" placeholder="El correo registrado en tu cuenta" required autocomplete="email" autocapitalize="none" spellcheck="false">
                             <div class="invalid-feedback">Escribe un correo válido.</div>
                         </div>
                         <div class="d-grid">
@@ -655,9 +655,21 @@ $serverDashboardUrl = dashboard_url();
     <script src="<?= asset('/assets/js/password-recovery.js') ?>"></script>
     <script>
         // "Crear cuenta" sólo aparece mientras alguna carrera tenga abierto el autoregistro.
-        api.get('/self-registration', { _fresh: true, _silent: true })
-            .then(data => ['selfRegistrationLink', 'selfRegistrationHero'].forEach(id => document.getElementById(id)?.classList.toggle('d-none', !data.open)))
-            .catch(() => {});
+        // Se vuelve a consultar al abrir el inicio de sesión, al regresar a la pestaña y a la hora del cierre.
+        let selfRegistrationTimer = null;
+        function refreshSelfRegistration() {
+            api.get('/self-registration', { _fresh: true, _silent: true }).then(data => {
+                ['selfRegistrationLink', 'selfRegistrationHero'].forEach(id => document.getElementById(id)?.classList.toggle('d-none', !data.open));
+                clearTimeout(selfRegistrationTimer);
+                const closes = (data.careers || []).map(career => new Date(career.closes_at).getTime() - Date.now());
+                // Una consulta al menos cada 24 horas: setTimeout no admite plazos muy largos.
+                if (closes.length) selfRegistrationTimer = setTimeout(refreshSelfRegistration, Math.min(Math.max(Math.min(...closes) + 1000, 1000), 86400000));
+            }).catch(() => {});
+        }
+        refreshSelfRegistration();
+        document.getElementById('loginModal')?.addEventListener('show.bs.modal', refreshSelfRegistration);
+        window.addEventListener('pageshow', event => { if (event.persisted) refreshSelfRegistration(); });
+        document.addEventListener('visibilitychange', () => { if (!document.hidden) refreshSelfRegistration(); });
 
         const loginForm = document.getElementById('loginForm');
         const loginSubmitBtn = document.getElementById('loginSubmitBtn');

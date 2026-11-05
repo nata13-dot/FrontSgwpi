@@ -97,7 +97,7 @@ if (!is_authenticated() || !is_admin()) {
                     <div class="card border-0 shadow-sm">
                         <div class="card-header bg-light">
                             <h5 class="mb-0"><i class="bi bi-envelope-check"></i> Autoregistro: formato del correo por carrera</h5>
-                            <small class="text-muted">El correo siempre es «l» seguida del número de control completo: 22240022 → l22240022@smartin.tecnm.mx; b22240022 → lb22240022@smartin.tecnm.mx.</small>
+                            <small class="text-muted">El número de control es generación (2) + clave de la carrera (2) + consecutivo (4). El correo siempre es «l» seguida del número completo, o «lb» si inicia con b.</small>
                         </div>
                         <div class="card-body"><div id="ruleEditors" class="row g-3"><div class="text-muted">Cargando reglas...</div></div></div>
                     </div>
@@ -168,8 +168,7 @@ document.getElementById('settingsForm').addEventListener('submit', async event =
 
 // La «l» del correo es fija y todas las carreras aceptan números con b al inicio (correo «lb…»).
 function ruleSample(rule) {
-    const digits = Number(rule.digits) || 8;
-    const number = `${String(rule.number_prefix || '').padEnd(digits - 2, '0').slice(0, digits - 2)}22`;
+    const number = `AA${rule.career_code || 'CC'}NNNN`;
     return `l${number}@${rule.domain} · lb${number}@${rule.domain}`;
 }
 
@@ -182,11 +181,10 @@ async function loadRules() {
             <div class="col-lg-6"><form class="border rounded-3 p-3 h-100" data-career="${career.id}" onsubmit="saveRule(event)">
                 <div class="d-flex flex-wrap justify-content-between gap-2 mb-2"><strong>${esc(career.nombre)}</strong>${open_until && new Date(open_until) > new Date() ? `<span class="badge bg-success">Abierto hasta ${new Date(open_until).toLocaleString('es-MX')}</span>` : ''}</div>
                 <div class="row g-2">
-                    <div class="col-sm-6"><label class="form-label small">El número inicia con</label><input class="form-control" name="number_prefix" inputmode="numeric" value="${esc(rule.number_prefix)}" placeholder="Vacío para no exigirlo" oninput="updateRuleSample(this.form)"></div>
-                    <div class="col-sm-6"><label class="form-label small">Dígitos del número de control</label><input class="form-control" name="digits" type="number" min="4" max="12" value="${esc(rule.digits)}" oninput="updateRuleSample(this.form)"></div>
+                    <div class="col-sm-6"><label class="form-label small">Clave de la carrera (2 dígitos)</label><input class="form-control" name="career_code" inputmode="numeric" maxlength="2" pattern="[0-9]{2}" value="${esc(rule.career_code)}" oninput="updateRuleSample(this.form)"></div>
                     <div class="col-sm-6"><label class="form-label small">Dominio</label><input class="form-control" name="domain" value="${esc(rule.domain)}" oninput="updateRuleSample(this.form)"></div>
                 </div>
-                <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mt-2"><small class="text-muted" data-sample>Ejemplo: ${esc(ruleSample(rule))}</small><button class="btn btn-sm btn-primary"><i class="bi bi-save"></i> Guardar</button></div>
+                <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mt-2"><small class="text-muted" data-sample>Formato: ${esc(ruleSample(rule))}</small><button class="btn btn-sm btn-primary"><i class="bi bi-save"></i> Guardar</button></div>
             </form></div>`).join('');
     } catch (error) {
         container.innerHTML = `<div class="alert alert-danger">${esc(error.message)}</div>`;
@@ -195,14 +193,13 @@ async function loadRules() {
 
 function ruleFromForm(form) {
     return {
-        number_prefix: form.number_prefix.value.trim(),
-        digits: Number(form.digits.value),
+        career_code: form.career_code.value.trim(),
         domain: form.domain.value.trim(),
     };
 }
 
 function updateRuleSample(form) {
-    form.querySelector('[data-sample]').textContent = `Ejemplo: ${ruleSample(ruleFromForm(form))}`;
+    form.querySelector('[data-sample]').textContent = `Formato: ${ruleSample(ruleFromForm(form))}`;
 }
 
 async function saveRule(event) {
