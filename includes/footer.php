@@ -587,6 +587,29 @@ window.promptText = async function ({
     return result.isConfirmed ? result.value : null;
 };
 
+// Archivo histórico: lo archivado deja de verse hasta restaurarlo en Sistema › Archivo histórico.
+window.sendToArchive = async function ({ tipo, ids, name }) {
+    if (!window.Swal) return false;
+    const result = await stableSwalFire({
+        title: 'Enviar al archivo histórico',
+        text: `${name} dejará de aparecer en el sistema hasta que lo restaures desde el archivo histórico. Lo publicado en el repositorio público sigue disponible.`,
+        input: 'textarea',
+        inputPlaceholder: 'Motivo (opcional), por ejemplo: generación 2026 egresada',
+        showCancelButton: true,
+        confirmButtonText: 'Archivar',
+        cancelButtonText: 'Cancelar'
+    });
+    if (!result.isConfirmed) return false;
+    try {
+        const response = await api.post('/archive', { tipo, ids: ids.map(String), motivo: String(result.value || '').trim() || null });
+        if (typeof swalToast === 'function') swalToast('success', response.message || 'Se envió al archivo histórico.');
+        return true;
+    } catch (error) {
+        Swal.fire('No se archivó', error.message, 'error');
+        return false;
+    }
+};
+
 window.promptPassword = async function ({
     title = 'Contraseña requerida',
     inputPlaceholder = 'Contraseña',

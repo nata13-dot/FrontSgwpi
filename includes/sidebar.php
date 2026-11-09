@@ -21,6 +21,11 @@ $section = isset($_GET['section']) ? $_GET['section'] : '';
                 <span class="sidebar-online"><i></i> En línea</span>
             </div>
         </div>
+        <?php // En el teléfono el menú de la cuenta queda oculto en la barra superior: sus comandos se repiten aquí. ?>
+        <div class="sidebar-account-actions">
+            <button type="button" class="sidebar-item" data-theme-toggle><i class="bi bi-moon-stars"></i><span>Modo oscuro</span></button>
+            <button type="button" class="sidebar-item text-danger" onclick="logout()"><i class="bi bi-box-arrow-right"></i><span>Cerrar sesión</span></button>
+        </div>
     <?php endif; ?>
     <?php $academicWorkflowsLink = '<a href="/pages/academic-workflows.php" class="sidebar-item ' . ($current_page == 'academic-workflows.php' ? 'active' : '') . '"><i class="bi bi-calendar3"></i><span>Seguimiento académico</span></a>'; ?>
     <?php if (is_management_staff()): ?>
@@ -76,7 +81,7 @@ $section = isset($_GET['section']) ? $_GET['section'] : '';
             <a data-career-module="entregables" href="/pages/admin/deliverables.php" class="sidebar-item sidebar-subitem <?= $current_page == 'deliverables.php' ? 'active' : '' ?>"><i class="bi bi-file-earmark-check"></i><span>Entregables</span></a>
         </details>
         <?php endif; ?>
-        <details class="sidebar-group" <?= in_array($current_page, ['document-tags.php', 'notices.php', 'settings.php', 'repositorio.php']) ? 'open' : '' ?>>
+        <details class="sidebar-group" <?= in_array($current_page, ['document-tags.php', 'notices.php', 'settings.php', 'archive.php', 'repositorio.php']) ? 'open' : '' ?>>
             <summary><i class="bi bi-sliders"></i><span>Sistema</span><i class="bi bi-chevron-down ms-auto"></i></summary>
             <?php if (is_admin()): ?>
                 <a data-career-module="repositorio" href="/pages/admin/document-tags.php" class="sidebar-item sidebar-subitem <?= $current_page == 'document-tags.php' ? 'active' : '' ?>"><i class="bi bi-tags"></i><span>Etiquetas</span></a>
@@ -84,6 +89,7 @@ $section = isset($_GET['section']) ? $_GET['section'] : '';
                 <a data-career-module="configuracion" href="/pages/admin/settings.php" class="sidebar-item sidebar-subitem <?= $current_page == 'settings.php' ? 'active' : '' ?>"><i class="bi bi-sliders"></i><span>Ajustes</span></a>
                 <a href="/pages/admin/career-modules.php" class="sidebar-item sidebar-subitem <?= $current_page == 'career-modules.php' ? 'active' : '' ?>"><i class="bi bi-grid-3x3-gap"></i><span>Módulos de carrera</span></a>
                 <a data-career-module="academico" href="/pages/admin/career-setup.php" class="sidebar-item sidebar-subitem <?= $current_page == 'career-setup.php' ? 'active' : '' ?>"><i class="bi bi-cloud-arrow-up"></i><span>Carga inicial</span></a>
+                <a href="/pages/admin/archive.php" class="sidebar-item sidebar-subitem <?= $current_page == 'archive.php' ? 'active' : '' ?>"><i class="bi bi-archive-fill"></i><span>Archivo histórico</span></a>
             <?php endif; ?>
             <a data-career-module="repositorio" href="/pages/repositorio.php" class="sidebar-item sidebar-subitem <?= $current_page == 'repositorio.php' ? 'active' : '' ?>"><i class="bi bi-archive"></i><span>Repositorio</span></a>
         </details>

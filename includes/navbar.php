@@ -362,21 +362,27 @@ async function startLevelView(profileId, button) {
 
 <script>
 document.addEventListener('DOMContentLoaded', () => {
-    const toggle = document.getElementById('themeToggle');
+    // El de la barra superior y el del menú lateral en el teléfono.
+    const toggles = document.querySelectorAll('#themeToggle, [data-theme-toggle]');
     const saveAppearance = () => api.put('/appearance', { theme: SGPIAppearance.theme(), font_scale: SGPIAppearance.fontScale() }).catch(() => {});
     window.SGPISaveAppearance = saveAppearance;
 
-    if (toggle) {
+    if (toggles.length) {
         const setLabel = () => {
             const dark = document.documentElement.dataset.theme === 'dark';
-            toggle.innerHTML = `<i class="bi ${dark ? 'bi-sun' : 'bi-moon-stars'}"></i> ${dark ? 'Modo claro' : 'Modo oscuro'}`;
+            const label = dark ? 'Modo claro' : 'Modo oscuro';
+            toggles.forEach(toggle => {
+                toggle.innerHTML = toggle.hasAttribute('data-theme-toggle')
+                    ? `<i class="bi ${dark ? 'bi-sun' : 'bi-moon-stars'}"></i><span>${label}</span>`
+                    : `<i class="bi ${dark ? 'bi-sun' : 'bi-moon-stars'}"></i> ${label}`;
+            });
         };
         setLabel();
         window.addEventListener('sgpi:appearance', setLabel);
-        toggle.addEventListener('click', () => {
+        toggles.forEach(toggle => toggle.addEventListener('click', () => {
             SGPIAppearance.set({ theme: document.documentElement.dataset.theme === 'dark' ? 'light' : 'dark' });
             if (!document.querySelector('.view-as-banner')) saveAppearance();
-        });
+        }));
     }
 
     // La apariencia de la cuenta se consulta una vez por pestaña; mientras tanto se usa la copia de este navegador.

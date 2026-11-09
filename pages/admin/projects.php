@@ -53,6 +53,9 @@ if (!is_authenticated()) {
                     <button type="button" class="btn btn-outline-secondary" id="caseViewBtn" onclick="setProjectManagementView('case')">
                         <i class="bi bi-lightbulb"></i> Caso integrador
                     </button>
+                    <button type="button" class="btn btn-outline-secondary" id="residencyViewBtn" onclick="setProjectManagementView('residency')">
+                        <i class="bi bi-briefcase"></i> Residencias
+                    </button>
                     <button type="button" class="btn btn-outline-secondary" id="thesisViewBtn" <?= is_project_coordinator() ? 'hidden title="Las tesis las administra la jefatura"' : '' ?> onclick="setProjectManagementView('thesis')">
                         <i class="bi bi-mortarboard"></i> Tesis
                     </button>
@@ -325,8 +328,11 @@ if (!is_authenticated()) {
         const PROJECT_MODALITIES = {
             integrator: { value: 'proyecto_integrador', label: 'Proyecto integrador', icon: 'bi-diagram-3' },
             dual: { value: 'dual', label: 'Modalidad Dual', icon: 'bi-building' },
-            case: { value: 'caso_integrador', label: 'Caso integrador', icon: 'bi-lightbulb' }
+            case: { value: 'caso_integrador', label: 'Caso integrador', icon: 'bi-lightbulb' },
+            // Proyectos de 9° marcados como residencia: salen de las demás pestañas.
+            residency: { value: 'residencia', label: 'Proyecto de residencia', icon: 'bi-briefcase' }
         };
+        const canArchive = <?= is_admin() ? 'true' : 'false' ?>;
 
         function currentProjectModality() {
             return PROJECT_MODALITIES[projectManagementView] || PROJECT_MODALITIES.integrator;
@@ -369,12 +375,14 @@ if (!is_authenticated()) {
                 const view = projectManagementView;
                 document.getElementById('projectManagementView').classList.toggle('d-none', view === 'thesis');
                 document.getElementById('thesisManagementView').classList.toggle('d-none', view !== 'thesis');
-                ['integrator', 'dual', 'case'].forEach(item => {
+                ['integrator', 'dual', 'case', 'residency'].forEach(item => {
                     document.getElementById(`${item}ViewBtn`).className = view === item ? 'btn btn-primary' : 'btn btn-outline-secondary';
                 });
                 document.getElementById('thesisViewBtn').className = view === 'thesis' ? 'btn btn-success' : 'btn btn-outline-secondary';
                 const newButton = document.getElementById('newProjectBtn');
                 if (newButton) {
+                    // Los de residencia se marcan desde los proyectos de 9°; no se crean aquí.
+                    newButton.hidden = view === 'residency';
                     newButton.innerHTML = view === 'thesis'
                         ? '<i class="bi bi-plus-circle"></i> Nueva Tesis'
                         : `<i class="bi bi-plus-circle"></i> Nuevo ${currentProjectModality().label}`;
@@ -461,7 +469,10 @@ if (!is_authenticated()) {
                     per_page: PROJECTS_PER_PAGE,
                     tipo_registro: projectManagementView === 'thesis' ? 'tesis' : 'proyecto'
                 };
-                if (projectManagementView !== 'thesis') params.modalidad = currentProjectModality().value;
+                if (projectManagementView !== 'thesis') {
+                    params.residencia = projectManagementView === 'residency' ? 1 : 0;
+                    if (projectManagementView !== 'residency') params.modalidad = currentProjectModality().value;
+                }
                 const semester = document.getElementById('semesterFilter').value;
                 const search = document.getElementById('projectSearchInput')?.value.trim();
                 if (semester) params.semestre = semester;
@@ -489,7 +500,9 @@ if (!is_authenticated()) {
 
                 let proyectosFiltrados = response.data.filter(project => requestedView === 'thesis'
                     ? Boolean(project.is_thesis) || project.tipo === 'tesis'
-                    : !project.is_thesis && project.tipo !== 'tesis' && project.modalidad === currentProjectModality().value
+                    : !project.is_thesis && project.tipo !== 'tesis' && (requestedView === 'residency'
+                        ? Boolean(project.es_residencia)
+                        : !project.es_residencia && project.modalidad === currentProjectModality().value)
                 );
                 // Se filtra sobre la categoría ya elegida para no mezclar tesis, dual, casos e integradores.
                 if (isTeacher) {
@@ -532,6 +545,13 @@ if (!is_authenticated()) {
                         ? `<button type="button" class="btn btn-outline-warning" onclick="toggleProjectThesis(${project.id}, false)" title="Quitar de tesis"><i class="bi bi-mortarboard-fill"></i></button>`
                         : `<button type="button" class="btn btn-outline-success" onclick="toggleProjectThesis(${project.id}, true)" title="Marcar como tesis"><i class="bi bi-mortarboard"></i></button>`;
 
+                    const residencyAction = projectManagementView === 'residency'
+                        ? `<button type="button" class="btn btn-outline-warning" onclick="toggleProjectResidency(${project.id}, false)" title="Quitar de residencia"><i class="bi bi-briefcase-fill"></i></button>`
+                        : (Number(project.semestre) === 9 ? `<button type="button" class="btn btn-outline-success" onclick="toggleProjectResidency(${project.id}, true)" title="Marcar como residencia"><i class="bi bi-briefcase"></i></button>` : '');
+                    const archiveAction = canArchive
+                        ? `<button type="button" class="btn btn-outline-secondary" onclick="archiveProject(${project.id})" title="Enviar al archivo histórico"><i class="bi bi-archive"></i></button>`
+                        : '';
+
                     tbody.innerHTML += `
                         <tr>
                             <td><strong>${escapeHtml(project.title)}</strong>${thesisBadge}${modalityBadge}</td>
@@ -543,9 +563,10 @@ if (!is_authenticated()) {
                             <td>
                                 <div class="btn-group btn-group-sm" role="group">
                                     <button class="btn btn-outline-secondary" onclick="showProjectDetails(${project.id})" title="Ver detalles"><i class="bi bi-eye"></i></button>
-                                    ${isAdmin ? `${thesisAction}
+                                    ${isAdmin ? `${thesisAction}${residencyAction}
                                     <button type="button" class="btn btn-outline-info" onclick="openProjectSubjectsModal(${project.id})" title="Materias"><i class="bi bi-book"></i></button>
                                     <button type="button" class="btn btn-outline-primary" onclick="openProjectModal(${project.id})" title="Editar"><i class="bi bi-pencil"></i></button>
+                                    ${archiveAction}
                                     <button class="btn btn-outline-danger" onclick="deleteProject(${project.id})" title="Eliminar"><i class="bi bi-trash"></i></button>` : ''}
                                 </div>
                             </td>
@@ -879,6 +900,28 @@ if (!is_authenticated()) {
             } catch (error) {
                 showAlert('#alertContainer', 'danger', error.message || 'No se pudo actualizar el estado de tesis');
             }
+        }
+
+        async function toggleProjectResidency(projectId, value) {
+            const confirmed = await confirmAction({
+                title: value ? 'Marcar como proyecto de residencia' : 'Quitar de residencia',
+                text: value
+                    ? 'El proyecto saldrá de esta lista y se verá en la pestaña Residencias.'
+                    : 'El proyecto volverá a su pestaña de proyectos integradores.',
+                confirmButtonText: value ? 'Sí, marcar' : 'Sí, quitar'
+            });
+            if (!confirmed) return;
+            try {
+                const response = await api.put(`/projects/${projectId}/residency`, { residencia: value });
+                swalToast('success', response.message);
+                await loadProjects(projectsCurrentPage);
+            } catch (error) {
+                showAlert('#alertContainer', 'danger', error.message || 'No se pudo cambiar la marca de residencia');
+            }
+        }
+
+        async function archiveProject(projectId) {
+            if (await sendToArchive({ tipo: 'proyectos', ids: [projectId], name: 'El proyecto' })) await loadProjects(projectsCurrentPage);
         }
 
         async function deleteProject(projectId) {

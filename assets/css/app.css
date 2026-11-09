@@ -1480,6 +1480,27 @@ html.grayscale-mode {
     border-bottom: 1px solid #e0e0e0;
 }
 
+.sidebar-account-actions {
+    display: none;
+    margin: -10px 0 12px;
+    padding-bottom: 8px;
+    border-bottom: 1px solid #e0e0e0;
+}
+
+.sidebar-account-actions .sidebar-item {
+    width: 100%;
+    border-top: 0;
+    border-right: 0;
+    border-bottom: 0;
+    background: none;
+    font: inherit;
+    text-align: left;
+}
+
+@media (max-width: 991.98px) {
+    .sidebar-account-actions { display: block; }
+}
+
 .sidebar-profile-photo {
     width: 45px;
     height: 45px;

@@ -465,6 +465,7 @@ if (!is_authenticated() || !can_view_users()) {
         let currentStatus = 'active';
         const CAN_GOVERN_USERS = <?= can_govern_users() ? 'true' : 'false' ?>;
         const IS_GENERAL_ADMIN = <?= is_general_admin() ? 'true' : 'false' ?>;
+        const CAN_ARCHIVE = <?= is_admin() ? 'true' : 'false' ?>;
         let currentProfile = 'all';
         let currentPage = 1;
         const usersPerPage = 12;
@@ -552,6 +553,9 @@ if (!is_authenticated() || !can_view_users()) {
                     const generalAdminButton = canSetGeneralAdmin
                         ? `<button class="btn ${isGeneralAdminRow ? 'btn-success' : 'btn-outline-secondary'}" onclick="setGeneralAdmin('${escapeHtml(user.id)}', ${isGeneralAdminRow ? 'false' : 'true'})" title="${isGeneralAdminRow ? 'Administrador general. Clic para retirarlo' : 'Nombrar administrador general'}"><i class="bi bi-award"></i></button>`
                         : '';
+                    const archiveButton = CAN_ARCHIVE && !isGeneralAdminRow && String(user.id) !== String(auth.getCurrentUser()?.id)
+                        ? `<button class="btn btn-outline-secondary" onclick="archiveUser('${escapeHtml(user.id)}')" title="Enviar al archivo histórico"><i class="bi bi-archive"></i></button>`
+                        : '';
                     const statusBadge = isActive ? '<span class="badge bg-success">Activo</span>' : '<span class="badge bg-secondary">Inactivo</span>';
                     // El botón refleja el estado actual; el título indica la acción disponible.
                     const toggleClass = isActive ? 'btn-outline-success' : 'btn-outline-danger';
@@ -586,6 +590,7 @@ if (!is_authenticated() || !can_view_users()) {
                                     ${normalToggle}
                                     ${protectedButton}
                                     ${generalAdminButton}
+                                    ${archiveButton}
                                 </div>`)}
                             </td>
                         </tr>`;
@@ -1147,6 +1152,10 @@ if (!is_authenticated() || !can_view_users()) {
             } catch (error) {
                 showError(error.message || 'Error al cambiar el estado del usuario');
             }
+        }
+
+        async function archiveUser(userId) {
+            if (await sendToArchive({ tipo: 'usuarios', ids: [userId], name: `La cuenta ${userId}` })) loadUsers();
         }
 
         async function setGeneralAdmin(userId, grant) {
