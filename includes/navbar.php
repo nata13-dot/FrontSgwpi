@@ -6,7 +6,9 @@ $management_pages = [
     'users.php', 'advisors.php', 'projects.php', 'project-create.php', 'project-edit.php',
     'proposal-config.php', 'deliverables.php', 'evaluations.php', 'asignaturas.php',
     'document-tags.php', 'notices.php', 'settings.php', 'semesters.php', 'my-projects.php',
-    'proposal-review.php', 'proposal-register.php', 'my-deliverables.php', 'evaluation-documents.php', 'repositorio.php'
+    'proposal-review.php', 'proposal-register.php', 'my-deliverables.php', 'evaluation-documents.php', 'repositorio.php',
+    'period-center.php', 'academic-workflows.php', 'competencias.php', 'career-setup.php', 'registration-requests.php', 'archive.php',
+    'evaluation-rooms.php', 'evaluations-archived.php', 'career-modules.php', 'user-create.php', 'user-edit.php'
 ];
 ?>
 
@@ -131,44 +133,87 @@ $management_pages = [
                             </ul>
                         </li>
                     <?php endif; ?>
-                    <?php if (is_admin()): ?>
+                    <?php if (is_management_staff()): ?>
                         <li class="nav-item dropdown">
                             <a class="nav-link dropdown-toggle <?= in_array($current_page, $management_pages) ? 'active' : '' ?>" href="#" id="managementMenu" role="button" data-bs-toggle="dropdown" title="Gestiones">
                                 <i class="bi bi-grid-3x3-gap" aria-hidden="true"></i> <span class="nav-text">Gestiones</span>
+                                <span class="badge rounded-pill text-bg-danger d-none" data-management-badge="total"></span>
                             </a>
                             <div class="dropdown-menu dropdown-menu-end management-menu" aria-labelledby="managementMenu">
-                                <div class="management-menu-grid">
+                                <?php // Mismos grupos que el menú lateral y que la app (React_Swgpi/src/lib/navigation.js). ?>
+                                <div class="management-menu-grid management-menu-grid-5">
+                                    <div>
+                                        <h6 class="dropdown-header">Periodo</h6>
+                                        <a class="dropdown-item <?= in_array($current_page, ['period-center.php']) ? 'active' : '' ?>" href="/pages/admin/period-center.php"><i class="bi bi-flag"></i> Operación del periodo</a>
+                                        <a class="dropdown-item <?= in_array($current_page, ['academic-workflows.php']) ? 'active' : '' ?>" href="/pages/academic-workflows.php"><i class="bi bi-calendar3"></i> Seguimiento académico</a>
+                                        <?php if (can_manage_academics()): ?>
+                                            <a class="dropdown-item <?= in_array($current_page, ['semesters.php']) ? 'active' : '' ?>" href="/pages/admin/semesters.php"><i class="bi bi-calendar-range"></i> Semestres y periodos</a>
+                                            <a class="dropdown-item <?= in_array($current_page, ['asignaturas.php', 'competencias.php']) ? 'active' : '' ?>" href="/pages/admin/asignaturas.php"><i class="bi bi-book"></i> Asignaturas y competencias</a>
+                                        <?php endif; ?>
+                                        <?php if (is_admin()): ?>
+                                            <a class="dropdown-item <?= in_array($current_page, ['career-setup.php']) ? 'active' : '' ?>" href="/pages/admin/career-setup.php"><i class="bi bi-cloud-arrow-up"></i> Carga inicial</a>
+                                        <?php endif; ?>
+                                    </div>
                                     <div>
                                         <h6 class="dropdown-header">Personas</h6>
                                         <?php if (can_govern_users()): ?>
-                                            <a class="dropdown-item <?= $current_page == 'users.php' ? 'active' : '' ?>" href="/pages/admin/users.php"><i class="bi bi-people"></i> Usuarios</a>
+                                            <a class="dropdown-item <?= in_array($current_page, ['users.php', 'user-create.php', 'user-edit.php']) ? 'active' : '' ?>" href="/pages/admin/users.php"><i class="bi bi-people"></i> Usuarios</a>
                                         <?php endif; ?>
-                                        <a class="dropdown-item <?= $current_page == 'advisors.php' ? 'active' : '' ?>" href="/pages/admin/advisors.php"><i class="bi bi-person-check"></i> Asesores</a>
+                                        <?php if (can_manage_academics()): ?>
+                                            <a class="dropdown-item <?= in_array($current_page, ['registration-requests.php']) ? 'active' : '' ?>" href="/pages/admin/registration-requests.php"><i class="bi bi-person-plus"></i> Solicitudes de cuenta <span class="badge rounded-pill text-bg-danger ms-auto d-none" data-management-badge="registration_requests"></span></a>
+                                        <?php endif; ?>
+                                        <a class="dropdown-item <?= in_array($current_page, ['advisors.php']) ? 'active' : '' ?>" href="/pages/admin/advisors.php"><i class="bi bi-person-check"></i> Asesores</a>
+                                        <?php if (is_admin()): ?>
+                                            <a class="dropdown-item <?= in_array($current_page, ['archive.php']) ? 'active' : '' ?>" href="/pages/admin/archive.php"><i class="bi bi-archive-fill"></i> Archivo histórico</a>
+                                        <?php endif; ?>
                                     </div>
                                     <div>
                                         <h6 class="dropdown-header">Proyectos</h6>
-                                        <a class="dropdown-item <?= in_array($current_page, ['projects.php', 'project-create.php', 'project-edit.php']) ? 'active' : '' ?>" href="/pages/admin/projects.php"><i class="bi bi-diagram-3"></i> Proyectos/Tesis</a>
-                                        <a class="dropdown-item <?= $current_page == 'proposal-config.php' ? 'active' : '' ?>" href="/pages/admin/proposal-config.php"><i class="bi bi-calendar-check"></i> Propuestas</a>
-                                        <a class="dropdown-item <?= $current_page == 'deliverables.php' ? 'active' : '' ?>" href="/pages/admin/deliverables.php"><i class="bi bi-file-earmark"></i> Entregables</a>
-                                        <a class="dropdown-item <?= $current_page == 'evaluations.php' ? 'active' : '' ?>" href="/pages/admin/evaluations.php"><i class="bi bi-clipboard-check"></i> Evaluaciones</a>
-                                        <a class="dropdown-item <?= $current_page == 'evaluation-documents.php' ? 'active' : '' ?>" href="/pages/evaluation-documents.php"><i class="bi bi-file-earmark-ppt"></i> Documentos de evaluación</a>
+                                        <a class="dropdown-item <?= in_array($current_page, ['projects.php', 'project-create.php', 'project-edit.php']) ? 'active' : '' ?>" href="/pages/admin/projects.php"><i class="bi bi-diagram-3"></i> Proyectos y tesis</a>
+                                        <a class="dropdown-item <?= in_array($current_page, ['proposal-config.php']) ? 'active' : '' ?>" href="/pages/admin/proposal-config.php"><i class="bi bi-calendar-check"></i> Propuestas <span class="badge rounded-pill text-bg-danger ms-auto d-none" data-management-badge="pending_proposals"></span></a>
+                                        <a class="dropdown-item <?= in_array($current_page, ['deliverables.php']) ? 'active' : '' ?>" href="/pages/admin/deliverables.php"><i class="bi bi-file-earmark"></i> Entregables</a>
                                     </div>
                                     <div>
-                                        <h6 class="dropdown-header">Académico</h6>
-                                        <a class="dropdown-item <?= $current_page == 'asignaturas.php' ? 'active' : '' ?>" href="/pages/admin/asignaturas.php"><i class="bi bi-book"></i> Asignaturas, cargas y competencias</a>
-                                        <a class="dropdown-item <?= $current_page == 'semesters.php' ? 'active' : '' ?>" href="/pages/admin/semesters.php"><i class="bi bi-calendar3"></i> Semestres y periodos</a>
+                                        <h6 class="dropdown-header">Evaluación</h6>
+                                        <a class="dropdown-item <?= in_array($current_page, ['evaluations.php']) ? 'active' : '' ?>" href="/pages/admin/evaluations.php"><i class="bi bi-clipboard-check"></i> Evaluaciones</a>
+                                        <a class="dropdown-item <?= in_array($current_page, ['evaluation-rooms.php']) ? 'active' : '' ?>" href="/pages/admin/evaluation-rooms.php"><i class="bi bi-door-open"></i> Salas y turnos</a>
+                                        <a class="dropdown-item <?= in_array($current_page, ['evaluation-documents.php']) ? 'active' : '' ?>" href="/pages/evaluation-documents.php"><i class="bi bi-file-earmark-ppt"></i> Evidencias</a>
+                                        <a class="dropdown-item <?= in_array($current_page, ['evaluations-archived.php']) ? 'active' : '' ?>" href="/pages/admin/evaluations-archived.php"><i class="bi bi-clock-history"></i> Evaluaciones previas</a>
                                     </div>
                                     <div>
                                         <h6 class="dropdown-header">Sistema</h6>
-                                        <a class="dropdown-item <?= $current_page == 'document-tags.php' ? 'active' : '' ?>" href="/pages/admin/document-tags.php"><i class="bi bi-tags"></i> Etiquetas</a>
-                                        <a class="dropdown-item <?= $current_page == 'notices.php' ? 'active' : '' ?>" href="/pages/admin/notices.php"><i class="bi bi-megaphone"></i> Avisos</a>
-                                        <a class="dropdown-item <?= $current_page == 'settings.php' ? 'active' : '' ?>" href="/pages/admin/settings.php"><i class="bi bi-sliders"></i> Ajustes</a>
-                                        <a class="dropdown-item <?= $current_page == 'career-modules.php' ? 'active' : '' ?>" href="/pages/admin/career-modules.php"><i class="bi bi-grid-3x3-gap"></i> Módulos de carrera</a>
-                                        <a class="dropdown-item <?= $current_page == 'repositorio.php' ? 'active' : '' ?>" href="/pages/repositorio.php"><i class="bi bi-archive"></i> Repositorio</a>
+                                        <?php if (is_admin()): ?>
+                                            <a class="dropdown-item <?= in_array($current_page, ['settings.php']) ? 'active' : '' ?>" href="/pages/admin/settings.php"><i class="bi bi-sliders"></i> Ajustes</a>
+                                            <a class="dropdown-item <?= in_array($current_page, ['notices.php']) ? 'active' : '' ?>" href="/pages/admin/notices.php"><i class="bi bi-megaphone"></i> Avisos</a>
+                                            <a class="dropdown-item <?= in_array($current_page, ['document-tags.php']) ? 'active' : '' ?>" href="/pages/admin/document-tags.php"><i class="bi bi-tags"></i> Etiquetas</a>
+                                            <a class="dropdown-item <?= in_array($current_page, ['career-modules.php']) ? 'active' : '' ?>" href="/pages/admin/career-modules.php"><i class="bi bi-grid-3x3-gap"></i> Módulos de carrera</a>
+                                        <?php endif; ?>
+                                        <a class="dropdown-item <?= in_array($current_page, ['repositorio.php']) ? 'active' : '' ?>" href="/pages/repositorio.php"><i class="bi bi-archive"></i> Repositorio</a>
                                     </div>
                                 </div>
                             </div>
                         </li>
+                        <script>
+                        // Pendientes en Gestiones: solicitudes de cuenta y propuestas. Se consultan una vez por minuto.
+                        document.addEventListener('DOMContentLoaded', () => {
+                            const paint = counts => {
+                                // Sólo suma lo que esta persona ve en el menú (cada contador aparece arriba y en el lateral).
+                                const shown = new Set();
+                                document.querySelectorAll('[data-management-badge]').forEach(badge => {
+                                    const key = badge.dataset.managementBadge;
+                                    if (key === 'total') return;
+                                    shown.add(key);
+                                    const value = Number(counts[key] || 0);
+                                    badge.textContent = value > 99 ? '99+' : String(value);
+                                    badge.classList.toggle('d-none', !value);
+                                });
+                                const total = [...shown].reduce((sum, key) => sum + Number(counts[key] || 0), 0);
+                                const head = document.querySelector('[data-management-badge="total"]');
+                                if (head) { head.textContent = total > 99 ? '99+' : String(total); head.classList.toggle('d-none', !total); }
+                            };
+                            api.get('/period-center/badges', { _cache_ttl: 60000, _silent: true }).then(paint).catch(() => {});
+                        });
+                        </script>
                     <?php elseif (is_teacher()): ?>
                         <li class="nav-item dropdown">
                             <a class="nav-link dropdown-toggle <?= in_array($current_page, $management_pages) ? 'active' : '' ?>" href="#" id="managementMenu" role="button" data-bs-toggle="dropdown" title="Gestiones">

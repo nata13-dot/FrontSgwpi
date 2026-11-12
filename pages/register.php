@@ -32,7 +32,7 @@ if (is_authenticated()) { header('Location: ' . dashboard_url()); exit; }
                     <div class="col-md-4"><label class="form-label" for="nombres">Nombre(s)</label><input class="form-control" id="nombres" required autocomplete="given-name"></div>
                     <div class="col-md-4"><label class="form-label" for="apa">Apellido paterno</label><input class="form-control" id="apa" required autocomplete="family-name"></div>
                     <div class="col-md-4"><label class="form-label" for="ama">Apellido materno</label><input class="form-control" id="ama"></div>
-                    <div class="col-12"><label class="form-label" for="grupo_id">Grupo</label><select class="form-select" id="grupo_id" required disabled></select><div class="form-text">Los alumnos nuevos entran a 5° semestre.</div></div>
+                    <div class="col-12"><label class="form-label" for="grupo_id">Grupo</label><select class="form-select" id="grupo_id" required disabled></select><div class="form-text" id="grupoHint">Elige tu grupo.</div></div>
                     <div class="col-md-6"><label class="form-label" for="password">Contraseña</label><input class="form-control" id="password" type="password" minlength="8" required autocomplete="new-password"><div class="form-text">Mínimo 8 caracteres.</div></div>
                     <div class="col-md-6"><label class="form-label" for="password_confirmation">Confirmar contraseña</label><input class="form-control" id="password_confirmation" type="password" required autocomplete="new-password"></div>
                 </div>
@@ -95,6 +95,8 @@ function renderCareer() {
 
 function renderGroups() {
     const groups = career()?.groups || [];
+    const semester = Number(groups[0]?.semestre || 0);
+    $('grupoHint').textContent = semester ? `Los alumnos nuevos entran a ${semester}° semestre.` : 'Elige tu grupo.';
     $('grupo_id').innerHTML = '<option value="">Elige tu grupo</option>' + groups.map(group => `<option value="${group.id}">${Number(group.semestre)}° ${esc(group.grupo)}</option>`).join('');
     $('grupo_id').disabled = !groups.length;
 }

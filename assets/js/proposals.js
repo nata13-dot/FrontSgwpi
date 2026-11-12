@@ -123,11 +123,18 @@ const ProposalUI = (() => {
             const data = await api.get('/proposal/settings', { _fresh: true });
             const self = data.self_registration;
             const selected = data.validator_ids.map(String);
+            // Si no se cambia, los alumnos nuevos entran a 5° (o al único semestre que admita el periodo).
+            const options = self.semester_options || [];
+            const defaultSemester = options.includes(5) ? 5 : (options[0] || 5);
+            const semesterPicker = self.can_manage && options.length ? `<div class="mt-2"><label class="form-label small mb-1" for="newStudentSemester">${self.open ? 'Semestre al actualizar' : 'Semestre de los alumnos nuevos'}</label>
+                <select class="form-select form-select-sm" id="newStudentSemester" style="max-width:200px">${options.map(value => `<option value="${value}" ${value === defaultSemester ? 'selected' : ''}>${value}° semestre</option>`).join('')}</select>
+                <div class="form-text">${options.length > 1 ? 'Si no lo cambias, entran a 5°.' : `Este periodo sólo tiene ${options[0]}° para alumnos nuevos.`}</div></div>` : '';
+            const shownSemester = self.open ? self.semester : defaultSemester;
             container.innerHTML = `
                 ${data.period ? '' : '<div class="alert alert-warning">La carrera no tiene un periodo abierto. Ábrelo en Operación académica antes de habilitar el autoregistro.</div>'}
                 <div class="row g-3 mb-3">
                     ${windowCard('Autoregistro de alumnos', 'Mientras esté abierto, el inicio de sesión muestra «Crear cuenta».', self, '/proposal/settings/self-registration', !self.can_manage,
-                        `<p class="text-muted small mb-0">Correo esperado: <strong>${esc(self.rule.example)}</strong>. ${esc(self.rule.description)}</p>${self.blocker ? `<div class="alert alert-warning small py-2 mt-2 mb-0"><i class="bi bi-exclamation-triangle"></i> <strong>«Crear cuenta» no se está mostrando.</strong> ${esc(self.blocker)}</div>` : ''}<div class="mt-2"><label class="form-label small mb-1" for="newStudentGroups">Grupos de 5° para alumnos nuevos</label><div class="input-group input-group-sm"><input class="form-control" id="newStudentGroups" value="${esc((self.groups || []).join(', '))}" ${self.can_manage ? '' : 'disabled'}>${self.can_manage ? '<button class="btn btn-outline-primary" type="button" onclick="ProposalUI.saveNewStudentGroups()">Guardar grupos</button>' : ''}</div><div class="form-text">Separados por coma. El registro sólo se abre de julio a diciembre.</div></div>${self.can_manage ? '' : '<p class="text-muted small mb-0">Lo abre la administración general o la jefatura.</p>'}`)}
+                        `${self.open ? `<p class="small mb-2">Los alumnos nuevos entran a <strong>${Number(self.semester)}° semestre</strong>.</p>` : ''}<p class="text-muted small mb-0">Correo esperado: <strong>${esc(self.rule.example)}</strong>. ${esc(self.rule.description)}</p>${self.blocker ? `<div class="alert alert-warning small py-2 mt-2 mb-0"><i class="bi bi-exclamation-triangle"></i> <strong>«Crear cuenta» no se está mostrando.</strong> ${esc(self.blocker)}</div>` : ''}<div class="mt-2"><label class="form-label small mb-1" for="newStudentGroups">Grupos de ${Number(shownSemester)}° para alumnos nuevos</label><div class="input-group input-group-sm"><input class="form-control" id="newStudentGroups" value="${esc((self.groups || []).join(', '))}" ${self.can_manage ? '' : 'disabled'}>${self.can_manage ? '<button class="btn btn-outline-primary" type="button" onclick="ProposalUI.saveNewStudentGroups()">Guardar grupos</button>' : ''}</div><div class="form-text">Separados por coma.</div></div>${semesterPicker}${self.can_manage ? '' : '<p class="text-muted small mb-0">Lo abre la administración general o la jefatura.</p>'}`)}
                     ${windowCard('Registro de propuestas', `Los alumnos registran su propuesta o piden unirse a la de un compañero (máximo ${data.max_project_members} integrantes).`, data.proposal_window, '/proposal/settings/proposal-window', false)}
                 </div>
                 <div class="card border-0 shadow-sm"><div class="card-body">
@@ -150,7 +157,10 @@ const ProposalUI = (() => {
             return;
         }
         try {
-            const response = await api.put(endpoint, { until });
+            const semester = document.getElementById('newStudentSemester');
+            const payload = { until };
+            if (until && semester && endpoint.endsWith('/self-registration')) payload.semester = Number(semester.value);
+            const response = await api.put(endpoint, payload);
             swalToast('success', response.message);
             loadSettings();
         } catch (error) {
