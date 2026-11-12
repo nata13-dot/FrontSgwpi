@@ -1,4 +1,4 @@
-// Shared by the React and PHP clients (React_Swgpi/src/shared/periodCenter.js). All user-provided content is rendered as text.
+// Shared by the React and PHP clients (Frontend_Swgpi/assets/js/period-center.js). All user-provided content is rendered as text.
 /**
  * Operación del periodo: las etapas de la carrera en orden, cada una con su estado, sus pendientes y su control.
  * host: { api(method, url, body), go(path), confirm(text) → Promise<boolean>, notify(type, text), links }
@@ -174,6 +174,7 @@ export function mountPeriodCenter(root, host) {
   async function load() {
     try {
       data = await host.api('GET', '/period-center')
+      editing = false
       // La primera vez se despliega lo que pide atención.
       if (!opened.size) {
         if (!data.period.open) opened.add('period')
@@ -186,7 +187,18 @@ export function mountPeriodCenter(root, host) {
     }
   }
 
+  // Cuando el pulso de la web o la app (evento sgpi:live) avisa que llegaron solicitudes o propuestas, se recarga solo;
+  // si hay un formulario a medio llenar se espera a que se guarde para no borrar lo escrito.
+  let editing = false
+  root.addEventListener('input', () => { editing = true })
+  root.addEventListener('change', () => { editing = true })
+  const live = (event) => {
+    const channels = event.detail?.channels || []
+    if (!editing && channels.some(channel => ['registration_requests', 'proposals'].includes(channel))) load()
+  }
+  window.addEventListener('sgpi:live', live)
+
   content.append(el('p', 'Cargando el periodo…', { className: 'pc-muted' }))
   load()
-  return () => { disposed = true }
+  return () => { disposed = true; window.removeEventListener('sgpi:live', live) }
 }

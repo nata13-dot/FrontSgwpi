@@ -38,6 +38,7 @@ if (!is_authenticated() || !is_teacher()) { header('Location: /index.php'); exit
 <script src="<?= asset('/assets/js/api.js') ?>"></script>
 <script src="<?= asset('/assets/js/app.js') ?>"></script>
 <script src="<?= asset('/assets/js/proposals.js') ?>"></script>
-<script>document.addEventListener('DOMContentLoaded', ProposalUI.loadReview);</script>
+<script>document.addEventListener('DOMContentLoaded', ProposalUI.loadReview);
+window.onLiveChange?.(['proposals'], ProposalUI.loadReview);</script>
 </body>
 </html>

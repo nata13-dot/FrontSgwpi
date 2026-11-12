@@ -446,6 +446,7 @@ if (!is_authenticated()) {
             await loadCatalogs();
             loadDeliverables();
         });
+        window.onLiveChange?.(['deliverables'], () => loadDeliverables());
     </script>
 </body>
 </html>

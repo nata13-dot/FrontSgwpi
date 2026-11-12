@@ -194,7 +194,7 @@ $management_pages = [
                             </div>
                         </li>
                         <script>
-                        // Pendientes en Gestiones: solicitudes de cuenta y propuestas. Se consultan una vez por minuto.
+                        // Pendientes en Gestiones: solicitudes de cuenta y propuestas. Se actualizan al llegar algo (live.js).
                         document.addEventListener('DOMContentLoaded', () => {
                             const paint = counts => {
                                 // Sólo suma lo que esta persona ve en el menú (cada contador aparece arriba y en el lateral).
@@ -211,7 +211,9 @@ $management_pages = [
                                 const head = document.querySelector('[data-management-badge="total"]');
                                 if (head) { head.textContent = total > 99 ? '99+' : String(total); head.classList.toggle('d-none', !total); }
                             };
-                            api.get('/period-center/badges', { _cache_ttl: 60000, _silent: true }).then(paint).catch(() => {});
+                            const refresh = (fresh = false) => api.get('/period-center/badges', { _cache_ttl: 60000, _fresh: fresh, _silent: true }).then(paint).catch(() => {});
+                            refresh();
+                            window.onLiveChange?.(['registration_requests', 'proposals'], () => refresh(true));
                         });
                         </script>
                     <?php elseif (is_teacher()): ?>
@@ -482,6 +484,7 @@ async function logout() {
     <script>window.SGPI_PAGE = <?= json_encode($_SERVER['PHP_SELF'] ?? '') ?>;</script>
     <script src="<?= asset('/assets/js/upload-guard.js') ?>"></script>
     <script src="<?= asset('/assets/js/help-center.js') ?>"></script>
+    <script src="<?= asset('/assets/js/live.js') ?>"></script>
     <script src="<?= asset('/assets/js/activity-notifications.js') ?>"></script>
     <?php if (is_general_admin()): ?>
         <script src="<?= asset('/assets/js/operational-notifications.js') ?>"></script>

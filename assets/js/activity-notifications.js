@@ -116,10 +116,11 @@
         });
 
         load();
-        // Sin consultas mientras la pestaña está oculta; al volver se actualiza.
+        // Llegan al momento con el pulso (live.js); el intervalo queda de respaldo. Sin consultas con la pestaña oculta.
+        window.onLiveChange?.(['notifications'], load);
         window.setInterval(() => {
             if (!document.hidden) load();
-        }, 30000);
+        }, 120000);
         document.addEventListener('visibilitychange', () => {
             if (!document.hidden) load();
         });

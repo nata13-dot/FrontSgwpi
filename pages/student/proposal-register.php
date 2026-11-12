@@ -254,6 +254,7 @@ document.getElementById('projectForm').addEventListener('submit', async event =>
 });
 
 document.addEventListener('DOMContentLoaded', loadStatus);
+window.onLiveChange?.(['proposals', 'join_requests', 'projects'], loadStatus);
 </script>
 </body>
 </html>

@@ -114,6 +114,7 @@ document.querySelectorAll('[data-status]').forEach(button => button.addEventList
     loadRequests();
 }));
 document.addEventListener('DOMContentLoaded', loadRequests);
+window.onLiveChange?.(['registration_requests'], loadRequests);
 </script>
 </body>
 </html>

@@ -549,6 +549,7 @@ $careerFeature = match ($careerCode) {
         }
 
         document.addEventListener('DOMContentLoaded', loadDashboard);
+        window.onLiveChange?.(['projects', 'proposals', 'registration_requests'], loadDashboard);
     </script>
 </body>
 </html>

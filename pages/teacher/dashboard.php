@@ -308,6 +308,7 @@ if (!is_authenticated() || !is_teacher()) {
         }
 
         document.addEventListener('DOMContentLoaded', loadDashboard);
+        window.onLiveChange?.(['deliverables', 'projects', 'proposals'], loadDashboard);
     </script>
 </body>
 </html>

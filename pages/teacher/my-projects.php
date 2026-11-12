@@ -160,6 +160,7 @@ if (!is_authenticated() || !is_teacher()) {
         }
 
         document.addEventListener('DOMContentLoaded', loadProjects);
+        window.onLiveChange?.(['projects', 'proposals'], loadProjects);
     </script>
 </body>
 </html>

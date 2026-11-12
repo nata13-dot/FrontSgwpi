@@ -1021,6 +1021,7 @@ if (!is_authenticated()) {
             if (params.get('edit') && [1, 4, 5, 6, 7].includes(Number(auth.getCurrentUser()?.active_profile_id ?? auth.getCurrentUser()?.perfil_id))) openProjectModal(params.get('edit'));
             if (params.get('id')) showProjectDetails(params.get('id'));
         });
+        window.onLiveChange?.(['projects', 'proposals'], () => loadProjects(projectsCurrentPage));
     </script>
 </body>
 </html>

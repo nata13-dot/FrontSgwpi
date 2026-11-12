@@ -399,6 +399,7 @@ if (!is_authenticated() || !is_student()) {
             }
         });
         document.addEventListener('DOMContentLoaded', loadDashboard);
+        window.onLiveChange?.(['deliverables', 'projects', 'proposals', 'join_requests'], loadDashboard);
     </script>
 </body>
 </html>

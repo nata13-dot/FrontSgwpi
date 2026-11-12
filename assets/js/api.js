@@ -36,17 +36,17 @@ class ApiClient {
         ];
         this.cachePrefix = `sgpi-api-cache:v3:${this.baseURL}:`;
         this.defaultCacheTtls = [
-            { pattern: /^\/dashboard\/(stats|teacher|student)$/, ttl: 20000 },
+            { pattern: /^\/dashboard\/(stats|teacher|student)$/, ttl: 60000 },
             { pattern: /^\/users(?:\/[^/]+)?$/, ttl: 30000 },
-            { pattern: /^\/projects(?:\/[^/]+)?$/, ttl: 30000 },
+            { pattern: /^\/projects(?:\/[^/]+)?$/, ttl: 90000 },
             { pattern: /^\/asignaturas(?:\/[^/]+)?$/, ttl: 120000 },
             { pattern: /^\/competencias(?:\/[^/]+)?$/, ttl: 60000 },
             { pattern: /^\/subject-groups(?:\/[^/]+)?$/, ttl: 120000 },
             { pattern: /^\/document-tags(?:\/[^/]+)?$/, ttl: 60000 },
-            { pattern: /^\/repositorio(?:\/[^/]+)?$/, ttl: 30000 },
-            { pattern: /^\/deliverables(?:\/[^/]+)?$/, ttl: 20000 },
+            { pattern: /^\/repositorio(?:\/[^/]+)?$/, ttl: 60000 },
+            { pattern: /^\/deliverables(?:\/[^/]+)?$/, ttl: 60000 },
             { pattern: /^\/evaluations(?:\/.*)?$/, ttl: 20000 },
-            { pattern: /^\/proposal\/student-status$/, ttl: 20000 },
+            { pattern: /^\/proposal\/student-status$/, ttl: 60000 },
             { pattern: /^\/student\/evaluation-schedule$/, ttl: 30000 },
             { pattern: /^\/settings\/public$/, ttl: 300000 },
             { pattern: /^\/settings$/, ttl: 60000 },
@@ -298,6 +298,27 @@ class ApiClient {
                 .forEach(key => sessionStorage.removeItem(key));
         } catch (error) {
             // La limpieza en memoria ya evita reutilizar datos dentro de la página actual.
+        }
+    }
+
+    /**
+     * Olvida lo guardado de estas rutas (y sus subrutas) cuando el pulso de cambios (live.js) avisa que cambiaron:
+     * la siguiente consulta va al servidor y el resto del caché se conserva.
+     */
+    forgetEndpoints(prefixes) {
+        const matches = endpoint => prefixes.some(prefix => endpoint === prefix || String(endpoint || '').startsWith(`${prefix}/`));
+        this.cache.forEach((cached, cacheKey) => {
+            if (matches(cached?.endpoint)) this.cache.delete(cacheKey);
+        });
+        try {
+            Object.keys(sessionStorage)
+                .filter(key => key.startsWith(this.cachePrefix))
+                .forEach(key => {
+                    const cached = JSON.parse(sessionStorage.getItem(key) || 'null');
+                    if (matches(cached?.endpoint)) sessionStorage.removeItem(key);
+                });
+        } catch (error) {
+            // La invalidación en memoria basta para esta página.
         }
     }
 

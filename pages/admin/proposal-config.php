@@ -64,6 +64,7 @@ function reloadActiveTab() {
     activeTab === 'settings' ? ProposalUI.loadSettings() : ProposalUI.loadReview();
 }
 document.addEventListener('DOMContentLoaded', ProposalUI.loadReview);
+window.onLiveChange?.(['proposals'], () => activeTab === 'settings' ? null : ProposalUI.loadReview());
 </script>
 </body>
 </html>

@@ -296,6 +296,7 @@ if (!is_authenticated() || !is_teacher()) {
             gradeModal = new bootstrap.Modal(document.getElementById('gradeModal'));
             loadDeliverablesMatrix();
         });
+        window.onLiveChange?.(['deliverables'], loadDeliverablesMatrix);
     </script>
 </body>
 </html>

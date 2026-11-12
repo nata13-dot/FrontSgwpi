@@ -239,6 +239,7 @@ if (!is_authenticated() || !is_student()) {
         }
 
         document.addEventListener('DOMContentLoaded', loadDeliverables);
+        window.onLiveChange?.(['deliverables'], loadDeliverables);
     </script>
 </body>
 </html>
