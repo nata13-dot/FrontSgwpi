@@ -118,16 +118,47 @@ function backupNotice(type, title, text) {
     alert(`${title}\n${text || ''}`);
 }
 let backupRows = [];
+// El respaldo y la prueba de restauración corren en segundo plano en la API: mientras algo siga "en_proceso" la lista
+// se vuelve a consultar cada 3 s y, al terminar, se avisa el resultado.
+const backupRunning = new Set();
+let backupPoll = null;
+function announceBackupResults(rows) {
+    rows.forEach(row => {
+        if (row.estado === 'en_proceso') backupRunning.add(`b${row.id}`);
+        else if (backupRunning.delete(`b${row.id}`)) {
+            if (row.estado === 'completado') swalToast('success', `Respaldo generado (${formatBackupSize(row.tamano_bytes)}). Verifícalo para comprobar que se puede restaurar.`, 6000);
+            else backupNotice('error', 'El respaldo no se generó', row.mensaje_error || 'No se registró el detalle del error.');
+            loadBackupHealth();
+        }
+        if (row.estado_verificacion === 'en_proceso') backupRunning.add(`v${row.id}`);
+        else if (backupRunning.delete(`v${row.id}`)) {
+            if (row.estado_verificacion === 'correcto') swalToast('success', `Restaurable: ${Number(row.tablas_encontradas)} tablas esenciales y ${Number(row.filas_verificadas).toLocaleString('es-MX')} filas comprobadas.`, 6000);
+            else backupNotice('error', 'La prueba de restauración falló', row.error_verificacion || 'No se registró el detalle del error.');
+            loadBackupHealth();
+        }
+    });
+    clearTimeout(backupPoll);
+    const working = rows.some(row => row.estado === 'en_proceso' || row.estado_verificacion === 'en_proceso');
+    const button = document.getElementById('createBackupButton');
+    button.disabled = rows.some(row => row.estado === 'en_proceso');
+    button.innerHTML = button.disabled ? '<span class="spinner-border spinner-border-sm"></span> Generando...' : '<i class="bi bi-database-add"></i> Crear respaldo ahora';
+    if (working) backupPoll = setTimeout(loadBackups, 3000);
+}
 async function loadBackups() {
     const body = document.getElementById('backupHistory');
     try {
-        const response = await api.get('/admin/database-backups', {_fresh: true});
+        const response = await api.get('/admin/database-backups', {_fresh: true, _silent: true});
         backupRows = response.data || [];
+        announceBackupResults(backupRows);
         body.innerHTML = backupRows.map(backup => {
             const actor = [backup.actor_nombres, backup.actor_apellido].filter(Boolean).join(' ') || backup.creado_por || 'Sistema';
             const completed = backup.estado === 'completado';
+            const working = backup.estado === 'en_proceso';
+            const verifying = backup.estado_verificacion === 'en_proceso';
             const checksum = backup.checksum_sha256 || '';
-            const verification = backup.estado_verificacion === 'correcto'
+            const verification = verifying
+                ? '<span class="badge text-bg-info"><span class="spinner-border spinner-border-sm"></span> Probando restauración…</span>'
+                : backup.estado_verificacion === 'correcto'
                 ? `<span class="badge text-bg-success">Restaurable</span><div class="small text-muted mt-1">${Number(backup.tablas_encontradas)} tablas · ${Number(backup.filas_verificadas).toLocaleString('es-MX')} filas<br>${backupEscape(backupDate(backup.verificado_en))}</div>`
                 : (backup.estado_verificacion === 'fallido'
                     ? `<button class="btn btn-link btn-sm p-0 text-danger text-decoration-none" type="button" onclick="showBackupError(${Number(backup.id)}, 'verification')"><span class="badge text-bg-danger">Falló prueba</span> <i class="bi bi-info-circle"></i></button>`
@@ -139,9 +170,9 @@ async function loadBackups() {
                 <td class="text-nowrap">${formatBackupSize(backup.tamano_bytes)}</td>
                 <td><code title="${backupEscape(checksum)}">${backupEscape(checksum ? `${checksum.slice(0, 12)}…` : '—')}</code></td>
                 <td>${verification}</td>
-                <td><span class="badge text-bg-${completed ? 'success' : 'danger'}">${completed ? 'Completado' : 'Fallido'}</span></td>
-                <td class="text-end"><div class="d-flex justify-content-end gap-2">${completed
-                    ? `<button class="btn btn-sm btn-outline-success text-nowrap" type="button" onclick="verifyBackup(${Number(backup.id)}, this)"><i class="bi bi-shield-check"></i> Verificar</button>
+                <td><span class="badge text-bg-${completed ? 'success' : working ? 'info' : 'danger'}">${completed ? 'Completado' : working ? 'Generando…' : 'Fallido'}</span></td>
+                <td class="text-end"><div class="d-flex justify-content-end gap-2">${working ? '<span class="small text-muted">Generando en el servidor…</span>' : completed
+                    ? `<button class="btn btn-sm btn-outline-success text-nowrap" type="button" ${verifying ? 'disabled' : ''} onclick="verifyBackup(${Number(backup.id)}, this)"><i class="bi bi-shield-check"></i> Verificar</button>
                        <button class="btn btn-sm btn-outline-primary text-nowrap" type="button" onclick="downloadBackup(${Number(backup.id)}, this)"><i class="bi bi-download"></i> Descargar</button>`
                     : `<button class="btn btn-sm btn-outline-danger text-nowrap" type="button" onclick="showBackupError(${Number(backup.id)}, 'backup')"><i class="bi bi-exclamation-octagon"></i> Ver error</button>`}
                 </div></td>
@@ -164,13 +195,11 @@ async function createBackup() {
     button.disabled = true;
     button.innerHTML = '<span class="spinner-border spinner-border-sm"></span> Generando...';
     try {
-        const response = await api.post('/admin/database-backups', {}, {_timeout: 300000});
-        swalToast('success', `Respaldo generado (${formatBackupSize(response.backup?.tamano_bytes)}). Verifícalo para comprobar que se puede restaurar.`, 6000);
+        const response = await api.post('/admin/database-backups', {});
+        swalToast('info', response.message || 'Generando el respaldo.', 5000);
     } catch (error) {
         backupNotice('error', 'No se pudo generar el respaldo', error.message);
     } finally {
-        button.disabled = false;
-        button.innerHTML = '<i class="bi bi-database-add"></i> Crear respaldo ahora';
         refreshBackupPage();
     }
 }
@@ -179,9 +208,8 @@ async function verifyBackup(id, button) {
     const original = button.innerHTML;
     button.innerHTML = '<span class="spinner-border spinner-border-sm"></span> Probando...';
     try {
-        const response = await api.post(`/admin/database-backups/${id}/verify`, {}, {_timeout: 300000});
-        const result = response.verification || {};
-        swalToast('success', `Restaurable: ${Number(result.tablas_encontradas)} tablas esenciales y ${Number(result.filas_verificadas).toLocaleString('es-MX')} filas comprobadas.`, 6000);
+        const response = await api.post(`/admin/database-backups/${id}/verify`, {});
+        swalToast('info', response.message || 'Prueba de restauración en curso.', 5000);
     } catch (error) {
         backupNotice('error', 'La prueba de restauración falló', error.message);
     } finally {
