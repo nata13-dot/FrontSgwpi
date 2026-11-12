@@ -66,6 +66,28 @@
             </div>`;
     }
 
+    /**
+     * Un círculo de carga no debe volverse el esqueleto: conserva su animación de giro y su tamaño, y el esqueleto
+     * terminaría girando encima de la página. Se reemplaza su bloque si sólo contiene el círculo y el texto "Cargando…".
+     */
+    function spinnerBlock(element) {
+        if (!element.matches('.spinner-border, .spinner-custom')) return null;
+        const parent = element.parentElement;
+        if (!parent || parent === document.body || parent.matches('main, .main-content, .container, .container-xl, .container-fluid')) return null;
+        const onlyLoading = [...parent.children].every(child => child === element
+            || child.matches('.spinner-border, .spinner-custom, .visually-hidden, .sr-only')
+            || /^cargando/i.test(child.textContent.trim()));
+        return onlyLoading ? parent : null;
+    }
+
+    // Si el bloque tiene más contenido, el círculo se cambia por un contenedor propio sin animación de giro.
+    function spinnerSlot(element) {
+        if (!element.matches('.spinner-border, .spinner-custom')) return null;
+        const slot = document.createElement('div');
+        element.replaceWith(slot);
+        return slot;
+    }
+
     function replaceLoadingElement(element) {
         if (!(element instanceof HTMLElement) || element.hasAttribute(processedAttribute)) return;
         if (element.closest('[aria-busy="false"], [data-skeleton-disabled]')) return;
@@ -81,12 +103,13 @@
 
         const container = element.closest(
             '[data-loading-container], .dashboard-empty, .text-center.py-5, .text-center.py-4, .text-center.py-3'
-        ) || element;
+        ) || spinnerBlock(element) || spinnerSlot(element) || element;
         if (!container || container.hasAttribute(processedAttribute)) return;
 
         container.setAttribute(processedAttribute, '1');
         container.setAttribute('aria-busy', 'true');
-        const useCards = container.id && /(list|grid|cards|container|body)/i.test(container.id);
+        const host = container.id ? container : container.parentElement;
+        const useCards = Boolean(host?.id) && /(list|grid|cards|container|body)/i.test(host.id);
         container.innerHTML = useCards ? cardSkeleton() : blockSkeleton();
     }
 
