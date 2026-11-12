@@ -26,6 +26,6 @@ try {
             saveBlob(await response.blob(), downloadFilename(response, body.name)); return;
         }
         return api.request(method, url, body, { _cache_ttl: 0 });
-    }, response.user, new URLSearchParams(location.search).get('tab') || 'periods');
+    }, response.user, new URLSearchParams(location.search).get('tab') || 'periods', { confirm: text => confirmAction({ title: 'Confirmar', text, confirmButtonText: 'Sí, continuar' }) });
 } catch (error) { root.textContent = error.message || 'No fue posible cargar tu sesión.'; }
 </script></body></html>

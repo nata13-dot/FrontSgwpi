@@ -29,7 +29,7 @@ if (!is_authenticated() || !can_manage_projects()) { header('Location: /index.ph
 
             <div class="nav nav-pills gap-2 mb-4" role="tablist">
                 <button type="button" class="btn btn-primary" id="reviewTabButton" onclick="showTab('review')"><i class="bi bi-check2-square"></i> Validar</button>
-                <button type="button" class="btn btn-outline-primary" id="settingsTabButton" onclick="showTab('settings')"><i class="bi bi-gear"></i> Ventanas y validadores</button>
+                <button type="button" class="btn btn-outline-primary" id="settingsTabButton" onclick="showTab('settings')"><i class="bi bi-gear"></i> Validadores</button>
             </div>
             <section id="reviewTab">
                 <div id="proposalFilters" class="d-flex flex-wrap gap-2 mb-3"></div>

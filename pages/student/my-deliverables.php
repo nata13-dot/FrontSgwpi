@@ -141,7 +141,7 @@ if (!is_authenticated() || !is_student()) {
                         archivoHTML = '<i class="bi bi-file-earmark text-primary"></i> Presente';
                         btnDescargar = `
                             <button class="btn btn-sm btn-outline-info w-100 mt-2" 
-                                    onclick="descargarEntregable(${deliverable.id}, '${deliverable.nombre}', ${deliverable.project_id})">
+                                    data-name="${escapeHtml(deliverable.nombre)}" onclick="descargarEntregable(${Number(deliverable.id)}, this.dataset.name, ${Number(deliverable.project_id)})">
                                 <i class="bi bi-download"></i> Descargar Archivo
                             </button>
                         `;
@@ -178,7 +178,13 @@ if (!is_authenticated() || !is_student()) {
                                             <i class="bi bi-calendar"></i> 
                                             Creado: ${new Date(deliverable.created_at).toLocaleDateString('es-MX')}
                                         </small>
+                                        <small class="${deliverable.vencido ? 'text-danger fw-semibold' : 'text-muted'} d-block">
+                                            <i class="bi bi-alarm"></i>
+                                            Fecha límite: ${deliverable.fecha_limite ? new Date(deliverable.fecha_limite).toLocaleString('es-MX', { dateStyle: 'medium', timeStyle: 'short' }) : 'Sin fecha'}
+                                        </small>
                                     </div>
+                                    ${deliverable.vencido ? '<div class="alert alert-warning small py-2">La fecha límite ya pasó; pide a tu docente que la amplíe si aún necesitas entregar.</div>' : ''}
+                                    ${!deliverable.vencido && !deliverable.project_id ? '<div class="alert alert-info small py-2">Podrás subir tu archivo cuando tengas un proyecto aprobado en este periodo.</div>' : ''}
 
                                     <div class="mb-3">
                                         <strong class="d-block mb-2 small">Calificación:</strong>
@@ -194,10 +200,10 @@ if (!is_authenticated() || !is_student()) {
                                 
                                 <div class="card-footer border-0 bg-light">
                                     ${btnDescargar}
-                                    <button class="btn btn-sm btn-primary w-100" 
-                                            onclick="abrirSubirArchivo(${deliverable.id}, ${deliverable.project_id}, '${deliverable.nombre}')">
-                                        <i class="bi bi-cloud-upload"></i> Subir/Actualizar Archivo
-                                    </button>
+                                    ${deliverable.puede_subir === false ? '' : `<button class="btn btn-sm btn-primary w-100" data-upload-id="${Number(deliverable.id)}"
+                                            data-upload-project="${Number(deliverable.project_id)}" data-upload-name="${escapeHtml(deliverable.nombre)}">
+                                        <i class="bi bi-cloud-upload"></i> ${deliverable.file_path ? 'Actualizar archivo' : 'Subir archivo'}
+                                    </button>`}
                                 </div>
                             </div>
                         </div>
@@ -211,6 +217,11 @@ if (!is_authenticated() || !is_student()) {
         }
 
         let currentProjectId = null;
+
+        document.addEventListener('click', event => {
+            const button = event.target.closest('[data-upload-id]');
+            if (button) abrirSubirArchivo(Number(button.dataset.uploadId), Number(button.dataset.uploadProject), button.dataset.uploadName);
+        });
 
         function abrirSubirArchivo(deliverableId, projectId, nombre) {
             currentDeliverableId = deliverableId;

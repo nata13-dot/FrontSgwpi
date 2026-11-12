@@ -30,7 +30,6 @@
             item('Evaluaciones archivadas', 'Consultar evaluaciones finalizadas', '/pages/admin/evaluations-archived.php', 'bi-archive-fill', ['historial', 'archivadas']),
             item('Salas y turnos', 'Organizar salas, horarios y orden de presentación', '/pages/admin/evaluation-rooms.php', 'bi-door-open', ['horarios', 'turnos', 'presentaciones']),
             item('Asignaturas', 'Gestionar asignaturas, cargas y competencias', '/pages/admin/asignaturas.php', 'bi-book', ['materias', 'competencias', 'carga académica'], 'manage_academics'),
-            item('Semestres y periodos', 'Gestionar ciclos, promociones y presentaciones especiales', '/pages/admin/semesters.php', 'bi-calendar3', ['periodos', 'promocion', 'cambio de semestre', 'excepciones'], 'manage_academics'),
             item('Carga inicial', 'Importar asignaturas y grupos de la carrera activa', '/pages/admin/career-setup.php', 'bi-cloud-arrow-up', ['csv', 'plan de estudios', 'catalogo'], 'admin'),
             item('Competencias', 'Ir a la gestión de competencias', '/pages/admin/asignaturas.php#competencias', 'bi-star', ['criterios academicos'], 'manage_academics'),
             item('Etiquetas', 'Administrar etiquetas de documentos', '/pages/admin/document-tags.php', 'bi-tags', ['colores', 'categorias'], 'admin'),
@@ -45,7 +44,7 @@
             item('Entregables', 'Revisar entregables de estudiantes', '/pages/teacher/my-deliverables.php', 'bi-file-earmark-check', ['entregas', 'calificar'])
         ],
         student: [
-            item('Registrar proyecto', 'Registrar una propuesta o tesis', '/pages/student/proposal-register.php', 'bi-pencil-square', ['propuesta', 'nueva tesis']),
+            item('Mi proyecto', 'Registrar tu propuesta o ver tu proyecto aprobado', '/pages/student/proposal-register.php', 'bi-pencil-square', ['propuesta', 'registrar', 'nueva tesis', 'equipo', 'unirse']),
             item('Mis entregables', 'Consultar y subir entregables', '/pages/student/my-deliverables.php', 'bi-file-earmark-arrow-up', ['entregas', 'archivos'])
         ]
     };

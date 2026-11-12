@@ -313,7 +313,7 @@ function renderEvaluationDelivery(project, type) {
                 <div class="small mb-3">
                     <strong>${esc(document.nombre)}</strong>
                     <div class="text-muted">${document.created_at ? new Date(document.created_at).toLocaleString('es-MX') : ''}</div>
-                    <button class="btn btn-sm btn-outline-secondary mt-2" onclick="downloadRepositoryDocument(${document.id}, '${escAttr(document.nombre)}')">
+                    <button class="btn btn-sm btn-outline-secondary mt-2" data-name="${esc(document.nombre)}" onclick="downloadRepositoryDocument(${Number(document.id)}, this.dataset.name)">
                         <i class="bi bi-download"></i> Descargar
                     </button>
                 </div>` : ''}
@@ -423,7 +423,7 @@ function renderThesisDocument(document) {
                     </small>
                 </div>
                 <div class="document-actions d-flex flex-wrap justify-content-xl-end align-items-center gap-2">
-                    <button type="button" class="btn btn-sm btn-outline-secondary" onclick="downloadRepositoryDocument(${document.id}, '${escAttr(document.nombre)}')"><i class="bi bi-download"></i> Descargar</button>
+                    <button type="button" class="btn btn-sm btn-outline-secondary" data-name="${esc(document.nombre)}" onclick="downloadRepositoryDocument(${Number(document.id)}, this.dataset.name)"><i class="bi bi-download"></i> Descargar</button>
                     ${canPublish ? `<button type="button" class="btn btn-sm ${document.visibility === 'public' ? 'btn-outline-warning' : 'btn-success'}" onclick="toggleRepositoryPublication(${document.id}, ${document.visibility === 'public' ? 'false' : 'true'})"><i class="bi ${document.visibility === 'public' ? 'bi-eye-slash' : 'bi-globe2'}"></i> ${document.visibility === 'public' ? 'Privado' : 'Publicar'}</button>` : ''}
                 </div>
             </div>

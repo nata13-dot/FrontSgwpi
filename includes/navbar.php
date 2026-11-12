@@ -147,7 +147,6 @@ $management_pages = [
                                         <a class="dropdown-item <?= in_array($current_page, ['period-center.php']) ? 'active' : '' ?>" href="/pages/admin/period-center.php"><i class="bi bi-flag"></i> Operación del periodo</a>
                                         <a class="dropdown-item <?= in_array($current_page, ['academic-workflows.php']) ? 'active' : '' ?>" href="/pages/academic-workflows.php"><i class="bi bi-calendar3"></i> Seguimiento académico</a>
                                         <?php if (can_manage_academics()): ?>
-                                            <a class="dropdown-item <?= in_array($current_page, ['semesters.php']) ? 'active' : '' ?>" href="/pages/admin/semesters.php"><i class="bi bi-calendar-range"></i> Semestres y periodos</a>
                                             <a class="dropdown-item <?= in_array($current_page, ['asignaturas.php', 'competencias.php']) ? 'active' : '' ?>" href="/pages/admin/asignaturas.php"><i class="bi bi-book"></i> Asignaturas y competencias</a>
                                         <?php endif; ?>
                                         <?php if (is_admin()): ?>
@@ -250,7 +249,7 @@ $management_pages = [
                                 <div class="management-menu-grid">
                                     <div>
                                         <h6 class="dropdown-header">Proyectos</h6>
-                                        <a class="dropdown-item <?= $current_page == 'proposal-register.php' ? 'active' : '' ?>" href="/pages/student/proposal-register.php"><i class="bi bi-pencil-square"></i> Registrar proyecto</a>
+                                        <a class="dropdown-item <?= $current_page == 'proposal-register.php' ? 'active' : '' ?>" href="/pages/student/proposal-register.php"><i class="bi bi-pencil-square"></i> Mi proyecto</a>
                                         <a class="dropdown-item <?= $current_page == 'evaluation-documents.php' ? 'active' : '' ?>" href="/pages/evaluation-documents.php"><i class="bi bi-file-earmark-ppt"></i> Documentos de evaluación</a>
                                     </div>
                                     <div>

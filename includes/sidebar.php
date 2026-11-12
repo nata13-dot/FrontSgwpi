@@ -54,7 +54,6 @@ $section = isset($_GET['section']) ? $_GET['section'] : '';
             <a href="/pages/admin/period-center.php" class="sidebar-item sidebar-subitem <?= in_array($current_page, ['period-center.php']) ? 'active' : '' ?>"><i class="bi bi-flag"></i><span>Operación del periodo</span></a>
             <a href="/pages/academic-workflows.php" class="sidebar-item sidebar-subitem <?= in_array($current_page, ['academic-workflows.php']) ? 'active' : '' ?>"><i class="bi bi-calendar3"></i><span>Seguimiento académico</span></a>
             <?php if (can_manage_academics()): ?>
-                <a data-career-module="academico" href="/pages/admin/semesters.php" class="sidebar-item sidebar-subitem <?= in_array($current_page, ['semesters.php']) ? 'active' : '' ?>"><i class="bi bi-calendar-range"></i><span>Semestres y periodos</span></a>
                 <a data-career-module="academico" href="/pages/admin/asignaturas.php" class="sidebar-item sidebar-subitem <?= in_array($current_page, ['asignaturas.php', 'competencias.php']) ? 'active' : '' ?>"><i class="bi bi-journal-bookmark"></i><span>Asignaturas y competencias</span></a>
             <?php endif; ?>
             <?php if (is_admin()): ?>
@@ -102,7 +101,7 @@ $section = isset($_GET['section']) ? $_GET['section'] : '';
         <div class="sidebar-section-title"><h6 class="text-uppercase">Docente</h6></div>
         <a href="/pages/teacher/dashboard.php" class="sidebar-item <?= $current_page == 'dashboard.php' ? 'active' : '' ?>"><i class="bi bi-speedometer2"></i><span>Inicio</span></a>
         <?= $academicWorkflowsLink ?>
-        <details class="sidebar-group" <?= in_array($current_page, ['my-projects.php', 'proposal-review.php', 'evaluations.php', 'evaluations-archived.php', 'evaluation-rooms.php', 'evaluation-documents.php']) ? 'open' : '' ?>>
+        <details class="sidebar-group" <?= in_array($current_page, ['my-projects.php', 'proposal-review.php', 'evaluations.php', 'evaluations-archived.php', 'evaluation-rooms.php', 'evaluation-documents.php', 'my-deliverables.php']) ? 'open' : '' ?>>
             <summary><i class="bi bi-mortarboard"></i><span>Proyectos y tesis</span><i class="bi bi-chevron-down ms-auto"></i></summary>
             <a data-career-module="proyectos" href="/pages/teacher/my-projects.php" class="sidebar-item sidebar-subitem <?= $current_page == 'my-projects.php' ? 'active' : '' ?>"><i class="bi bi-folder2"></i><span>Mis proyectos</span></a>
             <a data-career-module="proyectos" href="/pages/teacher/proposal-review.php" class="sidebar-item sidebar-subitem <?= $current_page == 'proposal-review.php' ? 'active' : '' ?>"><i class="bi bi-check2-square"></i><span>Revisar propuestas</span></a>
@@ -110,33 +109,21 @@ $section = isset($_GET['section']) ? $_GET['section'] : '';
             <a data-career-module="evaluaciones" href="/pages/admin/evaluation-rooms.php" class="sidebar-item sidebar-subitem <?= $current_page == 'evaluation-rooms.php' ? 'active' : '' ?>"><i class="bi bi-door-open"></i><span>Salas y turnos</span></a>
             <a data-career-module="evaluaciones" href="/pages/admin/evaluations-archived.php" class="sidebar-item sidebar-subitem <?= $current_page == 'evaluations-archived.php' ? 'active' : '' ?>"><i class="bi bi-archive"></i><span>Evaluaciones previas</span></a>
             <a data-career-module="evaluaciones" href="/pages/evaluation-documents.php" class="sidebar-item sidebar-subitem <?= $current_page == 'evaluation-documents.php' ? 'active' : '' ?>"><i class="bi bi-file-earmark-ppt"></i><span>Evidencias</span></a>
-        </details>
-        <details class="sidebar-group" <?= in_array($current_page, ['my-deliverables.php']) ? 'open' : '' ?>>
-            <summary><i class="bi bi-book"></i><span>Académico</span><i class="bi bi-chevron-down ms-auto"></i></summary>
             <a data-career-module="entregables" href="/pages/teacher/my-deliverables.php" class="sidebar-item sidebar-subitem <?= $current_page == 'my-deliverables.php' ? 'active' : '' ?>"><i class="bi bi-file-earmark-check"></i><span>Entregables</span></a>
         </details>
-        <details class="sidebar-group" <?= in_array($current_page, ['repositorio.php']) ? 'open' : '' ?>>
-            <summary><i class="bi bi-sliders"></i><span>Sistema</span><i class="bi bi-chevron-down ms-auto"></i></summary>
-            <a data-career-module="repositorio" href="/pages/repositorio.php" class="sidebar-item sidebar-subitem <?= $current_page == 'repositorio.php' ? 'active' : '' ?>"><i class="bi bi-archive"></i><span>Repositorio</span></a>
-        </details>
+        <a data-career-module="repositorio" href="/pages/repositorio.php" class="sidebar-item <?= $current_page == 'repositorio.php' ? 'active' : '' ?>"><i class="bi bi-archive"></i><span>Repositorio</span></a>
         <a href="/pages/profile.php" class="sidebar-item <?= $current_page == 'profile.php' ? 'active' : '' ?>"><i class="bi bi-person-circle"></i><span>Mi Perfil</span></a>
     <?php else: ?>
         <div class="sidebar-section-title"><h6 class="text-uppercase">Estudiante</h6></div>
         <a href="/pages/student/dashboard.php" class="sidebar-item <?= $current_page == 'dashboard.php' ? 'active' : '' ?>"><i class="bi bi-speedometer2"></i><span>Inicio</span></a>
         <?= $academicWorkflowsLink ?>
-        <details class="sidebar-group" <?= in_array($current_page, ['proposal-register.php', 'evaluation-documents.php']) ? 'open' : '' ?>>
+        <details class="sidebar-group" <?= in_array($current_page, ['proposal-register.php', 'evaluation-documents.php', 'my-deliverables.php']) ? 'open' : '' ?>>
             <summary><i class="bi bi-mortarboard"></i><span>Proyectos y tesis</span><i class="bi bi-chevron-down ms-auto"></i></summary>
-            <a data-career-module="proyectos" href="/pages/student/proposal-register.php" class="sidebar-item sidebar-subitem <?= $current_page == 'proposal-register.php' ? 'active' : '' ?>"><i class="bi bi-pencil-square"></i><span>Registrar propuesta</span></a>
+            <a data-career-module="proyectos" href="/pages/student/proposal-register.php" class="sidebar-item sidebar-subitem <?= $current_page == 'proposal-register.php' ? 'active' : '' ?>"><i class="bi bi-pencil-square"></i><span>Mi proyecto</span></a>
+            <a data-career-module="entregables" href="/pages/student/my-deliverables.php" class="sidebar-item sidebar-subitem <?= $current_page == 'my-deliverables.php' ? 'active' : '' ?>"><i class="bi bi-file-earmark"></i><span>Mis entregables</span></a>
             <a data-career-module="evaluaciones" href="/pages/evaluation-documents.php" class="sidebar-item sidebar-subitem <?= $current_page == 'evaluation-documents.php' ? 'active' : '' ?>"><i class="bi bi-file-earmark-ppt"></i><span>Evidencias</span></a>
         </details>
-        <details class="sidebar-group" <?= in_array($current_page, ['my-deliverables.php']) ? 'open' : '' ?>>
-            <summary><i class="bi bi-book"></i><span>Académico</span><i class="bi bi-chevron-down ms-auto"></i></summary>
-            <a data-career-module="entregables" href="/pages/student/my-deliverables.php" class="sidebar-item sidebar-subitem <?= $current_page == 'my-deliverables.php' ? 'active' : '' ?>"><i class="bi bi-file-earmark"></i><span>Mis entregables</span></a>
-        </details>
-        <details class="sidebar-group" <?= in_array($current_page, ['repositorio.php']) ? 'open' : '' ?>>
-            <summary><i class="bi bi-sliders"></i><span>Sistema</span><i class="bi bi-chevron-down ms-auto"></i></summary>
-            <a data-career-module="repositorio" href="/pages/repositorio.php" class="sidebar-item sidebar-subitem <?= $current_page == 'repositorio.php' ? 'active' : '' ?>"><i class="bi bi-archive"></i><span>Repositorio</span></a>
-        </details>
+        <a data-career-module="repositorio" href="/pages/repositorio.php" class="sidebar-item <?= $current_page == 'repositorio.php' ? 'active' : '' ?>"><i class="bi bi-archive"></i><span>Repositorio</span></a>
         <a href="/pages/profile.php" class="sidebar-item <?= $current_page == 'profile.php' ? 'active' : '' ?>"><i class="bi bi-person-circle"></i><span>Mi Perfil</span></a>
     <?php endif; ?>
     <div class="sidebar-footer-brand">

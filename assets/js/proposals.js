@@ -101,42 +101,23 @@ const ProposalUI = (() => {
         }
     }
 
-    function windowCard(title, subtitle, state, endpoint, disabled, extra = '') {
-        const key = endpoint.split('/').pop();
-        return `<div class="col-lg-6"><div class="card border-0 shadow-sm h-100"><div class="card-body">
-            <div class="d-flex justify-content-between gap-2"><h5 class="mb-1">${esc(title)}</h5><span class="badge ${state.open ? 'bg-success' : 'bg-secondary'}"><i class="bi ${state.open ? 'bi-unlock' : 'bi-lock'}"></i> ${state.open ? 'Abierto' : 'Cerrado'}</span></div>
-            <p class="text-muted small">${esc(subtitle)}</p>
-            ${state.open ? `<p class="small mb-2">Cierra: <strong>${esc(dateTime(state.until || state.closes_at))}</strong></p>` : ''}
-            ${extra}
-            ${disabled ? '' : `<div class="d-flex flex-wrap align-items-end gap-2 mt-2">
-                <div><label class="form-label small mb-1" for="until-${key}">${state.open ? 'Cambiar cierre' : 'Abrir hasta'}</label><input class="form-control" type="datetime-local" id="until-${key}" min="${localInput()}"></div>
-                <button class="btn btn-primary" onclick="ProposalUI.saveWindow('${endpoint}', 'until-${key}')"><i class="bi bi-unlock"></i> ${state.open ? 'Actualizar' : 'Abrir'}</button>
-                ${state.open ? `<button class="btn btn-outline-danger" onclick="ProposalUI.saveWindow('${endpoint}', null)"><i class="bi bi-lock"></i> Cerrar ahora</button>` : ''}
-            </div>`}
-        </div></div></div>`;
-    }
 
     async function loadSettings() {
         const container = document.getElementById('proposalSettings');
         container.innerHTML = '<div class="text-muted">Cargando ajustes...</div>';
         try {
             const data = await api.get('/proposal/settings', { _fresh: true });
-            const self = data.self_registration;
             const selected = data.validator_ids.map(String);
-            // Si no se cambia, los alumnos nuevos entran a 5° (o al único semestre que admita el periodo).
-            const options = self.semester_options || [];
-            const defaultSemester = options.includes(5) ? 5 : (options[0] || 5);
-            const semesterPicker = self.can_manage && options.length ? `<div class="mt-2"><label class="form-label small mb-1" for="newStudentSemester">${self.open ? 'Semestre al actualizar' : 'Semestre de los alumnos nuevos'}</label>
-                <select class="form-select form-select-sm" id="newStudentSemester" style="max-width:200px">${options.map(value => `<option value="${value}" ${value === defaultSemester ? 'selected' : ''}>${value}° semestre</option>`).join('')}</select>
-                <div class="form-text">${options.length > 1 ? 'Si no lo cambias, entran a 5°.' : `Este periodo sólo tiene ${options[0]}° para alumnos nuevos.`}</div></div>` : '';
-            const shownSemester = self.open ? self.semester : defaultSemester;
+            // Las ventanas se abren y cierran sólo en Operación del periodo; aquí se ve su estado.
+            const windowRow = (label, state) => `<li class="d-flex justify-content-between align-items-center py-2 border-bottom"><span class="fw-semibold">${label}${state.open && (state.until || state.closes_at) ? ` <small class="text-muted fw-normal">· cierra ${esc(dateTime(state.until || state.closes_at))}</small>` : ''}</span><span class="badge ${state.open ? 'bg-success' : 'bg-secondary'}"><i class="bi ${state.open ? 'bi-unlock' : 'bi-lock'}"></i> ${state.open ? 'Abierto' : 'Cerrado'}</span></li>`;
             container.innerHTML = `
-                ${data.period ? '' : '<div class="alert alert-warning">La carrera no tiene un periodo abierto. Ábrelo en Operación académica antes de habilitar el autoregistro.</div>'}
-                <div class="row g-3 mb-3">
-                    ${windowCard('Autoregistro de alumnos', 'Mientras esté abierto, el inicio de sesión muestra «Crear cuenta».', self, '/proposal/settings/self-registration', !self.can_manage,
-                        `${self.open ? `<p class="small mb-2">Los alumnos nuevos entran a <strong>${Number(self.semester)}° semestre</strong>.</p>` : ''}<p class="text-muted small mb-0">Correo esperado: <strong>${esc(self.rule.example)}</strong>. ${esc(self.rule.description)}</p>${self.blocker ? `<div class="alert alert-warning small py-2 mt-2 mb-0"><i class="bi bi-exclamation-triangle"></i> <strong>«Crear cuenta» no se está mostrando.</strong> ${esc(self.blocker)}</div>` : ''}<div class="mt-2"><label class="form-label small mb-1" for="newStudentGroups">Grupos de ${Number(shownSemester)}° para alumnos nuevos</label><div class="input-group input-group-sm"><input class="form-control" id="newStudentGroups" value="${esc((self.groups || []).join(', '))}" ${self.can_manage ? '' : 'disabled'}>${self.can_manage ? '<button class="btn btn-outline-primary" type="button" onclick="ProposalUI.saveNewStudentGroups()">Guardar grupos</button>' : ''}</div><div class="form-text">Separados por coma.</div></div>${semesterPicker}${self.can_manage ? '' : '<p class="text-muted small mb-0">Lo abre la administración general o la jefatura.</p>'}`)}
-                    ${windowCard('Registro de propuestas', `Los alumnos registran su propuesta o piden unirse a la de un compañero (máximo ${data.max_project_members} integrantes).`, data.proposal_window, '/proposal/settings/proposal-window', false)}
-                </div>
+                <div class="card border-0 shadow-sm mb-3"><div class="card-body">
+                    <div class="d-flex flex-wrap justify-content-between align-items-start gap-2 mb-2">
+                        <div><h5 class="mb-1">Ventanas del periodo</h5><p class="text-muted small mb-0">El autoregistro y el registro de propuestas se abren y se cierran en Operación del periodo.</p></div>
+                        <a class="btn btn-sm btn-outline-primary" href="/pages/admin/period-center.php"><i class="bi bi-flag"></i> Ir a Operación del periodo</a>
+                    </div>
+                    <ul class="list-unstyled mb-0">${windowRow('Autoregistro de alumnos', data.self_registration)}${windowRow('Registro de propuestas', data.proposal_window)}</ul>
+                </div></div>
                 <div class="card border-0 shadow-sm"><div class="card-body">
                     <h5 class="mb-1">Docentes validadores</h5>
                     <p class="text-muted small">Además de coordinación, jefatura y asistencia, estos docentes pueden validar las propuestas de la carrera.</p>
@@ -150,34 +131,7 @@ const ProposalUI = (() => {
         }
     }
 
-    async function saveWindow(endpoint, inputId) {
-        const until = inputId ? document.getElementById(inputId).value : null;
-        if (inputId && !until) {
-            swalToast('warning', 'Indica la fecha y hora de cierre.');
-            return;
-        }
-        try {
-            const semester = document.getElementById('newStudentSemester');
-            const payload = { until };
-            if (until && semester && endpoint.endsWith('/self-registration')) payload.semester = Number(semester.value);
-            const response = await api.put(endpoint, payload);
-            swalToast('success', response.message);
-            loadSettings();
-        } catch (error) {
-            Swal.fire('Error', error.message, 'error');
-        }
-    }
 
-    async function saveNewStudentGroups() {
-        try {
-            const groups = document.getElementById('newStudentGroups').value.split(/[\s,]+/).filter(Boolean);
-            const response = await api.put('/proposal/settings/new-student-groups', { groups });
-            swalToast('success', response.message);
-            loadSettings();
-        } catch (error) {
-            Swal.fire('Error', error.message, 'error');
-        }
-    }
 
     async function saveValidators() {
         const ids = [...document.querySelectorAll('.validator-option:checked')].map(input => input.value);
@@ -190,7 +144,7 @@ const ProposalUI = (() => {
     }
 
     return {
-        STATUS, esc, fullName, dateTime, badge, details, loadReview, review, loadSettings, saveWindow, saveNewStudentGroups, saveValidators,
+        STATUS, esc, fullName, dateTime, badge, details, loadReview, review, loadSettings, saveValidators,
         setFilter(value) { filter = value; renderList(); }
     };
 })();

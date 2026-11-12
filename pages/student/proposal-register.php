@@ -7,7 +7,7 @@ if (!is_authenticated() || !is_student()) { header('Location: /index.php'); exit
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Propuesta de Proyecto - <?= APP_NAME ?></title>
+    <title>Mi proyecto - <?= APP_NAME ?></title>
     <?php require_once $_SERVER['DOCUMENT_ROOT'] . '/includes/visual-preferences.php'; ?>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
@@ -21,7 +21,7 @@ if (!is_authenticated() || !is_student()) { header('Location: /index.php'); exit
         <div class="container-xl mt-5 mb-5">
             <div class="d-flex justify-content-between align-items-center gap-3 mb-4">
                 <div>
-                    <h1 class="mb-1">Propuesta de Proyecto</h1>
+                    <h1 class="mb-1">Mi proyecto</h1>
                     <p class="text-muted mb-0">Registra la propuesta de tu proyecto integrador o únete a la de tu compañero.</p>
                 </div>
                 <button class="btn btn-primary" onclick="loadStatus()" aria-label="Actualizar"><i class="bi bi-arrow-clockwise"></i></button>
