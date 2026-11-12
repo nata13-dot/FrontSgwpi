@@ -377,10 +377,24 @@ $careerHeroStyle = $careerHeroImage ? "background-image: url('" . htmlspecialcha
             }
         }
 
+        // Turno en vivo: qué número va pasando, cuántos faltan antes del suyo y la hora estimada recalculada por la API.
+        function liveTurnHtml(live) {
+            if (!live || live.done) return '';
+            if (live.is_current) return '<div class="live-turn now"><strong>¡Es tu turno!</strong><span>Tu equipo está presentando ahora.</span></div>';
+            const at = live.estimated_at ? new Date(live.estimated_at).toLocaleTimeString('es-MX', { hour: '2-digit', minute: '2-digit' }) : '';
+            const before = live.turns_before === 1 ? ' · eres el siguiente' : live.turns_before > 1 ? ` · faltan ${Number(live.turns_before)} antes que tú` : '';
+            return `<div class="live-turn">
+                <span>${live.started ? `Va pasando el turno <strong>${Number(live.current_order)}</strong> de ${Number(live.total)}` : 'La sala aún no empieza'}</span>
+                <span>Tu turno: <strong>${Number(live.my_order)}</strong>${before}</span>
+                ${at ? `<span>Pasarías cerca de las <strong>${escapeHtml(at)}</strong></span>` : ''}
+            </div>`;
+        }
+
+        let scheduleTimer = null;
         async function loadEvaluationSchedule() {
             const box = document.getElementById('evaluationScheduleList');
             try {
-                const schedule = await api.get('/student/evaluation-schedule');
+                const schedule = await api.get('/student/evaluation-schedule', { _fresh: true, _silent: true });
                 if (!schedule.length) {
                     box.innerHTML = '<p class="text-muted mb-0">Aún no tienes presentaciones programadas.</p>';
                     return;
@@ -390,21 +404,28 @@ $careerHeroStyle = $careerHeroImage ? "background-image: url('" . htmlspecialcha
                     <div class="border rounded p-3 mb-2">
                         <div class="d-flex flex-wrap justify-content-between gap-2">
                             <div>
-                                <strong>${item.project_title || 'Proyecto'}</strong>
-                                <div class="small text-muted">${item.room_name || 'Sala pendiente'} · ${item.classroom || 'Salon pendiente'}</div>
+                                <strong>${escapeHtml(item.project_title || 'Proyecto')}</strong>
+                                <div class="small text-muted">${escapeHtml(item.room_name || 'Sala pendiente')} · ${escapeHtml(item.classroom || 'Salón pendiente')}</div>
                             </div>
                             <span class="badge bg-primary">${item.date ? new Date(item.date).toLocaleString('es-MX') : 'Fecha pendiente'}</span>
                         </div>
                         <div class="small mt-2">
-                            Tiempo de exposicion: <strong>${item.presentation_minutes || '-'} min</strong>
-                            ${item.evaluation_minutes ? ` · Tiempo de evaluación docente: <strong>${item.evaluation_minutes} min</strong>` : ''}
+                            Exposición: <strong>${Number(item.presentation_minutes) || '-'} min</strong>
+                            ${item.questions_minutes ? ` · Preguntas y respuestas: <strong>${Number(item.questions_minutes)} min</strong>` : ''}
                         </div>
+                        ${liveTurnHtml(item.live)}
                     </div>
                 `).join('');
+                // Mientras alguna sala siga activa, se vuelve a consultar cada 20 s.
+                clearTimeout(scheduleTimer);
+                if (schedule.some(item => item.live && !item.live.done)) {
+                    scheduleTimer = setTimeout(() => (document.hidden ? null : loadEvaluationSchedule()), 20000);
+                }
             } catch (error) {
                 box.innerHTML = '<p class="text-danger mb-0">No se pudo cargar la agenda de evaluaciones.</p>';
             }
         }
+        document.addEventListener('visibilitychange', () => { if (!document.hidden && scheduleTimer) loadEvaluationSchedule(); });
 
 
         async function checkInitialProfile() {

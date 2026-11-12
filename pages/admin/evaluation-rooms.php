@@ -382,14 +382,14 @@ $canManageRooms = can_manage_projects();
                                 </div>
                                 <div class="row g-3">
                                     <div class="col-md-6">
-                                        <label class="form-label" for="roomDate">Inicio</label>
+                                        <label class="form-label" for="roomDate">Fecha y hora de inicio</label>
                                         <input type="datetime-local" class="form-control" id="roomDate" onchange="updateRoomAvailability()">
                                         <div class="room-inline-hint" id="roomDateHint">Debe ser posterior a la fecha actual.</div>
                                     </div>
                                     <div class="col-md-6">
-                                        <label class="form-label" for="roomEndDate">Fin</label>
-                                        <input type="datetime-local" class="form-control" id="roomEndDate" onchange="roomEndAuto = false; updateRoomAvailability()">
-                                        <div class="room-inline-hint">Se calcula solo con los proyectos; puedes cambiarlo.</div>
+                                        <label class="form-label" for="roomEndDate">Termina aproximadamente</label>
+                                        <input type="datetime-local" class="form-control" id="roomEndDate" readonly tabindex="-1">
+                                        <div class="room-inline-hint">Se calcula: exposición + preguntas de cada proyecto y la tolerancia entre ellos.</div>
                                     </div>
                                     <div class="col-md-6">
                                         <label class="form-label" for="roomClassroom">Salón</label>
@@ -403,19 +403,32 @@ $canManageRooms = can_manage_projects();
                                     </div>
                                 </div>
                                 <details class="room-times mt-3">
-                                    <summary>Tiempos por proyecto: <strong id="roomTimesSummary">20 min de presentación + 15 de evaluación · 1 oportunidad</strong></summary>
+                                    <summary>Tiempos por proyecto: <strong id="roomTimesSummary">15 min de exposición + 10 de preguntas · 3 min de tolerancia · 1 oportunidad</strong></summary>
                                     <div class="row g-3 mt-1">
-                                        <div class="col-sm-4">
-                                            <label class="form-label" for="presentationMinutes">Presentación (min)</label>
-                                            <input type="number" class="form-control" id="presentationMinutes" min="1" max="240" value="20" oninput="renderTimeBudget()">
+                                        <div class="col-sm-6 col-lg-3">
+                                            <label class="form-label" for="presentationMinutes">Exposición (min)</label>
+                                            <input type="number" class="form-control" id="presentationMinutes" min="1" max="240" value="15" oninput="renderTimeBudget()">
+                                            <div class="room-inline-hint">Lo que tiene cada equipo para presentar.</div>
                                         </div>
-                                        <div class="col-sm-4">
-                                            <label class="form-label" for="teacherMinutes">Evaluación docente (min)</label>
-                                            <input type="number" class="form-control" id="teacherMinutes" min="1" max="240" value="15" oninput="renderTimeBudget()">
+                                        <div class="col-sm-6 col-lg-3">
+                                            <label class="form-label" for="teacherMinutes">Preguntas y respuestas (min)</label>
+                                            <input type="number" class="form-control" id="teacherMinutes" min="1" max="240" value="10" oninput="renderTimeBudget()">
+                                            <div class="room-inline-hint">Los docentes califican durante la exposición y las preguntas.</div>
                                         </div>
-                                        <div class="col-sm-4">
+                                        <div class="col-sm-6 col-lg-3">
+                                            <label class="form-label" for="toleranceMinutes">Tolerancia entre proyectos (min)</label>
+                                            <input type="number" class="form-control" id="toleranceMinutes" min="0" max="15" value="3" oninput="renderTimeBudget()">
+                                            <div class="room-inline-hint">Cambio de equipo; 3 por defecto.</div>
+                                        </div>
+                                        <div class="col-sm-6 col-lg-3">
                                             <label class="form-label" for="maxAttempts">Oportunidades</label>
                                             <input type="number" class="form-control" id="maxAttempts" min="1" max="10" value="1" oninput="renderRoomSummary()">
+                                        </div>
+                                        <div class="col-12">
+                                            <div class="form-check form-switch">
+                                                <input class="form-check-input" type="checkbox" id="autoQuestions" checked>
+                                                <label class="form-check-label" for="autoQuestions">Pasar solo a preguntas: al terminar la exposición suena un aviso, se pone en rojo 5 segundos y empieza la cuenta de preguntas.</label>
+                                            </div>
                                         </div>
                                     </div>
                                 </details>
@@ -479,7 +492,7 @@ $canManageRooms = can_manage_projects();
                     <input type="hidden" id="scheduleRoomId">
                     <div class="row g-3">
                         <div class="col-md-6"><label class="form-label" for="scheduleStart">Inicio</label><input class="form-control" id="scheduleStart" type="datetime-local" required></div>
-                        <div class="col-md-6"><label class="form-label" for="scheduleEnd">Fin ordinario</label><input class="form-control" id="scheduleEnd" type="datetime-local" required></div>
+                        <div class="col-md-6"><label class="form-label" for="scheduleEnd">Termina aproximadamente</label><input class="form-control" id="scheduleEnd" type="datetime-local" readonly tabindex="-1"><div class="form-text">Se calcula con los turnos de la sala.</div></div>
                         <div class="col-12"><div class="form-check"><input class="form-check-input" id="scheduleAllowLate" type="checkbox" onchange="toggleLateScheduleFields()"><label class="form-check-label" for="scheduleAllowLate">Permitir evaluaciones fuera del horario ordinario</label></div></div>
                         <div class="col-md-6 d-none" id="scheduleLateUntilBox"><label class="form-label" for="scheduleLateUntil">Autorizada hasta</label><input class="form-control" id="scheduleLateUntil" type="datetime-local"></div>
                         <div class="col-12 d-none" id="scheduleLateReasonBox"><label class="form-label" for="scheduleLateReason">Motivo</label><textarea class="form-control" id="scheduleLateReason" rows="3" minlength="10" maxlength="500"></textarea></div>
@@ -497,6 +510,7 @@ $canManageRooms = can_manage_projects();
     <script src="<?= asset('/assets/js/auth.js') ?>"></script>
     <script src="<?= asset('/assets/js/api.js') ?>"></script>
     <script src="<?= asset('/assets/js/app.js') ?>"></script>
+    <script src="<?= asset('/assets/js/room-countdown.js') ?>"></script>
     <script>
         const CAN_MANAGE_ROOMS = <?= $canManageRooms ? 'true' : 'false' ?>;
         // Con nombres de evaluadores sólo descargan jefatura y administración general; los demás, el informe limitado.
@@ -672,9 +686,12 @@ $canManageRooms = can_manage_projects();
             return value ? String(value).replace(' ', 'T').slice(0, 16) : '';
         }
 
+        // Igual que la API (App\Support\RoomTimeline): turnos de exposición + preguntas y la tolerancia entre ellos.
         function requiredRoomMinutes(projectCount = selectedRoomProjectIds().length) {
             const perProject = Number(document.getElementById('teacherMinutes').value || 0) + Number(document.getElementById('presentationMinutes').value || 0);
-            return projectCount * perProject;
+            const tolerance = Math.max(0, Number(document.getElementById('toleranceMinutes').value || 0));
+            const count = Math.max(1, projectCount);
+            return count * perProject + (count - 1) * tolerance;
         }
 
         function selectedRoomProjectIds() {
@@ -695,20 +712,13 @@ $canManageRooms = can_manage_projects();
                 box.innerHTML = '<i class="bi bi-hourglass"></i> Marca proyectos para calcular el tiempo necesario.';
                 return;
             }
-            const available = start && end ? Math.round((end - start) / 60000) : 0;
-            const short = available < required;
-            box.classList.add(short ? 'is-short' : 'is-ok');
-            box.innerHTML = `<i class="bi ${short ? 'bi-exclamation-triangle' : 'bi-check-circle'}"></i>
-                ${count} proyecto(s) × ${requiredRoomMinutes(1)} min = <strong>${required} min</strong> necesarios · disponibles <strong>${available} min</strong>
-                ${short && start ? '<button type="button" class="btn btn-sm btn-link p-0 ms-2 align-baseline" onclick="fitRoomEndToProjects()">Ajustar fin</button>' : ''}`;
+            box.classList.add('is-ok');
+            const tolerance = Math.max(0, Number(document.getElementById('toleranceMinutes').value || 0));
+            box.innerHTML = `<i class="bi bi-check-circle"></i>
+                ${count} turno(s) de ${requiredRoomMinutes(1)} min + ${Math.max(0, count - 1)} × ${tolerance} min de tolerancia = <strong>${required} min</strong>
+                ${end ? ` · termina cerca de las <strong>${end.toLocaleTimeString('es-MX', { hour: '2-digit', minute: '2-digit' })}</strong>` : ''}`;
         }
 
-        function fitRoomEndToProjects() {
-            const start = parseRoomDate(document.getElementById('roomDate').value);
-            if (!start || document.getElementById('roomEndDate').readOnly) return;
-            document.getElementById('roomEndDate').value = formatLocalDateTimeInput(new Date(start.getTime() + Math.max(60, requiredRoomMinutes()) * 60000));
-            updateRoomAvailability();
-        }
 
         async function loadProjects() {
             projects = await api.get('/evaluations/projects', { _cache_ttl: 30000, _timeout: 45000 });
@@ -792,7 +802,7 @@ $canManageRooms = can_manage_projects();
                                     <div class="room-meta-item"><span class="text-muted d-block">Lugar</span>${escapeHtml(room.salon || 'Sin salon')}</div>
                                     <div class="room-meta-item"><span class="text-muted d-block">Horario</span>${room.fecha_evaluacion ? new Date(room.fecha_evaluacion).toLocaleString('es-MX') : 'Sin inicio'}${room.fecha_fin_evaluacion ? ` - ${new Date(room.fecha_fin_evaluacion).toLocaleTimeString('es-MX', { hour: '2-digit', minute: '2-digit' })}` : ''}</div>
                                     <div class="room-meta-item"><span class="text-muted d-block">Responsable</span>${escapeHtml(fullName(room.responsible_teacher) || '-')}</div>
-                                    <div class="room-meta-item"><span class="text-muted d-block">Tiempos</span>${room.project_presentation_minutes} min exposición / ${room.teacher_evaluation_minutes} min evaluación</div>
+                                    <div class="room-meta-item"><span class="text-muted d-block">Tiempos por turno</span>${room.project_presentation_minutes} min exposición + ${room.teacher_evaluation_minutes} min preguntas · ${room.tolerance_minutes ?? 3} min de tolerancia</div>
                                 </div>
                                 <div class="small mb-2"><span class="fw-semibold">Evaluadores:</span> ${(room.teachers || []).map(teacher => escapeHtml(fullName(teacher))).filter(Boolean).join(', ') || '-'}</div>
                                 <div class="small ${windowClass} mb-2"><i class="bi bi-clock"></i> ${escapeHtml(windowLabel)}${windowStatus === 'late_authorized' ? ` hasta ${new Date(room.late_evaluation_until).toLocaleString('es-MX')}` : ''}</div>
@@ -818,36 +828,31 @@ $canManageRooms = can_manage_projects();
             tickRoomTimers();
         }
 
+        // Exposición y luego preguntas (room-countdown.js). La duración sale de la sala; la API decide según la fase.
+        // Duración total de una sala existente: igual que la API (turnos + tolerancia entre ellos).
+        function roomTotalMinutes(room) {
+            const count = Math.max(1, (room.projects || []).length);
+            return count * (Number(room.project_presentation_minutes) + Number(room.teacher_evaluation_minutes)) + (count - 1) * Number(room.tolerance_minutes ?? 3);
+        }
+
         function roomTimerMarkup(room) {
             const timer = room.timer || {};
-            const remaining = Number(timer.remaining_seconds || 0);
-            const minutes = Math.max(1, Math.ceil(Number(timer.duration_seconds || room.project_presentation_minutes * 60) / 60));
-            return `<div class="room-live-timer ${timer.status === 'en_curso' ? 'running' : ''} ${remaining === 0 ? 'expired' : ''}">
-                <div class="d-flex align-items-center justify-content-between gap-2 mb-2">
-                    <span><i class="bi bi-stopwatch"></i> Tiempo del equipo en turno</span>
-                    <span class="room-live-timer-display" data-room-timer="${room.id}" data-status="${escapeHtml(timer.status || 'detenido')}" data-remaining="${remaining}">00:00</span>
-                </div>
-                ${room.can_control_room ? `<div class="room-live-timer-controls">
-                    <label class="small">Minutos<input class="form-control form-control-sm" id="timerMinutes${room.id}" type="number" min="1" max="240" value="${minutes}" ${timer.status === 'en_curso' ? 'disabled' : ''}></label>
+            const controls = room.can_control_room ? `<div class="room-live-timer-controls">
                     ${timer.status === 'en_curso'
-                        ? `<button class="btn btn-sm btn-outline-warning" onclick="controlRoomTimer(${room.id}, 'pause')"><i class="bi bi-pause"></i> Pausar</button>`
+                        ? `<button class="btn btn-sm btn-outline-warning" onclick="controlRoomTimer(${Number(room.id)}, 'pause')"><i class="bi bi-pause"></i> Pausar</button>`
                         : timer.status === 'pausado'
-                            ? `<button class="btn btn-sm btn-outline-success" onclick="controlRoomTimer(${room.id}, 'resume')"><i class="bi bi-play"></i> Reanudar</button>`
-                            : `<button class="btn btn-sm btn-outline-success" onclick="controlRoomTimer(${room.id}, 'start')"><i class="bi bi-play"></i> Iniciar</button>`}
-                    <button class="btn btn-sm btn-outline-secondary" onclick="controlRoomTimer(${room.id}, 'reset')"><i class="bi bi-arrow-counterclockwise"></i> Reiniciar</button>
-                    <button class="btn btn-sm btn-outline-danger" onclick="controlRoomTimer(${room.id}, 'finish')"><i class="bi bi-stop"></i> Finalizar</button>
-                </div>` : ''}
-            </div>`;
+                            ? `<button class="btn btn-sm btn-outline-success" onclick="controlRoomTimer(${Number(room.id)}, 'resume')"><i class="bi bi-play"></i> Reanudar</button>`
+                            : `<button class="btn btn-sm btn-outline-success" onclick="controlRoomTimer(${Number(room.id)}, 'start')"><i class="bi bi-play"></i> ${timer.phase === 'preguntas' ? 'Iniciar preguntas' : 'Iniciar exposición'}</button>`}
+                    ${timer.phase !== 'preguntas' ? `<button class="btn btn-sm btn-outline-primary" onclick="controlRoomTimer(${Number(room.id)}, 'questions')"><i class="bi bi-chat-dots"></i> Pasar a preguntas</button>` : ''}
+                    <button class="btn btn-sm btn-outline-secondary" onclick="controlRoomTimer(${Number(room.id)}, 'reset')"><i class="bi bi-arrow-counterclockwise"></i> Reiniciar</button>
+                    <button class="btn btn-sm btn-outline-danger" onclick="controlRoomTimer(${Number(room.id)}, 'finish')"><i class="bi bi-stop"></i> Terminar tiempo</button>
+                    <small class="text-muted w-100">${timer.auto_questions ? 'Pasa sola a preguntas al terminar la exposición.' : 'Las preguntas se inician a mano.'}</small>
+                </div>` : '';
+            return RoomCountdown.markup(timer, 'Tiempo del equipo en turno', controls);
         }
 
         function tickRoomTimers() {
-            document.querySelectorAll('[data-room-timer]').forEach(display => {
-                let remaining = Math.max(0, Number(display.dataset.remaining || 0));
-                if (display.dataset.status === 'en_curso' && display.dataset.tickReady === '1') remaining = Math.max(0, remaining - 1);
-                display.dataset.remaining = remaining;
-                display.dataset.tickReady = '1';
-                display.textContent = `${String(Math.floor(remaining / 60)).padStart(2, '0')}:${String(remaining % 60).padStart(2, '0')}`;
-            });
+            RoomCountdown.tick();
         }
 
         function renderProjectRoomView() {
@@ -1229,12 +1234,12 @@ $canManageRooms = can_manage_projects();
             return `SALA ${number}`;
         }
 
-        // Mientras no se edite a mano, el fin se ajusta al tiempo que necesitan los proyectos marcados.
+        // El fin no se captura: se calcula con los proyectos marcados y sus tiempos.
         function autoFitRoomEnd() {
             const end = document.getElementById('roomEndDate');
             const start = parseRoomDate(document.getElementById('roomDate').value);
-            if (!roomEndAuto || end.readOnly || !start) return;
-            const value = formatLocalDateTimeInput(new Date(start.getTime() + Math.max(30, requiredRoomMinutes()) * 60000));
+            if (!start) return;
+            const value = formatLocalDateTimeInput(new Date(start.getTime() + requiredRoomMinutes() * 60000));
             if (end.value === value) return;
             end.value = value;
             const selectedTeachers = [...document.querySelectorAll('.room-teacher:checked')].map(input => input.value);
@@ -1281,7 +1286,7 @@ $canManageRooms = can_manage_projects();
             const presentation = Number(document.getElementById('presentationMinutes').value || 0);
             const evaluation = Number(document.getElementById('teacherMinutes').value || 0);
             const attempts = Number(document.getElementById('maxAttempts').value || 1);
-            document.getElementById('roomTimesSummary').textContent = `${presentation} min de presentación + ${evaluation} de evaluación · ${attempts} oportunidad${attempts === 1 ? '' : 'es'}`;
+            document.getElementById('roomTimesSummary').textContent = `${presentation} min de exposición + ${evaluation} de preguntas · ${Number(document.getElementById('toleranceMinutes').value || 0)} min de tolerancia · ${attempts} oportunidad${attempts === 1 ? '' : 'es'}`;
             document.getElementById('roomStepProjectsCount').textContent = regular + special ? `(${regular + special})` : '';
             document.getElementById('roomStepTeachersCount').textContent = teacherCount ? `(${teacherCount})` : '';
             const items = [
@@ -1321,8 +1326,10 @@ $canManageRooms = can_manage_projects();
             setRoomScheduleLocked(true);
             roomEndAuto = false;
             roomNameAuto = false;
-            document.getElementById('teacherMinutes').value = room.teacher_evaluation_minutes || 15;
-            document.getElementById('presentationMinutes').value = room.project_presentation_minutes || 20;
+            document.getElementById('teacherMinutes').value = room.teacher_evaluation_minutes || 10;
+            document.getElementById('presentationMinutes').value = room.project_presentation_minutes || 15;
+            document.getElementById('toleranceMinutes').value = room.tolerance_minutes ?? 3;
+            document.getElementById('autoQuestions').checked = room.auto_questions ?? true;
             document.getElementById('maxAttempts').value = room.max_attempts || 1;
             renderRoomTeachers((room.teachers || []).map(teacher => teacher.id));
             refreshResponsibleTeacherOptions(room.responsible_teacher_id || room.responsible_teacher?.id || '');
@@ -1334,7 +1341,7 @@ $canManageRooms = can_manage_projects();
 
         // Al editar, el horario se cambia con el botón Horario (la API protege el horario de una sala existente).
         function setRoomScheduleLocked(locked) {
-            ['roomDate', 'roomEndDate'].forEach(id => document.getElementById(id).readOnly = locked);
+            document.getElementById('roomDate').readOnly = locked;
             document.getElementById('roomDateHint').innerHTML = locked
                 ? 'Para cambiar el horario usa el botón <i class="bi bi-clock"></i> Horario de la sala.'
                 : 'Debe ser posterior a la fecha actual.';
@@ -1349,8 +1356,10 @@ $canManageRooms = can_manage_projects();
             document.getElementById('roomSpecialCasesBox').open = false;
             document.getElementById('roomSpecialCases').innerHTML = '';
             document.getElementById('responsibleTeacher').innerHTML = '<option value="">Selecciona primero docentes</option>';
-            document.getElementById('teacherMinutes').value = 15;
-            document.getElementById('presentationMinutes').value = 20;
+            document.getElementById('teacherMinutes').value = 10;
+            document.getElementById('presentationMinutes').value = 15;
+            document.getElementById('toleranceMinutes').value = 3;
+            document.getElementById('autoQuestions').checked = true;
             document.getElementById('maxAttempts').value = 1;
             document.getElementById('roomDate').min = nextMinuteInput();
             roomNameAuto = true;
@@ -1405,11 +1414,6 @@ $canManageRooms = can_manage_projects();
             // Los casos especiales pasan al final, en el orden en que se marcaron.
             let nextOrder = Math.max(0, ...Object.values(projectOrder)) + 1;
             specialCases.forEach(item => { projectOrder[item.project_id] = nextOrder++; });
-            const availableMinutes = Math.round((endsAt - startsAt) / 60000);
-            if (!id && availableMinutes < requiredRoomMinutes(projectIds.length)) {
-                showAlert('#alertContainer', 'warning', `El horario no alcanza: se necesitan ${requiredRoomMinutes(projectIds.length)} min para ${projectIds.length} proyecto(s) y hay ${availableMinutes} min. Usa "Ajustar fin" o reduce los tiempos.`);
-                return;
-            }
             const selectedOrders = Object.values(projectOrder).filter(order => order > 0);
             if (selectedOrders.some((order, index) => selectedOrders.indexOf(order) !== index)) {
                 showAlert('#alertContainer', 'danger', 'No repitas el orden de presentación entre proyectos.');
@@ -1421,9 +1425,10 @@ $canManageRooms = can_manage_projects();
                 semestre: document.getElementById('roomSemester').value,
                 responsible_teacher_id: document.getElementById('responsibleTeacher').value || null,
                 fecha_evaluacion: document.getElementById('roomDate').value,
-                fecha_fin_evaluacion: document.getElementById('roomEndDate').value,
                 teacher_evaluation_minutes: Number(document.getElementById('teacherMinutes').value),
                 project_presentation_minutes: Number(document.getElementById('presentationMinutes').value),
+                tolerance_minutes: Number(document.getElementById('toleranceMinutes').value || 0),
+                auto_questions: document.getElementById('autoQuestions').checked,
                 max_attempts: Number(document.getElementById('maxAttempts').value),
                 teacher_ids: teacherIds,
                 project_ids: projectIds,
@@ -1554,13 +1559,8 @@ $canManageRooms = can_manage_projects();
         async function controlRoomTimer(id, action) {
             const room = rooms.find(item => Number(item.id) === Number(id));
             if (!room) return;
-            const minutes = Number(document.getElementById(`timerMinutes${id}`)?.value || room.project_presentation_minutes || 20);
             try {
-                const response = await api.post(`/evaluations/rooms/${id}/timer`, {
-                    action,
-                    expected_sequence_version: room.sequence_version,
-                    ...(['start', 'reset'].includes(action) ? { duration_seconds: Math.max(1, minutes) * 60 } : {})
-                });
+                const response = await api.post(`/evaluations/rooms/${id}/timer`, { action, expected_sequence_version: room.sequence_version });
                 replaceRoomLocal(response.room);
                 renderCurrentView();
             } catch (error) {
@@ -1583,6 +1583,10 @@ $canManageRooms = can_manage_projects();
                 apply();
             };
             document.getElementById('scheduleEnd').value = toDateTimeInput(room.fecha_fin_evaluacion);
+            document.getElementById('scheduleStart').oninput = () => {
+                const start = parseRoomDate(document.getElementById('scheduleStart').value);
+                if (start) document.getElementById('scheduleEnd').value = formatLocalDateTimeInput(new Date(start.getTime() + roomTotalMinutes(room) * 60000));
+            };
             document.getElementById('scheduleAllowLate').checked = Boolean(room.allow_late_evaluations);
             document.getElementById('scheduleLateUntil').value = toDateTimeInput(room.late_evaluation_until);
             document.getElementById('scheduleLateReason').value = room.late_evaluation_reason || '';
@@ -1609,18 +1613,13 @@ $canManageRooms = can_manage_projects();
             const end = document.getElementById('scheduleEnd').value;
             const allowsLate = document.getElementById('scheduleAllowLate').checked;
             const lateUntil = document.getElementById('scheduleLateUntil').value;
-            if (new Date(end) <= new Date(start)) {
-                showAlert('#alertContainer', 'warning', 'La hora de fin debe ser posterior al inicio.');
-                return;
-            }
             if (allowsLate && new Date(lateUntil) <= new Date(end)) {
-                showAlert('#alertContainer', 'warning', 'La autorización fuera de horario debe terminar después del horario ordinario.');
+                showAlert('#alertContainer', 'warning', 'La autorización fuera de horario debe terminar después de que termine la sala.');
                 return;
             }
             try {
                 const response = await api.put(`/evaluations/rooms/${id}/schedule`, {
                     fecha_evaluacion: start,
-                    fecha_fin_evaluacion: end,
                     allow_late_evaluations: allowsLate,
                     late_evaluation_until: allowsLate ? lateUntil : null,
                     late_evaluation_reason: allowsLate ? document.getElementById('scheduleLateReason').value.trim() : null,

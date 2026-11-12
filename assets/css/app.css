@@ -7315,3 +7315,11 @@ body .pagination .page-item.active .page-link { background: var(--inst-navy); bo
 /* Encabezados de tarjeta de los paneles: blancos con barra azul (tema institucional); el enlace va en azul marino. */
 .dashboard-card-header-actions a, .dashboard-card-header-actions a:hover { color: var(--inst-navy); }
 .dashboard-card-header-actions a:hover { text-decoration: underline; }
+
+/* Temporizador por fases (room-countdown.js): exposición en verde, preguntas en azul, rojo al terminar. */
+.room-live-timer.running.phase-preguntas { border-color: #2463a6; background: rgba(36, 99, 166, .08); }
+.room-live-timer.expired { border-color: #b23b3b !important; background: rgba(178, 59, 59, .08); animation: room-timer-alert 1s ease-in-out 5; }
+.room-live-timer.expired [data-countdown-display], .room-live-timer.expired [data-countdown-label] { color: #b23b3b; }
+@keyframes room-timer-alert { 50% { box-shadow: 0 0 0 4px rgba(178, 59, 59, .25); } }
+.live-turn { display: flex; flex-wrap: wrap; gap: 6px 16px; padding: 8px 12px; margin-top: 8px; border-radius: 12px; background: var(--inst-soft); border-left: 4px solid var(--inst-navy); font-size: .9rem; }
+.live-turn.now { background: rgba(31, 138, 76, .1); border-left-color: #1f8a4c; }

@@ -356,6 +356,7 @@ $is_archived_view = basename($_SERVER['PHP_SELF']) === 'evaluations-archived.php
                 <div class="modal-body">
                     <input type="hidden" id="scoreEvaluationId">
                     <div id="scoreProjectContext" class="border rounded p-3 mb-3"></div>
+                    <div id="scoreRoomTimer" class="mb-3"></div>
                     <div class="score-summary-bar mb-3" id="scoreSummaryBar" aria-live="polite"></div>
                     <div id="scoreDraftStatus" class="small text-muted mb-2"></div>
                     <div id="scoreFields"></div>
@@ -468,6 +469,7 @@ $is_archived_view = basename($_SERVER['PHP_SELF']) === 'evaluations-archived.php
     <script src="<?= asset('/assets/js/auth.js') ?>"></script>
     <script src="<?= asset('/assets/js/api.js') ?>"></script>
     <script src="<?= asset('/assets/js/app.js') ?>"></script>
+    <script src="<?= asset('/assets/js/room-countdown.js') ?>"></script>
     <script>
         const IS_ADMIN = <?= can_manage_projects() ? 'true' : 'false' ?>;
         const CAN_MANAGE_EVALUATIONS = <?= is_evaluation_manager() ? 'true' : 'false' ?>;
@@ -2038,6 +2040,29 @@ $is_archived_view = basename($_SERVER['PHP_SELF']) === 'evaluations-archived.php
             await loadRubricCriteria(true);
         }
 
+        // Temporizador de la sala dentro de la rúbrica: el mismo que controla el encargado, consultado cada 5 s.
+        let scoreRoomTimerInterval = null;
+        function stopScoreRoomTimer() {
+            clearInterval(scoreRoomTimerInterval);
+            scoreRoomTimerInterval = null;
+            document.getElementById('scoreRoomTimer').innerHTML = '';
+        }
+        function startScoreRoomTimer(roomId) {
+            stopScoreRoomTimer();
+            if (!roomId) return;
+            const load = async () => {
+                try {
+                    const live = await api.get(`/evaluations/rooms/${Number(roomId)}/live`, { _fresh: true, _silent: true });
+                    const box = document.getElementById('scoreRoomTimer');
+                    if (!live.current_order || live.completed_at) { box.innerHTML = ''; return; }
+                    box.innerHTML = RoomCountdown.markup(live.timer, `Turno ${live.current_order} de ${live.total}${live.current_project?.title ? ` · ${live.current_project.title}` : ''}`);
+                    RoomCountdown.tick();
+                } catch (error) { /* sin temporizador si no participa en la sala */ }
+            };
+            load();
+            scoreRoomTimerInterval = setInterval(() => { if (!document.hidden) load(); }, 5000);
+        }
+
         async function openScoreModal(evaluationId) {
             await refreshCriteria(true);
             document.getElementById('scoreEvaluationId').value = evaluationId;
@@ -2061,6 +2086,7 @@ $is_archived_view = basename($_SERVER['PHP_SELF']) === 'evaluations-archived.php
                     <span class="badge bg-secondary align-self-start">Orden #${escapeHtml(evaluation?.presentation_order || '-')}</span>
                 </div>
             `;
+            startScoreRoomTimer(evaluation?.room?.id || evaluation?.evaluation_room_id);
             document.getElementById('generalEvaluationComment').value = draft.general_comment || '';
             document.getElementById('titulationAptBox').classList.toggle('d-none', Number(evaluation?.semestre) !== 8);
             document.getElementById('apto_titulacion').value = draft.apto_titulacion
@@ -2305,6 +2331,7 @@ $is_archived_view = basename($_SERVER['PHP_SELF']) === 'evaluations-archived.php
 
         document.addEventListener('DOMContentLoaded', async () => {
             evaluationModal = new bootstrap.Modal(document.getElementById('evaluationModal'));
+            document.getElementById('scoreModal').addEventListener('hidden.bs.modal', stopScoreRoomTimer);
             rubricModal = new bootstrap.Modal(document.getElementById('rubricModal'));
             scoreModal = new bootstrap.Modal(document.getElementById('scoreModal'));
             breakdownModal = new bootstrap.Modal(document.getElementById('breakdownModal'));
