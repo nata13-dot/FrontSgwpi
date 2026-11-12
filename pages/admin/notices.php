@@ -220,7 +220,16 @@ function openNoticeModal(index = null) {
     // Un inicio ya guardado se conserva; uno nuevo no puede ser anterior a hoy.
     startsAt.oninput = () => { startsAt.min = startsAt.value === (notice?.starts_at || '') ? '' : new Date().toLocaleDateString('en-CA'); };
     startsAt.min = notice?.starts_at ? '' : new Date().toLocaleDateString('en-CA');
-    document.getElementById('noticeEndsAt').value = notice?.ends_at || '';
+    const endsAt = document.getElementById('noticeEndsAt');
+    endsAt.value = notice?.ends_at || '';
+    // El cierre no puede ser antes de hoy ni de la apertura (un cierre ya guardado se conserva).
+    const fitEndMin = () => {
+        const today = new Date().toLocaleDateString('en-CA');
+        endsAt.min = endsAt.value && endsAt.value === (notice?.ends_at || '') ? '' : [today, startsAt.value || ''].sort().pop();
+    };
+    startsAt.addEventListener('input', fitEndMin);
+    endsAt.oninput = fitEndMin;
+    fitEndMin();
     document.getElementById('noticeActive').checked = notice?.active ?? true;
     document.getElementById('noticeMessage').value = notice?.message || '';
     noticeModal.show();
@@ -263,7 +272,7 @@ document.getElementById('noticeForm').addEventListener('submit', async event => 
     }
 
     if (notice.starts_at && notice.ends_at && notice.ends_at < notice.starts_at) {
-        showAlert('#alertContainer', 'danger', 'La fecha final debe ser igual o posterior a la fecha inicial.');
+        showAlert('#alertContainer', 'danger', 'El cierre del aviso no puede ser antes de su apertura.');
         return;
     }
 
@@ -278,6 +287,7 @@ document.getElementById('noticeForm').addEventListener('submit', async event => 
         noticeModal.hide();
     } catch (error) {
         showAlert('#alertContainer', 'danger', error.message || 'Error guardando aviso');
+        await loadNotices();
     }
 });
 
@@ -302,11 +312,18 @@ document.addEventListener('DOMContentLoaded', () => {
     loadNotices();
 });
 
+// Fechas solas como día local (new Date("2026-11-12") en México sería el día anterior).
+function noticeDate(value) {
+    const date = /^\d{4}-\d{2}-\d{2}$/.test(String(value || '')) ? new Date(`${value}T00:00:00`) : new Date(value);
+    return date.toLocaleDateString('es-MX', { day: '2-digit', month: 'short', year: 'numeric' });
+}
+
 function formatValidity(notice) {
-    if (!notice.starts_at && !notice.ends_at) return '<span class="text-muted small">Sin límite</span>';
-    const start = notice.starts_at ? esc(notice.starts_at) : 'Hoy';
-    const end = notice.ends_at ? esc(notice.ends_at) : 'Sin fin';
-    return `<span class="small">${start}<br>${end}</span>`;
+    const updated = notice.updated_at ? `<br><span class="text-muted">Actualizado ${esc(new Date(notice.updated_at).toLocaleString('es-MX', { dateStyle: 'medium', timeStyle: 'short' }))}</span>` : '';
+    if (!notice.starts_at && !notice.ends_at) return `<span class="small">Desde que se publica, sin cierre${updated}</span>`;
+    const start = notice.starts_at ? `Del ${esc(noticeDate(notice.starts_at))}` : 'Desde que se publica';
+    const end = notice.ends_at ? `al ${esc(noticeDate(notice.ends_at))}` : 'sin cierre';
+    return `<span class="small">${start}<br>${end}${updated}</span>`;
 }
 </script>
 </body>

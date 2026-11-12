@@ -12,6 +12,9 @@ window.SGPI_SETTINGS_SYNC_INTERVAL = window.SGPI_SETTINGS_SYNC_INTERVAL || 60000
 window.SGPI_SETTINGS_SIGNATURE = null;
 window.SGPI_SETTINGS_LAST_SYNC = 0;
 
+// Al crear o modificar un aviso, el pulso de cambios (live.js) recarga los ajustes y lo muestra al momento.
+document.addEventListener('DOMContentLoaded', () => window.onLiveChange?.(['notices'], () => loadPublicSettings({ force: true })));
+
 async function loadPublicSettings(options = {}) {
     const force = Boolean(options.force);
     try {
@@ -208,6 +211,16 @@ function currentAudienceContext() {
     };
 }
 
+// Una fecha sola ("2026-11-12") es un día local; new Date() la tomaría como medianoche UTC (el día anterior en México).
+function noticeDay(value) {
+    return /^\d{4}-\d{2}-\d{2}$/.test(String(value || '')) ? new Date(`${value}T00:00:00`) : new Date(value);
+}
+
+function noticeValidityText(notice) {
+    if (!notice.ends_at) return 'Sin fecha de cierre';
+    return `Vigente hasta ${noticeDay(notice.ends_at).toLocaleDateString('es-MX', { day: '2-digit', month: 'short', year: 'numeric' })}`;
+}
+
 function noticeMatchesCurrentAudience(notice, context) {
     const audience = notice.audience || 'all';
     if (audience === 'all') return true;
@@ -227,8 +240,8 @@ function activeSystemNoticesForCurrentAudience(notices) {
         .filter(notice => notice && notice.active !== false && notice.message)
         .filter(notice => noticeMatchesCurrentAudience(notice, context))
         .filter(notice => {
-            if (notice.starts_at && new Date(notice.starts_at) > today) return false;
-            if (notice.ends_at && new Date(notice.ends_at) < today) return false;
+            if (notice.starts_at && noticeDay(notice.starts_at) > today) return false;
+            if (notice.ends_at && noticeDay(notice.ends_at) < today) return false;
             return true;
         })
         .sort((a, b) => String(b.updated_at || b.created_at || '').localeCompare(String(a.updated_at || a.created_at || '')));
@@ -269,7 +282,7 @@ function renderNotificationMenu(notices) {
                 <div>
                     <strong>${title}</strong>
                     <p>${message}</p>
-                    ${date ? `<small>${date}</small>` : ''}
+                    <small>${escapeToastHtml(noticeValidityText(notice))}${date ? ` · publicado ${date}` : ''}</small>
                 </div>
             </article>`;
     }).join('');
@@ -321,7 +334,7 @@ function notificationIcon(type) {
 
 function formatNotificationDate(value) {
     if (!value) return '';
-    const date = new Date(value);
+    const date = noticeDay(value);
     if (Number.isNaN(date.getTime())) return String(value);
     return date.toLocaleDateString('es-MX', {
         day: '2-digit',
@@ -333,13 +346,10 @@ function formatNotificationDate(value) {
 function queueSystemNoticeToasts(notices) {
     if (!Array.isArray(notices) || !notices.length) return;
 
-    const context = currentAudienceContext();
-    if (!context.isIndex && !context.isDashboard) return;
-
+    // Cada aviso nuevo o modificado (otra marca de actualización) se muestra una vez, en cualquier pantalla y dentro de
+    // su vigencia; el aviso de cambios en vivo (live.js) lo trae al momento en que se publica.
     const seenNoticeIds = readSeenNoticeIds();
-    const applicable = notices
-        .filter(notice => notice && notice.active !== false && notice.message)
-        .filter(notice => noticeMatchesCurrentAudience(notice, context))
+    const applicable = activeSystemNoticesForCurrentAudience(notices)
         .filter(notice => !seenNoticeIds.has(noticeSeenKey(notice)));
 
     if (!applicable.length) return;
@@ -368,6 +378,7 @@ function showSystemNoticeToast(notice) {
     };
 
     const title = notice.title ? `<strong>${escapeToastHtml(notice.title)}</strong><br>` : '';
+    const validity = `<br><small class="text-muted">${escapeToastHtml(noticeValidityText(notice))}</small>`;
     Swal.fire({
         toast: true,
         position: 'top-end',
@@ -375,7 +386,7 @@ function showSystemNoticeToast(notice) {
             popup: 'system-notice-toast'
         },
         icon: iconMap[notice.type] || 'info',
-        html: `${title}<span>${escapeToastHtml(notice.message)}</span>`,
+        html: `${title}<span>${escapeToastHtml(notice.message)}</span>${validity}`,
         showConfirmButton: false,
         timer: noticeToastDuration(notice),
         timerProgressBar: true

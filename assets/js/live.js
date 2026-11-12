@@ -8,6 +8,7 @@
     // Rutas del caché de api.js que dependen de cada canal.
     const RESOURCES = {
         notifications: ['/activity-notifications'],
+        notices: ['/settings/public', '/settings/current', '/notices'],
         registration_requests: ['/self-registration/requests', '/period-center'],
         proposals: ['/proposal/projects', '/proposal/student-status', '/projects', '/period-center', '/dashboard'],
         join_requests: ['/proposal/student-status', '/proposal/projects'],
