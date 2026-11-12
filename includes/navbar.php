@@ -485,6 +485,20 @@ async function logout() {
     <script src="<?= asset('/assets/js/upload-guard.js') ?>"></script>
     <script src="<?= asset('/assets/js/help-center.js') ?>"></script>
     <script src="<?= asset('/assets/js/live.js') ?>"></script>
+    <script type="module">
+    // Guía "Cómo usar esta sección" (section-guide.js, la misma de la app), debajo del título de la página.
+    import { guideKeyFor, mountSectionGuide } from '<?= asset('/assets/js/section-guide.js') ?>';
+    const key = guideKeyFor(window.SGPI_PAGE || location.pathname, location.search);
+    const heading = key && document.querySelector('.main-content h1, main h1');
+    if (heading) {
+        let anchor = heading;
+        while (anchor.parentElement && !anchor.parentElement.matches('.container-xl, .container, .container-fluid, main, .main-content')) anchor = anchor.parentElement;
+        const root = document.createElement('div');
+        root.className = 'section-guide';
+        anchor.after(root);
+        mountSectionGuide(root, { user: (typeof auth !== 'undefined' && auth.getCurrentUser?.()) || {}, key });
+    }
+    </script>
     <script src="<?= asset('/assets/js/activity-notifications.js') ?>"></script>
     <?php if (is_general_admin()): ?>
         <script src="<?= asset('/assets/js/operational-notifications.js') ?>"></script>
