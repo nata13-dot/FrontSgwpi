@@ -131,6 +131,8 @@ async function loadStatus() {
     const data = statusData;
     const project = data.project;
     editing = false;
+    const denial = data.presentation_denial;
+    const denialBanner = denial ? `<div class="alert alert-danger"><strong>${denial.scope === 'team' ? 'La presentación de tu equipo fue negada.' : 'Tu presentación fue negada.'}</strong> Motivo: ${esc(denial.reason)}</div>` : '';
 
     if (data.profile_required) {
         box.innerHTML = '<div class="alert alert-warning">Completa tu perfil antes de registrar una propuesta.</div>';
@@ -140,7 +142,7 @@ async function loadStatus() {
         const canFix = project.proposal_status === 'requiere_cambios' && project.revision_allowed_until && new Date(project.revision_allowed_until) > new Date();
         const slots = Math.max(0, (data.max_members || 4) - (project.students || []).length);
         const requests = project.join_requests || [];
-        box.innerHTML = `
+        box.innerHTML = `${denialBanner}
             <div class="card border-0 shadow-sm mb-4"><div class="card-body">
                 <div class="d-flex justify-content-between gap-2 mb-1"><h5 class="mb-0">${esc(project.title)}</h5>${badge(project.proposal_status)}</div>
                 ${project.proposal_review_comment ? `<div class="alert ${canFix ? 'alert-warning' : 'alert-light border'} small"><strong>Observaciones:</strong> ${esc(project.proposal_review_comment)}${canFix ? `<br>Puedes corregir hasta ${esc(dateTime(project.revision_allowed_until))}.` : ''}</div>` : ''}

@@ -200,6 +200,7 @@ function renderProjectCard(project) {
                     </div>
                     <div class="text-lg-end">${badge}${missing}</div>
                 </div>
+                ${renderDenials(project)}
                 <hr>
                 <div class="row g-3">${slots.map(slot => `<div class="col-xl-6">${slot}</div>`).join('')}</div>
             </div>
@@ -330,6 +331,61 @@ function renderEvaluationDelivery(project, type) {
     `;
 }
 
+const DEFAULT_DENIAL = 'Se te impide continuar por una decisión administrativa.';
+
+// Negar la presentación por decisión administrativa (PresentationDenialService en la API; igual que la app).
+// Los nombres viajan en atributos data-*, nunca dentro del código de los botones.
+function renderDenials(project) {
+    const team = project.readiness?.denial;
+    const students = project.readiness?.students || [];
+    const denied = students.filter(student => student.denial);
+    if (!project.puede_revisar) {
+        const me = String((auth.getCurrentUser() || {}).id || '');
+        const mine = team || students.find(student => String(student.id) === me)?.denial;
+        return mine ? `<div class="alert alert-danger small mt-3 mb-0"><strong>${team ? 'La presentación de tu equipo fue negada.' : 'Tu presentación fue negada.'}</strong> Motivo: ${esc(mine.reason)}</div>` : '';
+    }
+    const allowButton = (denial, who) => `<button type="button" class="btn btn-sm btn-outline-primary" data-allow-denial="${Number(denial.id)}" data-allow-who="${esc(who)}"><i class="bi bi-unlock"></i> Permitir de nuevo</button>`;
+    const teamRow = team
+        ? `<div class="alert alert-danger small d-flex flex-wrap justify-content-between align-items-center gap-2 mb-2"><span><strong>Presentación del equipo negada.</strong> Motivo: ${esc(team.reason)}${team.denied_by ? ` <span class="text-muted">· ${esc(team.denied_by)}, ${esc(new Date(team.denied_at).toLocaleString('es-MX', { dateStyle: 'medium', timeStyle: 'short' }))}</span>` : ''}</span>${allowButton(team, 'del equipo')}</div>`
+        : `<div class="d-flex flex-wrap align-items-center gap-2 mb-2"><span class="small text-muted me-auto">Decisión administrativa</span><button type="button" class="btn btn-sm btn-outline-danger" data-deny-project="${Number(project.project.id)}"><i class="bi bi-slash-circle"></i> Negar al equipo</button></div>`;
+    const studentRows = denied.map(student => `<div class="alert alert-danger small d-flex flex-wrap justify-content-between align-items-center gap-2 mb-2"><span><strong>${esc(student.name)}:</strong> presentación negada. Motivo: ${esc(student.denial.reason)}</span>${allowButton(student.denial, `de ${student.name}`)}</div>`).join('');
+    const perStudent = !team && students.length > 1 ? `<div class="d-flex flex-wrap gap-1">${students.filter(student => !student.denial).map(student => `<button type="button" class="btn btn-sm btn-link text-danger" data-deny-project="${Number(project.project.id)}" data-deny-student="${esc(student.id)}" data-deny-name="${esc(student.name)}"><i class="bi bi-slash-circle"></i> Negar a ${esc(student.name.split(' ')[0])}</button>`).join('')}</div>` : '';
+    return `<div class="mt-3">${teamRow}${studentRows}${perStudent}</div>`;
+}
+
+document.addEventListener('click', async event => {
+    const deny = event.target.closest('[data-deny-project]');
+    const allow = event.target.closest('[data-allow-denial]');
+    if (deny) {
+        const studentId = deny.dataset.denyStudent || null;
+        const name = deny.dataset.denyName || '';
+        const result = await Swal.fire({
+            title: studentId ? `Negar la presentación de ${name}` : 'Negar la presentación del equipo',
+            text: `${studentId ? 'El alumno no podrá ser liberado ni presentar; el resto del equipo sí presenta.' : 'El equipo no podrá ponerse en sala ni ser evaluado en este periodo.'} El motivo es opcional: si lo dejas vacío verán «${DEFAULT_DENIAL}»`,
+            input: 'textarea', inputPlaceholder: 'Motivo (opcional)', showCancelButton: true, reverseButtons: true,
+            confirmButtonText: 'Negar presentación', cancelButtonText: 'Cancelar', confirmButtonColor: '#b23b3b',
+        });
+        if (!result.isConfirmed) return;
+        try {
+            const response = await api.post('/repositorio/evaluation-documents/denials', { project_id: Number(deny.dataset.denyProject), student_id: studentId, reason: String(result.value || '').trim() || null });
+            showAlert('#alertContainer', 'success', response.message);
+            await loadDocuments(true);
+        } catch (error) {
+            showAlert('#alertContainer', 'danger', error.message || 'No se pudo negar la presentación.');
+        }
+    }
+    if (allow) {
+        if (!await confirmAction({ title: 'Permitir de nuevo', text: `La presentación ${allow.dataset.allowWho} vuelve a estar permitida y se le avisará en la app y por correo.`, confirmButtonText: 'Sí, permitir' })) return;
+        try {
+            const response = await api.delete(`/repositorio/evaluation-documents/denials/${Number(allow.dataset.allowDenial)}`);
+            showAlert('#alertContainer', 'success', response.message);
+            await loadDocuments(true);
+        } catch (error) {
+            showAlert('#alertContainer', 'danger', error.message || 'No se pudo permitir la presentación.');
+        }
+    }
+});
+
 function renderReleaseReview(project, delivery) {
     if (!delivery.uploaded) {
         return '<p class="text-muted small mb-0">La revisión por alumno estará disponible cuando se cargue la hoja.</p>';
@@ -341,11 +397,11 @@ function renderReleaseReview(project, delivery) {
             ${project.puede_revisar ? '' : '<p class="small text-muted mb-1">La liberación la deciden la jefatura, la asistencia o la coordinación de proyectos.</p>'}
             ${(delivery.students || []).map(student => `
                 <label class="release-student">
-                    <span>${esc(fullName(student))}</span>
+                    <span>${esc(fullName(student))}${isDenied(project, student) ? ' <span class="badge bg-danger">Presentación negada</span>' : ''}</span>
                     <span class="form-check form-switch mb-0">
                         <input class="form-check-input release-status-${documentId(delivery)}" type="checkbox"
-                            data-student-id="${escAttr(student.id)}" ${student.released ? 'checked' : ''}
-                            ${project.puede_revisar ? '' : 'disabled'}>
+                            data-student-id="${escAttr(student.id)}" ${student.released && !isDenied(project, student) ? 'checked' : ''}
+                            ${project.puede_revisar && !isDenied(project, student) ? '' : 'disabled'}>
                     </span>
                 </label>
             `).join('')}
@@ -355,6 +411,10 @@ function renderReleaseReview(project, delivery) {
                 </button>` : ''}
         </div>
     `;
+}
+
+function isDenied(project, student) {
+    return (project.readiness?.students || []).some(entry => String(entry.id) === String(student.id) && entry.denial);
 }
 
 function documentId(delivery) {
@@ -492,7 +552,7 @@ async function saveEvaluationLink(projectId) {
 async function saveReleaseReview(documentId) {
     const students = [...document.querySelectorAll(`.release-status-${documentId}`)].map(input => ({
         student_id: input.dataset.studentId,
-        released: input.checked
+        released: input.checked && !input.disabled
     }));
 
     try {
