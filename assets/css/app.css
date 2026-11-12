@@ -7311,3 +7311,7 @@ body .dropdown-menu { border: 1px solid var(--inst-line); border-radius: 14px; b
 body .table > tbody > tr:hover > * { background-color: color-mix(in srgb, var(--inst-navy) 5%, transparent); }
 body .pagination .page-link { border-radius: 10px; margin: 0 2px; border-color: var(--inst-line); color: var(--inst-navy); }
 body .pagination .page-item.active .page-link { background: var(--inst-navy); border-color: var(--inst-navy); color: #fff; }
+
+/* Encabezados de tarjeta de los paneles: blancos con barra azul (tema institucional); el enlace va en azul marino. */
+.dashboard-card-header-actions a, .dashboard-card-header-actions a:hover { color: var(--inst-navy); }
+.dashboard-card-header-actions a:hover { text-decoration: underline; }

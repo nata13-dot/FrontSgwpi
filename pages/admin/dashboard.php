@@ -228,7 +228,7 @@ $careerFeature = match ($careerCode) {
             <!-- Quick Actions -->
             <div class="col-lg-6">
                 <div class="card border-0 shadow-sm">
-                    <div class="card-header" style="background: linear-gradient(135deg, #1B396A 0%, #2D5A96 100%); color: white; border: 0;">
+                    <div class="card-header">
                         <h5 class="mb-0" style="color: white;"><i class="bi bi-lightning"></i> Acciones Rápidas</h5>
                     </div>
                     <div class="card-body p-0">
@@ -280,7 +280,7 @@ $careerFeature = match ($careerCode) {
             <!-- Project Overview -->
             <div class="col-lg-6">
                 <div class="card border-0 shadow-sm">
-                    <div class="card-header" style="background: linear-gradient(135deg, #1B396A 0%, #2D5A96 100%); color: white; border: 0;">
+                    <div class="card-header">
                         <div class="dashboard-card-header-actions">
                             <h5 class="mb-0" style="color: white;"><i class="bi bi-kanban"></i> Resumen de proyectos</h5>
                             <a href="/pages/admin/projects.php">Ver todos <i class="bi bi-arrow-right"></i></a>

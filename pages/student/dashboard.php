@@ -6,6 +6,11 @@ if (!is_authenticated() || !is_student()) {
     header('Location: /index.php');
     exit;
 }
+$career = active_career() ?? [];
+$careerCode = $career['clave'] ?? 'ISC';
+// Misma portada de la carrera que el panel administrativo (pages/admin/dashboard.php).
+$careerHeroImage = $career['portada_ruta'] ?? ($careerCode === 'ISC' ? '/assets/img/ITSSMT/fondochido2.webp' : null);
+$careerHeroStyle = $careerHeroImage ? "background-image: url('" . htmlspecialchars($careerHeroImage) . "');" : '';
 ?>
 <!DOCTYPE html>
 <html lang="es">
@@ -25,32 +30,58 @@ if (!is_authenticated() || !is_student()) {
         <?php require_once $_SERVER['DOCUMENT_ROOT'] . '/includes/sidebar.php'; ?>
         
         <div class="main-content flex-grow-1">
-            <!-- Hero -->
-            <div style="background: url('/assets/img/ITSSMT/fondochido2.webp'); background-size: cover; background-position: center; padding: 48px 0; position: relative;">
+            <!-- Portada de la carrera: igual que el panel administrativo. -->
+            <div class="page-image-header dashboard-hero career-dashboard-hero career-<?= htmlspecialchars(strtolower($careerCode)) ?>" style="<?= $careerHeroStyle ?>" data-career="<?= htmlspecialchars($careerCode) ?>">
                 <div class="overlay"></div>
                 <div class="container-xl" style="position: relative; z-index: 1;">
-                    <!-- Logo y Título -->
-                    <div class="d-flex align-items-center gap-3 mb-2">
-                        <img src="/assets/img/ITSSMT/ITSSMT-192.webp" alt="ITSSMT" style="height: 50px;">
-                        <h1 class="display-4 fw-bold text-white mb-0">Panel del Estudiante</h1>
-                    </div>
-                    
-                    <!-- Subtítulo -->
-                    <p class="text-white opacity-90 mb-3" style="font-size: 1.1rem;">
-                        <strong>Bienvenido, <?= htmlspecialchars($current_user['nombres']) ?></strong> | Gestión de proyectos y entregas
+                    <h1 class="display-4 fw-bold text-white mb-3">Panel del Estudiante</h1>
+                    <p class="text-white opacity-90 mb-0 dashboard-hero-subtitle">
+                        <strong>Bienvenido, <?= htmlspecialchars($current_user['nombres']) ?></strong> | Tu proyecto, entregas y presentaciones
                     </p>
-                    
-                    <!-- Breadcrumb -->
-                    <nav aria-label="breadcrumb">
-                        <ol class="breadcrumb" style="background: rgba(255,255,255,0.15); border-radius: 5px; padding: 8px 12px; margin: 0;">
-                            <li class="breadcrumb-item"><a href="/index.php" class="text-white text-decoration-none">Inicio</a></li>
-                            <li class="breadcrumb-item active text-white opacity-75">Panel Estudiante</li>
-                        </ol>
-                    </nav>
+                    <span class="dashboard-hero-line"></span>
+                    <p class="dashboard-career-name"><?= htmlspecialchars($career['nombre'] ?? 'Ingeniería en Sistemas Computacionales') ?></p>
+                    <p class="dashboard-career-motto"><?= htmlspecialchars($career['lema'] ?? 'Tecnología, innovación y transformación digital.') ?></p>
+                    <p class="dashboard-hero-tag">#OrgulloHalcón</p>
                 </div>
             </div>
 
             <div class="container-xl mt-5 mb-5">
+                <section class="dashboard-mobile-shortcuts" aria-labelledby="mobileShortcutsTitle">
+                    <div class="dashboard-mobile-shortcuts-heading">
+                        <div>
+                            <span>Acceso directo</span>
+                            <h2 id="mobileShortcutsTitle">Mis accesos</h2>
+                        </div>
+                        <i class="bi bi-grid"></i>
+                    </div>
+                    <div class="dashboard-mobile-shortcuts-grid">
+                    <a href="/pages/student/proposal-register.php" class="dashboard-mobile-shortcut">
+                        <i class="bi bi-mortarboard"></i>
+                        <span>Mi proyecto</span>
+                    </a>
+                    <a href="/pages/student/my-deliverables.php" class="dashboard-mobile-shortcut">
+                        <i class="bi bi-file-earmark-check"></i>
+                        <span>Mis entregables</span>
+                    </a>
+                    <a href="/pages/evaluation-documents.php" class="dashboard-mobile-shortcut">
+                        <i class="bi bi-file-earmark-ppt"></i>
+                        <span>Evidencias</span>
+                    </a>
+                    <a href="/pages/academic-workflows.php?tab=courses" class="dashboard-mobile-shortcut">
+                        <i class="bi bi-calendar-check"></i>
+                        <span>Mis materias</span>
+                    </a>
+                    <a href="/pages/repositorio.php" class="dashboard-mobile-shortcut">
+                        <i class="bi bi-archive"></i>
+                        <span>Repositorio</span>
+                    </a>
+                    <a href="/pages/profile.php" class="dashboard-mobile-shortcut">
+                        <i class="bi bi-person-circle"></i>
+                        <span>Mi perfil</span>
+                    </a>
+                    </div>
+                </section>
+
                 <section class="dashboard-action-panel" aria-live="polite">
                     <span class="dashboard-action-icon" aria-hidden="true"><i class="bi bi-mortarboard"></i><b>!</b></span>
                     <div>
@@ -70,13 +101,13 @@ if (!is_authenticated() || !is_student()) {
                         <a href="/pages/student/proposal-register.php" class="text-decoration-none d-block dashboard-stat-link" aria-label="Ir a registrar o consultar proyecto">
                             <div class="card dashboard-stat-card border-0 shadow-sm" style="cursor: pointer;">
                                 <div class="card-body">
-                                    <div class="d-flex justify-content-between align-items-start gap-3">
+                                    <div class="dashboard-stat-layout">
+                                        <span class="dashboard-stat-icon dashboard-stat-icon-users"><i class="bi bi-folder2"></i></span>
                                         <div>
                                             <div class="dashboard-stat-label">Mis proyectos</div>
                                             <div class="dashboard-stat-value mt-2" id="myProjects">0</div>
                                             <div class="dashboard-stat-note mt-2"><span id="pendingProposals">0</span> propuestas pendientes</div>
                                         </div>
-                                        <span class="dashboard-stat-icon"><i class="bi bi-folder2"></i></span>
                                     </div>
                                 </div>
                             </div>
@@ -87,13 +118,13 @@ if (!is_authenticated() || !is_student()) {
                         <a href="/pages/student/my-deliverables.php" class="text-decoration-none d-block dashboard-stat-link" aria-label="Ir a mis entregables">
                             <div class="card dashboard-stat-card border-0 shadow-sm" style="cursor: pointer;">
                                 <div class="card-body">
-                                    <div class="d-flex justify-content-between align-items-start gap-3">
+                                    <div class="dashboard-stat-layout">
+                                        <span class="dashboard-stat-icon dashboard-stat-icon-active"><i class="bi bi-file-earmark-check"></i></span>
                                         <div class="w-100">
                                             <div class="dashboard-stat-label">Entregables completados</div>
                                             <div class="dashboard-stat-value mt-2" id="completedDeliverables">0</div>
                                             <div class="dashboard-progress-track mt-3"><div class="dashboard-progress-fill" id="completionProgress" style="width: 0%;"></div></div>
                                         </div>
-                                        <span class="dashboard-stat-icon" style="color: #218838;"><i class="bi bi-file-earmark-check"></i></span>
                                     </div>
                                 </div>
                             </div>
@@ -104,13 +135,13 @@ if (!is_authenticated() || !is_student()) {
                         <a href="/pages/student/my-deliverables.php" class="text-decoration-none d-block dashboard-stat-link" aria-label="Ir a entregables pendientes">
                             <div class="card dashboard-stat-card border-0 shadow-sm" style="cursor: pointer;">
                                 <div class="card-body">
-                                    <div class="d-flex justify-content-between align-items-start gap-3">
+                                    <div class="dashboard-stat-layout">
+                                        <span class="dashboard-stat-icon dashboard-stat-icon-projects"><i class="bi bi-clock"></i></span>
                                         <div>
                                             <div class="dashboard-stat-label">Entregables pendientes</div>
                                             <div class="dashboard-stat-value mt-2" id="pendingDeliverables">0</div>
                                             <div class="dashboard-stat-note mt-2">Por enviar o revisar</div>
                                         </div>
-                                        <span class="dashboard-stat-icon" style="color: #b38600;"><i class="bi bi-clock"></i></span>
                                     </div>
                                 </div>
                             </div>
@@ -146,7 +177,7 @@ if (!is_authenticated() || !is_student()) {
                 <div class="row">
                     <div class="col-12">
                         <div class="card border-0 shadow-sm">
-                            <div class="card-header" style="background: linear-gradient(135deg, #1B396A 0%, #2D5A96 100%); color: white; border: 0;">
+                            <div class="card-header">
                                 <div class="dashboard-card-header-actions">
                                     <h5 class="mb-0"><i class="bi bi-clock-history"></i> Mis Proyectos Activos</h5>
                                     <a href="/pages/student/proposal-register.php">Ir a proyecto <i class="bi bi-arrow-right"></i></a>
