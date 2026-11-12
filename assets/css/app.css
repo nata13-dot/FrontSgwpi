@@ -7263,6 +7263,8 @@ html.sgpi-page-entering.sgpi-page-entered .sgpi-page-transition {
 :root[data-theme="dark"] { --inst-bg: #0f1522; --inst-surface: #172033; --inst-soft: #1c273c; --inst-line: #2c3850; --inst-navy: #79a9ef; --inst-navy-2: #9cc2ff; --inst-ink: #edf2f7; --inst-muted: #9aa6b9; --inst-shadow: 0 1px 2px rgba(0, 0, 0, .3), 0 8px 24px rgba(0, 0, 0, .25); }
 body { background-color: var(--inst-bg); }
 .main-content h1 { color: var(--inst-navy); font-weight: 800; letter-spacing: -.01em; }
+/* Sobre los encabezados oscuros (panel institucional, repositorio, portadas de los paneles) el título va en blanco. */
+.main-content :is(.general-admin-hero, .hero-gradient, .page-image-header, .dashboard-hero) h1 { color: #fff; }
 /* Sin "body" ni !important: las tarjetas con diseño propio (estadísticas, encabezados de color) conservan el suyo. */
 .card { border: 1px solid var(--inst-line); border-radius: 18px; box-shadow: var(--inst-shadow); }
 .card:hover { transform: none; box-shadow: var(--inst-shadow); }
