@@ -109,17 +109,16 @@
     panel.setAttribute('aria-label', 'Asistente de ayuda');
     panel.innerHTML = `
         <header>
-            <div><strong>Asistente de ayuda</strong><small>Elige un tema o escribe tu pregunta.</small></div>
+            <div><strong>Asistente de ayuda</strong><small>Elige un tema para ver cómo hacerlo.</small></div>
             <button type="button" class="btn-close" aria-label="Cerrar" data-help="close"></button>
         </header>
         <div class="help-chat" aria-live="polite"></div>
-        <form class="help-compose">
-            <input class="form-control" maxlength="200" placeholder="Escribe tu pregunta..." aria-label="Escribe tu pregunta">
-            <button class="btn btn-primary" type="submit" aria-label="Enviar pregunta"><i class="bi bi-send" aria-hidden="true"></i></button>
-        </form>`;
+        <footer class="help-footer">
+            <button type="button" class="btn btn-outline-primary btn-sm" data-help="menu">Ver todos los temas</button>
+            ${guest ? '' : '<button type="button" class="btn btn-outline-primary btn-sm" data-help="search"><i class="bi bi-search" aria-hidden="true"></i> Buscar pantallas</button>'}
+        </footer>`;
+    // Sin escritura libre: se navega por temas; el pie lleva de vuelta a la lista completa o al buscador.
     const chat = panel.querySelector('.help-chat');
-    const form = panel.querySelector('form');
-    const field = form.querySelector('input');
 
     let categories = [];
     const choices = list => `<div class="help-suggestions">${list.map(item => `<button type="button" data-${item.topics ? 'category' : 'topic'}="${escapeHtml(item.id)}" data-label="${escapeHtml(item.question || item.title)}">${escapeHtml(item.question || item.title)}</button>`).join('')}</div>`;
@@ -179,7 +178,7 @@
     function openPanel() {
         panel.hidden = false;
         loadHelp().catch(() => { if (!loaded) addBubble('bot', '<p>No se pudo cargar la ayuda. Intenta de nuevo.</p>'); });
-        field.focus();
+        panel.querySelector('[data-help="close"]').focus();
     }
     function closePanel() { panel.hidden = true; }
 
@@ -201,20 +200,6 @@
     });
     panel.addEventListener('keydown', event => { if (event.key === 'Escape') { closePanel(); fab.focus(); } });
 
-    form.addEventListener('submit', event => {
-        event.preventDefault();
-        const question = field.value.trim();
-        if (!question) return;
-        field.value = '';
-        addUser(question);
-        respond({ q: question }, data => {
-            if (data.topic) return `${answerHtml(data.topic, true)}${data.options?.length ? `${caption('¿Buscabas otra cosa?')}${choices(data.options)}` : ''}`;
-            if (data.options?.length) return `<p>No estoy seguro de haberte entendido. ¿Te refieres a alguna de estas?</p>${choices(data.options)}`;
-            return `<p>No encontré una respuesta para eso. Intenta con otras palabras o revisa los temas. Si es un problema con tu cuenta o tus datos, acude a tu jefatura.</p>
-                <button type="button" class="btn btn-outline-primary btn-sm" data-help="menu">Ver todos los temas</button>
-                ${guest ? '' : '<button type="button" class="btn btn-outline-primary btn-sm" data-help="search"><i class="bi bi-search" aria-hidden="true"></i> Abrir el buscador</button>'}`;
-        });
-    });
 
     document.addEventListener('DOMContentLoaded', async () => {
         document.body.append(fab, panel);

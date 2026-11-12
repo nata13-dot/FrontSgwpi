@@ -7091,7 +7091,7 @@ html.sgpi-page-entering.sgpi-page-entered .sgpi-page-transition {
 .help-suggestions { display: flex; flex-direction: column; align-items: flex-start; gap: 6px; margin: 6px 0 8px; }
 .help-suggestions button { padding: 6px 10px; border: 1px solid var(--border-color); border-radius: 10px; background: var(--surface-bg); color: var(--text-dark); font-size: .84rem; text-align: left; }
 .help-suggestions button:hover { border-color: var(--secondary-blue); }
-.help-compose { display: flex; gap: 8px; padding: 10px 12px; border-top: 1px solid var(--border-color); }
+.help-footer { display: flex; flex-wrap: wrap; gap: 8px; justify-content: flex-end; padding: 10px 12px; border-top: 1px solid var(--border-color); }
 .help-tour-layer { position: fixed; inset: 0; z-index: 2000; }
 .help-tour-backdrop { position: absolute; inset: 0; background: rgba(10, 18, 32, .6); }
 .help-tour-spotlight { position: fixed; border-radius: 12px; box-shadow: 0 0 0 9999px rgba(10, 18, 32, .6); outline: 2px solid #fff; pointer-events: none; }
