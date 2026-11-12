@@ -97,7 +97,7 @@ if (!is_authenticated() || !is_admin()) {
                     <div class="card border-0 shadow-sm">
                         <div class="card-header bg-light">
                             <h5 class="mb-0"><i class="bi bi-envelope-check"></i> Autoregistro: formato del correo por carrera</h5>
-                            <small class="text-muted">El número de control es generación (2) + clave de la carrera (2) + consecutivo (4). El correo siempre es «l» seguida del número completo, o «lb» si inicia con b.</small>
+                            <small class="text-muted">El número de control es generación (2) + clave de la carrera (2) + consecutivo (4). El correo siempre es «l» seguida del número completo: «lb» si inicia con b y «lc» si inicia con c.</small>
                         </div>
                         <div class="card-body"><div id="ruleEditors" class="row g-3"><div class="text-muted">Cargando reglas...</div></div></div>
                     </div>
@@ -166,10 +166,10 @@ document.getElementById('settingsForm').addEventListener('submit', async event =
     }
 });
 
-// La «l» del correo es fija y todas las carreras aceptan números con b al inicio (correo «lb…»).
+// La «l» del correo es fija y todas las carreras aceptan números con b o c al inicio (correo «lb…» o «lc…»).
 function ruleSample(rule) {
     const number = `AA${rule.career_code || 'CC'}NNNN`;
-    return `l${number}@${rule.domain} · lb${number}@${rule.domain}`;
+    return `l${number}@${rule.domain} · lb${number}@${rule.domain} · lc${number}@${rule.domain}`;
 }
 
 async function loadRules() {
