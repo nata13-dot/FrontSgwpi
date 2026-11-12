@@ -7323,3 +7323,4 @@ body .pagination .page-item.active .page-link { background: var(--inst-navy); bo
 @keyframes room-timer-alert { 50% { box-shadow: 0 0 0 4px rgba(178, 59, 59, .25); } }
 .live-turn { display: flex; flex-wrap: wrap; gap: 6px 16px; padding: 8px 12px; margin-top: 8px; border-radius: 12px; background: var(--inst-soft); border-left: 4px solid var(--inst-navy); font-size: .9rem; }
 .live-turn.now { background: rgba(31, 138, 76, .1); border-left-color: #1f8a4c; }
+.notification-item small { display: block; }

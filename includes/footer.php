@@ -216,9 +216,21 @@ function noticeDay(value) {
     return /^\d{4}-\d{2}-\d{2}$/.test(String(value || '')) ? new Date(`${value}T00:00:00`) : new Date(value);
 }
 
+// Vigencia completa: "Vigente del 12 nov al 13 nov 2026", "desde…", "hasta…" o sin fechas.
 function noticeValidityText(notice) {
-    if (!notice.ends_at) return 'Sin fecha de cierre';
-    return `Vigente hasta ${noticeDay(notice.ends_at).toLocaleDateString('es-MX', { day: '2-digit', month: 'short', year: 'numeric' })}`;
+    const day = value => noticeDay(value).toLocaleDateString('es-MX', { day: '2-digit', month: 'short', year: 'numeric' });
+    if (notice.starts_at && notice.ends_at) return `Vigente del ${day(notice.starts_at)} al ${day(notice.ends_at)}`;
+    if (notice.ends_at) return `Vigente hasta el ${day(notice.ends_at)}`;
+    if (notice.starts_at) return `Vigente desde el ${day(notice.starts_at)}, sin fecha de cierre`;
+    return 'Sin fecha de cierre';
+}
+
+// Cuándo se publicó y, si se modificó después, cuándo (con hora).
+function noticePublishedText(notice) {
+    const moment = value => new Date(value).toLocaleString('es-MX', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' });
+    if (!notice.created_at && !notice.updated_at) return '';
+    if (notice.updated_at && notice.created_at && notice.updated_at !== notice.created_at) return `Publicado ${moment(notice.created_at)} · actualizado ${moment(notice.updated_at)}`;
+    return `Publicado ${moment(notice.updated_at || notice.created_at)}`;
 }
 
 function noticeMatchesCurrentAudience(notice, context) {
@@ -275,14 +287,14 @@ function renderNotificationMenu(notices) {
         const type = escapeToastHtml(notice.type || 'info');
         const title = escapeToastHtml(notice.title || 'Aviso del sistema');
         const message = escapeToastHtml(notice.message || '');
-        const date = escapeToastHtml(formatNotificationDate(notice.updated_at || notice.created_at || notice.starts_at));
         return `
             <article class="notification-item notification-item-${type}">
                 <span class="notification-icon"><i class="bi ${notificationIcon(type)}"></i></span>
                 <div>
                     <strong>${title}</strong>
                     <p>${message}</p>
-                    <small>${escapeToastHtml(noticeValidityText(notice))}${date ? ` · publicado ${date}` : ''}</small>
+                    <small>${escapeToastHtml(noticeValidityText(notice))}</small>
+                    ${noticePublishedText(notice) ? `<small>${escapeToastHtml(noticePublishedText(notice))}</small>` : ''}
                 </div>
             </article>`;
     }).join('');
@@ -332,16 +344,6 @@ function notificationIcon(type) {
     return icons[type] || icons.info;
 }
 
-function formatNotificationDate(value) {
-    if (!value) return '';
-    const date = noticeDay(value);
-    if (Number.isNaN(date.getTime())) return String(value);
-    return date.toLocaleDateString('es-MX', {
-        day: '2-digit',
-        month: 'short',
-        year: 'numeric'
-    });
-}
 
 function queueSystemNoticeToasts(notices) {
     if (!Array.isArray(notices) || !notices.length) return;
