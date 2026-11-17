@@ -1196,12 +1196,64 @@ if (!is_authenticated() || !can_view_users()) {
             }))) return;
             try {
                 const result = await api.post('/users/bulk', { action, ids });
-                if (result.skipped?.length) Swal.fire({ icon: result.done?.length ? 'warning' : 'error', title: result.done?.length ? 'Aplicado en parte' : 'No se aplicó', html: bulkResultHtml(result) });
-                else swalToast('success', result.message);
                 clearSelectedUsers();
                 loadUsers(currentPage);
+                const releasable = (result.skipped || []).filter(item => item.releasable);
+                if (action === 'deactivate' && releasable.length) {
+                    await releaseAndDeactivate({ ...result, skipped: (result.skipped || []).filter(item => !item.releasable) }, releasable);
+                    return;
+                }
+                if (result.skipped?.length) Swal.fire({ icon: result.done?.length ? 'warning' : 'error', title: result.done?.length ? 'Aplicado en parte' : 'No se aplicó', html: bulkResultHtml(result) });
+                else swalToast('success', result.message);
             } catch (error) {
                 showError(error.message || 'No se pudo aplicar la acción.');
+            }
+        }
+
+        // Docentes con cursos, salas, asesorías o residencias: se muestran sus pendientes y se liberan o se pasan a otro docente.
+        async function releaseAndDeactivate(previous, releasable) {
+            const others = (previous.skipped || []).map(item => `<li><strong>${escapeHtml(item.name)}</strong>: ${escapeHtml(item.reason)}</li>`).join('');
+            const people = releasable.map(item => `
+                <div class="border rounded p-2 mb-2">
+                    <strong>${escapeHtml(item.name)}</strong>
+                    <ul class="small mb-0 mt-1">${(item.commitments || []).map(label => `<li>${escapeHtml(label)}</li>`).join('')}</ul>
+                </div>`).join('');
+            const hasResidency = releasable.some(item => (item.commitments || []).some(label => label.startsWith('Residencia')));
+            const options = (previous.replacements || []).map(person => `<option value="${escapeHtml(person.id)}">${escapeHtml(person.name)}</option>`).join('');
+            const answer = await Swal.fire({
+                icon: 'info',
+                title: releasable.length > 1 ? 'Tienen pendientes en la carrera' : 'Tiene pendientes en la carrera',
+                html: `
+                    <div class="text-start">
+                        ${previous.done?.length ? `<p class="small text-success mb-2">${escapeHtml(previous.message)}</p>` : ''}
+                        <p class="small mb-2">Para desactivar${releasable.length > 1 ? 'los' : 'lo'} primero hay que liberar esto:</p>
+                        ${people}
+                        <label class="form-label fw-semibold mt-2" for="releaseReplacement">Pasar sus pendientes a</label>
+                        <select class="form-select" id="releaseReplacement">
+                            <option value="">${hasResidency ? 'Elige un docente (hay residencias que necesitan asesor)' : 'Nadie: sólo quitarlos'}</option>
+                            ${options}
+                        </select>
+                        <div class="form-text">Con un docente elegido, él recibe los cursos, las salas (también como responsable), las asesorías y las residencias. Sin docente, se quitan de los cursos, salas y asesorías.</div>
+                        ${others ? `<p class="small mt-2 mb-1">Tampoco se pudo con:</p><ul class="small mb-0">${others}</ul>` : ''}
+                    </div>`,
+                showCancelButton: true,
+                confirmButtonText: 'Liberar y desactivar',
+                cancelButtonText: 'Dejar así',
+                focusConfirm: false,
+                preConfirm: () => {
+                    const replacement = document.getElementById('releaseReplacement').value;
+                    if (hasResidency && !replacement) return Swal.showValidationMessage('Elige al docente que asesorará las residencias.');
+                    return replacement || null;
+                }
+            });
+            if (!answer.isConfirmed) return;
+            try {
+                const result = await api.post('/users/bulk', { action: 'deactivate', ids: releasable.map(item => item.id), release: true, replacement_id: answer.value });
+                loadUsers(currentPage);
+                if (result.skipped?.length) Swal.fire({ icon: result.done?.length ? 'warning' : 'error', title: result.done?.length ? 'Aplicado en parte' : 'No se aplicó', html: bulkResultHtml(result) });
+                else swalToast('success', `${result.message} Sus pendientes se liberaron.`);
+            } catch (error) {
+                showError(error.message || 'No se pudieron liberar los pendientes.');
             }
         }
 
