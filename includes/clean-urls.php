@@ -15,6 +15,7 @@ return [
 
     '/pages/admin/advisors.php' => '/asesores',
     '/pages/admin/asignaturas.php' => '/asignaturas',
+    '/pages/admin/archive.php' => '/archivo',
     '/pages/admin/career-audit.php' => '/auditoria',
     '/pages/admin/career-integrity.php' => '/integridad',
     '/pages/admin/career-modules.php' => '/modulos',
@@ -31,6 +32,7 @@ return [
     '/pages/admin/general.php' => '/general',
     '/pages/admin/notices.php' => '/avisos',
     '/pages/admin/operations.php' => '/operaciones',
+    '/pages/admin/period-center.php' => '/periodo',
     '/pages/admin/project-create.php' => '/proyectos/nuevo',
     '/pages/admin/project-edit.php' => '/proyectos/editar',
     '/pages/admin/projects.php' => '/proyectos',

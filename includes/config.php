@@ -23,6 +23,38 @@ define('SGPI_AUTH_REMEMBER_COOKIE', 'sgpi_auth_remember');
 define('SGPI_COOKIE_SUPPORT_COOKIE', 'sgpi_cookie_support');
 define('SGPI_VIEW_AS_ORIGIN_COOKIE', 'sgpi_view_as_origin');
 define('SGPI_AUTH_COOKIE_TTL', 60 * 60 * 24 * 28);
+
+/**
+ * Direcciones limpias (segunda fase). nginx ya sirve /usuarios en lugar de /pages/admin/users.php
+ * (deploy/nginx-clean-urls.conf). Si la página actual llegó por una dirección limpia, nginx está activo: todos los
+ * enlaces /pages/... de la página se cambian por su dirección limpia al enviarla. Sin el include de nginx la
+ * página llega por /pages/... y no se toca nada, así que quitar el include nunca deja enlaces rotos.
+ */
+function sgpi_clean_urls(): array {
+    static $urls = null;
+    return $urls ??= require __DIR__ . '/clean-urls.php';
+}
+function sgpi_clean_urls_active(): bool {
+    static $active = null;
+    if ($active !== null) return $active;
+    $path = rtrim(rawurldecode(parse_url($_SERVER['REQUEST_URI'] ?? '/', PHP_URL_PATH) ?: '/'), '/');
+    return $active = $path !== '' && in_array($path, sgpi_clean_urls(), true);
+}
+/** Dirección visible de una página: la limpia si nginx está activo, la original si no. */
+function page_url(string $file): string {
+    if (!sgpi_clean_urls_active()) return $file;
+    [$path, $rest] = array_pad(preg_split('/(?=[?#])/', $file, 2), 2, '');
+    return (sgpi_clean_urls()[$path] ?? $path) . $rest;
+}
+if (sgpi_clean_urls_active() && PHP_SAPI !== 'cli') {
+    ob_start(function (string $html): string {
+        foreach (headers_list() as $header) {
+            // Sólo páginas HTML: no se tocan JSON, archivos ni redirecciones.
+            if (stripos($header, 'Content-Type:') === 0 && stripos($header, 'text/html') === false) return $html;
+        }
+        return strtr($html, sgpi_clean_urls());
+    });
+}
 define('SGPI_AUTH_COOKIE_SECRET', getenv('SGPI_AUTH_COOKIE_SECRET') ?: getenv('APP_KEY') ?: hash('sha256', __DIR__ . '|' . API_BASE_URL));
 
 // Iniciar sesión
@@ -276,12 +308,12 @@ function must_change_password() {
 }
 
 function dashboard_url() {
-    if (must_change_password() && !view_as_session()) return '/pages/change-password.php';
+    if (must_change_password() && !view_as_session()) return page_url('/pages/change-password.php');
     // El administrador general entra a su panel institucional, separado de las vistas de cada carrera.
-    if (is_general_admin()) return '/pages/admin/general.php';
-    if (is_management_staff()) return '/pages/admin/dashboard.php';
-    if (is_teacher()) return '/pages/teacher/dashboard.php';
-    if (is_student()) return '/pages/student/dashboard.php';
+    if (is_general_admin()) return page_url('/pages/admin/general.php');
+    if (is_management_staff()) return page_url('/pages/admin/dashboard.php');
+    if (is_teacher()) return page_url('/pages/teacher/dashboard.php');
+    if (is_student()) return page_url('/pages/student/dashboard.php');
     return '/index.php';
 }
 
