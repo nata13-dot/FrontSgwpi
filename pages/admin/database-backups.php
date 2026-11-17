@@ -95,13 +95,17 @@ async function loadBackupHealth() {
                         <span><strong>${Number(health.verified)}</strong> restaurables</span>
                         <span><strong>${Number(health.missing)}</strong> faltantes</span>
                         <span><strong>${Number(health.altered)}</strong> alterados</span>
+                        ${Number(health.unreadable) ? `<span class="text-danger"><strong>${Number(health.unreadable)}</strong> sin permiso de lectura</span>` : ''}
+                        ${Number(health.orphans) ? `<span><strong>${Number(health.orphans)}</strong> archivos huérfanos (${formatBackupSize(health.orphan_bytes)})</span>` : ''}
+                        ${Number(health.leftover_databases) ? `<span><strong>${Number(health.leftover_databases)}</strong> bases temporales sobrantes</span>` : ''}
                         <span><strong>${formatBackupSize(health.total_bytes)}</strong> usados</span>
                         <span><strong>${formatBackupSize(health.disk_free_bytes)}</strong> libres</span>
                     </div>
+                    ${health.unreadable_hint ? `<div class="alert alert-warning small mt-2 mb-0">${backupEscape(health.unreadable_hint)}</div>` : ''}
                 </div>
                 <div class="text-end">
                     <div class="small text-muted mb-2">${Number(health.eligible_count)} copias anteriores a ${retentionDays} días elegibles</div>
-                    <button class="btn btn-sm btn-outline-danger" type="button" ${Number(health.eligible_count) ? '' : 'disabled'} onclick="cleanupBackups(${retentionDays})">
+                    <button class="btn btn-sm btn-outline-danger" type="button" ${Number(health.eligible_count) || Number(health.orphans) || Number(health.leftover_databases) ? '' : 'disabled'} onclick="cleanupBackups(${retentionDays})">
                         <i class="bi bi-trash3"></i> Aplicar retención
                     </button>
                 </div>
@@ -229,7 +233,8 @@ async function cleanupBackups(days) {
     if (confirmation === null) return;
     try {
         const response = await api.post('/admin/database-backups-cleanup', {retention_days: days, confirmation});
-        swalToast('success', `Retención aplicada: ${Number(response.result?.deleted || 0)} copias eliminadas, ${formatBackupSize(response.result?.released_bytes)} liberados.`, 6000);
+        const result = response.result || {};
+        swalToast('success', `Retención aplicada: ${Number(result.deleted || 0)} copias vencidas, ${Number(result.orphans_removed || 0)} archivos huérfanos y ${Number(result.databases_dropped || 0)} bases temporales eliminadas; ${formatBackupSize(result.released_bytes)} liberados.`, 7000);
         await refreshBackupPage();
     } catch (error) {
         backupNotice('error', 'No se aplicó la retención', error.message);
