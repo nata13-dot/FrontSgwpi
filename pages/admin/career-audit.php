@@ -45,13 +45,32 @@ if (!is_authenticated() || !is_general_admin()) {
             <section class="card border-0 shadow-sm">
                 <div class="table-responsive">
                     <table class="table table-hover align-middle mb-0">
-                        <thead><tr><th>Fecha</th><th>Carrera</th><th>Actor</th><th>Operación</th><th>Ruta</th><th>Resultado</th><th>IP</th></tr></thead>
+                        <thead><tr><th>Fecha</th><th>Carrera</th><th>Actor</th><th>Operación</th><th>Ruta</th><th>Resultado</th><th>IP y dispositivo</th></tr></thead>
                         <tbody id="auditRows"><tr><td colspan="7" class="text-center text-muted py-5">Cargando auditoría...</td></tr></tbody>
                     </table>
                 </div>
                 <div class="card-footer bg-white d-flex justify-content-between align-items-center">
                     <small class="text-muted" id="auditPageInfo"></small>
                     <div class="btn-group btn-group-sm"><button class="btn btn-outline-secondary" id="auditPrevious"><i class="bi bi-chevron-left"></i></button><button class="btn btn-outline-secondary" id="auditNext"><i class="bi bi-chevron-right"></i></button></div>
+                </div>
+            </section>
+            <section class="card border-0 shadow-sm mt-4">
+                <div class="card-body p-4">
+                    <div class="d-flex flex-wrap justify-content-between align-items-start gap-3 mb-3">
+                        <div>
+                            <h2 class="h5 mb-1">Retención de la auditoría</h2>
+                            <p class="text-muted small mb-0">Cada noche (01:40, después del respaldo) los registros más antiguos que el plazo se copian a un archivo comprimido junto a los respaldos y se borran de aquí. El plazo se cambia en Operaciones → Política de continuidad.</p>
+                        </div>
+                        <button class="btn btn-outline-primary btn-sm" type="button" id="auditPruneButton" disabled><i class="bi bi-archive"></i> Depurar ahora</button>
+                    </div>
+                    <div id="auditRetention" class="small text-muted">Cargando...</div>
+                </div>
+            </section>
+            <section class="card border-0 shadow-sm mt-4">
+                <div class="card-body p-4">
+                    <h2 class="h5 mb-1">Así te ve el sistema</h2>
+                    <p class="text-muted small mb-2">La IP con la que se registran tus cambios. Desde un teléfono con datos móviles es la IP pública que asigna la compañía; en Wi-Fi, la del módem de esa red.</p>
+                    <div id="auditIpCheck" class="small text-muted">Cargando...</div>
                 </div>
             </section>
         </div>
@@ -86,7 +105,7 @@ async function loadAudit() {
                 <td><span class="badge text-bg-secondary">${auditEscape(item.metodo)}</span></td>
                 <td><code>${auditEscape(item.ruta)}</code></td>
                 <td><span class="badge text-bg-${success ? 'success' : 'danger'}">${Number(item.estado_http)}</span></td>
-                <td><small>${auditEscape(item.direccion_ip || '-')}</small></td>
+                <td><strong class="small">${auditEscape(item.direccion_ip || '-')}</strong><small class="d-block text-muted">${auditEscape(item.dispositivo || '')}</small></td>
             </tr>`;
         }).join('') || '<tr><td colspan="7" class="text-center text-muted py-5">No hay operaciones para estos filtros.</td></tr>';
         auditPageInfo.textContent = `Página ${auditPage} de ${auditLastPage} · ${Number(response.total || 0)} registros`;
@@ -106,7 +125,58 @@ async function initializeAudit() {
 auditFilters.addEventListener('submit', event => { event.preventDefault(); auditPage = 1; loadAudit(); });
 auditPrevious.addEventListener('click', () => { if (auditPage > 1) { auditPage--; loadAudit(); } });
 auditNext.addEventListener('click', () => { if (auditPage < auditLastPage) { auditPage++; loadAudit(); } });
-document.addEventListener('DOMContentLoaded', initializeAudit);
+let auditRetentionData = null;
+async function loadAuditRetention() {
+    try {
+        auditRetentionData = await api.get('/admin/audit/retention', { _fresh: true });
+        const preview = auditRetentionData.preview || {};
+        const archives = auditRetentionData.archives || [];
+        auditPruneButton.disabled = !preview.total;
+        auditRetention.innerHTML = `
+            <div class="d-flex flex-wrap gap-2 mb-3">
+                <span class="badge text-bg-info">Se conservan ${Number(preview.days || 0)} días</span>
+                <span class="badge text-bg-${preview.total ? 'warning' : 'success'}">${preview.total ? `${Number(preview.total)} por depurar` : 'Nada por depurar'}</span>
+            </div>
+            ${archives.length ? `<ul class="list-group">${archives.map(archive => `
+                <li class="list-group-item d-flex flex-wrap justify-content-between align-items-center gap-2">
+                    <div>
+                        <strong>${archive.status === 'completada' ? `${Number(archive.total)} registros hasta ${auditEscape(new Date(archive.cutoff).toLocaleDateString('es-MX'))}` : archive.status === 'fallida' ? 'Depuración fallida' : 'En proceso'}</strong>
+                        <small class="d-block text-muted">${auditEscape(new Date(archive.created_at).toLocaleString('es-MX'))} · ${auditEscape(archive.source)}${archive.error ? ` · ${auditEscape(archive.error)}` : ''}</small>
+                    </div>
+                    ${archive.available ? `<button class="btn btn-sm btn-outline-primary" type="button" onclick="downloadAuditArchive(${Number(archive.id)})"><i class="bi bi-download"></i> Descargar copia</button>` : ''}
+                </li>`).join('')}</ul>` : '<p class="mb-0">Todavía no se ha depurado la auditoría.</p>'}`;
+    } catch (error) {
+        auditRetention.innerHTML = `<span class="text-danger">${auditEscape(error.message)}</span>`;
+    }
+}
+async function downloadAuditArchive(id) {
+    const archive = (auditRetentionData?.archives || []).find(item => Number(item.id) === Number(id));
+    try { await downloadApiFile(`/admin/audit/archives/${id}/download`, archive?.file || `auditoria_${id}.sql.gz`, 'No se pudo descargar la copia.'); }
+    catch (error) { showAlert('#auditAlert', 'danger', error.message); }
+}
+auditPruneButton.addEventListener('click', async () => {
+    const preview = auditRetentionData?.preview || {};
+    const ok = await confirmAction({ title: 'Depurar auditoría ahora', text: `Se copiarán ${Number(preview.total || 0)} registros anteriores al ${new Date(preview.cutoff).toLocaleDateString('es-MX')} a un archivo junto a los respaldos y después se borrarán de la auditoría. Requiere un respaldo completo de los últimos 2 días.`, confirmButtonText: 'Copiar y depurar' });
+    if (!ok) return;
+    auditPruneButton.disabled = true;
+    try {
+        const response = await api.post('/admin/audit/retention/run', {}, { _timeout: 120000 });
+        swalToast('success', response.message);
+        loadAudit();
+    } catch (error) {
+        showAlert('#auditAlert', 'danger', error.message);
+    }
+    loadAuditRetention();
+});
+async function loadIpCheck() {
+    try {
+        const data = await api.get('/admin/audit/ip-check', { _fresh: true });
+        auditIpCheck.innerHTML = `<span class="badge text-bg-info me-2">IP: ${auditEscape(data.ip || '-')}</span><span class="badge text-bg-light">${auditEscape(data.device || '')}</span>`;
+    } catch (error) {
+        auditIpCheck.innerHTML = `<span class="text-danger">${auditEscape(error.message)}</span>`;
+    }
+}
+document.addEventListener('DOMContentLoaded', () => { initializeAudit(); loadAuditRetention(); loadIpCheck(); });
 </script>
 </body>
 </html>

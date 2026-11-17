@@ -84,6 +84,7 @@ if (!is_authenticated() || !is_general_admin()) {
                     <div class="col-6"><label class="form-label" for="policyCritical">Umbral crítico (%)</label><input class="form-control" id="policyCritical" type="number" min="1" max="99" required></div>
                     <div class="col-6"><label class="form-label" for="policyBackupAge">Máxima antigüedad (horas)</label><input class="form-control" id="policyBackupAge" type="number" min="1" max="168" required></div>
                     <div class="col-6"><label class="form-label" for="policyRetention">Retención (días)</label><input class="form-control" id="policyRetention" type="number" min="7" max="365" required></div>
+                    <div class="col-12"><label class="form-label" for="policyAuditRetention">Retención de auditoría (días)</label><input class="form-control" id="policyAuditRetention" type="number" min="30" max="1825" required><div class="form-text">Lo más antiguo se copia a un archivo junto a los respaldos y se borra de la auditoría cada noche.</div></div>
                 </div>
                 <div class="alert alert-light border small mt-3 mb-0">El umbral crítico debe ser menor que el objetivo. Los cambios se aplican inmediatamente al monitoreo institucional.</div>
             </div>
@@ -205,6 +206,7 @@ async function loadContinuityPolicy() {
         document.getElementById('policyCritical').value = policy.critical_readiness;
         document.getElementById('policyBackupAge').value = policy.max_backup_age_hours;
         document.getElementById('policyRetention').value = policy.backup_retention_days;
+        document.getElementById('policyAuditRetention').value = policy.audit_retention_days ?? 180;
     } catch (error) {
         swalToast('error', error.message, 7000) || alert(error.message);
     }
@@ -218,7 +220,8 @@ async function saveContinuityPolicy(event) {
             target_readiness: Number(document.getElementById('policyTarget').value),
             critical_readiness: Number(document.getElementById('policyCritical').value),
             max_backup_age_hours: Number(document.getElementById('policyBackupAge').value),
-            backup_retention_days: Number(document.getElementById('policyRetention').value)
+            backup_retention_days: Number(document.getElementById('policyRetention').value),
+            audit_retention_days: Number(document.getElementById('policyAuditRetention').value)
         };
         if (payload.critical_readiness >= payload.target_readiness) {
             throw new Error('El umbral crítico debe ser menor que el objetivo.');
