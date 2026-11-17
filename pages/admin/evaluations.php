@@ -364,6 +364,16 @@ $is_archived_view = basename($_SERVER['PHP_SELF']) === 'evaluations-archived.php
                         <label class="form-label fw-semibold" for="generalEvaluationComment">Comentarios o puntos de mejora</label>
                         <textarea class="form-control" id="generalEvaluationComment" rows="3" placeholder="Comentario final visible en el desglose"></textarea>
                     </div>
+                    <div class="border rounded p-3 mt-3 d-none" id="viabilityBox">
+                        <label class="form-label fw-semibold" for="viabilidad">Dictamen de viabilidad (obligatorio)</label>
+                        <select class="form-select" id="viabilidad">
+                            <option value="">Elige tu dictamen</option>
+                            <option value="viable">Viable</option>
+                            <option value="correcciones">Viable con correcciones</option>
+                            <option value="no_viable">No viable</option>
+                        </select>
+                        <div class="form-text">¿El proyecto es viable para desarrollarse? Coordinación confirma el dictamen final con los votos de todos los evaluadores.</div>
+                    </div>
                     <div class="border rounded p-3 mt-3 d-none" id="titulationAptBox">
                         <label class="form-label fw-semibold">¿Recomienda continuar el proyecto? (No acredita titulación)</label>
                         <select class="form-select" id="apto_titulacion">
@@ -747,6 +757,7 @@ $is_archived_view = basename($_SERVER['PHP_SELF']) === 'evaluations-archived.php
             return {
                 general_comment: document.getElementById('generalEvaluationComment').value,
                 apto_titulacion: document.getElementById('apto_titulacion').value,
+                viabilidad: document.getElementById('viabilidad').value,
                 scores: [...document.querySelectorAll('[data-criterion]')].map(row => ({
                     criterio: row.dataset.criterion,
                     valor: row.querySelector('.criterion-value:checked')?.value || '',
@@ -1237,6 +1248,7 @@ $is_archived_view = basename($_SERVER['PHP_SELF']) === 'evaluations-archived.php
                 const evaluatedBadge = evaluation.is_completed
                     ? `<span class="badge evaluation-success-badge ms-2"><i class="bi bi-check2-circle"></i> ${evaluation.evaluated_by_all ? 'Evaluado por todos' : 'Evaluación completada'}</span>`
                     : '';
+                const viabilityBadge = renderViabilityBadge(evaluation.viability);
                 const evaluationSelection = renderArchiveEvaluationCheckbox(evaluation);
                 tbody.innerHTML += `
                     <tr class="${evaluatedClass} ${isExpanded ? '' : 'd-none'}" data-evaluation-room-row="${escapeHtml(roomKey)}">
@@ -1244,7 +1256,7 @@ $is_archived_view = basename($_SERVER['PHP_SELF']) === 'evaluations-archived.php
                             <div class="d-flex align-items-start gap-2">
                                 ${evaluationSelection}
                                 <div>
-                                    <div class="fw-semibold">${escapeHtml(project?.title || 'N/A')}${evaluationPresentationIndicator(evaluation)}${evaluatedBadge}</div>
+                                    <div class="fw-semibold">${escapeHtml(project?.title || 'N/A')}${evaluationPresentationIndicator(evaluation)}${evaluatedBadge}${viabilityBadge}</div>
                                     <span class="text-muted small d-block">Semestre ${escapeHtml(evaluation.semestre || '-')} · ${escapeHtml(stageLabel(evaluation.etapa))}</span>
                                 </div>
                             </div>
@@ -1276,6 +1288,10 @@ $is_archived_view = basename($_SERVER['PHP_SELF']) === 'evaluations-archived.php
                                     title="${escapeHtml(evaluation.score_block_reason || 'Evaluar')}" ${disabled}>
                                     <i class="bi bi-clipboard-check"></i><span>Evaluar</span>
                                 </button>
+                                ${evaluation.can_confirm_viability && !IS_ARCHIVED_VIEW ? `
+                                    <button class="btn btn-sm btn-outline-primary" onclick="confirmViability(${evaluation.id})" title="Confirmar el dictamen de viabilidad con los votos de los evaluadores">
+                                        <i class="bi bi-flag"></i><span>Confirmar dictamen</span>
+                                    </button>` : ''}
                                 ${evaluation.can_mark_completed ? `
                                     <button class="btn btn-sm btn-outline-success" onclick="markEvaluationCompleted(${evaluation.id})"
                                         title="Marcar esta evaluación como completada con los docentes presentes">
@@ -1846,6 +1862,92 @@ $is_archived_view = basename($_SERVER['PHP_SELF']) === 'evaluations-archived.php
             }
         }
 
+        const VIABILITY = {
+            viable: { label: 'Viable', tone: 'success', effect: 'El proyecto sigue igual y el equipo continúa con su desarrollo.' },
+            correcciones: { label: 'Viable con correcciones', tone: 'warning', effect: 'La propuesta vuelve a «Requiere cambios» con tu motivo y los comentarios de los evaluadores. El equipo la corrige antes del plazo y se valida otra vez.' },
+            no_viable: { label: 'No viable', tone: 'danger', effect: 'El proyecto se cierra y queda en el historial como no viable. El equipo queda libre para registrar otra propuesta cuando se abra el registro para su semestre.' }
+        };
+
+        function renderViabilityBadge(viability) {
+            if (!viability?.applies) return '';
+            if (viability.confirmed) {
+                return `<span class="badge bg-${VIABILITY[viability.confirmed]?.tone || 'secondary'} ms-2"><i class="bi bi-flag"></i> Dictamen: ${escapeHtml(viability.confirmed_label)}</span>`;
+            }
+            if (!viability.total) return '';
+            return `<span class="badge bg-info text-dark ms-2"><i class="bi bi-flag"></i> Viabilidad sugerida: ${escapeHtml(viability.suggested_label)} (${viability.total} voto${viability.total === 1 ? '' : 's'})</span>`;
+        }
+
+        function viabilityDateIn(days) {
+            const date = new Date();
+            date.setDate(date.getDate() + days);
+            return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
+        }
+
+        /** Confirmar el dictamen de viabilidad de 5° (POST /evaluations/{id}/viability). */
+        async function confirmViability(id) {
+            const evaluation = evaluations.find(item => Number(item.id) === Number(id));
+            const summary = evaluation?.viability;
+            if (!summary?.applies) return;
+            const votes = Object.entries(VIABILITY).map(([key, option]) => `<span class="badge bg-${option.tone} me-1">${option.label}: ${summary.votes?.[key] || 0}</span>`).join('');
+            const radios = Object.entries(VIABILITY).map(([key, option]) => `
+                <div class="form-check text-start">
+                    <input class="form-check-input" type="radio" name="viabilityDecision" id="viability-${key}" value="${key}" ${key === summary.suggested ? 'checked' : ''}>
+                    <label class="form-check-label" for="viability-${key}">${option.label}</label>
+                </div>`).join('');
+            const result = await Swal.fire({
+                title: 'Confirmar dictamen de viabilidad',
+                html: `
+                    <div class="text-start">
+                        <p class="mb-1"><strong>${escapeHtml(evaluationProject(evaluation)?.title || 'Proyecto')}</strong></p>
+                        <div class="mb-2">${votes}</div>
+                        <p class="small text-muted">Votaron ${summary.total} evaluador(es). Sugerido por mayoría: <strong>${escapeHtml(summary.suggested_label || '—')}</strong> (en empate se sugiere el más estricto).</p>
+                        <label class="form-label fw-semibold">Dictamen final</label>
+                        ${radios}
+                        <div id="viabilityEffect" class="alert py-2 small mt-2"></div>
+                        <div id="viabilityDeadlineBox" class="mb-2">
+                            <label class="form-label fw-semibold" for="viabilityDeadline">Plazo para corregir</label>
+                            <input type="date" class="form-control" id="viabilityDeadline" min="${viabilityDateIn(1)}" value="${viabilityDateIn(7)}">
+                            <div class="form-text">Hasta el final de ese día podrán editar su propuesta.</div>
+                        </div>
+                        <label class="form-label fw-semibold" for="viabilityReason" id="viabilityReasonLabel">Motivo (opcional)</label>
+                        <textarea class="form-control" id="viabilityReason" rows="3" maxlength="2000"></textarea>
+                    </div>`,
+                showCancelButton: true,
+                confirmButtonText: 'Confirmar dictamen',
+                cancelButtonText: 'Cancelar',
+                focusConfirm: false,
+                didOpen: () => {
+                    const sync = () => {
+                        const decision = document.querySelector('input[name="viabilityDecision"]:checked')?.value || 'viable';
+                        const effect = document.getElementById('viabilityEffect');
+                        effect.className = `alert alert-${VIABILITY[decision].tone} py-2 small mt-2`;
+                        effect.textContent = `${VIABILITY[decision].effect} Se notifica al equipo y no se puede deshacer.`;
+                        document.getElementById('viabilityDeadlineBox').classList.toggle('d-none', decision !== 'correcciones');
+                        document.getElementById('viabilityReasonLabel').textContent = decision !== summary.suggested ? 'Motivo (obligatorio: es distinto al voto de la mayoría)' : 'Motivo (opcional)';
+                    };
+                    document.querySelectorAll('input[name="viabilityDecision"]').forEach(input => input.addEventListener('change', sync));
+                    sync();
+                },
+                preConfirm: () => {
+                    const decision = document.querySelector('input[name="viabilityDecision"]:checked')?.value;
+                    const reason = document.getElementById('viabilityReason').value.trim();
+                    const deadline = document.getElementById('viabilityDeadline').value;
+                    if (!decision) return Swal.showValidationMessage('Elige el dictamen final.');
+                    if (decision !== summary.suggested && !reason) return Swal.showValidationMessage('Escribe el motivo: tu dictamen es distinto al que votó la mayoría.');
+                    if (decision === 'correcciones' && !deadline) return Swal.showValidationMessage('Indica el plazo para corregir.');
+                    return { decision, reason: reason || null, deadline: decision === 'correcciones' ? `${deadline} 23:59:59` : null };
+                }
+            });
+            if (!result.isConfirmed) return;
+            try {
+                const response = await api.post(`/evaluations/${id}/viability`, result.value);
+                await loadEvaluations(false, true);
+                swalToast('success', response.message || 'Dictamen confirmado');
+            } catch (error) {
+                showAlert('#alertContainer', 'danger', error.message || 'No se pudo confirmar el dictamen');
+            }
+        }
+
         async function markEvaluationCompleted(id) {
             const evaluation = evaluations.find(item => Number(item.id) === Number(id));
             if (!evaluation) return;
@@ -2089,6 +2191,8 @@ $is_archived_view = basename($_SERVER['PHP_SELF']) === 'evaluations-archived.php
             startScoreRoomTimer(evaluation?.room?.id || evaluation?.evaluation_room_id);
             document.getElementById('generalEvaluationComment').value = draft.general_comment || '';
             document.getElementById('titulationAptBox').classList.toggle('d-none', Number(evaluation?.semestre) !== 8);
+            document.getElementById('viabilityBox').classList.toggle('d-none', Number(evaluation?.semestre) !== 5);
+            document.getElementById('viabilidad').value = draft.viabilidad ?? evaluation?.current_teacher_viabilidad ?? '';
             document.getElementById('apto_titulacion').value = draft.apto_titulacion
                 ?? (evaluation?.current_teacher_apto_titulacion === true ? '1' : (evaluation?.current_teacher_apto_titulacion === false ? '0' : ''));
             if (evaluation?.current_teacher_has_scores && Number(evaluation.current_teacher_attempts) >= Number(evaluation.max_attempts)) {
@@ -2137,6 +2241,7 @@ $is_archived_view = basename($_SERVER['PHP_SELF']) === 'evaluations-archived.php
             });
             document.getElementById('generalEvaluationComment').oninput = saveScoreDraft;
             document.getElementById('apto_titulacion').onchange = saveScoreDraft;
+            document.getElementById('viabilidad').onchange = saveScoreDraft;
             renderScoreSummary();
             scoreModal.show();
         }
@@ -2174,6 +2279,12 @@ $is_archived_view = basename($_SERVER['PHP_SELF']) === 'evaluations-archived.php
                 showAlert('#alertContainer', 'warning', `Faltan ${rows.filter(row => !row.querySelector('.criterion-value:checked')).length} pregunta(s) por responder.`);
                 return;
             }
+            const viabilityPending = Number(evaluations.find(item => String(item.id) === String(evaluationId))?.semestre) === 5 && !document.getElementById('viabilidad').value;
+            if (viabilityPending) {
+                document.getElementById('viabilityBox').scrollIntoView({ behavior: 'smooth', block: 'center' });
+                showAlert('#alertContainer', 'warning', 'Marca tu dictamen de viabilidad del proyecto.');
+                return;
+            }
             try {
                 const evaluation = evaluations.find(item => String(item.id) === String(evaluationId));
                 const confirmSave = await confirmAction({
@@ -2186,6 +2297,7 @@ $is_archived_view = basename($_SERVER['PHP_SELF']) === 'evaluations-archived.php
                 const payload = { scores, general_comment: document.getElementById('generalEvaluationComment').value.trim() || null };
                 const aptValue = document.getElementById('apto_titulacion').value;
                 if (aptValue !== '') payload.apto_titulacion = aptValue === '1';
+                if (Number(evaluation?.semestre) === 5) payload.viabilidad = document.getElementById('viabilidad').value;
                 const response = await api.post(`/evaluations/${evaluationId}/score`, payload);
                 replaceEvaluationLocal(response.evaluation);
                 clearScoreDraft(evaluationId);
@@ -2249,6 +2361,7 @@ $is_archived_view = basename($_SERVER['PHP_SELF']) === 'evaluations-archived.php
                         <h6 class="mb-0">${escapeHtml(teacher.teacher_name)}</h6>
                         <span><span class="badge bg-primary">${teacher.average}%</span> ${verdictBadge(teacher.verdict, teacher.average)}</span>
                     </div>
+                    ${teacher.viabilidad ? `<div class="small mb-2"><strong>Dictamen de viabilidad:</strong> <span class="badge bg-${VIABILITY[teacher.viabilidad]?.tone || 'secondary'}">${escapeHtml(VIABILITY[teacher.viabilidad]?.label || teacher.viabilidad)}</span></div>` : ''}
                     ${aptSummary.applies ? `<div class="small text-muted mb-2"><strong>Recomendación del proyecto (sin efecto de egreso):</strong> ${escapeHtml(renderAptVote(teacher.apto_titulacion))}</div>` : ''}
                     ${teacher.general_comment ? `<div class="alert alert-light border py-2 mb-3"><strong>Comentario general:</strong><div class="mt-1" style="white-space:pre-wrap">${escapeHtml(teacher.general_comment)}</div></div>` : ''}
                     ${renderTeacherScores(teacher)}

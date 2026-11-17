@@ -191,7 +191,7 @@ async function loadStatus() {
         return;
     }
     box.innerHTML = `
-        ${data.last_rejected ? `<div class="alert alert-danger"><strong>Tu propuesta anterior fue rechazada:</strong> ${esc(data.last_rejected.titulo)}${data.last_rejected.comentario_revision ? `<br>${esc(data.last_rejected.comentario_revision)}` : ''}</div>` : ''}
+        ${data.last_rejected ? `<div class="alert alert-danger"><strong>${data.last_rejected.estado === 'no_viable' ? 'Tu proyecto anterior se dictaminó no viable en la evaluación de 5°:' : 'Tu propuesta anterior fue rechazada:'}</strong> ${esc(data.last_rejected.titulo)}${data.last_rejected.comentario_revision ? `<br>${esc(data.last_rejected.comentario_revision)}` : ''}${data.last_rejected.estado === 'no_viable' ? '<br><small>Tu equipo quedó libre: registra una nueva propuesta cuando se abra el registro para tu semestre.</small>' : ''}</div>` : ''}
         <div class="alert alert-success">Registro abierto hasta ${esc(dateTime(data.window.closes_at))} · ${esc(data.subject_group.nombre)}</div>`;
     if (!readOnly) show('partnerQuestion', true);
 }
