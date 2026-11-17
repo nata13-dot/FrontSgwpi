@@ -35,6 +35,9 @@ if (!is_authenticated() || !can_view_users()) {
                         <button type="button" class="btn btn-outline-success" onclick="openUsersImportModal()">
                             <i class="bi bi-upload"></i> Cargar Excel
                         </button>
+                        <button type="button" class="btn btn-outline-secondary" id="bulkSelectBtn" onclick="enableBulkSelection()">
+                            <i class="bi bi-check2-square"></i> Seleccionar
+                        </button>
                         <button type="button" class="btn btn-outline-warning" id="credentialEmailOpenBtn" onclick="openCredentialEmailModal()">
                             <i class="bi bi-envelope-lock"></i> Enviar credenciales
                         </button>
@@ -146,6 +149,11 @@ if (!is_authenticated() || !can_view_users()) {
                             <button type="button" class="btn btn-outline-secondary" onclick="cancelCredentialSelectionMode()">
                                 <i class="bi bi-x-lg"></i> Cancelar
                             </button>
+                        </div>
+                        <div class="btn-group btn-group-sm" role="group" aria-label="Acciones sobre los seleccionados" id="bulkUserActions">
+                            <button type="button" class="btn btn-outline-danger" data-bulk="deactivate" onclick="bulkUsers('deactivate', [...selectedUserIds])"><i class="bi bi-person-x"></i> Inactivar</button>
+                            <button type="button" class="btn btn-outline-success" data-bulk="activate" onclick="bulkUsers('activate', [...selectedUserIds])"><i class="bi bi-arrow-counterclockwise"></i> Reactivar</button>
+                            <button type="button" class="btn btn-danger" data-bulk="remove" onclick="removeUsers([...selectedUserIds])"><i class="bi bi-trash"></i> Eliminar</button>
                         </div>
                     </div>
                     <div class="card-body p-0">
@@ -553,8 +561,9 @@ if (!is_authenticated() || !can_view_users()) {
                     const generalAdminButton = canSetGeneralAdmin
                         ? `<button class="btn ${isGeneralAdminRow ? 'btn-success' : 'btn-outline-secondary'}" onclick="setGeneralAdmin('${escapeHtml(user.id)}', ${isGeneralAdminRow ? 'false' : 'true'})" title="${isGeneralAdminRow ? 'Administrador general. Clic para retirarlo' : 'Nombrar administrador general'}"><i class="bi bi-award"></i></button>`
                         : '';
-                    const archiveButton = CAN_ARCHIVE && !isGeneralAdminRow && String(user.id) !== String(auth.getCurrentUser()?.id)
-                        ? `<button class="btn btn-outline-secondary" onclick="archiveUser('${escapeHtml(user.id)}')" title="Enviar al archivo histórico"><i class="bi bi-archive"></i></button>`
+                    // Inactivo: reactivar o eliminar (archivo histórico o definitivo; sólo administración general y jefatura).
+                    const removeButton = !isActive && CAN_ARCHIVE && !isGeneralAdminRow && String(user.id) !== String(auth.getCurrentUser()?.id)
+                        ? `<button class="btn btn-outline-danger" data-remove-user="${escapeHtml(user.id)}" data-remove-name="${escapeHtml([user.nombres, user.apa].filter(Boolean).join(' '))}" title="Eliminar: archivo histórico o definitivo"><i class="bi bi-trash"></i></button>`
                         : '';
                     const statusBadge = isActive ? '<span class="badge bg-success">Activo</span>' : '<span class="badge bg-secondary">Inactivo</span>';
                     // El botón refleja el estado actual; el título indica la acción disponible.
@@ -565,7 +574,9 @@ if (!is_authenticated() || !can_view_users()) {
                         : 'Estado: Inactivo. Clic para activar';
                     const normalToggle = isAdminUser
                         ? `<button class="btn ${toggleClass}" disabled title="Administrador protegido"><i class="bi ${toggleIcon}"></i></button>`
-                        : `<button class="btn ${toggleClass}" onclick="toggleUserStatus('${escapeHtml(user.id)}')" title="${toggleTitle}"><i class="bi ${toggleIcon}"></i></button>`;
+                        : (isActive
+                            ? `<button class="btn btn-outline-danger" onclick="bulkUsers('deactivate', ['${escapeHtml(user.id)}'])" title="Eliminar (pasa a inactivos)"><i class="bi bi-person-x"></i></button>`
+                            : `<button class="btn btn-outline-success" onclick="bulkUsers('activate', ['${escapeHtml(user.id)}'])" title="Reactivar"><i class="bi bi-arrow-counterclockwise"></i></button>`);
                     const protectedButton = isAdminUser
                         ? `<button class="btn btn-outline-secondary" onclick="protectedAdminAction('${escapeHtml(user.id)}')" title="Acción protegida"><i class="bi bi-shield-lock"></i></button>`
                         : '';
@@ -590,7 +601,7 @@ if (!is_authenticated() || !can_view_users()) {
                                     ${normalToggle}
                                     ${protectedButton}
                                     ${generalAdminButton}
-                                    ${archiveButton}
+                                    ${removeButton}
                                 </div>`)}
                             </td>
                         </tr>`;
@@ -647,6 +658,17 @@ if (!is_authenticated() || !can_view_users()) {
             document.querySelectorAll('.credential-select-col').forEach(element => {
                 element.classList.toggle('d-none', !credentialSelectionMode);
             });
+
+            // Acciones masivas según la pestaña: en activos sólo inactivar; en inactivos reactivar o eliminar.
+            const bulkBox = document.getElementById('bulkUserActions');
+            if (bulkBox) {
+                bulkBox.classList.toggle('d-none', !CAN_GOVERN_USERS || count === 0);
+                bulkBox.querySelector('[data-bulk="deactivate"]').classList.toggle('d-none', currentStatus === 'inactive');
+                bulkBox.querySelector('[data-bulk="activate"]').classList.toggle('d-none', currentStatus === 'active');
+                bulkBox.querySelector('[data-bulk="remove"]').classList.toggle('d-none', currentStatus === 'active' || !CAN_ARCHIVE);
+            }
+            const selectButton = document.getElementById('bulkSelectBtn');
+            if (selectButton) selectButton.classList.toggle('d-none', credentialSelectionMode || !CAN_GOVERN_USERS);
 
             const toolbar = document.getElementById('credentialSelectionToolbar');
             if (toolbar) {
@@ -1154,9 +1176,80 @@ if (!is_authenticated() || !can_view_users()) {
             }
         }
 
-        async function archiveUser(userId) {
-            if (await sendToArchive({ tipo: 'usuarios', ids: [userId], name: `La cuenta ${userId}` })) loadUsers();
+        function enableBulkSelection() {
+            credentialSelectionMode = true;
+            updateSelectedUsersUi();
         }
+
+        function bulkResultHtml(result) {
+            const skipped = (result.skipped || []).map(item => `<li><strong>${escapeHtml(item.name)}</strong>: ${escapeHtml(item.reason)}</li>`);
+            return `<p>${escapeHtml(result.message)}</p>${skipped.length ? `<ul class="text-start small mb-0">${skipped.join('')}</ul>` : ''}`;
+        }
+
+        // "Eliminar" un activo lo pasa a inactivos; reactivar lo devuelve. Igual para uno o para varios (POST /users/bulk).
+        async function bulkUsers(action, ids) {
+            if (!ids.length) return;
+            if (action === 'deactivate' && !(await confirmAction({
+                title: ids.length > 1 ? `Inactivar ${ids.length} usuarios` : 'Pasar a inactivos',
+                text: 'Ya no podrá iniciar sesión y se liberan sus asignaciones. Desde Inactivos puedes reactivarlo o eliminarlo.',
+                confirmButtonText: ids.length > 1 ? 'Sí, inactivar' : 'Sí, pasar a inactivos'
+            }))) return;
+            try {
+                const result = await api.post('/users/bulk', { action, ids });
+                if (result.skipped?.length) Swal.fire({ icon: result.done?.length ? 'warning' : 'error', title: result.done?.length ? 'Aplicado en parte' : 'No se aplicó', html: bulkResultHtml(result) });
+                else swalToast('success', result.message);
+                clearSelectedUsers();
+                loadUsers(currentPage);
+            } catch (error) {
+                showError(error.message || 'No se pudo aplicar la acción.');
+            }
+        }
+
+        // Eliminar inactivos: elegir archivo histórico (reversible) o definitivo (irreversible), con la contraseña propia.
+        async function removeUsers(ids) {
+            if (!ids.length) return;
+            const option = (value, title, color, points, checked) => `
+                <label class="removal-option text-start d-block border rounded-3 p-3 mb-2" style="cursor:pointer">
+                    <input class="form-check-input me-2" type="radio" name="removalChoice" value="${value}" ${checked ? 'checked' : ''}>
+                    <strong class="${color}">${title}</strong>
+                    <ul class="small mb-0 mt-1 ps-3">${points.map(point => `<li>${point}</li>`).join('')}</ul>
+                </label>`;
+            const result = await Swal.fire({
+                title: ids.length > 1 ? `Eliminar ${ids.length} usuarios` : 'Eliminar usuario',
+                width: 640,
+                html: option('archive', 'Enviar al archivo histórico', 'text-primary', [
+                        'Deja de aparecer en listas, grupos, búsquedas y reportes, y no puede iniciar sesión.',
+                        'Se conservan sus calificaciones, entregas, evaluaciones y documentos.',
+                        'Se puede restaurar cuando quieras desde Archivo histórico.'], true)
+                    + option('delete', 'Eliminar definitivamente', 'text-danger', [
+                        'Se borra la cuenta en todo el sistema, con su historial propio: matrículas, movimientos de semestre, liberaciones, residencias y autorizaciones.',
+                        'Sus entregas, documentos y evaluaciones quedan sin autor; los reportes pasados ya no mostrarán su nombre.',
+                        'No se puede deshacer. Si dejó registros como autoridad, el sistema pedirá archivarlo en su lugar.'], false)
+                    + '<input id="removalReason" class="form-control mt-2" maxlength="500" placeholder="Motivo para el archivo (opcional)">'
+                    + '<input id="removalPassword" class="form-control mt-2" type="password" autocomplete="current-password" placeholder="Tu contraseña para confirmar">',
+                showCancelButton: true, reverseButtons: true, confirmButtonText: 'Continuar', cancelButtonText: 'Cancelar', confirmButtonColor: '#b23b3b',
+                preConfirm: () => {
+                    const password = document.getElementById('removalPassword').value;
+                    if (!password) { Swal.showValidationMessage('Escribe tu contraseña para confirmar.'); return false; }
+                    return { action: document.querySelector('input[name="removalChoice"]:checked').value, password, reason: document.getElementById('removalReason').value.trim() };
+                }
+            });
+            if (!result.isConfirmed) return;
+            try {
+                const response = await api.post('/users/bulk', { action: result.value.action, ids, admin_password: result.value.password, motivo: result.value.reason || null });
+                if (response.skipped?.length) Swal.fire({ icon: response.done?.length ? 'warning' : 'error', title: response.done?.length ? 'Aplicado en parte' : 'No se aplicó', html: bulkResultHtml(response) });
+                else swalToast('success', response.message);
+                clearSelectedUsers();
+                loadUsers(currentPage);
+            } catch (error) {
+                Swal.fire('No se pudo eliminar', error.message, 'error');
+            }
+        }
+
+        document.addEventListener('click', event => {
+            const button = event.target.closest('[data-remove-user]');
+            if (button) removeUsers([button.dataset.removeUser]);
+        });
 
         async function setGeneralAdmin(userId, grant) {
             const password = await promptPassword({
