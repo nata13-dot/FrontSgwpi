@@ -1130,7 +1130,7 @@ $is_archived_view = basename($_SERVER['PHP_SELF']) === 'evaluations-archived.php
                 params.archived = IS_ARCHIVED_VIEW ? 1 : 0;
                 params.per_page = 200;
                 if (fresh) params._fresh = 1;
-                params._timeout = 30000;
+                params._timeout = 60000;
                 if (showLoading) {
                     tbody.innerHTML = '<tr><td colspan="7" class="text-center py-4"><div class="spinner-border" role="status"></div></td></tr>';
                 }
