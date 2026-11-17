@@ -1222,11 +1222,11 @@ if (!is_authenticated() || !can_view_users()) {
                 html: option('archive', 'Enviar al archivo histórico', 'text-primary', [
                         'Deja de aparecer en listas, grupos, búsquedas y reportes, y no puede iniciar sesión.',
                         'Se conservan sus calificaciones, entregas, evaluaciones y documentos.',
-                        'Se puede restaurar cuando quieras desde Archivo histórico.'], true)
+                        'Su proyecto, si se queda sin alumnos, también va al archivo y vuelve si lo restauras.', 'Se puede restaurar cuando quieras desde Archivo histórico.'], true)
                     + option('delete', 'Eliminar definitivamente', 'text-danger', [
                         'Se borra la cuenta en todo el sistema, con su historial propio: matrículas, movimientos de semestre, liberaciones, residencias y autorizaciones.',
                         'Sus entregas, documentos y evaluaciones quedan sin autor; los reportes pasados ya no mostrarán su nombre.',
-                        'No se puede deshacer. Si dejó registros como autoridad, el sistema pedirá archivarlo en su lugar.'], false)
+                        'Su proyecto, si se queda sin alumnos, también se elimina.', 'No se puede deshacer. Si dejó registros como autoridad, el sistema pedirá archivarlo en su lugar.'], false)
                     + '<input id="removalReason" class="form-control mt-2" maxlength="500" placeholder="Motivo para el archivo (opcional)">'
                     + '<input id="removalPassword" class="form-control mt-2" type="password" autocomplete="current-password" placeholder="Tu contraseña para confirmar">',
                 showCancelButton: true, reverseButtons: true, confirmButtonText: 'Continuar', cancelButtonText: 'Cancelar', confirmButtonColor: '#b23b3b',
