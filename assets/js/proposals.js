@@ -109,14 +109,15 @@ const ProposalUI = (() => {
             const data = await api.get('/proposal/settings', { _fresh: true });
             const selected = data.validator_ids.map(String);
             // Las ventanas se abren y cierran sólo en Operación del periodo; aquí se ve su estado.
-            const windowRow = (label, state) => `<li class="d-flex justify-content-between align-items-center py-2 border-bottom"><span class="fw-semibold">${label}${state.open && (state.until || state.closes_at) ? ` <small class="text-muted fw-normal">· cierra ${esc(dateTime(state.until || state.closes_at))}</small>` : ''}</span><span class="badge ${state.open ? 'bg-success' : 'bg-secondary'}"><i class="bi ${state.open ? 'bi-unlock' : 'bi-lock'}"></i> ${state.open ? 'Abierto' : 'Cerrado'}</span></li>`;
+            const semesterLabel = list => { const items = (list || []).map(value => `${Number(value)}°`); const last = items.pop(); return items.length ? `${items.join(', ')} y ${last}` : (last || ''); };
+            const windowRow = (label, state, semesters) => `<li class="d-flex justify-content-between align-items-center py-2 border-bottom"><span class="fw-semibold">${label}${state.open && semesters?.length ? ` <small class="text-muted fw-normal">· ${esc(semesterLabel(semesters))}</small>` : ''}${state.open && (state.until || state.closes_at) ? ` <small class="text-muted fw-normal">· cierra ${esc(dateTime(state.until || state.closes_at))}</small>` : ''}</span><span class="badge ${state.open ? 'bg-success' : 'bg-secondary'}"><i class="bi ${state.open ? 'bi-unlock' : 'bi-lock'}"></i> ${state.open ? 'Abierto' : 'Cerrado'}</span></li>`;
             container.innerHTML = `
                 <div class="card border-0 shadow-sm mb-3"><div class="card-body">
                     <div class="d-flex flex-wrap justify-content-between align-items-start gap-2 mb-2">
                         <div><h5 class="mb-1">Ventanas del periodo</h5><p class="text-muted small mb-0">El autoregistro y el registro de propuestas se abren y se cierran en Operación del periodo.</p></div>
                         <a class="btn btn-sm btn-outline-primary" href="/pages/admin/period-center.php"><i class="bi bi-flag"></i> Ir a Operación del periodo</a>
                     </div>
-                    <ul class="list-unstyled mb-0">${windowRow('Autoregistro de alumnos', data.self_registration)}${windowRow('Registro de propuestas', data.proposal_window)}</ul>
+                    <ul class="list-unstyled mb-0">${windowRow('Autoregistro de alumnos', data.self_registration, data.self_registration.semesters)}${windowRow('Registro de propuestas', data.proposal_window, data.proposal_window.semesters)}</ul>
                 </div></div>
                 <div class="card border-0 shadow-sm"><div class="card-body">
                     <h5 class="mb-1">Docentes validadores</h5>

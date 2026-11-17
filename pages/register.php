@@ -95,8 +95,9 @@ function renderCareer() {
 
 function renderGroups() {
     const groups = career()?.groups || [];
-    const semester = Number(groups[0]?.semestre || 0);
-    $('grupoHint').textContent = semester ? `Los alumnos nuevos entran a ${semester}° semestre.` : 'Elige tu grupo.';
+    const semesterLabel = list => { const items = (list || []).map(value => `${Number(value)}°`); const last = items.pop(); return items.length ? `${items.join(', ')} y ${last}` : (last || ''); };
+    const semesters = career()?.semesters?.length ? career().semesters : [...new Set(groups.map(group => Number(group.semestre)))];
+    $('grupoHint').textContent = semesters.length ? `Elige tu grupo: el registro está abierto para ${semesterLabel(semesters)} semestre.` : 'Elige tu grupo.';
     $('grupo_id').innerHTML = '<option value="">Elige tu grupo</option>' + groups.map(group => `<option value="${group.id}">${Number(group.semestre)}° ${esc(group.grupo)}</option>`).join('');
     $('grupo_id').disabled = !groups.length;
 }

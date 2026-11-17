@@ -180,6 +180,12 @@ async function loadStatus() {
         box.innerHTML = '<div class="alert alert-secondary">No tienes un grupo asignado en el periodo actual. Pide a la jefatura que te asigne uno.</div>';
         return;
     }
+    // "5°", "5° y 7°": la ventana se abre por semestres.
+    const semesterLabel = list => { const items = (list || []).map(value => `${Number(value)}°`); const last = items.pop(); return items.length ? `${items.join(', ')} y ${last}` : (last || ''); };
+    if (data.window?.open && data.subject_group && data.window_for_my_semester === false) {
+        box.innerHTML = `<div class="alert alert-secondary">El registro de propuestas está abierto sólo para ${esc(semesterLabel(data.window.semesters))} semestre; tú estás en ${Number(data.subject_group.semestre)}°.</div>`;
+        return;
+    }
     if (!data.window?.open) {
         box.innerHTML = `<div class="alert alert-secondary">El registro de propuestas de tu carrera está cerrado.${data.window?.closes_at ? ` Cerró el ${esc(dateTime(data.window.closes_at))}.` : ''}</div>`;
         return;
