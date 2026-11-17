@@ -580,33 +580,9 @@ if (!is_authenticated()) {
 
         function renderProjectsPagination() {
             const info = document.getElementById('projectsPageInfo');
-            const nav = document.getElementById('projectsPagination');
-            if (info) {
-                info.textContent = projectsTotal
-                    ? `Página ${projectsCurrentPage} de ${projectsLastPage} · ${projectsTotal} ${projectManagementView === 'thesis' ? 'tesis' : currentProjectModality().label.toLowerCase() + '(s)'}`
-                    : (projectManagementView === 'thesis' ? 'Sin tesis' : `Sin ${currentProjectModality().label.toLowerCase()}`);
-            }
-            if (!nav) return;
-            if (projectsLastPage <= 1) {
-                nav.innerHTML = '';
-                return;
-            }
-            nav.innerHTML = `
-                <ul class="pagination justify-content-center">
-                    <li class="page-item ${projectsCurrentPage <= 1 ? 'disabled' : ''}">
-                        <button class="page-link" type="button" onclick="loadProjects(${projectsCurrentPage - 1})">
-                            <i class="bi bi-chevron-left"></i> Anterior
-                        </button>
-                    </li>
-                    <li class="page-item disabled">
-                        <span class="page-link">${projectsCurrentPage} / ${projectsLastPage}</span>
-                    </li>
-                    <li class="page-item ${projectsCurrentPage >= projectsLastPage ? 'disabled' : ''}">
-                        <button class="page-link" type="button" onclick="loadProjects(${projectsCurrentPage + 1})">
-                            Siguiente <i class="bi bi-chevron-right"></i>
-                        </button>
-                    </li>
-                </ul>`;
+            const noun = projectManagementView === 'thesis' ? 'tesis' : currentProjectModality().label.toLowerCase() + '(s)';
+            if (info) info.textContent = projectsTotal ? `${projectsTotal} ${noun}` : (projectManagementView === 'thesis' ? 'Sin tesis' : `Sin ${currentProjectModality().label.toLowerCase()}`);
+            SgpiPager.render('#projectsPagination', { current: projectsCurrentPage, last: projectsLastPage, total: projectsTotal, perPage: PROJECTS_PER_PAGE, noun, onPage: loadProjects });
         }
 
         function scheduleProjectsSearch() {

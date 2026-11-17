@@ -484,6 +484,7 @@ async function logout() {
     <script src="<?= asset('/assets/js/upload-guard.js') ?>"></script>
     <script src="<?= asset('/assets/js/help-center.js') ?>"></script>
     <script src="<?= asset('/assets/js/live.js') ?>"></script>
+    <script src="<?= asset('/assets/js/pager.js') ?>"></script>
     <script type="module">
     // Guía "Cómo usar esta sección" (section-guide.js, la misma de la app), debajo del título de la página.
     import { guideKeyFor, mountSectionGuide } from '<?= asset('/assets/js/section-guide.js') ?>';

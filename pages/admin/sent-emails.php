@@ -45,13 +45,7 @@ if (!is_authenticated() || !is_general_admin()) {
                         <tbody id="emailRows"><tr><td colspan="6" class="text-center text-muted py-4">Cargando...</td></tr></tbody>
                     </table>
                 </div>
-                <div class="card-footer bg-white border-0 d-flex justify-content-between align-items-center p-3 d-none" id="emailPager">
-                    <small class="text-muted" id="emailPagerText"></small>
-                    <div class="btn-group">
-                        <button class="btn btn-sm btn-outline-secondary" type="button" id="emailPrev" aria-label="Anterior"><i class="bi bi-chevron-left"></i></button>
-                        <button class="btn btn-sm btn-outline-secondary" type="button" id="emailNext" aria-label="Siguiente"><i class="bi bi-chevron-right"></i></button>
-                    </div>
-                </div>
+                <div class="card-footer bg-white border-0 px-3 py-1" id="emailPager"></div>
             </section>
         </div>
     </main>
@@ -108,10 +102,7 @@ async function loadEmails() {
         </tr>`).join('') || '<tr><td colspan="6" class="text-center text-muted py-4">No hay correos con esos filtros.</td></tr>';
         emailPage = Number(response.current_page || 1);
         emailLastPage = Number(response.last_page || 1);
-        document.getElementById('emailPager').classList.toggle('d-none', emailLastPage <= 1);
-        document.getElementById('emailPagerText').textContent = `Página ${emailPage} de ${emailLastPage} · ${Number(response.total)} registros`;
-        document.getElementById('emailPrev').disabled = emailPage <= 1;
-        document.getElementById('emailNext').disabled = emailPage >= emailLastPage;
+        SgpiPager.render('#emailPager', { current: emailPage, last: emailLastPage, total: response.total, from: response.from, to: response.to, noun: 'correos', onPage: (page) => { emailPage = page; loadEmails(); } });
     } catch (error) {
         document.getElementById('mailerStatus').innerHTML = `<div class="alert alert-danger mb-0">${emailEscape(error.message)}</div>`;
         body.innerHTML = '<tr><td colspan="6" class="text-center text-muted py-4">Sin datos.</td></tr>';
@@ -125,8 +116,6 @@ document.getElementById('filterSearch').addEventListener('input', () => {
     emailSearchTimer = setTimeout(() => { emailPage = 1; loadEmails(); }, 350);
 });
 ['filterStatus', 'filterCategory'].forEach(id => document.getElementById(id).addEventListener('change', () => { emailPage = 1; loadEmails(); }));
-document.getElementById('emailPrev').addEventListener('click', () => { emailPage--; loadEmails(); });
-document.getElementById('emailNext').addEventListener('click', () => { emailPage++; loadEmails(); });
 document.addEventListener('DOMContentLoaded', () => { loadEmails(); setInterval(loadEmails, 30000); });
 </script>
 </body>

@@ -324,21 +324,7 @@ if (!is_authenticated() || !is_admin()) {
         }
 
         function renderPagination() {
-            const nav = document.getElementById('paginationContainer');
-            if (lastPage <= 1) {
-                nav.innerHTML = '';
-                return;
-            }
-            nav.innerHTML = `
-                <ul class="pagination justify-content-center">
-                    <li class="page-item ${currentPage <= 1 ? 'disabled' : ''}">
-                        <button class="page-link" onclick="loadTags(${currentPage - 1})">Anterior</button>
-                    </li>
-                    <li class="page-item disabled"><span class="page-link">${currentPage} / ${lastPage}</span></li>
-                    <li class="page-item ${currentPage >= lastPage ? 'disabled' : ''}">
-                        <button class="page-link" onclick="loadTags(${currentPage + 1})">Siguiente</button>
-                    </li>
-                </ul>`;
+            SgpiPager.render('#paginationContainer', { current: currentPage, last: lastPage, total: Number(document.getElementById('tagTotal')?.textContent || 0), noun: 'etiquetas', onPage: loadTags });
         }
 
         function scheduleTagSearch() {

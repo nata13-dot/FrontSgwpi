@@ -270,22 +270,7 @@
         }
 
         function renderRepositoryPagination(response) {
-            const container = document.getElementById('paginationContainer');
-            const current = Number(response.current_page || 1);
-            const last = Number(response.last_page || 1);
-            if (last <= 1) {
-                container.innerHTML = '';
-                return;
-            }
-            const start = Math.max(1, current - 2);
-            const end = Math.min(last, current + 2);
-            const pages = [];
-            for (let page = start; page <= end; page++) pages.push(page);
-            container.innerHTML = `<ul class="pagination justify-content-center">
-                <li class="page-item ${current === 1 ? 'disabled' : ''}"><button class="page-link" type="button" ${current === 1 ? 'disabled' : ''} onclick="loadDocumentos(${current - 1})" aria-label="Página anterior"><i class="bi bi-chevron-left"></i></button></li>
-                ${pages.map(page => `<li class="page-item ${page === current ? 'active' : ''}"><button class="page-link" type="button" onclick="loadDocumentos(${page})">${page}</button></li>`).join('')}
-                <li class="page-item ${current === last ? 'disabled' : ''}"><button class="page-link" type="button" ${current === last ? 'disabled' : ''} onclick="loadDocumentos(${current + 1})" aria-label="Página siguiente"><i class="bi bi-chevron-right"></i></button></li>
-            </ul>`;
+            SgpiPager.render('#paginationContainer', { current: response.current_page, last: response.last_page, total: response.total, from: response.from, to: response.to, noun: 'documentos', onPage: loadDocumentos });
         }
 
         async function loadRepositoryAdminData(selectedTagIds = []) {

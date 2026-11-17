@@ -49,10 +49,7 @@ if (!is_authenticated() || !is_general_admin()) {
                         <tbody id="auditRows"><tr><td colspan="7" class="text-center text-muted py-5">Cargando auditoría...</td></tr></tbody>
                     </table>
                 </div>
-                <div class="card-footer bg-white d-flex justify-content-between align-items-center">
-                    <small class="text-muted" id="auditPageInfo"></small>
-                    <div class="btn-group btn-group-sm"><button class="btn btn-outline-secondary" id="auditPrevious"><i class="bi bi-chevron-left"></i></button><button class="btn btn-outline-secondary" id="auditNext"><i class="bi bi-chevron-right"></i></button></div>
-                </div>
+                <div class="card-footer bg-white px-3 py-1" id="auditPager"></div>
             </section>
             <section class="card border-0 shadow-sm mt-4">
                 <div class="card-body p-4">
@@ -108,9 +105,7 @@ async function loadAudit() {
                 <td><strong class="small">${auditEscape(item.direccion_ip || '-')}</strong><small class="d-block text-muted">${auditEscape(item.dispositivo || '')}</small></td>
             </tr>`;
         }).join('') || '<tr><td colspan="7" class="text-center text-muted py-5">No hay operaciones para estos filtros.</td></tr>';
-        auditPageInfo.textContent = `Página ${auditPage} de ${auditLastPage} · ${Number(response.total || 0)} registros`;
-        auditPrevious.disabled = auditPage <= 1;
-        auditNext.disabled = auditPage >= auditLastPage;
+        SgpiPager.render('#auditPager', { current: auditPage, last: auditLastPage, total: response.total, from: response.from, to: response.to, noun: 'operaciones', onPage: (page) => { auditPage = page; loadAudit(); } });
     } catch (error) {
         auditRows.innerHTML = `<tr><td colspan="7" class="text-center text-danger py-5">${auditEscape(error.message)}</td></tr>`;
     }
@@ -123,8 +118,6 @@ async function initializeAudit() {
     loadAudit();
 }
 auditFilters.addEventListener('submit', event => { event.preventDefault(); auditPage = 1; loadAudit(); });
-auditPrevious.addEventListener('click', () => { if (auditPage > 1) { auditPage--; loadAudit(); } });
-auditNext.addEventListener('click', () => { if (auditPage < auditLastPage) { auditPage++; loadAudit(); } });
 let auditRetentionData = null;
 async function loadAuditRetention() {
     try {

@@ -47,13 +47,7 @@ if (!is_authenticated() || !is_admin()) {
                         <tbody id="archiveRows"><tr><td colspan="5" class="text-center text-muted py-4">Cargando...</td></tr></tbody>
                     </table>
                 </div>
-                <div class="card-footer bg-white border-0 d-flex justify-content-between align-items-center p-3 d-none" id="archivePager">
-                    <small class="text-muted" id="archivePagerText"></small>
-                    <div class="btn-group">
-                        <button class="btn btn-sm btn-outline-secondary" type="button" id="archivePrev" aria-label="Anterior"><i class="bi bi-chevron-left"></i></button>
-                        <button class="btn btn-sm btn-outline-secondary" type="button" id="archiveNext" aria-label="Siguiente"><i class="bi bi-chevron-right"></i></button>
-                    </div>
-                </div>
+                <div class="card-footer bg-white border-0 px-3 py-1" id="archivePager"></div>
             </section>
         </div>
     </main>
@@ -99,10 +93,7 @@ async function loadArchive() {
         </tr>`).join('') || `<tr><td colspan="5" class="text-center text-muted py-4">Sin ${many} archivados.</td></tr>`;
         archivePage = Number(response.current_page || 1);
         archiveLastPage = Number(response.last_page || 1);
-        document.getElementById('archivePager').classList.toggle('d-none', archiveLastPage <= 1);
-        document.getElementById('archivePagerText').textContent = `Página ${archivePage} de ${archiveLastPage} · ${Number(response.total)} registros`;
-        document.getElementById('archivePrev').disabled = archivePage <= 1;
-        document.getElementById('archiveNext').disabled = archivePage >= archiveLastPage;
+        SgpiPager.render('#archivePager', { current: archivePage, last: archiveLastPage, total: response.total, from: response.from, to: response.to, noun: 'registros', onPage: (page) => { archivePage = page; loadArchive(); } });
         updateArchiveSelection();
     } catch (error) {
         body.innerHTML = `<tr><td colspan="5"><div class="alert alert-danger mb-0">${archiveEscape(error.message)}</div></td></tr>`;
@@ -154,8 +145,6 @@ document.getElementById('archiveSearch').addEventListener('input', () => {
     clearTimeout(archiveSearchTimer);
     archiveSearchTimer = setTimeout(() => { archivePage = 1; loadArchive(); }, 350);
 });
-document.getElementById('archivePrev').addEventListener('click', () => { archivePage--; loadArchive(); });
-document.getElementById('archiveNext').addEventListener('click', () => { archivePage++; loadArchive(); });
 document.addEventListener('DOMContentLoaded', loadArchive);
 </script>
 </body>

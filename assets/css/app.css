@@ -7353,3 +7353,27 @@ body .main-content .nav-tabs .nav-link { white-space: nowrap; }
 .pc-semester input { accent-color: var(--pc-brand); width: 16px; height: 16px; margin: 0; }
 .pc-semester:has(input:checked) { border-color: var(--pc-brand); background: color-mix(in srgb, var(--pc-brand) 10%, transparent); color: var(--pc-brand); }
 .pc-semester input { appearance: auto; -webkit-appearance: checkbox; position: static; opacity: 1; display: inline-block; min-height: 0; }
+
+/* ---- Paginación común (assets/js/pager.js) ---- */
+.sgpi-pager { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 10px 16px; padding: 12px 4px; }
+.sgpi-pager.single { justify-content: flex-start; }
+.sgpi-pager-info { color: #5b6b82; font-size: .86rem; }
+.sgpi-pager-info strong { color: #1B396A; }
+.sgpi-pager-controls { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+.sgpi-pager-pages { display: flex; align-items: center; gap: 6px; }
+.sgpi-pager-num, .sgpi-pager-step { min-width: 36px; height: 36px; padding: 0 10px; display: inline-flex; align-items: center; justify-content: center; gap: 6px; border: 1px solid #d7deea; border-radius: 10px; background: #fff; color: #1B396A; font-size: .88rem; font-weight: 600; cursor: pointer; transition: background .15s, border-color .15s, color .15s, box-shadow .15s; }
+.sgpi-pager-num:hover, .sgpi-pager-step:not(:disabled):hover { border-color: #2D5A96; background: #eef3fb; }
+.sgpi-pager-num:focus-visible, .sgpi-pager-step:focus-visible { outline: 0; box-shadow: 0 0 0 3px rgba(45, 90, 150, .25); }
+.sgpi-pager-num.active { background: #1B396A; border-color: #1B396A; color: #fff; box-shadow: 0 4px 10px rgba(27, 57, 106, .25); cursor: default; }
+.sgpi-pager-step { padding: 0 12px; }
+.sgpi-pager-step:disabled { background: #eef1f6; color: #9aa6b8; border-color: #e3e8f0; cursor: not-allowed; }
+.sgpi-pager-gap { min-width: 24px; text-align: center; color: #8592a6; font-weight: 700; }
+.sgpi-pager-compact { display: none; min-width: 64px; text-align: center; font-weight: 700; color: #1B396A; font-size: .9rem; }
+@media (max-width: 575.98px) {
+    .sgpi-pager { justify-content: center; text-align: center; }
+    .sgpi-pager-info { width: 100%; }
+    .sgpi-pager-pages { display: none; }
+    .sgpi-pager-compact { display: inline-block; }
+    .sgpi-pager-controls { width: 100%; flex-wrap: nowrap; }
+    .sgpi-pager-step { flex: 1 1 0; height: 42px; }
+}

@@ -332,42 +332,14 @@ if (!is_authenticated() || !can_manage_academics()) {
 
         function renderAsignaturasPagination(pagination) {
             const container = document.getElementById('asignaturasPagination');
-            const current = Number(pagination.current_page || 1);
-            const last = Number(pagination.last_page || 1);
-            const total = Number(pagination.total || 0);
-            const from = Number(pagination.from || 0);
-            const to = Number(pagination.to || 0);
-            const start = Math.max(1, current - 2);
-            const end = Math.min(last, current + 2);
-            const pages = [];
-
-            for (let page = start; page <= end; page++) {
-                pages.push(`
-                    <li class="page-item ${page === current ? 'active' : ''}">
-                        <button class="page-link" type="button" onclick="loadAsignaturas(${page})">${page}</button>
-                    </li>`);
-            }
-
             container.innerHTML = `
-                <div class="d-flex flex-wrap align-items-center justify-content-between gap-3">
-                    <div class="d-flex align-items-center gap-2">
-                        <span class="text-muted small">Mostrando ${from}-${to} de ${total} asignaturas</span>
-                        <select class="form-select form-select-sm" style="width:auto" aria-label="Asignaturas por página" onchange="changeAsignaturasPerPage(this.value)">
-                            ${[15, 25, 50, 100].map(value => `<option value="${value}" ${value === asignaturasPerPage ? 'selected' : ''}>${value} por página</option>`).join('')}
-                        </select>
-                    </div>
-                    <nav aria-label="Paginacion de asignaturas">
-                        <ul class="pagination pagination-sm mb-0">
-                            <li class="page-item ${current <= 1 ? 'disabled' : ''}">
-                                <button class="page-link" type="button" onclick="loadAsignaturas(${current - 1})" ${current <= 1 ? 'disabled' : ''}>Anterior</button>
-                            </li>
-                            ${pages.join('')}
-                            <li class="page-item ${current >= last ? 'disabled' : ''}">
-                                <button class="page-link" type="button" onclick="loadAsignaturas(${current + 1})" ${current >= last ? 'disabled' : ''}>Siguiente</button>
-                            </li>
-                        </ul>
-                    </nav>
+                <div class="d-flex flex-wrap align-items-center justify-content-between gap-2">
+                    <select class="form-select form-select-sm" style="width:auto" aria-label="Asignaturas por página" onchange="changeAsignaturasPerPage(this.value)">
+                        ${[15, 25, 50, 100].map(value => `<option value="${value}" ${value === asignaturasPerPage ? 'selected' : ''}>${value} por página</option>`).join('')}
+                    </select>
+                    <div class="flex-grow-1" id="asignaturasPager"></div>
                 </div>`;
+            SgpiPager.render('#asignaturasPager', { current: pagination.current_page, last: pagination.last_page, total: pagination.total, from: pagination.from, to: pagination.to, noun: 'asignaturas', onPage: loadAsignaturas });
         }
 
         function changeAsignaturasPerPage(value) {

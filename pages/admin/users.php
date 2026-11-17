@@ -717,59 +717,9 @@ if (!is_authenticated() || !can_view_users()) {
 
 
         function renderPagination(pagination) {
-            const container = document.getElementById('paginationContainer');
-            const current = Number(pagination.current_page || 1);
-            const last = Number(pagination.last_page || 1);
-            const total = Number(pagination.total || 0);
-            const from = pagination.from || 0;
-            const to = pagination.to || 0;
-
-            if (last <= 1) {
-                container.innerHTML = total > 0
-                    ? `<p class="text-muted small mb-0">Mostrando ${from}-${to} de ${total} usuarios</p>`
-                    : '';
-                return;
-            }
-
-            const start = Math.max(1, current - 2);
-            const end = Math.min(last, current + 2);
-            const pages = [];
-
-            if (start > 1) {
-                pages.push(pageButton(1, current));
-                if (start > 2) pages.push('<li class="page-item disabled"><span class="page-link">...</span></li>');
-            }
-
-            for (let page = start; page <= end; page++) {
-                pages.push(pageButton(page, current));
-            }
-
-            if (end < last) {
-                if (end < last - 1) pages.push('<li class="page-item disabled"><span class="page-link">...</span></li>');
-                pages.push(pageButton(last, current));
-            }
-
-            container.innerHTML = `
-                <div class="d-flex flex-wrap justify-content-between align-items-center gap-2">
-                    <p class="text-muted small mb-0">Mostrando ${from}-${to} de ${total} usuarios</p>
-                    <ul class="pagination pagination-sm mb-0">
-                        <li class="page-item ${current === 1 ? 'disabled' : ''}">
-                            <button class="page-link" type="button" onclick="loadUsers(${current - 1})">Anterior</button>
-                        </li>
-                        ${pages.join('')}
-                        <li class="page-item ${current === last ? 'disabled' : ''}">
-                            <button class="page-link" type="button" onclick="loadUsers(${current + 1})">Siguiente</button>
-                        </li>
-                    </ul>
-                </div>`;
+            SgpiPager.render('#paginationContainer', { current: pagination.current_page, last: pagination.last_page, total: pagination.total, from: pagination.from, to: pagination.to, noun: 'usuarios', onPage: loadUsers });
         }
 
-        function pageButton(page, current) {
-            return `
-                <li class="page-item ${page === current ? 'active' : ''}">
-                    <button class="page-link" type="button" onclick="loadUsers(${page})">${page}</button>
-                </li>`;
-        }
         function setStatusFilter(status) {
             currentStatus = status;
             updateUsersMobileFilterSummary();
