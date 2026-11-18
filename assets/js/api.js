@@ -710,6 +710,14 @@ function downloadFilename(response, fallback) {
  * Descarga un archivo protegido de la API con la sesión actual. Si la API responde con error,
  * lanza el mensaje que envía el servidor en lugar de uno genérico.
  */
+/** Un registro pedido por su id ya no existe (la API respondió 404): se muestra la página «no encontrada». */
+function showNotFoundPage(error) {
+    if (error && Number(error.status) !== 404) return false;
+    window.location.replace('/404.php');
+    return true;
+}
+window.showNotFoundPage = showNotFoundPage;
+
 async function downloadApiFile(endpoint, fallbackName, fallbackMessage = 'No se pudo descargar el archivo.') {
     // Se acepta JSON primero para que, si hay error, Laravel responda con el mensaje y no con una página HTML.
     const response = await fetch(`${API_BASE_URL}${endpoint}`, {

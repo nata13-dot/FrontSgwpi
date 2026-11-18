@@ -11,6 +11,11 @@ if (!$userId) {
     header('Location: /pages/admin/users.php');
     exit;
 }
+// Número de control o de empleado: sólo letras y números.
+if (!preg_match('/^[A-Za-z0-9]{1,20}$/', (string) $userId)) {
+    require $_SERVER['DOCUMENT_ROOT'] . '/404.php';
+    exit;
+}
 ?>
 <!DOCTYPE html>
 <html lang="es">
@@ -173,6 +178,7 @@ if (!$userId) {
                 
                 console.log('Usuario cargado:', user);
             } catch (error) {
+                if (showNotFoundPage(error)) return;
                 console.error('Error al cargar usuario:', error);
                 alertBox.innerHTML = `
                     <div class="alert alert-danger alert-dismissible fade show" role="alert">

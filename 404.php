@@ -6,8 +6,6 @@ header('X-Robots-Tag: noindex');
 
 $signedIn = is_authenticated();
 $homeUrl = $signedIn ? dashboard_url() : '/';
-$requested = parse_url($_SERVER['REQUEST_URI'] ?? '/', PHP_URL_PATH) ?: '/';
-$requested = mb_strimwidth(rawurldecode($requested), 0, 80, '…');
 ?><!DOCTYPE html>
 <html lang="es">
 <head>
@@ -86,12 +84,7 @@ $requested = mb_strimwidth(rawurldecode($requested), 0, 80, '…');
             background: linear-gradient(135deg, var(--n-navy), var(--n-navy-2)); color: #fff; font-size: clamp(1.05rem, 2.4vw, 1.4rem); font-weight: 800;
             box-shadow: 0 2px 4px rgba(16, 30, 54, .10), 0 10px 22px rgba(27, 57, 106, .25); transform: rotate(-1.5deg);
         }
-        .nf-text { margin: 0 0 8px; color: var(--n-muted); font-size: 1.04rem; line-height: 1.6; max-width: 46ch; }
-        .nf-path {
-            display: inline-flex; align-items: center; gap: 8px; max-width: 100%; margin: 6px 0 22px; padding: 8px 12px; border-radius: 12px;
-            background: var(--n-sky); color: var(--n-navy); font: 600 .86rem/1.3 ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; overflow-wrap: anywhere;
-            box-shadow: inset 0 1px 2px rgba(16, 30, 54, .06);
-        }
+        .nf-text { margin: 0 0 24px; color: var(--n-muted); font-size: 1.04rem; line-height: 1.6; max-width: 46ch; }
         .nf-actions { display: flex; flex-wrap: wrap; gap: 12px; }
         .nf-btn {
             display: inline-flex; align-items: center; justify-content: center; gap: 10px; min-height: 50px; padding: 0 22px; border-radius: 16px; border: 0;
@@ -142,7 +135,6 @@ $requested = mb_strimwidth(rawurldecode($requested), 0, 80, '…');
                 <p class="nf-code" aria-hidden="true">404</p>
                 <h1 class="nf-chip" id="nfTitle"><i class="bi bi-signpost-split" aria-hidden="true"></i> ¡Página no encontrada!</h1>
                 <p class="nf-text">La dirección que buscas no existe, cambió de lugar o ya no está disponible. Revisa que esté bien escrita o vuelve al inicio.</p>
-                <div class="nf-path" title="Dirección solicitada"><i class="bi bi-link-45deg" aria-hidden="true"></i><?= htmlspecialchars($requested) ?></div>
                 <div class="nf-actions">
                     <a class="nf-btn primary" href="<?= htmlspecialchars($homeUrl) ?>"><i class="bi bi-house-door-fill" aria-hidden="true"></i> Volver al inicio</a>
                     <button type="button" class="nf-btn ghost" onclick="history.length > 1 ? history.back() : location.assign('<?= htmlspecialchars($homeUrl, ENT_QUOTES) ?>')"><i class="bi bi-arrow-left" aria-hidden="true"></i> Regresar</button>

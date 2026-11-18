@@ -11,6 +11,11 @@ if (!$projectId) {
     header('Location: /pages/admin/projects.php');
     exit;
 }
+// Un id que no es número no puede ser un proyecto: página «no encontrada».
+if (!ctype_digit((string) $projectId)) {
+    require $_SERVER['DOCUMENT_ROOT'] . '/404.php';
+    exit;
+}
 ?>
 <!DOCTYPE html>
 <html lang="es">
@@ -231,6 +236,7 @@ if (!$projectId) {
                 renderSelectedStudents();
                 await loadSubjectGroups(project.subject_group_id || '');
             } catch (error) {
+                if (showNotFoundPage(error)) return;
                 showAlert('#alertBox', 'danger', 'Error al cargar los datos del proyecto');
             }
         }

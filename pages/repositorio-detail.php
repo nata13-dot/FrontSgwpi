@@ -133,6 +133,7 @@
                     renderDocumentPreview(fileType, viewUrl, downloadUrl);
                 }
             } catch (error) {
+                if (showNotFoundPage(error)) return;
                 console.error('Error:', error);
                 document.getElementById('detailsContainer').innerHTML = `<div class="repository-empty-state repository-error-state"><i class="bi bi-file-earmark-x"></i><h2>Documento no disponible</h2><p>${esc(error.message || 'No fue posible cargar el documento solicitado.')}</p><a class="btn btn-primary" href="/pages/repositorio.php"><i class="bi bi-arrow-left"></i> Volver al repositorio</a></div>`;
             }
