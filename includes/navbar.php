@@ -478,13 +478,13 @@ async function logout() {
     window.location.replace('/pages/logout.php');
 }
 </script>
+<script src="<?= asset('/assets/js/pager.js') ?>"></script>
 <?php if (is_authenticated()): ?>
     <script src="<?= asset('/assets/js/global-search.js') ?>"></script>
     <script>window.SGPI_PAGE = <?= json_encode($_SERVER['PHP_SELF'] ?? '') ?>;</script>
     <script src="<?= asset('/assets/js/upload-guard.js') ?>"></script>
     <script src="<?= asset('/assets/js/help-center.js') ?>"></script>
     <script src="<?= asset('/assets/js/live.js') ?>"></script>
-    <script src="<?= asset('/assets/js/pager.js') ?>"></script>
     <script type="module">
     // Guía "Cómo usar esta sección" (section-guide.js, la misma de la app), debajo del título de la página.
     import { guideKeyFor, mountSectionGuide } from '<?= asset('/assets/js/section-guide.js') ?>';
