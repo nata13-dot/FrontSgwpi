@@ -1,4 +1,10 @@
 <?php
+// nginx manda aquí toda dirección que no existe (try_files): sólo «/» e «/index.php» son la portada.
+$sgpiIndexPath = parse_url($_SERVER['REQUEST_URI'] ?? '/', PHP_URL_PATH) ?: '/';
+if (!in_array($sgpiIndexPath, ['/', '/index.php'], true)) {
+    require __DIR__ . '/404.php';
+    exit;
+}
 require_once $_SERVER['DOCUMENT_ROOT'] . '/includes/config.php';
 
 $serverAuthenticated = is_authenticated();

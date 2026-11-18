@@ -21,7 +21,7 @@ $blocked = [
 ];
 foreach ($blocked as $pattern) {
     if (preg_match($pattern, $path)) {
-        http_response_code(404);
+        require __DIR__ . '/404.php';
         exit;
     }
 }
@@ -65,5 +65,4 @@ if ($path === '/') {
     return false;
 }
 
-http_response_code(404);
-require __DIR__ . '/index.php';
+require __DIR__ . '/404.php';

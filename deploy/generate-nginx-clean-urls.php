@@ -6,6 +6,9 @@ $out = <<<'CONF'
 # Se incluye dentro del bloque server de swgpi.online. Para deshacerlo, quita el include y recarga nginx:
 # no se mueve ni se renombra ningún archivo.
 
+# Página propia para «no encontrada» (también para los archivos internos bloqueados abajo).
+error_page 404 /404.php;
+
 # Archivos internos que no deben responder en público. .well-known se conserva para renovar el certificado.
 if ($uri ~* "/\.(?!well-known/)|^/(includes|deploy|tests|docs|vendor)(/|$)|^/(test-api|router)\.php$|^/api/session-helpers\.php$|\.(md|sql|lock|log|json|key|crt|p12)$") {
     return 404;
