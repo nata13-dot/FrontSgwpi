@@ -7577,3 +7577,40 @@ body .main-content .nav-tabs .nav-link { white-space: nowrap; }
     .navbar.navbar-expand-md .nav-icon-item { display: list-item; }
     .navbar.navbar-expand-md .navbar-nav .dropdown-menu { position: absolute; }
 }
+
+/* ===== Menú lateral más curvo y con sombras ===== */
+@media (min-width: 769px) {
+    html .content-wrapper .sidebar#appSidebar {
+        border-radius: 0 28px 28px 0 !important;
+        box-shadow: 10px 0 30px rgba(8, 20, 42, .22), 2px 0 0 rgba(255, 255, 255, .04) inset !important;
+    }
+    html .content-wrapper .sidebar#appSidebar.sidebar-expanded {
+        box-shadow: 22px 0 56px rgba(8, 20, 42, .36), 6px 0 14px rgba(8, 20, 42, .18) !important;
+    }
+}
+#appSidebar .sidebar-brand img { border-radius: 16px !important; box-shadow: 0 6px 16px rgba(0, 0, 0, .28), inset 0 0 0 1px rgba(255, 255, 255, .14) !important; }
+#appSidebar .sidebar-profile-photo { box-shadow: 0 0 0 4px rgba(122, 170, 240, .22), 0 10px 22px rgba(0, 0, 0, .35) !important; }
+#appSidebar .sidebar-item,
+#appSidebar .sidebar-group summary { border-radius: 16px !important; }
+#appSidebar .sidebar-item:hover,
+#appSidebar .sidebar-group summary:hover { box-shadow: 0 6px 16px rgba(0, 0, 0, .18), inset 0 1px 0 rgba(255, 255, 255, .06) !important; }
+#appSidebar .sidebar-item.active {
+    border-radius: 16px !important;
+    box-shadow: 0 12px 26px rgba(3, 12, 30, .38), 0 3px 8px rgba(3, 12, 30, .22), inset 0 1px 0 rgba(255, 255, 255, .9) !important;
+}
+#appSidebar .sidebar-item.active::before { border-radius: 0 6px 6px 0; }
+#appSidebar .sidebar-group[open] {
+    border-radius: 22px !important;
+    background: linear-gradient(180deg, rgba(255, 255, 255, .07), rgba(255, 255, 255, .03)) !important;
+    box-shadow: 0 14px 30px rgba(3, 12, 30, .30), inset 0 1px 0 rgba(255, 255, 255, .08) !important;
+}
+#appSidebar .sidebar-group[open] > summary { background: rgba(255, 255, 255, .06) !important; }
+#appSidebar .sidebar-collapse-control { border-radius: 16px !important; box-shadow: 0 10px 22px rgba(0, 0, 0, .28), inset 0 1px 0 rgba(255, 255, 255, .1) !important; }
+#appSidebar .sidebar-footer-brand { border-radius: 18px; }
+@media (min-width: 769px) {
+    #appSidebar.sidebar-collapsed .sidebar-item,
+    #appSidebar.sidebar-collapsed .sidebar-group summary { border-radius: 16px !important; }
+    #appSidebar.sidebar-collapsed .sidebar-group:has(.sidebar-item.active) > summary {
+        box-shadow: 0 12px 26px rgba(3, 12, 30, .38), 0 3px 8px rgba(3, 12, 30, .22), inset 0 1px 0 rgba(255, 255, 255, .9) !important;
+    }
+}
