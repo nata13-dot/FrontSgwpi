@@ -7799,3 +7799,105 @@ html body .swal2-popup.swal2-toast { border-radius: 18px !important; box-shadow:
     html body .sgpi-swal .sgpi-swal-btn { width: 100%; }
 }
 @media (prefers-reduced-motion: reduce) { html body .modal.fade .modal-dialog { transition: none; } }
+
+/* ===================== Modo oscuro: legibilidad en todo el sistema =====================
+   El azul marino institucional sirve de fondo, pero no como color de texto sobre superficies oscuras: aquí todo
+   texto «azul marino» pasa a un azul claro legible y se corrigen los componentes que quedaban claros u oscuros. */
+:root[data-theme="dark"] {
+    --dk-text: #e6edf7; --dk-muted: #a9b6c9; --dk-link: #9cc6ff; --dk-strong: #cfe0ff;
+    --dk-surface: #172033; --dk-surface-2: #1c273c; --dk-line: #2f3c55; --dk-accent: #2D5A96;
+}
+/* Guía de cada pantalla y «También te puede servir» */
+:root[data-theme="dark"] .section-guide {
+    --sg-navy: #9cc6ff; --sg-surface: var(--dk-surface); --sg-soft: var(--dk-surface-2); --sg-line: var(--dk-line);
+    --sg-ink: var(--dk-text); --sg-muted: var(--dk-muted);
+}
+:root[data-theme="dark"] .sg-col ol li::before { background: var(--dk-accent); color: #fff; }
+:root[data-theme="dark"] .sg-toggle:hover { background: var(--dk-accent); border-color: var(--dk-accent); color: #fff; }
+:root[data-theme="dark"] .sg-related-card:hover, :root[data-theme="dark"] .sg-related-card:focus-visible { border-color: #5d8fd6; }
+/* Textos que Bootstrap pinta oscuros */
+:root[data-theme="dark"] .text-dark, :root[data-theme="dark"] .text-body, :root[data-theme="dark"] .link-dark { color: var(--dk-text) !important; }
+:root[data-theme="dark"] .text-black-50, :root[data-theme="dark"] .text-body-secondary { color: var(--dk-muted) !important; }
+:root[data-theme="dark"] .text-primary { color: var(--dk-link) !important; }
+:root[data-theme="dark"] .text-success { color: #6fd39b !important; }
+:root[data-theme="dark"] .text-danger { color: #ff8f8f !important; }
+:root[data-theme="dark"] .text-warning { color: #f3c95c !important; }
+:root[data-theme="dark"] .text-info { color: #7fd6f0 !important; }
+:root[data-theme="dark"] .text-secondary { color: var(--dk-muted) !important; }
+:root[data-theme="dark"] a:not(.btn):not(.nav-link):not(.dropdown-item):not(.sidebar-item):not(.list-group-item):not(.navbar-brand):not(.sg-related-card):not([class*="dashboard-"]) { color: var(--dk-link); }
+:root[data-theme="dark"] :is(h1, h2, h3, h4, h5, h6, .h1, .h2, .h3, .h4, .h5, .h6):not(.modal-title) { color: var(--dk-text); }
+:root[data-theme="dark"] .main-content h1 { color: #dce8fb; }
+/* Insignias con fondo claro: texto oscuro */
+:root[data-theme="dark"] .badge.bg-warning, :root[data-theme="dark"] .badge.text-bg-warning,
+:root[data-theme="dark"] .badge.bg-info, :root[data-theme="dark"] .badge.text-bg-info { color: #1a1d24 !important; }
+:root[data-theme="dark"] .badge.bg-light, :root[data-theme="dark"] .badge.text-bg-light { background: #2a3650 !important; color: var(--dk-text) !important; }
+/* Tablas: filas de color atenuadas */
+:root[data-theme="dark"] .table > :not(caption) > tr.table-warning > *, :root[data-theme="dark"] .table-warning > * { background: rgba(224, 165, 38, .14) !important; color: var(--dk-text) !important; }
+:root[data-theme="dark"] .table > :not(caption) > tr.table-success > * { background: rgba(80, 200, 130, .12) !important; color: var(--dk-text) !important; }
+:root[data-theme="dark"] .table > :not(caption) > tr.table-danger > * { background: rgba(240, 100, 100, .13) !important; color: var(--dk-text) !important; }
+:root[data-theme="dark"] .table > :not(caption) > tr.table-info > *, :root[data-theme="dark"] .table > :not(caption) > tr.table-primary > * { background: rgba(110, 160, 240, .13) !important; color: var(--dk-text) !important; }
+:root[data-theme="dark"] .table > :not(caption) > tr.table-active > *, :root[data-theme="dark"] .table > :not(caption) > tr.table-secondary > * { background: rgba(255, 255, 255, .06) !important; color: var(--dk-text) !important; }
+/* Las celdas con color propio (text-danger, text-success…) conservan su color sobre la fila atenuada. */
+:root[data-theme="dark"] .table > :not(caption) > tr[class*="table-"] > .text-danger { color: #ff8f8f !important; }
+:root[data-theme="dark"] .table > :not(caption) > tr[class*="table-"] > .text-success { color: #6fd39b !important; }
+:root[data-theme="dark"] .table > :not(caption) > tr[class*="table-"] > .text-warning { color: #f3c95c !important; }
+:root[data-theme="dark"] .table > :not(caption) > tr[class*="table-"] > .text-primary { color: var(--dk-link) !important; }
+:root[data-theme="dark"] .table > :not(caption) > tr[class*="table-"] > .text-muted { color: var(--dk-muted) !important; }
+/* Paginación */
+:root[data-theme="dark"] .sgpi-pager-info { color: var(--dk-muted); }
+:root[data-theme="dark"] .sgpi-pager-info strong { color: var(--dk-strong); }
+:root[data-theme="dark"] .sgpi-pager-num, :root[data-theme="dark"] .sgpi-pager-step { background: var(--dk-surface-2); border-color: var(--dk-line); color: var(--dk-strong); }
+:root[data-theme="dark"] .sgpi-pager-num:hover, :root[data-theme="dark"] .sgpi-pager-step:not(:disabled):hover { background: #243251; border-color: #5d8fd6; }
+:root[data-theme="dark"] .sgpi-pager-num.active { background: var(--dk-accent); border-color: var(--dk-accent); color: #fff; }
+:root[data-theme="dark"] .sgpi-pager-step:disabled { background: #141c2b; color: #5f6b80; border-color: #222d42; }
+:root[data-theme="dark"] .sgpi-pager-compact, :root[data-theme="dark"] .sgpi-pager-gap { color: var(--dk-strong); }
+:root[data-theme="dark"] .pagination .page-link { background: var(--dk-surface-2); border-color: var(--dk-line); color: var(--dk-strong); }
+:root[data-theme="dark"] .pagination .page-item.active .page-link { background: var(--dk-accent); border-color: var(--dk-accent); color: #fff; }
+/* Menús, listas y acordeones */
+:root[data-theme="dark"] .dropdown-item { color: var(--dk-text); }
+:root[data-theme="dark"] .dropdown-item:hover, :root[data-theme="dark"] .dropdown-item:focus { background: rgba(255, 255, 255, .07); color: #fff; }
+:root[data-theme="dark"] .dropdown-item.active, :root[data-theme="dark"] .dropdown-item:active { background: var(--dk-accent) !important; color: #fff !important; }
+:root[data-theme="dark"] .dropdown-header { color: var(--dk-muted); }
+:root[data-theme="dark"] .list-group-item.active { background: var(--dk-accent) !important; border-color: var(--dk-accent) !important; color: #fff !important; }
+:root[data-theme="dark"] .list-group-item-action:hover { background: rgba(255, 255, 255, .05); color: #fff; }
+:root[data-theme="dark"] .accordion-button { color: var(--dk-text); background: var(--dk-surface-2); }
+:root[data-theme="dark"] .accordion-button:not(.collapsed) { color: #fff; background: #20304d; box-shadow: none; }
+:root[data-theme="dark"] .accordion-button::after { filter: invert(1) brightness(1.6); }
+/* Campos: flecha de los selectores, marcadores y ayudas visibles */
+:root[data-theme="dark"] .form-select { background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3e%3cpath fill='none' stroke='%23c6d6ee' stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='m2 5 6 6 6-6'/%3e%3c/svg%3e") !important; }
+:root[data-theme="dark"] .form-control::placeholder { color: #8391a8; opacity: 1; }
+:root[data-theme="dark"] .form-text, :root[data-theme="dark"] .text-muted, :root[data-theme="dark"] small.text-muted { color: var(--dk-muted) !important; }
+:root[data-theme="dark"] .input-group-text { background: #222e45; border-color: var(--dk-line); color: var(--dk-muted); }
+:root[data-theme="dark"] .btn-close:not(.modal-header .btn-close) { filter: invert(1) grayscale(1) brightness(2); }
+/* Botones */
+:root[data-theme="dark"] .btn-outline-primary { color: var(--dk-link); border-color: #4f7fc4; }
+:root[data-theme="dark"] .btn-outline-primary:hover, :root[data-theme="dark"] .btn-check:checked + .btn-outline-primary, :root[data-theme="dark"] .btn-outline-primary.active { background: var(--dk-accent); border-color: var(--dk-accent); color: #fff !important; }
+:root[data-theme="dark"] .btn-outline-success { color: #6fd39b; border-color: #3f9c6a; }
+:root[data-theme="dark"] .btn-outline-dark { color: var(--dk-text); border-color: var(--dk-line); }
+:root[data-theme="dark"] .btn-link { color: var(--dk-link); }
+:root[data-theme="dark"] .sgpi-swal .sgpi-swal-cancel:hover { background: #26324a; color: #fff; }
+/* Tarjetas y métricas propias que fijaban azul marino */
+:root[data-theme="dark"] .tag-summary-card strong, :root[data-theme="dark"] .room-metric strong,
+:root[data-theme="dark"] [class*="metric"] strong, :root[data-theme="dark"] [class*="summary"] strong { color: var(--dk-strong); }
+:root[data-theme="dark"] .dashboard-action-link { color: #fff !important; }
+:root[data-theme="dark"] .dashboard-action-link span { color: #fff; }
+.dashboard-action-icon b { background: #d9530a; }
+:root[data-theme="dark"] .dashboard-action-icon b { border-color: var(--dk-surface); }
+/* Código y elementos sueltos */
+:root[data-theme="dark"] code { color: #ff9ec7; }
+:root[data-theme="dark"] .bg-white { background: var(--dk-surface) !important; color: var(--dk-text); }
+:root[data-theme="dark"] .bg-light { background: var(--dk-surface-2) !important; color: var(--dk-text); }
+:root[data-theme="dark"] .border, :root[data-theme="dark"] .border-top, :root[data-theme="dark"] .border-bottom { border-color: var(--dk-line) !important; }
+:root[data-theme="dark"] hr { border-color: var(--dk-line); opacity: 1; }
+
+/* Avisos pequeños de la esquina (toasts): su contenedor nunca oscurece ni desenfoca la página. */
+html body .swal2-container:has(.swal2-toast), html body.swal2-toast-shown .swal2-container {
+    background: transparent !important; backdrop-filter: none !important; -webkit-backdrop-filter: none !important;
+}
+:root[data-theme="dark"] .swal2-popup.swal2-toast {
+    background: #1c273c !important; color: #e6edf7 !important; border: 1px solid #2f3c55 !important;
+    box-shadow: 0 10px 28px rgba(0, 0, 0, .45) !important;
+}
+:root[data-theme="dark"] .swal2-popup.swal2-toast .swal2-title, :root[data-theme="dark"] .swal2-popup.swal2-toast .swal2-html-container { color: #e6edf7 !important; }
+:root[data-theme="dark"] .swal2-popup.swal2-toast .swal2-timer-progress-bar { background: #5d8fd6 !important; }
+:root[data-theme="dark"] kbd { background: #222e45 !important; color: #c6d6ee !important; border: 1px solid #34425e !important; box-shadow: none !important; }
