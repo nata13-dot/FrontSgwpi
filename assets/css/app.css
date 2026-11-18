@@ -7377,3 +7377,110 @@ body .main-content .nav-tabs .nav-link { white-space: nowrap; }
     .sgpi-pager-controls { width: 100%; flex-wrap: nowrap; }
     .sgpi-pager-step { flex: 1 1 0; height: 42px; }
 }
+
+/* ===================== Barra lateral institucional (rediseño) =====================
+   Azul marino con profundidad, elementos redondeados, activo en blanco con indicador y,
+   contraída, un riel de iconos centrados con separadores entre secciones. */
+#appSidebar.sidebar {
+    background:
+        radial-gradient(130% 55% at 0% 0%, rgba(77, 132, 214, .30), transparent 62%),
+        radial-gradient(90% 40% at 100% 100%, rgba(45, 90, 150, .35), transparent 70%),
+        linear-gradient(180deg, #0c2142 0%, #12305c 52%, #173b70 100%) !important;
+    border-right: 1px solid rgba(255, 255, 255, .06);
+    box-shadow: 6px 0 28px rgba(8, 20, 42, .20);
+    scrollbar-width: thin;
+    scrollbar-color: rgba(255, 255, 255, .18) transparent;
+}
+#appSidebar .sidebar-brand img {
+    width: 42px; height: 42px; padding: 4px; border-radius: 13px;
+    background: rgba(255, 255, 255, .08); box-shadow: inset 0 0 0 1px rgba(255, 255, 255, .12);
+}
+#appSidebar .sidebar-profile { border-bottom: 1px solid rgba(255, 255, 255, .08) !important; }
+#appSidebar .sidebar-profile-photo {
+    width: 44px !important; height: 44px !important; border: 2px solid rgba(255, 255, 255, .9) !important;
+    box-shadow: 0 0 0 4px rgba(122, 170, 240, .22), 0 6px 14px rgba(0, 0, 0, .25) !important; object-fit: cover;
+}
+#appSidebar .sidebar-section-title h6 { color: rgba(205, 220, 244, .55) !important; font-size: .66rem !important; letter-spacing: .13em !important; font-weight: 800 !important; }
+#appSidebar .sidebar-item,
+#appSidebar .sidebar-group summary {
+    position: relative; margin: 2px 8px; border-radius: 12px !important; border: 0 !important;
+    color: rgba(230, 238, 251, .80) !important; background: transparent;
+    transition: background .16s ease, color .16s ease, box-shadow .16s ease, transform .16s ease;
+}
+#appSidebar .sidebar-item i,
+#appSidebar .sidebar-group summary > i { color: rgba(196, 215, 244, .82) !important; transition: color .16s ease, transform .16s ease; }
+#appSidebar .sidebar-item:hover,
+#appSidebar .sidebar-group summary:hover { background: rgba(255, 255, 255, .08) !important; color: #fff !important; }
+#appSidebar .sidebar-item:hover i,
+#appSidebar .sidebar-group summary:hover > i { color: #fff !important; }
+#appSidebar .sidebar-item:hover > i:first-child { transform: scale(1.08); }
+#appSidebar .sidebar-item:focus-visible,
+#appSidebar .sidebar-group summary:focus-visible { outline: 0; box-shadow: 0 0 0 3px rgba(140, 188, 255, .45) !important; }
+/* Página actual: tarjeta blanca con indicador azul claro pegado al borde. */
+#appSidebar .sidebar-item.active {
+    background: linear-gradient(135deg, #ffffff 0%, #e9f1fd 100%) !important; color: #1B396A !important; font-weight: 700;
+    box-shadow: 0 8px 18px rgba(3, 12, 30, .30) !important;
+}
+#appSidebar .sidebar-item.active i { color: #2D5A96 !important; }
+#appSidebar .sidebar-item.active::before {
+    content: ''; position: absolute; left: -10px; top: 9px; bottom: 9px; width: 4px; border-radius: 0 4px 4px 0;
+    background: linear-gradient(180deg, #9cc6ff, #5d9cf0); box-shadow: 0 0 10px rgba(140, 188, 255, .7);
+}
+/* Grupo abierto: un panel suave con una guía vertical para sus opciones. */
+#appSidebar .sidebar-group[open] { margin: 4px 8px; padding: 2px 0 6px; border-radius: 14px; background: rgba(255, 255, 255, .04) !important; border: 1px solid rgba(255, 255, 255, .05); }
+#appSidebar .sidebar-group[open] > summary { margin: 2px; color: #fff !important; }
+#appSidebar .sidebar-group:has(.sidebar-item.active) > summary { color: #fff !important; }
+#appSidebar .sidebar-group:has(.sidebar-item.active) > summary > i:first-child { color: #9cc6ff !important; }
+#appSidebar .sidebar-subitem { margin: 2px 6px 2px 18px !important; font-size: .9rem; }
+#appSidebar .sidebar-group[open] > .sidebar-subitem:not(.active)::after {
+    content: ''; position: absolute; left: -8px; top: 0; bottom: 0; width: 1px; background: rgba(255, 255, 255, .12);
+}
+#appSidebar .sidebar-subitem.active::before { left: -14px; }
+#appSidebar .sidebar-group summary .bi-chevron-down { transition: transform .2s ease; opacity: .7; }
+#appSidebar .badge { box-shadow: 0 0 0 2px rgba(12, 33, 66, .9); }
+/* Botón de contraer/expandir. */
+#appSidebar .sidebar-collapse-control {
+    width: 42px !important; height: 42px !important; border-radius: 13px !important;
+    background: rgba(255, 255, 255, .08) !important; border: 1px solid rgba(255, 255, 255, .14) !important; color: #fff !important;
+    box-shadow: 0 6px 14px rgba(0, 0, 0, .18); transition: background .16s ease, transform .16s ease;
+}
+#appSidebar .sidebar-collapse-control:hover { background: rgba(255, 255, 255, .16) !important; transform: translateY(-1px); }
+#appSidebar .sidebar-footer-brand { border-top: 1px solid rgba(255, 255, 255, .08) !important; }
+
+@media (min-width: 769px) {
+    #appSidebar.sidebar.sidebar-expanded { width: 268px; min-width: 268px; }
+    #appSidebar.sidebar.sidebar-collapsed { width: 78px; min-width: 78px; }
+    /* Riel: iconos en cuadros de 46 px centrados. */
+    #appSidebar.sidebar-collapsed .sidebar-item,
+    #appSidebar.sidebar-collapsed .sidebar-group summary {
+        width: 46px; height: 46px; min-height: 46px; margin: 4px auto !important; padding: 0 !important; justify-content: center;
+    }
+    #appSidebar.sidebar-collapsed .sidebar-item i,
+    #appSidebar.sidebar-collapsed .sidebar-group summary > i:first-child { width: auto !important; font-size: 1.18rem !important; margin: 0 !important; }
+    #appSidebar.sidebar-collapsed .sidebar-group[open] { margin: 0 !important; padding: 0 !important; background: transparent !important; border: 0 !important; }
+    #appSidebar.sidebar-collapsed .sidebar-item.active::before { left: -16px; }
+    /* El grupo de la página actual se marca igual que una página activa. */
+    #appSidebar.sidebar-collapsed .sidebar-group:has(.sidebar-item.active) > summary {
+        background: linear-gradient(135deg, #ffffff 0%, #e9f1fd 100%) !important; box-shadow: 0 8px 18px rgba(3, 12, 30, .30) !important;
+    }
+    #appSidebar.sidebar-collapsed .sidebar-group:has(.sidebar-item.active) > summary > i:first-child { color: #2D5A96 !important; }
+    #appSidebar.sidebar-collapsed .sidebar-group:has(.sidebar-item.active) > summary::before {
+        content: ''; position: absolute; left: -16px; top: 9px; bottom: 9px; width: 4px; border-radius: 0 4px 4px 0;
+        background: linear-gradient(180deg, #9cc6ff, #5d9cf0); box-shadow: 0 0 10px rgba(140, 188, 255, .7);
+    }
+    /* Los títulos de sección se vuelven separadores cortos. */
+    .sidebar#appSidebar.sidebar-collapsed .sidebar-section-title {
+        display: block !important; opacity: 1 !important; visibility: visible !important; width: 28px !important; max-width: 28px !important;
+        height: 1px; min-height: 0; margin: 12px auto !important; padding: 0 !important; background: rgba(255, 255, 255, .14); overflow: hidden;
+    }
+    .sidebar#appSidebar.sidebar-collapsed .sidebar-section-title h6 { display: none !important; }
+    #appSidebar.sidebar-collapsed .sidebar-brand { justify-content: center; }
+    #appSidebar.sidebar-collapsed .sidebar-profile { border-bottom-color: transparent !important; }
+    #appSidebar.sidebar-collapsed .sidebar-profile::after {
+        content: ''; display: block; position: absolute; bottom: 0; left: 50%; width: 28px; height: 1px; transform: translateX(-50%); background: rgba(255, 255, 255, .14);
+    }
+    #appSidebar.sidebar-collapsed .sidebar-profile { position: relative; }
+}
+#appSidebar .sidebar-item.text-danger,
+#appSidebar .sidebar-item.text-danger i { color: #ffa4a4 !important; }
+#appSidebar .sidebar-item.text-danger:hover { background: rgba(255, 120, 120, .12) !important; }
