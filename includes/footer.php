@@ -557,11 +557,40 @@ window.stableSwalFire = async function (options = {}) {
     });
 };
 
+// Todas las ventanas de SweetAlert con el estilo del sistema (también las que se llaman directo con Swal.fire):
+// clase propia, botones institucionales y botón rojo cuando la acción es destructiva.
+(function patchSwal() {
+    if (!window.Swal || window.Swal.__sgpiPatched) return;
+    const original = window.Swal.fire.bind(window.Swal);
+    const DANGER = /(eliminar|borrar|quitar|rechazar|negar|desactivar|inactivar|archivar|revocar|cancelar solicitud|vaciar|restaurar la base|sí, salir)/i;
+    window.Swal.fire = function (...args) {
+        if (args.length !== 1 || typeof args[0] !== 'object' || args[0] === null) {
+            const [title, html, icon] = args;
+            args = [{ title, html, icon }];
+        }
+        const options = { ...args[0] };
+        if (!options.toast) {
+            const danger = options.sgpiDanger ?? (DANGER.test(String(options.confirmButtonText || '')) || options.icon === 'error' && options.showCancelButton);
+            options.buttonsStyling = false;
+            options.customClass = {
+                popup: 'sgpi-swal', title: 'sgpi-swal-title', htmlContainer: 'sgpi-swal-text', actions: 'sgpi-swal-actions',
+                confirmButton: `btn ${danger ? 'btn-danger' : 'btn-primary'} sgpi-swal-btn`, cancelButton: 'btn btn-light sgpi-swal-btn sgpi-swal-cancel',
+                denyButton: 'btn btn-outline-danger sgpi-swal-btn', input: 'form-control', validationMessage: 'sgpi-swal-validation',
+                ...(options.customClass || {}),
+            };
+            delete options.sgpiDanger;
+        }
+        return original(options);
+    };
+    window.Swal.__sgpiPatched = true;
+})();
+
 window.confirmAction = async function ({
     title = '¿Confirmar acción?',
     text = '',
     confirmButtonText = 'Si, continuar',
-    icon = 'warning'
+    icon = 'warning',
+    danger = undefined
 } = {}) {
     if (!window.Swal) return window.confirm(text || title);
 
@@ -573,7 +602,8 @@ window.confirmAction = async function ({
         confirmButtonText,
         cancelButtonText: 'Cancelar',
         reverseButtons: true,
-        focusCancel: true
+        focusCancel: true,
+        sgpiDanger: danger
     });
 
     return result.isConfirmed;

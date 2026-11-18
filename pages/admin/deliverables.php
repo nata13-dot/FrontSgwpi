@@ -343,8 +343,9 @@ if (!is_authenticated()) {
             document.getElementById('tipo_documento').value = 'documento';
             if (competenciaFilter) document.getElementById('competencia_id').value = competenciaFilter;
 
+            // Fuera del if: la fecha límite de abajo también la usa (al crear uno nuevo queda vacía).
+            const deliverable = id ? deliverables.find(item => String(item.id) === String(id)) : null;
             if (id) {
-                const deliverable = deliverables.find(item => item.id === id);
                 document.getElementById('project_id').value = deliverable?.project_id || '';
                 document.getElementById('competencia_id').value = deliverable?.asignatura_id || '';
                 document.getElementById('nombre').value = deliverable?.nombre || '';

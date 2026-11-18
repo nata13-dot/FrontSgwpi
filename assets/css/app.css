@@ -7726,3 +7726,76 @@ html body .table > thead > tr > th { padding-top: 15px; padding-bottom: 15px; le
 html body .table > tbody > tr:last-child > * { border-bottom-width: 0; }
 html body .table > tbody > tr > td[colspan] { padding: 28px 24px !important; }
 html body .table.table-sm > :not(caption) > * > * { padding-top: 9px; padding-bottom: 9px; }
+
+/* ===================== Ventanas (modales y SweetAlert) con el estilo del sistema =====================
+   Fondo azul marino desenfocado (como la app), entrada suave, encabezado institucional, pie claro y, en el
+   teléfono, ventana que sube desde abajo. */
+html body .modal-backdrop { background: rgba(9, 22, 44, .42); backdrop-filter: blur(8px) saturate(1.15); -webkit-backdrop-filter: blur(8px) saturate(1.15); }
+html body .modal-backdrop.show { opacity: 1; }
+html body .modal.fade .modal-dialog { transform: translateY(14px) scale(.97); transition: transform .26s cubic-bezier(.2, .8, .2, 1), opacity .2s ease; opacity: 0; }
+html body .modal.show .modal-dialog { transform: none; opacity: 1; }
+html body .modal-content { background: var(--inst-surface, #fff); }
+html body .modal-header {
+    position: relative; padding: 18px 22px !important; border: 0 !important;
+    background: radial-gradient(120% 140% at 0% 0%, rgba(77, 132, 214, .35), transparent 60%), linear-gradient(135deg, #12305c 0%, #1B396A 55%, #2D5A96 100%) !important;
+    color: #fff !important; box-shadow: inset 0 -1px 0 rgba(255, 255, 255, .08);
+}
+html body .modal-header :is(.modal-title, h1, h2, h3, h4, h5, h6) { color: #fff !important; font-weight: 800; letter-spacing: -.01em; display: flex; align-items: center; gap: 10px; }
+html body .modal-header .modal-title > i:first-child, html body .modal-header .modal-title > .bi:first-child {
+    width: 34px; height: 34px; display: inline-grid; place-items: center; border-radius: 11px; background: rgba(255, 255, 255, .14); font-size: 1rem;
+}
+html body .modal-header .btn-close {
+    width: 34px; height: 34px; padding: 0; margin: 0 0 0 auto; border-radius: 11px; opacity: 1; filter: none !important;
+    background: rgba(255, 255, 255, .14) url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='%23fff'%3e%3cpath d='M.293.293a1 1 0 0 1 1.414 0L8 6.586 14.293.293a1 1 0 1 1 1.414 1.414L9.414 8l6.293 6.293a1 1 0 0 1-1.414 1.414L8 9.414l-6.293 6.293a1 1 0 0 1-1.414-1.414L6.586 8 .293 1.707a1 1 0 0 1 0-1.414z'/%3e%3c/svg%3e") center / 12px no-repeat;
+    transition: background-color .15s ease, transform .15s ease;
+}
+html body .modal-header .btn-close:hover { background-color: rgba(255, 255, 255, .26); transform: rotate(90deg); }
+html body .modal-body { padding: 22px 24px !important; }
+html body .modal-footer {
+    gap: 10px; padding: 14px 22px !important; border-top: 1px solid var(--inst-line, #e2e6ee) !important;
+    background: var(--inst-soft, #f6f8fc);
+}
+html body .modal-footer > * { margin: 0; }
+html body .modal-footer .btn { min-width: 110px; }
+html body .modal-dialog-scrollable .modal-content { max-height: calc(100vh - 3.5rem); }
+@media (max-width: 575.98px) {
+    /* Teléfono: la ventana sube desde abajo como las hojas de la app. */
+    html body .modal-dialog:not(.modal-fullscreen) { position: fixed; left: 0; right: 0; bottom: 0; margin: 0; max-width: none; width: 100%; }
+    html body .modal.fade .modal-dialog:not(.modal-fullscreen) { transform: translateY(100%); opacity: 1; }
+    html body .modal.show .modal-dialog:not(.modal-fullscreen) { transform: none; }
+    html body .modal-dialog:not(.modal-fullscreen) .modal-content { border-radius: 28px 28px 0 0 !important; max-height: 92dvh; padding-bottom: env(safe-area-inset-bottom, 0); }
+    html body .modal-dialog:not(.modal-fullscreen) .modal-header { border-radius: 28px 28px 0 0 !important; }
+    html body .modal-dialog:not(.modal-fullscreen) .modal-header::before {
+        content: ''; position: absolute; top: 7px; left: 50%; width: 38px; height: 4px; margin-left: -19px; border-radius: 4px; background: rgba(255, 255, 255, .45);
+    }
+    html body .modal-dialog:not(.modal-fullscreen) .modal-body { overflow-y: auto; }
+    html body .modal-dialog:not(.modal-fullscreen) .modal-footer { border-radius: 0; }
+    html body .modal-footer .btn { flex: 1 1 0; }
+}
+:root[data-theme="dark"] html body .modal-footer, :root[data-theme="dark"] .modal-footer { background: rgba(255, 255, 255, .03); }
+
+/* SweetAlert */
+html body .swal2-container.swal2-backdrop-show { background: rgba(9, 22, 44, .42) !important; backdrop-filter: blur(8px) saturate(1.15); -webkit-backdrop-filter: blur(8px) saturate(1.15); }
+html body .swal2-container.swal2-top-end, html body .swal2-container.swal2-top-start, html body .swal2-container.swal2-bottom-end { backdrop-filter: none; -webkit-backdrop-filter: none; }
+html body .swal2-popup.sgpi-swal { width: min(460px, calc(100vw - 32px)); padding: 26px 24px 20px; border-radius: 28px !important; background: var(--inst-surface, #fff); color: var(--inst-ink, #2b3040); box-shadow: var(--sgpi-sh-lg) !important; }
+html body .sgpi-swal .swal2-title.sgpi-swal-title { padding: 4px 0 0; color: var(--inst-navy, #1B396A); font-size: 1.3rem; font-weight: 800; letter-spacing: -.01em; }
+html body .sgpi-swal .sgpi-swal-text { margin: 10px 4px 0; color: var(--inst-muted, #5b6474); font-size: .95rem; line-height: 1.55; }
+html body .sgpi-swal .swal2-icon { width: 58px; height: 58px; margin: 4px auto 6px; border-width: 3px; }
+html body .sgpi-swal .swal2-icon .swal2-icon-content { font-size: 2.2rem; }
+html body .sgpi-swal .swal2-icon.swal2-warning { border-color: #e0a526; color: #c98a0c; }
+html body .sgpi-swal .swal2-icon.swal2-question, html body .sgpi-swal .swal2-icon.swal2-info { border-color: #2D5A96; color: #2D5A96; }
+html body .sgpi-swal .sgpi-swal-actions { gap: 10px; margin-top: 20px; width: 100%; flex-wrap: nowrap; }
+html body .sgpi-swal .sgpi-swal-btn { min-width: 120px; min-height: 44px; padding: 0 18px; font-weight: 700; margin: 0; }
+html body .sgpi-swal .sgpi-swal-btn.btn-primary { background: linear-gradient(135deg, #1B396A, #2D5A96); border: 0; }
+html body .sgpi-swal .sgpi-swal-btn.btn-danger { background: linear-gradient(135deg, #a92c2c, #cf4444); border: 0; }
+html body .sgpi-swal .sgpi-swal-cancel { background: var(--inst-soft, #eef2f8); color: var(--inst-ink, #2b3040); border: 1px solid var(--inst-line, #e2e6ee); box-shadow: none !important; }
+html body .sgpi-swal .sgpi-swal-cancel:hover { background: #e3e9f3; }
+html body .sgpi-swal .swal2-input, html body .sgpi-swal .swal2-textarea, html body .sgpi-swal .swal2-select { width: calc(100% - 8px); margin: 14px 4px 0; box-shadow: var(--sgpi-sh-in); border: 1px solid var(--inst-line, #d7deea); }
+html body .sgpi-swal .sgpi-swal-validation { border-radius: 12px; margin: 12px 4px 0; background: #fdecec; color: #a12d2d; }
+html body .sgpi-swal .swal2-html-container .form-control, html body .sgpi-swal .swal2-html-container .form-select { text-align: left; }
+html body .swal2-popup.swal2-toast { border-radius: 18px !important; box-shadow: var(--sgpi-sh-lg) !important; }
+@media (max-width: 575.98px) {
+    html body .sgpi-swal .sgpi-swal-actions { flex-direction: column-reverse; }
+    html body .sgpi-swal .sgpi-swal-btn { width: 100%; }
+}
+@media (prefers-reduced-motion: reduce) { html body .modal.fade .modal-dialog { transition: none; } }
