@@ -7512,3 +7512,32 @@ body .main-content .nav-tabs .nav-link { white-space: nowrap; }
     .content-wrapper .sidebar#appSidebar { transition: none !important; }
     #appSidebar.sidebar-expanded * { animation: none !important; }
 }
+
+/* Textos del menú lateral expandido: nada se sale del borde.
+   Opciones en una línea con «…» si no caben; marca, perfil y títulos de sección pueden ocupar dos líneas
+   y aparecen cuando el menú ya terminó de abrirse, para no reacomodarse durante la animación. */
+@media (min-width: 769px) {
+    html .content-wrapper .sidebar#appSidebar.sidebar-expanded { width: 284px !important; min-width: 284px !important; max-width: 284px !important; }
+    #appSidebar .sidebar-item span:not(.badge),
+    #appSidebar .sidebar-group summary span {
+        flex: 1 1 auto; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+    }
+    #appSidebar .sidebar-group summary .bi-chevron-down { flex: 0 0 auto; margin-left: 6px; }
+    #appSidebar .sidebar-brand div,
+    #appSidebar .sidebar-profile > div,
+    #appSidebar .sidebar-footer-brand div { min-width: 0; white-space: normal; overflow-wrap: anywhere; }
+    #appSidebar .sidebar-brand strong,
+    #appSidebar .sidebar-footer-brand strong { display: block; line-height: 1.25; }
+    #appSidebar .sidebar-section-title h6 { white-space: normal; line-height: 1.35; overflow-wrap: anywhere; padding-right: 8px; }
+    #appSidebar.sidebar-expanded .sidebar-brand div,
+    #appSidebar.sidebar-expanded .sidebar-profile > div,
+    #appSidebar.sidebar-expanded .sidebar-footer-brand,
+    #appSidebar.sidebar-expanded .sidebar-section-title { animation: sgpi-side-text .22s ease .26s both; }
+    #appSidebar .sidebar-subitem { font-size: .88rem; }
+}
+@media (min-width: 769px) {
+    html .content-wrapper .sidebar#appSidebar.sidebar-expanded { padding-left: 10px !important; padding-right: 10px !important; }
+    html .content-wrapper .sidebar#appSidebar.sidebar-expanded .sidebar-item,
+    html .content-wrapper .sidebar#appSidebar.sidebar-expanded .sidebar-group summary { padding-left: 12px !important; padding-right: 10px !important; gap: 12px; }
+    html .content-wrapper .sidebar#appSidebar.sidebar-expanded .sidebar-subitem { margin-left: 14px !important; }
+}
