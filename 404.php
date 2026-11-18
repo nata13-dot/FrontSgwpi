@@ -129,7 +129,7 @@ $homeUrl = $signedIn ? dashboard_url() : '/';
     <main class="nf-main">
         <section class="nf-card" aria-labelledby="nfTitle">
             <div class="nf-art">
-                <img src="<?= asset('/assets/img/mascota/mascota-404.webp') ?>" alt="La mascota del SGPI, confundida, revisa un libro buscando la página" width="620" height="672">
+                <img src="<?= asset('/assets/img/mascota/mascota-404.webp') ?>" alt="La mascota del SGPI, confundida, revisa un libro buscando la página" width="760" height="760">
             </div>
             <div>
                 <p class="nf-code" aria-hidden="true">404</p>
