@@ -1509,7 +1509,7 @@ html.grayscale-mode {
     text-align: left;
 }
 
-@media (max-width: 991.98px) {
+@media (max-width: 768px) {
     .sidebar-account-actions { display: block; }
 }
 
@@ -7540,4 +7540,40 @@ body .main-content .nav-tabs .nav-link { white-space: nowrap; }
     html .content-wrapper .sidebar#appSidebar.sidebar-expanded .sidebar-item,
     html .content-wrapper .sidebar#appSidebar.sidebar-expanded .sidebar-group summary { padding-left: 12px !important; padding-right: 10px !important; gap: 12px; }
     html .content-wrapper .sidebar#appSidebar.sidebar-expanded .sidebar-subitem { margin-left: 14px !important; }
+}
+
+/* ===== Zoom del navegador: al acercar, la página se acomoda en lugar de inflarse o esconder cosas ===== */
+/* Cabecera de cada página (título + botones): los botones bajan a su propia fila y no se parten en dos líneas. */
+.main-content .d-flex.justify-content-between:has(> div > h1) { flex-wrap: wrap; row-gap: 14px; column-gap: 16px; }
+.main-content .d-flex.justify-content-between:has(> div > h1) > div:has(h1) { flex: 1 1 260px; min-width: 0; }
+.main-content .d-flex.justify-content-between:has(> div > h1) > :not(:has(h1)) { flex-wrap: wrap; gap: 8px; }
+.main-content .d-flex.justify-content-between:has(> div > h1) .btn { white-space: nowrap; }
+/* Títulos con tamaño fluido: crecen y se reducen con el espacio disponible. */
+.main-content h1 { font-size: clamp(1.55rem, 1.05rem + 1.5vw, 2.5rem); line-height: 1.15; overflow-wrap: anywhere; }
+/* Barra superior compacta cuando hay poco ancho o poca altura (zoom alto). */
+@media (min-width: 769px) and (max-width: 1100px) {
+    .navbar .navbar-nav { gap: 2px; flex-wrap: nowrap; }
+    .navbar .nav-link { padding-left: 8px !important; padding-right: 8px !important; }
+}
+@media (max-height: 620px) and (min-width: 769px) {
+    .navbar { min-height: 0 !important; padding-top: 4px !important; padding-bottom: 4px !important; }
+    .main-content .container-xl.mt-5 { margin-top: 1.5rem !important; }
+    #appSidebar .sidebar-item, #appSidebar .sidebar-group summary { min-height: 40px !important; }
+    #appSidebar.sidebar-collapsed .sidebar-item, #appSidebar.sidebar-collapsed .sidebar-group summary { width: 42px; height: 42px; min-height: 42px !important; margin: 2px auto !important; }
+}
+/* Tablas: nunca empujan la página hacia un lado; se desplazan dentro de su tarjeta. */
+.main-content .table-responsive { overflow-x: auto; }
+.main-content { min-width: 0; }
+/* Entre 769 y 991 px (pantallas medianas o zoom alto) la barra superior queda en línea, como en escritorio:
+   no se aplican los estilos del menú desplegable del teléfono. */
+@media (min-width: 769px) and (max-width: 991.98px) {
+    .navbar.navbar-expand-md > .container-xl,
+    .navbar.navbar-expand-md > .container-fluid { flex-wrap: nowrap; }
+    .navbar.navbar-expand-md .navbar-collapse {
+        position: static !important; display: flex !important; flex-basis: auto; flex-grow: 1; justify-content: flex-end;
+        background: none !important; box-shadow: none !important; padding: 0 !important; max-height: none !important; overflow: visible !important;
+    }
+    .navbar.navbar-expand-md .navbar-nav { flex-direction: row; align-items: center !important; }
+    .navbar.navbar-expand-md .nav-icon-item { display: list-item; }
+    .navbar.navbar-expand-md .navbar-nav .dropdown-menu { position: absolute; }
 }
