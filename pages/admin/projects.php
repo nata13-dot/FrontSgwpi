@@ -34,6 +34,9 @@ if (!is_authenticated()) {
                         <button type="button" class="btn btn-outline-success" onclick="openProjectsImportModal()">
                             <i class="bi bi-upload"></i> Cargar Excel
                         </button>
+                        <button type="button" class="btn btn-outline-secondary d-none" id="projectsSelectBtn" onclick="toggleProjectsSelection(true)" title="Elegir varios proyectos para eliminarlos juntos">
+                            <i class="bi bi-check2-square"></i> Seleccionar
+                        </button>
                         <button type="button" class="btn btn-primary" id="newProjectBtn" onclick="openProjectModal()">
                             <i class="bi bi-plus-circle"></i> Nuevo Proyecto
                         </button>
@@ -77,6 +80,16 @@ if (!is_authenticated()) {
                         </div>
                     </div>
                 </div>
+                <div class="projects-bulk-bar d-none" id="projectsBulkBar" role="region" aria-label="Selección de proyectos">
+                    <span class="projects-bulk-count"><i class="bi bi-check2-square"></i> <strong id="projectsSelectedCount">0</strong> seleccionado(s)</span>
+                    <div class="d-flex flex-wrap gap-2">
+                        <button type="button" class="btn btn-sm btn-outline-primary" onclick="selectProjectsPage()"><i class="bi bi-check2-all"></i> Seleccionar página</button>
+                        <button type="button" class="btn btn-sm btn-outline-secondary" onclick="clearProjectsSelection()"><i class="bi bi-x-square"></i> Limpiar</button>
+                        <button type="button" class="btn btn-sm btn-danger" id="projectsBulkDeleteBtn" onclick="deleteSelectedProjects()" disabled><i class="bi bi-trash"></i> Eliminar seleccionados</button>
+                        <button type="button" class="btn btn-sm btn-light" onclick="toggleProjectsSelection(false)"><i class="bi bi-x-lg"></i> Cancelar</button>
+                    </div>
+                </div>
+
                 <div class="card border-0 shadow-sm border-start border-4 border-success d-none" id="thesisManagementView">
                     <div class="card-header d-flex flex-wrap align-items-center justify-content-between gap-2">
                         <span><i class="bi bi-mortarboard"></i> Gestión de tesis</span>
@@ -87,6 +100,7 @@ if (!is_authenticated()) {
                             <table class="table table-hover mb-0 align-middle">
                                 <thead class="table-success">
                                     <tr>
+                                        <th class="project-select-col"><input class="form-check-input" type="checkbox" aria-label="Seleccionar toda la página" onchange="selectProjectsPage(this.checked)"></th>
                                         <th>Tesis</th>
                                         <th>Semestre</th>
                                         <th>Grupo</th>
@@ -97,7 +111,7 @@ if (!is_authenticated()) {
                                     </tr>
                                 </thead>
                                 <tbody id="thesisTable">
-                                    <tr><td colspan="7" class="text-center py-4"><div class="spinner-border" role="status"></div></td></tr>
+                                    <tr><td colspan="8" class="text-center py-4"><div class="spinner-border" role="status"></div></td></tr>
                                 </tbody>
                             </table>
                         </div>
@@ -114,6 +128,7 @@ if (!is_authenticated()) {
                             <table class="table table-hover mb-0 align-middle">
                                 <thead class="table-primary">
                                     <tr>
+                                        <th class="project-select-col"><input class="form-check-input" type="checkbox" aria-label="Seleccionar toda la página" onchange="selectProjectsPage(this.checked)"></th>
                                         <th>Nombre del proyecto</th>
                                         <th>Semestre</th>
                                         <th>Integrantes</th>
@@ -124,7 +139,7 @@ if (!is_authenticated()) {
                                     </tr>
                                 </thead>
                                 <tbody id="projectsTable">
-                                    <tr><td colspan="7" class="text-center py-4"><div class="spinner-border" role="status"></div></td></tr>
+                                    <tr><td colspan="8" class="text-center py-4"><div class="spinner-border" role="status"></div></td></tr>
                                 </tbody>
                             </table>
                         </div>
@@ -368,7 +383,7 @@ if (!is_authenticated()) {
             if (projectManagementView === view) return;
             // El estado cambia antes de pedir datos: la transición es asíncrona y loadProjects debe usar la vista nueva.
             projectManagementView = view;
-            document.getElementById('projectsTable').innerHTML = '<tr><td colspan="7" class="text-center text-muted py-4">Cargando...</td></tr>';
+            document.getElementById('projectsTable').innerHTML = '<tr><td colspan="8" class="text-center text-muted py-4">Cargando...</td></tr>';
             loadProjects(1);
             // La animación aplica el cambio de forma asíncrona: se dibuja con el estado vigente, no con el de este clic.
             SGPIViewTransition.run(() => {
@@ -418,7 +433,7 @@ if (!is_authenticated()) {
             info.textContent = `${projectsTotal} tesis`;
 
             if (!projects.length) {
-                tbody.innerHTML = '<tr><td colspan="7" class="text-center text-muted py-4">No hay tesis registradas</td></tr>';
+                tbody.innerHTML = '<tr><td colspan="8" class="text-center text-muted py-4">No hay tesis registradas</td></tr>';
                 return;
             }
 
@@ -432,7 +447,8 @@ if (!is_authenticated()) {
                     : '<span class="badge bg-secondary">Proyecto directo</span>';
 
                 return `
-                    <tr>
+                    <tr data-project-row="${project.id}">
+                        ${projectSelectCell(project)}
                         <td><strong>${escapeHtml(project.title)}</strong><div class="small text-muted">${escapeHtml(project.company_name || 'Sin empresa')}</div></td>
                         <td>${project.semestre || '-'}</td>
                         <td>${escapeHtml(project.subject_group?.nombre || project.subjectGroup?.nombre || '-')}</td>
@@ -460,6 +476,7 @@ if (!is_authenticated()) {
                 const user = auth.getCurrentUser();
                 const activeProfileId = Number(user?.active_profile_id ?? user?.perfil_id);
                 isAdmin = [1, 4, 5, 6, 7].includes(activeProfileId);
+                document.getElementById('projectsSelectBtn')?.classList.toggle('d-none', !isAdmin || projectsSelecting);
                 isTeacher = user && user.perfil_id === 2;
                 isStudent = user && user.perfil_id === 3;
                 currentUserId = user && user.id;
@@ -492,7 +509,7 @@ if (!is_authenticated()) {
                     if (projectManagementView === 'thesis') {
                         renderThesisTable([]);
                     } else {
-                        tbody.innerHTML = '<tr><td colspan="7" class="text-center text-muted py-4">No hay proyectos</td></tr>';
+                        tbody.innerHTML = '<tr><td colspan="8" class="text-center text-muted py-4">No hay proyectos</td></tr>';
                     }
                     renderProjectsPagination();
                     return;
@@ -515,7 +532,7 @@ if (!is_authenticated()) {
                     if (projectManagementView === 'thesis') {
                         renderThesisTable([]);
                     } else {
-                        tbody.innerHTML = '<tr><td colspan="7" class="text-center text-muted py-4">No hay proyectos para este filtro</td></tr>';
+                        tbody.innerHTML = '<tr><td colspan="8" class="text-center text-muted py-4">No hay proyectos para este filtro</td></tr>';
                     }
                     renderProjectsPagination();
                     return;
@@ -528,7 +545,7 @@ if (!is_authenticated()) {
                 }
 
                 if (proyectosFiltrados.length === 0) {
-                    tbody.innerHTML = '<tr><td colspan="7" class="text-center text-muted py-4">No hay proyectos integradores para este filtro</td></tr>';
+                    tbody.innerHTML = '<tr><td colspan="8" class="text-center text-muted py-4">No hay proyectos integradores para este filtro</td></tr>';
                     renderProjectsPagination();
                     return;
                 }
@@ -553,7 +570,8 @@ if (!is_authenticated()) {
                         : '';
 
                     tbody.innerHTML += `
-                        <tr>
+                        <tr data-project-row="${project.id}">
+                            ${projectSelectCell(project)}
                             <td><strong>${escapeHtml(project.title)}</strong>${thesisBadge}${modalityBadge}</td>
                             <td>${project.semestre || '-'}</td>
                             <td><small>${escapeHtml(projectActiveAuthors(project))}</small></td>
@@ -572,6 +590,7 @@ if (!is_authenticated()) {
                             </td>
                         </tr>`;
                 });
+                syncProjectsSelectionUi();
             } catch (error) {
                 if (requestId !== projectsRequestSequence || requestedView !== projectManagementView) return;
                 showAlert('#alertContainer', 'danger', 'Error cargando proyectos: ' + error.message);
@@ -579,6 +598,7 @@ if (!is_authenticated()) {
         }
 
         function renderProjectsPagination() {
+            if (typeof syncProjectsSelectionUi === 'function') queueMicrotask(syncProjectsSelectionUi);
             const info = document.getElementById('projectsPageInfo');
             const noun = projectManagementView === 'thesis' ? 'tesis' : currentProjectModality().label.toLowerCase() + '(s)';
             if (info) info.textContent = projectsTotal ? `${projectsTotal} ${noun}` : (projectManagementView === 'thesis' ? 'Sin tesis' : `Sin ${currentProjectModality().label.toLowerCase()}`);
@@ -893,6 +913,89 @@ if (!is_authenticated()) {
                 await loadProjects(projectsCurrentPage);
             } catch (error) {
                 showAlert('#alertContainer', 'danger', error.message || 'No se pudo cambiar la marca de residencia');
+            }
+        }
+
+        // Selección múltiple para eliminar varios proyectos (POST /projects/bulk-delete). Se conserva entre páginas.
+        let projectsSelecting = false;
+        const projectsSelected = new Map(); // id → título
+
+        function projectSelectCell(project) {
+            const checked = projectsSelected.has(Number(project.id)) ? 'checked' : '';
+            return `<td class="project-select-col"><input class="form-check-input" type="checkbox" aria-label="Seleccionar ${escapeHtml(project.title)}" ${checked}
+                data-select-project="${Number(project.id)}" data-title="${escapeHtml(project.title)}" onchange="toggleProjectSelected(this)"></td>`;
+        }
+
+        function syncProjectsSelectionUi() {
+            document.querySelectorAll('#projectManagementView, #thesisManagementView').forEach(view => view.classList.toggle('projects-selecting', projectsSelecting));
+            document.getElementById('projectsBulkBar').classList.toggle('d-none', !projectsSelecting);
+            document.getElementById('projectsSelectBtn')?.classList.toggle('d-none', projectsSelecting || !isAdmin);
+            document.getElementById('projectsSelectedCount').textContent = projectsSelected.size;
+            document.getElementById('projectsBulkDeleteBtn').disabled = !projectsSelected.size;
+            document.querySelectorAll('[data-select-project]').forEach(box => { box.checked = projectsSelected.has(Number(box.dataset.selectProject)); });
+            document.querySelectorAll('th.project-select-col input').forEach(all => {
+                const boxes = [...document.querySelectorAll('[data-select-project]')].filter(box => box.offsetParent !== null);
+                all.checked = boxes.length > 0 && boxes.every(box => box.checked);
+            });
+            document.querySelectorAll('[data-project-row]').forEach(row => row.classList.toggle('table-active', projectsSelecting && projectsSelected.has(Number(row.dataset.projectRow))));
+        }
+
+        function toggleProjectsSelection(on) {
+            projectsSelecting = on;
+            if (!on) projectsSelected.clear();
+            syncProjectsSelectionUi();
+        }
+
+        function toggleProjectSelected(box) {
+            const id = Number(box.dataset.selectProject);
+            if (box.checked) projectsSelected.set(id, box.dataset.title || `Proyecto ${id}`);
+            else projectsSelected.delete(id);
+            syncProjectsSelectionUi();
+        }
+
+        function selectProjectsPage(on = true) {
+            document.querySelectorAll('[data-select-project]').forEach(box => {
+                if (box.offsetParent === null) return;
+                const id = Number(box.dataset.selectProject);
+                if (on) projectsSelected.set(id, box.dataset.title || `Proyecto ${id}`); else projectsSelected.delete(id);
+            });
+            syncProjectsSelectionUi();
+        }
+
+        function clearProjectsSelection() {
+            projectsSelected.clear();
+            syncProjectsSelectionUi();
+        }
+
+        async function deleteSelectedProjects() {
+            if (!projectsSelected.size) return;
+            const names = [...projectsSelected.values()];
+            const preview = names.slice(0, 6).map(name => `<li>${escapeHtml(name)}</li>`).join('') + (names.length > 6 ? `<li>y ${names.length - 6} más…</li>` : '');
+            const answer = await Swal.fire({
+                icon: 'warning',
+                title: `Eliminar ${names.length} proyecto(s)`,
+                html: `<p class="mb-2">Dejarán de aparecer en las listas, igual que al eliminarlos uno por uno.</p><ul class="text-start small mb-0">${preview}</ul>`,
+                showCancelButton: true, confirmButtonText: 'Sí, eliminar', cancelButtonText: 'Cancelar', reverseButtons: true, focusCancel: true
+            });
+            if (!answer.isConfirmed) return;
+            const button = document.getElementById('projectsBulkDeleteBtn');
+            button.disabled = true;
+            try {
+                const result = await api.post('/projects/bulk-delete', { ids: [...projectsSelected.keys()] });
+                (result.done || []).forEach(item => projectsSelected.delete(Number(item.id)));
+                if (result.skipped?.length) {
+                    Swal.fire({ icon: result.done?.length ? 'warning' : 'error', title: result.done?.length ? 'Eliminados en parte' : 'No se eliminó ninguno',
+                        html: `<p>${escapeHtml(result.message)}</p><ul class="text-start small mb-0">${result.skipped.map(item => `<li><strong>${escapeHtml(item.name)}</strong>: ${escapeHtml(item.reason)}</li>`).join('')}</ul>` });
+                } else {
+                    swalToast('success', result.message);
+                    projectsSelecting = false;
+                    projectsSelected.clear();
+                }
+                await loadProjects(projectsCurrentPage);
+            } catch (error) {
+                showAlert('#alertContainer', 'danger', error.message || 'No se pudieron eliminar los proyectos.');
+            } finally {
+                syncProjectsSelectionUi();
             }
         }
 
