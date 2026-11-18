@@ -7614,3 +7614,106 @@ body .main-content .nav-tabs .nav-link { white-space: nowrap; }
         box-shadow: 0 12px 26px rgba(3, 12, 30, .38), 0 3px 8px rgba(3, 12, 30, .22), inset 0 1px 0 rgba(255, 255, 255, .9) !important;
     }
 }
+
+/* ===================== Estilo curvo y sombreado en toda la web =====================
+   Mismo lenguaje que el menú lateral: esquinas amplias y sombras en capas, suaves en reposo y más profundas al
+   pasar el ratón. Cubre Bootstrap (tarjetas, botones, campos, tablas, ventanas, menús, avisos, pestañas,
+   paginación, listas) y los componentes propios del sistema. */
+:root {
+    --sgpi-r-lg: 22px; --sgpi-r: 16px; --sgpi-r-sm: 13px;
+    --sgpi-sh: 0 1px 2px rgba(16, 30, 54, .05), 0 4px 10px rgba(16, 30, 54, .05), 0 14px 32px rgba(16, 30, 54, .08);
+    --sgpi-sh-hover: 0 2px 4px rgba(16, 30, 54, .06), 0 10px 22px rgba(16, 30, 54, .10), 0 22px 44px rgba(16, 30, 54, .10);
+    --sgpi-sh-lg: 0 10px 24px rgba(16, 30, 54, .16), 0 28px 64px rgba(16, 30, 54, .24);
+    --sgpi-sh-btn: 0 2px 4px rgba(16, 30, 54, .10), 0 8px 18px rgba(27, 57, 106, .18);
+    --sgpi-sh-in: inset 0 1px 2px rgba(16, 30, 54, .06);
+}
+:root[data-theme="dark"] {
+    --sgpi-sh: 0 1px 2px rgba(0, 0, 0, .35), 0 6px 14px rgba(0, 0, 0, .25), 0 16px 36px rgba(0, 0, 0, .28);
+    --sgpi-sh-hover: 0 2px 4px rgba(0, 0, 0, .4), 0 12px 26px rgba(0, 0, 0, .35), 0 24px 48px rgba(0, 0, 0, .3);
+    --sgpi-sh-lg: 0 12px 28px rgba(0, 0, 0, .45), 0 30px 70px rgba(0, 0, 0, .5);
+    --sgpi-sh-btn: 0 2px 4px rgba(0, 0, 0, .35), 0 8px 18px rgba(0, 0, 0, .3);
+}
+/* Tarjetas y bloques */
+html body .card, html body .section-guide, html body .sg-card, html body .stat-card, html body .dashboard-card, html body .metric-card,
+html body .general-admin-hero, html body .dashboard-hero, html body .page-image-header, html body .hero-gradient,
+html body .accordion, html body .list-group, html body .sg-related-card, html body .sg-related a {
+    border-radius: var(--sgpi-r-lg) !important;
+}
+html body .card, html body .section-guide, html body .sg-card, html body .stat-card, html body .dashboard-card, html body .metric-card,
+html body .list-group, html body .accordion { box-shadow: var(--sgpi-sh) !important; border-color: rgba(16, 30, 54, .06) !important; }
+html body .card { overflow: hidden; transition: box-shadow .2s ease, transform .2s ease; }
+html body .card:has(> .dropdown-menu.show), html body .card:has(.dropdown-menu.show) { overflow: visible; }
+html body a.card:hover, html body .card.clickable:hover, html body .card[onclick]:hover,
+html body .sg-related a:hover, html body .stat-card:hover, html body .dashboard-card:hover { box-shadow: var(--sgpi-sh-hover) !important; transform: translateY(-2px); }
+html body .card-header:first-child { border-radius: var(--sgpi-r-lg) var(--sgpi-r-lg) 0 0 !important; }
+html body .card-footer:last-child { border-radius: 0 0 var(--sgpi-r-lg) var(--sgpi-r-lg) !important; }
+html body .general-admin-hero, html body .dashboard-hero, html body .page-image-header, html body .hero-gradient { box-shadow: var(--sgpi-sh-lg) !important; }
+/* Botones */
+html body .btn { border-radius: var(--sgpi-r-sm) !important; transition: background .15s, color .15s, border-color .15s, box-shadow .18s, transform .12s; }
+html body .btn-sm, html body .btn-group-sm > .btn { border-radius: 11px !important; }
+html body .btn-lg { border-radius: var(--sgpi-r) !important; }
+html body .btn:is(.btn-primary, .btn-success, .btn-danger, .btn-warning, .btn-info, .btn-dark) { box-shadow: var(--sgpi-sh-btn); }
+html body .btn:not(:disabled):not(.disabled):hover { box-shadow: var(--sgpi-sh-hover); }
+html body .btn:not(:disabled):not(.disabled):active { transform: translateY(1px); box-shadow: none; }
+html body .btn-group > .btn, html body .btn-group-sm > .btn { box-shadow: none; }
+html body .btn-group { border-radius: var(--sgpi-r-sm); box-shadow: 0 2px 8px rgba(16, 30, 54, .08); }
+html body .btn-group > .btn:not(:first-child) { border-top-left-radius: 0 !important; border-bottom-left-radius: 0 !important; }
+html body .btn-group > .btn:not(:last-child):not(.dropdown-toggle) { border-top-right-radius: 0 !important; border-bottom-right-radius: 0 !important; }
+html body .btn-close { border-radius: 10px; }
+/* Campos */
+html body .form-control, html body .form-select, html body .input-group-text {
+    border-radius: var(--sgpi-r-sm) !important; box-shadow: var(--sgpi-sh-in); transition: border-color .15s, box-shadow .15s;
+}
+html body .form-control:focus, html body .form-select:focus { box-shadow: 0 0 0 4px rgba(45, 90, 150, .16), 0 6px 16px rgba(16, 30, 54, .08) !important; }
+html body .input-group { border-radius: var(--sgpi-r-sm); }
+html body .input-group > :not(:first-child):not(.dropdown-menu):not(.valid-tooltip):not(.valid-feedback):not(.invalid-tooltip):not(.invalid-feedback) { border-top-left-radius: 0 !important; border-bottom-left-radius: 0 !important; }
+html body .input-group > :not(:last-child):not(.dropdown-toggle):not(.dropdown-menu) { border-top-right-radius: 0 !important; border-bottom-right-radius: 0 !important; }
+html body .form-check-input { border-radius: 6px; }
+html body .form-check-input[type="radio"], html body .form-switch .form-check-input { border-radius: 999px; }
+/* Tablas: contenedor redondeado con sombra; el encabezado conserva sus esquinas. */
+html body .table-responsive { border-radius: var(--sgpi-r-lg); }
+html body .card > .table-responsive:last-child, html body .card > .card-body > .table-responsive:last-child { border-radius: 0 0 var(--sgpi-r-lg) var(--sgpi-r-lg); }
+html body .main-content > .container-xl > .table-responsive, html body .main-content .table-responsive:not(.card .table-responsive) { box-shadow: var(--sgpi-sh); background: var(--inst-surface, #fff); }
+/* Ventanas, menús y avisos flotantes */
+html body .modal-content { border-radius: 26px !important; box-shadow: var(--sgpi-sh-lg) !important; border: 0 !important; overflow: hidden; }
+html body .modal-header { border-radius: 26px 26px 0 0 !important; }
+html body .modal-footer { border-radius: 0 0 26px 26px !important; }
+html body .dropdown-menu { border-radius: 18px !important; box-shadow: var(--sgpi-sh-lg) !important; border: 1px solid rgba(16, 30, 54, .06) !important; padding: 8px !important; }
+html body .dropdown-item { border-radius: 11px; }
+html body .popover, html body .tooltip-inner { border-radius: 14px !important; }
+html body .popover { box-shadow: var(--sgpi-sh-lg) !important; }
+html body .toast { border-radius: 18px !important; box-shadow: var(--sgpi-sh-lg) !important; }
+html body .offcanvas { box-shadow: var(--sgpi-sh-lg) !important; }
+html body .offcanvas-end { border-radius: 26px 0 0 26px; }
+html body .offcanvas-start { border-radius: 0 26px 26px 0; }
+html body .offcanvas-bottom { border-radius: 26px 26px 0 0; }
+html body .swal2-popup { border-radius: 28px !important; box-shadow: var(--sgpi-sh-lg) !important; }
+html body .swal2-popup.swal2-toast { border-radius: 18px !important; }
+html body .swal2-styled { border-radius: var(--sgpi-r-sm) !important; box-shadow: var(--sgpi-sh-btn) !important; }
+html body .swal2-input, html body .swal2-textarea, html body .swal2-select { border-radius: var(--sgpi-r-sm) !important; }
+/* Avisos, insignias, pestañas, paginación y progreso */
+html body .alert { border-radius: var(--sgpi-r) !important; box-shadow: 0 6px 16px rgba(16, 30, 54, .06); }
+html body .badge { border-radius: 999px; box-shadow: 0 1px 3px rgba(16, 30, 54, .10); }
+html body .nav-pills .nav-link { border-radius: var(--sgpi-r-sm) !important; }
+html body .nav-pills .nav-link.active { box-shadow: var(--sgpi-sh-btn); }
+html body .nav-tabs { border-bottom: 0; gap: 4px; padding: 5px; border-radius: 18px; background: rgba(16, 30, 54, .04); box-shadow: var(--sgpi-sh-in); }
+html body .nav-tabs .nav-link { border: 0 !important; border-radius: var(--sgpi-r-sm) !important; }
+html body .nav-tabs .nav-link.active { box-shadow: var(--sgpi-sh-btn); }
+html body .pagination .page-link { border-radius: 12px !important; margin: 0 2px; box-shadow: 0 2px 6px rgba(16, 30, 54, .06); }
+html body .sgpi-pager-num, html body .sgpi-pager-step { border-radius: 13px; box-shadow: 0 2px 6px rgba(16, 30, 54, .06); }
+html body .sgpi-pager-num.active { box-shadow: var(--sgpi-sh-btn); }
+html body .progress { border-radius: 999px !important; box-shadow: inset 0 1px 2px rgba(0, 0, 0, .1); }
+html body .progress-bar { border-radius: 999px; }
+html body .list-group-item:first-child { border-top-left-radius: var(--sgpi-r-lg); border-top-right-radius: var(--sgpi-r-lg); }
+html body .list-group-item:last-child { border-bottom-left-radius: var(--sgpi-r-lg); border-bottom-right-radius: var(--sgpi-r-lg); }
+html body .accordion-item:first-of-type, html body .accordion-item:first-of-type .accordion-button { border-top-left-radius: var(--sgpi-r-lg) !important; border-top-right-radius: var(--sgpi-r-lg) !important; }
+html body .accordion-item:last-of-type, html body .accordion-item:last-of-type .accordion-button.collapsed { border-bottom-left-radius: var(--sgpi-r-lg) !important; border-bottom-right-radius: var(--sgpi-r-lg) !important; }
+html body img.rounded, html body .img-thumbnail { border-radius: var(--sgpi-r) !important; }
+html body .rounded-3, html body .rounded-4 { border-radius: var(--sgpi-r-lg) !important; }
+/* Barra superior, buscador y botón de ayuda */
+html body .navbar-authenticated { box-shadow: 0 6px 24px rgba(16, 30, 54, .08) !important; border-radius: 0 0 24px 24px; }
+html body .navbar .nav-link { border-radius: var(--sgpi-r-sm) !important; }
+html body .navbar .nav-link:hover { box-shadow: 0 4px 12px rgba(16, 30, 54, .08); }
+html body .global-search-trigger, html body .navbar .search-trigger, html body [data-global-search] { border-radius: var(--sgpi-r-sm) !important; box-shadow: var(--sgpi-sh-in); }
+html body .help-fab, html body .help-center-fab { box-shadow: 0 8px 18px rgba(16, 30, 54, .22), 0 18px 40px rgba(27, 57, 106, .25) !important; }
+@media (prefers-reduced-motion: reduce) { html body .card, html body .btn { transition: none; } }
