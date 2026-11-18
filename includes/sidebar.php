@@ -3,7 +3,7 @@ $current_page = basename($_SERVER['PHP_SELF']);
 $section = isset($_GET['section']) ? $_GET['section'] : '';
 ?>
 
-<nav class="sidebar" id="appSidebar">
+<nav class="sidebar sidebar-collapsed" id="appSidebar">
     <a href="<?= htmlspecialchars(dashboard_url()) ?>" class="sidebar-brand">
         <img src="/assets/img/ITSSMT/ITSSMT-192.webp" alt="ITSSMT">
         <div>

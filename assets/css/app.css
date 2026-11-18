@@ -7484,3 +7484,31 @@ body .main-content .nav-tabs .nav-link { white-space: nowrap; }
 #appSidebar .sidebar-item.text-danger,
 #appSidebar .sidebar-item.text-danger i { color: #ffa4a4 !important; }
 #appSidebar .sidebar-item.text-danger:hover { background: rgba(255, 120, 120, .12) !important; }
+
+/* Despliegue del menú lateral encima de la página: el contenido no se mueve y el ancho se anima suave. */
+@media (min-width: 769px) {
+    .content-wrapper .sidebar#appSidebar {
+        transition: width .32s cubic-bezier(.22, .8, .24, 1), min-width .32s cubic-bezier(.22, .8, .24, 1),
+            max-width .32s cubic-bezier(.22, .8, .24, 1), padding .32s cubic-bezier(.22, .8, .24, 1), box-shadow .32s ease !important;
+        will-change: width;
+    }
+    .content-wrapper .sidebar#appSidebar.sidebar-expanded { box-shadow: 18px 0 48px rgba(8, 20, 42, .32) !important; }
+    html.sgpi-sidebar-collapsed .content-wrapper,
+    html.sgpi-sidebar-collapsed .navbar { transition: none !important; }
+    /* Los textos aparecen cuando ya hay espacio, sin partirse durante la animación. */
+    #appSidebar .sidebar-item span,
+    #appSidebar .sidebar-group summary span,
+    #appSidebar .sidebar-brand div,
+    #appSidebar .sidebar-profile > div,
+    #appSidebar .sidebar-section-title h6 { white-space: nowrap; }
+    #appSidebar.sidebar-expanded .sidebar-item span,
+    #appSidebar.sidebar-expanded .sidebar-group summary span,
+    #appSidebar.sidebar-expanded .sidebar-brand div,
+    #appSidebar.sidebar-expanded .sidebar-profile > div,
+    #appSidebar.sidebar-expanded .sidebar-section-title { animation: sgpi-side-text .26s ease .1s both; }
+}
+@keyframes sgpi-side-text { from { opacity: 0; transform: translateX(-6px); } to { opacity: 1; transform: none; } }
+@media (prefers-reduced-motion: reduce) {
+    .content-wrapper .sidebar#appSidebar { transition: none !important; }
+    #appSidebar.sidebar-expanded * { animation: none !important; }
+}

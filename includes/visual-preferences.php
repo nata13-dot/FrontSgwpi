@@ -27,6 +27,10 @@ html.grayscale-mode {
 }
 </style>
 <script>
+// El menú lateral de escritorio arranca contraído desde el primer pintado: la página no salta al cargar.
+if (window.matchMedia && window.matchMedia('(min-width: 769px)').matches) document.documentElement.classList.add('sgpi-sidebar-collapsed');
+</script>
+<script>
 // Apariencia: tema claro, oscuro o según el dispositivo, y escala personal sobre la letra del navegador.
 // Se guarda en la cuenta (/appearance) y se copia aquí para aplicarla antes de pintar la página.
 window.SGPIAppearance = (function () {

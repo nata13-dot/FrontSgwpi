@@ -229,7 +229,8 @@
             clearCollapseTimer();
             sidebar.classList.remove('sidebar-collapsed');
             sidebar.classList.add('sidebar-expanded');
-            document.documentElement.classList.remove('sgpi-sidebar-collapsed');
+            // La página conserva el margen del riel: el menú se despliega encima, sin mover el contenido.
+            document.documentElement.classList.add('sgpi-sidebar-collapsed');
         };
 
         const collapse = () => {
