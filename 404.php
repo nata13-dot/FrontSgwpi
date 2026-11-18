@@ -136,7 +136,7 @@ $requested = mb_strimwidth(rawurldecode($requested), 0, 80, '…');
     <main class="nf-main">
         <section class="nf-card" aria-labelledby="nfTitle">
             <div class="nf-art">
-                <img src="/assets/img/mascota/mascota-404.webp" alt="La mascota del SGPI, confundida, revisa un libro buscando la página" width="620" height="672">
+                <img src="<?= asset('/assets/img/mascota/mascota-404.webp') ?>" alt="La mascota del SGPI, confundida, revisa un libro buscando la página" width="620" height="672">
             </div>
             <div>
                 <p class="nf-code" aria-hidden="true">404</p>
