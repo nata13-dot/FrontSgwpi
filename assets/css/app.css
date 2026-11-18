@@ -7717,3 +7717,12 @@ html body .navbar .nav-link:hover { box-shadow: 0 4px 12px rgba(16, 30, 54, .08)
 html body .global-search-trigger, html body .navbar .search-trigger, html body [data-global-search] { border-radius: var(--sgpi-r-sm) !important; box-shadow: var(--sgpi-sh-in); }
 html body .help-fab, html body .help-center-fab { box-shadow: 0 8px 18px rgba(16, 30, 54, .22), 0 18px 40px rgba(27, 57, 106, .25) !important; }
 @media (prefers-reduced-motion: reduce) { html body .card, html body .btn { transition: none; } }
+
+/* Listas y tablas: el texto respira y no queda pegado a las orillas redondeadas. */
+html body .table > :not(caption) > * > * { padding: 13px 14px; }
+html body .table > :not(caption) > * > *:first-child { padding-left: 24px !important; }
+html body .table > :not(caption) > * > *:last-child { padding-right: 24px !important; }
+html body .table > thead > tr > th { padding-top: 15px; padding-bottom: 15px; letter-spacing: .01em; }
+html body .table > tbody > tr:last-child > * { border-bottom-width: 0; }
+html body .table > tbody > tr > td[colspan] { padding: 28px 24px !important; }
+html body .table.table-sm > :not(caption) > * > * { padding-top: 9px; padding-bottom: 9px; }
