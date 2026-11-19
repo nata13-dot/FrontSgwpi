@@ -588,7 +588,7 @@ window.stableSwalFire = async function (options = {}) {
 // Estilo cristal: cualquier superficie que siga opaca dentro del contenido (tarjetas, paneles, métricas, también las
 // que llegan después con datos) se vuelve translúcida. Se revisa al cambiar el contenido, sin bloquear la página.
 (function glassSurfaces() {
-    const SKIP = /^(BUTTON|A|INPUT|SELECT|TEXTAREA|TH|TD|TR|THEAD|TBODY|TABLE|SPAN|I|IMG|SVG|CODE|LABEL|PROGRESS)$/;
+    const SKIP = /^(BUTTON|INPUT|SELECT|TEXTAREA|TH|TD|TR|THEAD|TBODY|TABLE|SPAN|I|IMG|SVG|CODE|LABEL|PROGRESS)$/;
     let frame = 0;
     const opaque = (color) => {
         const m = color.match(/rgba?\(([^)]+)\)/);
@@ -612,6 +612,19 @@ window.stableSwalFire = async function (options = {}) {
             el.classList.add('glass-auto');
             if (cs.backgroundImage.startsWith('linear-gradient')) el.classList.add('glass-auto-tinted');
         });
+        // Textos sueltos que quedan directo sobre la foto (títulos de sección, resúmenes, notas): llevan halo legible.
+        document.querySelectorAll('.main-content :is(h1, h2, h3, h4, h5, h6, .h4, .h5, p, small, label, .text-muted, .sgpi-pager-info, .form-text):not(.glass-text)').forEach(el => {
+            // Sólo texto: nada que contenga bloques, imágenes, controles o esqueletos de carga.
+            if (el.querySelector('div, ul, ol, table, section, img, canvas, svg, input, select, textarea, button, .skeleton, [class*="skeleton"]')) return;
+            if (el.getBoundingClientRect().height > 90 || !el.textContent.trim()) return;
+            for (let node = el.parentElement; node && !node.classList.contains('main-content'); node = node.parentElement) {
+                const cs = getComputedStyle(node);
+                const m = cs.backgroundColor.match(/rgba?\(([^)]+)\)/);
+                const alpha = m ? (m[1].split(/[ ,\/]+/).filter(Boolean).map(Number)[3] ?? 1) : 0;
+                if (alpha > 0.2 || cs.backdropFilter !== 'none' || node.classList.contains('glass-auto')) return;
+            }
+            el.classList.add('glass-text');
+        });
     };
     const queue = () => { if (!frame) frame = requestAnimationFrame(scan); };
     const start = () => {
@@ -620,7 +633,7 @@ window.stableSwalFire = async function (options = {}) {
     };
     if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', start); else start();
     addEventListener('sgpi:appearance', () => {
-        if (document.documentElement.dataset.glass !== 'on') document.querySelectorAll('.glass-auto').forEach(el => el.classList.remove('glass-auto', 'glass-auto-tinted'));
+        if (document.documentElement.dataset.glass !== 'on') document.querySelectorAll('.glass-auto, .glass-text').forEach(el => el.classList.remove('glass-auto', 'glass-auto-tinted', 'glass-text'));
         queue();
     });
 })();
