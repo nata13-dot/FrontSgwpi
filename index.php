@@ -107,35 +107,43 @@ $serverDashboardUrl = dashboard_url();
             padding-right: 1.35rem;
         }
 
-        .hero-search {
-            display: flex; align-items: center; gap: 0.6rem; max-width: 760px; padding: 0.45rem 0.45rem 0.45rem 1.1rem;
-            background: rgba(255, 255, 255, 0.97); border-radius: 20px;
-            box-shadow: 0 2px 6px rgba(5, 20, 42, 0.18), 0 24px 54px rgba(5, 20, 42, 0.38);
+        .index-hero .container-xl { display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: center; gap: 2.5rem; }
+        .hero-tiles { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0.75rem; max-width: 720px; }
+        .hero-tile {
+            display: flex; align-items: center; gap: 0.85rem; padding: 0.95rem 1.05rem; border-radius: 18px; text-decoration: none;
+            color: #fff; background: rgba(255, 255, 255, 0.12); border: 1px solid rgba(255, 255, 255, 0.22);
+            backdrop-filter: blur(10px) saturate(1.2); -webkit-backdrop-filter: blur(10px) saturate(1.2);
+            box-shadow: 0 10px 26px rgba(5, 20, 42, 0.28); transition: background .18s ease, transform .18s ease, box-shadow .18s ease;
         }
-        .hero-search > i { color: #2D5A96; font-size: 1.25rem; }
-        .hero-search input {
-            flex: 1; min-width: 0; border: 0; outline: 0; background: transparent; font-size: 1.1rem; color: #1b2433; padding: 0.7rem 0;
+        .hero-tile:hover, .hero-tile:focus-visible { background: rgba(255, 255, 255, 0.95); color: #1B396A; transform: translateY(-3px); box-shadow: 0 16px 34px rgba(5, 20, 42, 0.4); outline: 0; }
+        .hero-tile > i { width: 46px; height: 46px; flex: 0 0 46px; display: grid; place-items: center; border-radius: 14px; font-size: 1.3rem; background: rgba(255, 255, 255, 0.18); }
+        .hero-tile:hover > i, .hero-tile:focus-visible > i { background: linear-gradient(135deg, #1B396A, #2D5A96); color: #fff; }
+        .hero-tile span { display: flex; flex-direction: column; min-width: 0; }
+        .hero-tile strong { font-size: 1.05rem; font-weight: 800; line-height: 1.2; }
+        .hero-tile small { font-size: 0.86rem; opacity: 0.85; }
+        .hero-links { display: flex; flex-wrap: wrap; align-items: center; gap: 0.6rem 1.2rem; margin-top: 1.1rem; color: rgba(255, 255, 255, 0.86); font-size: 0.98rem; }
+        .hero-links a { color: #fff; text-decoration: none; display: inline-flex; align-items: center; gap: 0.45rem; }
+        .hero-link-strong {
+            font-weight: 800; padding: 0.75rem 1.2rem; border-radius: 16px; color: #1B396A !important; background: #fff;
+            box-shadow: 0 2px 6px rgba(5, 20, 42, 0.2), 0 16px 34px rgba(5, 20, 42, 0.35); transition: transform .15s ease;
         }
-        .hero-search input::placeholder { color: #7a8597; }
-        .hero-search .btn {
-            display: inline-flex; align-items: center; gap: 0.5rem; min-height: 54px; padding: 0 1.4rem; border: 0; border-radius: 15px;
-            font-weight: 800; color: #fff !important; background: linear-gradient(135deg, #1B396A, #2D5A96) !important; white-space: nowrap;
-            box-shadow: 0 8px 18px rgba(27, 57, 106, 0.35);
-        }
-        .hero-search .btn:hover { transform: translateY(-1px); }
-        .hero-links { display: flex; flex-wrap: wrap; align-items: center; gap: 0.6rem 1rem; margin-top: 1.1rem; color: rgba(255, 255, 255, 0.85); font-size: 0.98rem; }
-        .hero-links a { color: #fff; text-decoration: none; display: inline-flex; align-items: center; gap: 0.4rem; }
-        .hero-link-strong { font-weight: 800; padding: 0.45rem 0.9rem; border-radius: 12px; background: rgba(255, 255, 255, 0.14); border: 1px solid rgba(255, 255, 255, 0.24); }
-        .hero-link-strong:hover { background: rgba(255, 255, 255, 0.24); }
-        .hero-link-sep { width: 1px; height: 20px; background: rgba(255, 255, 255, 0.3); }
+        .hero-link-strong:hover { transform: translateY(-2px); }
+        .hero-total:not(:empty) { padding: 0.1rem 0.55rem; border-radius: 999px; background: #e8effa; font-size: 0.85rem; }
         .hero-link-note { display: inline-flex; align-items: center; gap: 0.4rem; }
         .hero-link-soft { font-weight: 600; text-decoration: underline !important; text-underline-offset: 3px; }
-        @media (max-width: 575.98px) {
-            .hero-search { flex-wrap: wrap; padding: 0.6rem; }
-            .hero-search input { flex-basis: calc(100% - 2rem); }
-            .hero-search .btn { width: 100%; justify-content: center; }
-            .hero-link-sep { display: none; }
+        .hero-latest {
+            width: 340px; padding: 1.1rem; border-radius: 22px; color: #fff; background: rgba(8, 26, 54, 0.55);
+            border: 1px solid rgba(255, 255, 255, 0.18); backdrop-filter: blur(14px) saturate(1.2); -webkit-backdrop-filter: blur(14px) saturate(1.2);
+            box-shadow: 0 20px 50px rgba(5, 20, 42, 0.45); position: relative; z-index: 1;
         }
+        .hero-latest-title { display: inline-flex; align-items: center; gap: 0.45rem; font-size: 0.78rem; font-weight: 800; letter-spacing: 0.08em; text-transform: uppercase; opacity: 0.9; }
+        .hero-latest ul { list-style: none; margin: 0.75rem 0 0; padding: 0; display: grid; gap: 0.5rem; }
+        .hero-latest a { display: block; padding: 0.65rem 0.8rem; border-radius: 14px; text-decoration: none; color: #fff; background: rgba(255, 255, 255, 0.08); transition: background .15s ease; }
+        .hero-latest a:hover { background: rgba(255, 255, 255, 0.18); }
+        .hero-latest strong { display: block; font-size: 0.95rem; line-height: 1.3; overflow: hidden; text-overflow: ellipsis; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; }
+        .hero-latest small { opacity: 0.8; font-size: 0.8rem; }
+        @media (max-width: 1199.98px) { .index-hero .container-xl { grid-template-columns: 1fr; } .hero-latest { display: none !important; } }
+        @media (max-width: 575.98px) { .hero-tiles { grid-template-columns: 1fr; } .hero-tile { padding: 0.8rem 0.9rem; } }
 
         .repository-spotlight {
             background: linear-gradient(180deg, #f8fafc 0%, #ffffff 100%);
@@ -398,18 +406,22 @@ $serverDashboardUrl = dashboard_url();
                 </div>
                 <h1 class="display-3 fw-bold text-white mb-3">Consulta los proyectos y evidencias académicas del instituto</h1>
                 <p class="lead text-white mb-4">Cualquier persona puede buscar y leer los proyectos integradores, tesis y documentos que publica el ITSSMT. No necesitas registrarte.</p>
-                <form class="hero-search" action="/pages/repositorio.php" method="get" role="search" aria-label="Buscar en el repositorio">
-                    <i class="bi bi-search" aria-hidden="true"></i>
-                    <input type="search" name="q" placeholder="Busca por proyecto, autor, empresa o tema" aria-label="Qué quieres buscar" autocomplete="off">
-                    <button type="submit" class="btn btn-light"><span>Buscar en el repositorio</span><i class="bi bi-arrow-right" aria-hidden="true"></i></button>
-                </form>
+                <nav class="hero-tiles" aria-label="Qué hay en el repositorio">
+                    <a class="hero-tile" href="/pages/repositorio.php?categoria=desarrollo"><i class="bi bi-diagram-3" aria-hidden="true"></i><span><strong>Proyectos integradores</strong><small data-repo-count="desarrollo">Ver documentos</small></span></a>
+                    <a class="hero-tile" href="/pages/repositorio.php?categoria=tesis"><i class="bi bi-mortarboard" aria-hidden="true"></i><span><strong>Tesis</strong><small data-repo-count="tesis">Ver documentos</small></span></a>
+                    <a class="hero-tile" href="/pages/repositorio.php?categoria=residencias"><i class="bi bi-briefcase" aria-hidden="true"></i><span><strong>Residencias</strong><small data-repo-count="residencias">Ver documentos</small></span></a>
+                    <a class="hero-tile" href="/pages/repositorio.php?categoria=general"><i class="bi bi-journal-text" aria-hidden="true"></i><span><strong>Material general</strong><small data-repo-count="general">Ver documentos</small></span></a>
+                </nav>
                 <div class="hero-links">
-                    <a href="/pages/repositorio.php" class="hero-link-strong"><i class="bi bi-archive" aria-hidden="true"></i> Ver todo el repositorio</a>
-                    <span class="hero-link-sep" aria-hidden="true"></span>
+                    <a href="/pages/repositorio.php" class="hero-link-strong"><i class="bi bi-archive" aria-hidden="true"></i> Ver todo el repositorio <span class="hero-total" data-repo-count="total"></span><i class="bi bi-arrow-right" aria-hidden="true"></i></a>
                     <span class="hero-link-note"><i class="bi bi-unlock" aria-hidden="true"></i> Lectura y descarga de documentos públicos</span>
                     <a href="/pages/register.php" id="selfRegistrationHero" class="hero-link-soft d-none"><i class="bi bi-person-plus" aria-hidden="true"></i> ¿Eres alumno? Crea tu cuenta</a>
                 </div>
             </div>
+            <aside class="hero-latest d-none" id="heroLatest" aria-label="Documentos publicados recientemente">
+                <span class="hero-latest-title"><i class="bi bi-stars" aria-hidden="true"></i> Recién publicados</span>
+                <ul id="heroLatestList"></ul>
+            </aside>
         </div>
     </div>
 
@@ -755,6 +767,7 @@ $serverDashboardUrl = dashboard_url();
                 }
             });
 
+            loadRepositorySummary();
             document.querySelectorAll('[data-open-login]').forEach(link => {
                 link.addEventListener('click', event => {
                     event.preventDefault();
@@ -772,6 +785,35 @@ $serverDashboardUrl = dashboard_url();
                 openPasswordRecoveryModal();
             }
         });
+
+        // Portada: cuántos documentos públicos hay por tipo y los recién publicados (GET /repositorio/resumen, sin sesión).
+        async function loadRepositorySummary() {
+            const label = (count) => count === 1 ? '1 documento' : `${count} documentos`;
+            const names = { thesis_general: 'Tesis', thesis_residency: 'Residencia', evaluation_document: 'Proyecto integrador', repository: 'Material general' };
+            const escapeText = (value) => String(value ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+            try {
+                const response = await fetch(`${API_BASE_URL}/repositorio/resumen`, { headers: { Accept: 'application/json' } });
+                if (!response.ok) return;
+                const data = await response.json();
+                Object.entries(data.categories || {}).forEach(([key, count]) => {
+                    const box = document.querySelector(`[data-repo-count="${key}"]`);
+                    if (box) box.textContent = count ? label(count) : 'Próximamente';
+                });
+                const total = document.querySelector('[data-repo-count="total"]');
+                if (total && data.total) total.textContent = data.total;
+                const latest = data.latest || [];
+                if (latest.length) {
+                    document.getElementById('heroLatestList').innerHTML = latest.map(item => `
+                        <li><a href="/pages/repositorio-detail.php?id=${encodeURIComponent(item.id)}">
+                            <strong>${escapeText(item.nombre)}</strong>
+                            <small>${escapeText(names[item.categoria] || 'Documento')}${item.autor ? ' · ' + escapeText(item.autor) : ''}</small>
+                        </a></li>`).join('');
+                    document.getElementById('heroLatest').classList.remove('d-none');
+                }
+            } catch (error) {
+                // Sin conexión con la API los accesos siguen funcionando sin los números.
+            }
+        }
 
         function showLoginError(text) {
             const alert = document.createElement('div');

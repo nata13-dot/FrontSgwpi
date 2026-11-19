@@ -462,6 +462,12 @@
                 filters.buscar = search;
                 document.getElementById('searchInput').value = search;
             }
+            // Desde la portada se llega ya filtrado por tipo (?categoria=tesis…).
+            const category = new URLSearchParams(window.location.search).get('categoria');
+            if (category && document.querySelector(`#categoryFilter option[value="${CSS.escape(category)}"]`)) {
+                filters.categoria = category;
+                document.getElementById('categoryFilter').value = category;
+            }
             loadDocumentos(1);
         });
     </script>
