@@ -80,8 +80,8 @@ if (!is_authenticated()) {
                         </div>
                     </div>
                 </div>
-                <div class="projects-bulk-bar d-none" id="projectsBulkBar" role="region" aria-label="Selección de proyectos">
-                    <span class="projects-bulk-count"><i class="bi bi-check2-square"></i> <strong id="projectsSelectedCount">0</strong> seleccionado(s)</span>
+                <div class="sgpi-bulk-bar d-none" id="projectsBulkBar" role="region" aria-label="Selección de proyectos">
+                    <span class="sgpi-bulk-count"><i class="bi bi-check2-square"></i> <strong id="projectsSelectedCount">0</strong> seleccionado(s)</span>
                     <div class="d-flex flex-wrap gap-2">
                         <button type="button" class="btn btn-sm btn-outline-primary" onclick="selectProjectsPage()"><i class="bi bi-check2-all"></i> Seleccionar página</button>
                         <button type="button" class="btn btn-sm btn-outline-secondary" onclick="clearProjectsSelection()"><i class="bi bi-x-square"></i> Limpiar</button>
@@ -937,7 +937,7 @@ if (!is_authenticated()) {
                 const boxes = [...document.querySelectorAll('[data-select-project]')].filter(box => box.offsetParent !== null);
                 all.checked = boxes.length > 0 && boxes.every(box => box.checked);
             });
-            document.querySelectorAll('[data-project-row]').forEach(row => row.classList.toggle('table-active', projectsSelecting && projectsSelected.has(Number(row.dataset.projectRow))));
+            document.querySelectorAll('[data-project-row]').forEach(row => row.classList.toggle('sgpi-row-selected', projectsSelecting && projectsSelected.has(Number(row.dataset.projectRow))));
         }
 
         function toggleProjectsSelection(on) {

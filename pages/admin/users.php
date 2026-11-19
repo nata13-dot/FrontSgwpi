@@ -136,26 +136,19 @@ if (!is_authenticated() || !can_view_users()) {
 
                 <div id="alertContainer"></div>
 
-                <div class="card border-0 shadow-sm">
-                    <div class="card-header credential-selection-toolbar d-none flex-wrap align-items-center justify-content-between gap-2" id="credentialSelectionToolbar">
-                        <div class="small text-muted" id="selectedUsersCount">0 usuarios seleccionados</div>
-                        <div class="btn-group btn-group-sm" role="group" aria-label="Selección de usuarios">
-                            <button type="button" class="btn btn-outline-secondary" onclick="selectVisibleUsers()">
-                                <i class="bi bi-check2-square"></i> Seleccionar página
-                            </button>
-                            <button type="button" class="btn btn-outline-secondary" onclick="clearSelectedUsers()">
-                                <i class="bi bi-x-square"></i> Limpiar selección
-                            </button>
-                            <button type="button" class="btn btn-outline-secondary" onclick="cancelCredentialSelectionMode()">
-                                <i class="bi bi-x-lg"></i> Cancelar
-                            </button>
-                        </div>
-                        <div class="btn-group btn-group-sm" role="group" aria-label="Acciones sobre los seleccionados" id="bulkUserActions">
-                            <button type="button" class="btn btn-outline-danger" data-bulk="deactivate" onclick="bulkUsers('deactivate', [...selectedUserIds])"><i class="bi bi-person-x"></i> Inactivar</button>
-                            <button type="button" class="btn btn-outline-success" data-bulk="activate" onclick="bulkUsers('activate', [...selectedUserIds])"><i class="bi bi-arrow-counterclockwise"></i> Reactivar</button>
-                            <button type="button" class="btn btn-danger" data-bulk="remove" onclick="removeUsers([...selectedUserIds])"><i class="bi bi-trash"></i> Eliminar</button>
-                        </div>
+                <div class="sgpi-bulk-bar d-none" id="credentialSelectionToolbar" role="region" aria-label="Selección de usuarios">
+                    <span class="sgpi-bulk-count"><i class="bi bi-check2-square"></i> <strong id="selectedUsersCountNumber">0</strong> <span id="selectedUsersCount">seleccionados</span></span>
+                    <div class="d-flex flex-wrap gap-2" id="bulkUserActions">
+                        <button type="button" class="btn btn-sm btn-outline-primary" onclick="selectVisibleUsers()"><i class="bi bi-check2-all"></i> Seleccionar página</button>
+                        <button type="button" class="btn btn-sm btn-outline-secondary" onclick="clearSelectedUsers()"><i class="bi bi-x-square"></i> Limpiar</button>
+                        <button type="button" class="btn btn-sm btn-outline-danger" data-bulk="deactivate" onclick="bulkUsers('deactivate', [...selectedUserIds])"><i class="bi bi-person-x"></i> Desactivar</button>
+                        <button type="button" class="btn btn-sm btn-success" data-bulk="activate" onclick="bulkUsers('activate', [...selectedUserIds])"><i class="bi bi-arrow-counterclockwise"></i> Reactivar</button>
+                        <button type="button" class="btn btn-sm btn-danger" data-bulk="remove" onclick="removeUsers([...selectedUserIds])"><i class="bi bi-trash"></i> Eliminar</button>
+                        <button type="button" class="btn btn-sm btn-light" onclick="cancelCredentialSelectionMode()"><i class="bi bi-x-lg"></i> Cancelar</button>
                     </div>
+                </div>
+
+                <div class="card border-0 shadow-sm">
                     <div class="card-body p-0">
                         <div class="table-responsive">
                             <table class="table table-hover mb-0 align-middle">
@@ -653,7 +646,11 @@ if (!is_authenticated() || !can_view_users()) {
         function updateSelectedUsersUi() {
             const count = selectedUserIds.size;
             const countBox = document.getElementById('selectedUsersCount');
-            if (countBox) countBox.textContent = `${count} usuario${count === 1 ? '' : 's'} seleccionado${count === 1 ? '' : 's'}`;
+            const countNumber = document.getElementById('selectedUsersCountNumber');
+            if (countNumber) countNumber.textContent = count;
+            if (countBox) countBox.textContent = `usuario${count === 1 ? '' : 's'} seleccionado${count === 1 ? '' : 's'}`;
+            // Filas elegidas resaltadas, igual que en Proyectos.
+            document.querySelectorAll('.user-select-checkbox').forEach(input => input.closest('tr')?.classList.toggle('sgpi-row-selected', credentialSelectionMode && input.checked));
 
             document.querySelectorAll('.credential-select-col').forEach(element => {
                 element.classList.toggle('d-none', !credentialSelectionMode);
@@ -662,10 +659,15 @@ if (!is_authenticated() || !can_view_users()) {
             // Acciones masivas según la pestaña: en activos sólo inactivar; en inactivos reactivar o eliminar.
             const bulkBox = document.getElementById('bulkUserActions');
             if (bulkBox) {
-                bulkBox.classList.toggle('d-none', !CAN_GOVERN_USERS || count === 0);
-                bulkBox.querySelector('[data-bulk="deactivate"]').classList.toggle('d-none', currentStatus === 'inactive');
-                bulkBox.querySelector('[data-bulk="activate"]').classList.toggle('d-none', currentStatus === 'active');
-                bulkBox.querySelector('[data-bulk="remove"]').classList.toggle('d-none', currentStatus === 'active' || !CAN_ARCHIVE);
+                // Las acciones dependen de la pestaña y se desactivan mientras no haya nada elegido.
+                const show = (key, visible) => {
+                    const button = bulkBox.querySelector(`[data-bulk="${key}"]`);
+                    button.classList.toggle('d-none', !visible);
+                    button.disabled = count === 0;
+                };
+                show('deactivate', CAN_GOVERN_USERS && currentStatus !== 'inactive');
+                show('activate', CAN_GOVERN_USERS && currentStatus !== 'active');
+                show('remove', CAN_GOVERN_USERS && CAN_ARCHIVE && currentStatus !== 'active');
             }
             const selectButton = document.getElementById('bulkSelectBtn');
             if (selectButton) selectButton.classList.toggle('d-none', credentialSelectionMode || !CAN_GOVERN_USERS);
