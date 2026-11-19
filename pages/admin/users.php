@@ -145,7 +145,7 @@ if (!is_authenticated() || !can_view_users()) {
                                         <th class="credential-select-col d-none" style="width: 44px;">
                                             <input class="form-check-input" type="checkbox" id="selectVisibleUsersCheckbox" onchange="toggleVisibleUsers(this.checked)" title="Seleccionar usuarios visibles">
                                         </th>
-                                        <th>No. de Control, No. de empleado</th>
+                                        <th>No. de control<br><small class="fw-normal opacity-75">o de empleado</small></th>
                                         <th>Nombre</th>
                                         <th>Email</th>
                                         <th>Perfil</th>
@@ -536,8 +536,9 @@ if (!is_authenticated() || !can_view_users()) {
                     const toggleTitle = isActive
                         ? 'Estado: Activo. Clic para desactivar'
                         : 'Estado: Inactivo. Clic para activar';
+                    // Administradores: su estado se cambia con la acción protegida (escudo), no con un botón deshabilitado.
                     const normalToggle = isAdminUser
-                        ? `<button class="btn ${toggleClass}" disabled title="Administrador protegido"><i class="bi ${toggleIcon}"></i></button>`
+                        ? ''
                         : (isActive
                             ? `<button class="btn btn-outline-danger" onclick="bulkUsers('deactivate', ['${escapeHtml(user.id)}'])" title="Eliminar (pasa a inactivos)"><i class="bi bi-person-x"></i></button>`
                             : `<button class="btn btn-outline-success" onclick="bulkUsers('activate', ['${escapeHtml(user.id)}'])" title="Reactivar"><i class="bi bi-arrow-counterclockwise"></i></button>`);
@@ -552,15 +553,15 @@ if (!is_authenticated() || !can_view_users()) {
                             </td>
                             <td><strong>${escapeHtml(user.id)}</strong></td>
                             <td>${escapeHtml(user.nombres)} ${escapeHtml(user.apa)} ${escapeHtml(user.ama)}</td>
-                            <td>${escapeHtml(user.email)}</td>
-                            <td><span class="badge bg-secondary">${profileNames[user.perfil_id] || 'N/A'}</span>${isGeneralAdminRow ? ' <span class="badge bg-info text-dark"><i class="bi bi-award"></i> Admin. general</span>' : ''}</td>
+                            <td class="user-email-cell"><span title="${escapeHtml(user.email)}">${escapeHtml(user.email)}</span></td>
+                            <td><div class="user-profile-badges">${profileNames[user.perfil_id] ? `<span class="badge bg-secondary">${profileNames[user.perfil_id]}</span>` : (isGeneralAdminRow ? '' : '<span class="badge bg-secondary">Sin perfil</span>')}${isGeneralAdminRow ? '<span class="badge bg-info text-dark"><i class="bi bi-award"></i> Admin. general</span>' : ''}</div></td>
                             <td>${Number(user.perfil_id) === 3 ? `<span class="badge bg-primary">${escapeHtml(user.semestre || '-')} ${escapeHtml(user.grupo || '')}</span>` : '<span class="text-muted small">-</span>'}</td>
                             <td>${Number(user.perfil_id) === 2 ? `<span class="badge bg-info text-dark">${Number(user.advising_projects_count || 0)} asesorías</span>` : (Number(user.perfil_id) === 3 ? (Number(user.student_projects_count || 0) > 0 ? '<span class="badge bg-success">Con proyecto</span>' : '<span class="badge bg-warning text-dark">Sin proyecto</span>') : '<span class="text-muted small">-</span>')}</td>
                             <td>${statusBadge}</td>
                             <td>
                                 ${!CAN_GOVERN_USERS ? '<span class="text-muted small">Sólo consulta</span>' : (isAdminUser && !IS_GENERAL_ADMIN
                                     ? '<span class="text-muted small" title="Lo administra el administrador general"><i class="bi bi-shield-lock"></i> Protegido</span>'
-                                    : `<div class="btn-group btn-group-sm" role="group">
+                                    : `<div class="btn-group btn-group-sm user-row-actions" role="group">
                                     <button type="button" class="btn btn-outline-primary" onclick="openUserModal('${escapeHtml(user.id)}')" title="Editar"><i class="bi bi-pencil"></i></button>
                                     ${normalToggle}
                                     ${protectedButton}

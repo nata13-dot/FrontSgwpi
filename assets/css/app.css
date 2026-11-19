@@ -7962,3 +7962,23 @@ html body .table > tbody > tr.sgpi-row-selected > *:first-child { box-shadow: in
 /* Sin fijar: el título y la barra se separan con aire, sin tarjeta doble */
 .users-sticky-head:not(.is-stuck) { margin-bottom: 18px; }
 .users-sticky-head:not(.is-stuck) .sgpi-bulk-bar { margin-top: 4px; }
+
+/* Usuarios: filas parejas aunque haya administradores (insignias apiladas, correos recortados, acciones compactas) */
+.user-profile-badges { display: flex; flex-direction: column; align-items: flex-start; gap: 4px; }
+.user-profile-badges .badge { white-space: nowrap; }
+.user-email-cell { max-width: 250px; }
+.user-email-cell span { display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.user-row-actions { flex-wrap: nowrap; }
+.user-row-actions .btn { width: 36px; padding-left: 0; padding-right: 0; }
+#usersTable td:last-child, table:has(#usersTable) th:last-child { width: 1%; white-space: nowrap; }
+table:has(#usersTable) th { white-space: normal; vertical-align: middle; line-height: 1.2; }
+table:has(#usersTable) th small { font-size: .74rem; }
+#usersTable td:nth-child(3) { min-width: 170px; }
+.user-email-cell { max-width: 220px; }
+#usersTable .user-row-actions .btn { width: 34px !important; min-width: 34px !important; height: 34px; padding: 0 !important; display: inline-grid; place-items: center; }
+#usersTable .user-email-cell span { max-width: 230px; }
+#usersTable td { white-space: normal; }
+#usersTable td:nth-child(3) { min-width: 150px; max-width: 230px; }
+table:has(#usersTable) thead th:nth-child(2) { white-space: nowrap; }
+#usersTable td:nth-child(3) { min-width: 148px; }
+#usersTable .user-email-cell span { max-width: 190px; }
