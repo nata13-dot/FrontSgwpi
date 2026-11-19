@@ -436,7 +436,7 @@ document.addEventListener('DOMContentLoaded', () => {
     if (sessionStorage.getItem('sgpi-appearance-loaded') !== <?= json_encode((string) ($current_user['id'] ?? '')) ?>) {
         api.get('/appearance', { _fresh: true, _silent: true }).then(response => {
             sessionStorage.setItem('sgpi-appearance-loaded', <?= json_encode((string) ($current_user['id'] ?? '')) ?>);
-            if (response.data) SGPIAppearance.set({ theme: response.data.theme, fontScale: response.data.font_scale, glass: Boolean(response.data.glass) });
+            if (response.data) SGPIAppearance.set({ theme: response.data.theme, fontScale: response.data.font_scale, ...(typeof response.data.glass === 'boolean' ? { glass: response.data.glass } : {}) });
         }).catch(() => {});
     }
     <?php endif; ?>
