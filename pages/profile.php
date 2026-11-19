@@ -121,6 +121,9 @@ function renderAppearance() {
         <div class="mb-3"><div class="form-label">Tema</div><div class="d-flex flex-wrap gap-2">
             ${option('appearanceTheme', 'light', 'Claro', SGPIAppearance.theme())}${option('appearanceTheme', 'dark', 'Oscuro', SGPIAppearance.theme())}${option('appearanceTheme', 'system', 'Según el dispositivo', SGPIAppearance.theme())}
         </div></div>
+        <div class="mb-3"><div class="form-label">Estilo</div><div class="d-flex flex-wrap gap-2">
+            ${option('appearanceGlass', '0', 'Sólido', SGPIAppearance.glass() ? '1' : '0')}${option('appearanceGlass', '1', 'Cristal (transparencias)', SGPIAppearance.glass() ? '1' : '0')}
+        </div><div class="form-text">Cristal pone la foto del campus de fondo y vuelve translúcidos menús, tarjetas y ventanas. Funciona con el tema claro y con el oscuro.</div></div>
         <div><div class="form-label">Tamaño de letra</div><div class="d-flex flex-wrap gap-2">
             ${[[90, 'Chica'], [100, 'Normal'], [115, 'Grande'], [130, 'Muy grande']].map(([value, label]) => option('appearanceFont', value, label, SGPIAppearance.fontScale())).join('')}
         </div><div class="form-text">Se suma al tamaño de letra de tu navegador.</div></div>
@@ -128,6 +131,7 @@ function renderAppearance() {
     document.getElementById('appearancePreferences').addEventListener('change', event => {
         if (event.target.name === 'appearanceTheme') SGPIAppearance.set({ theme: event.target.value });
         if (event.target.name === 'appearanceFont') SGPIAppearance.set({ fontScale: Number(event.target.value) });
+        if (event.target.name === 'appearanceGlass') SGPIAppearance.set({ glass: event.target.value === '1' });
         if (!document.querySelector('.view-as-banner')) window.SGPISaveAppearance?.();
     });
 }

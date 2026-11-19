@@ -410,7 +410,7 @@ async function startLevelView(profileId, button) {
 document.addEventListener('DOMContentLoaded', () => {
     // El de la barra superior y el del menú lateral en el teléfono.
     const toggles = document.querySelectorAll('#themeToggle, [data-theme-toggle]');
-    const saveAppearance = () => api.put('/appearance', { theme: SGPIAppearance.theme(), font_scale: SGPIAppearance.fontScale() }).catch(() => {});
+    const saveAppearance = () => api.put('/appearance', { theme: SGPIAppearance.theme(), font_scale: SGPIAppearance.fontScale(), glass: SGPIAppearance.glass() }).catch(() => {});
     window.SGPISaveAppearance = saveAppearance;
 
     if (toggles.length) {
@@ -436,7 +436,7 @@ document.addEventListener('DOMContentLoaded', () => {
     if (sessionStorage.getItem('sgpi-appearance-loaded') !== <?= json_encode((string) ($current_user['id'] ?? '')) ?>) {
         api.get('/appearance', { _fresh: true, _silent: true }).then(response => {
             sessionStorage.setItem('sgpi-appearance-loaded', <?= json_encode((string) ($current_user['id'] ?? '')) ?>);
-            if (response.data) SGPIAppearance.set({ theme: response.data.theme, fontScale: response.data.font_scale });
+            if (response.data) SGPIAppearance.set({ theme: response.data.theme, fontScale: response.data.font_scale, glass: Boolean(response.data.glass) });
         }).catch(() => {});
     }
     <?php endif; ?>

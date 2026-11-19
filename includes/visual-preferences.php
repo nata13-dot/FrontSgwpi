@@ -44,16 +44,20 @@ window.SGPIAppearance = (function () {
         return value === 'dark' || value === 'system' ? value : 'light';
     }
     function fontScale() { return Number(read('sgpi-font-scale')) || 100; }
+    // Estilo cristal: superficies translúcidas sobre la foto del campus; se combina con claro u oscuro.
+    function glass() { return read('sgpi-glass') === '1'; }
     function apply() {
         var resolved = theme() === 'system' ? (media && media.matches ? 'dark' : 'light') : theme();
         root.dataset.theme = resolved;
         root.style.colorScheme = resolved;
         root.style.fontSize = fontScale() + '%';
+        if (glass()) root.dataset.glass = 'on'; else delete root.dataset.glass;
         window.dispatchEvent(new CustomEvent('sgpi:appearance'));
     }
     function set(next) {
         if (next.theme) write('sgpi-theme', next.theme);
         if (next.fontScale) write('sgpi-font-scale', String(next.fontScale));
+        if (typeof next.glass === 'boolean') write('sgpi-glass', next.glass ? '1' : '0');
         apply();
     }
     if (media && media.addEventListener) media.addEventListener('change', apply);
@@ -61,6 +65,6 @@ window.SGPIAppearance = (function () {
         if (JSON.parse(read('sgpi-public-settings') || '{}').grayscale_mode) root.classList.add('grayscale-mode');
     } catch (error) { /* Sin ajustes guardados se muestra a color. */ }
     apply();
-    return { theme: theme, fontScale: fontScale, set: set };
+    return { theme: theme, fontScale: fontScale, glass: glass, set: set };
 })();
 </script>

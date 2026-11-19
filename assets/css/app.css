@@ -7982,3 +7982,93 @@ table:has(#usersTable) th small { font-size: .74rem; }
 table:has(#usersTable) thead th:nth-child(2) { white-space: nowrap; }
 #usersTable td:nth-child(3) { min-width: 148px; }
 #usersTable .user-email-cell span { max-width: 190px; }
+
+/* ===================== Estilo «Cristal» (preferencia de apariencia, data-glass="on") =====================
+   Foto del campus fija de fondo y superficies translúcidas con desenfoque, como el panel «Recién publicados».
+   Se combina con el tema claro u oscuro; el texto conserva el contraste con un velo detrás de cada superficie. */
+:root[data-glass="on"] {
+    --glass-bg: rgba(255, 255, 255, .62); --glass-bg-strong: rgba(255, 255, 255, .8); --glass-bg-soft: rgba(255, 255, 255, .4);
+    --glass-line: rgba(255, 255, 255, .62); --glass-line-soft: rgba(16, 30, 54, .08);
+    --glass-blur: blur(18px) saturate(1.45); --glass-shadow: 0 8px 32px rgba(10, 25, 50, .16), inset 0 1px 0 rgba(255, 255, 255, .5);
+    --glass-veil: linear-gradient(180deg, rgba(226, 235, 248, .42), rgba(210, 222, 242, .54));
+    --glass-nav: rgba(255, 255, 255, .62); --glass-side: rgba(12, 33, 66, .62);
+    background: #0c2142;
+}
+:root[data-glass="on"][data-theme="dark"] {
+    --glass-bg: rgba(16, 24, 40, .56); --glass-bg-strong: rgba(16, 24, 40, .74); --glass-bg-soft: rgba(16, 24, 40, .38);
+    --glass-line: rgba(255, 255, 255, .12); --glass-line-soft: rgba(255, 255, 255, .06);
+    --glass-shadow: 0 10px 34px rgba(0, 0, 0, .45), inset 0 1px 0 rgba(255, 255, 255, .06);
+    --glass-veil: linear-gradient(180deg, rgba(6, 12, 24, .46), rgba(6, 12, 24, .6));
+    --glass-nav: rgba(14, 22, 38, .62); --glass-side: rgba(8, 20, 42, .66);
+}
+/* Velo sobre la foto: la mantiene presente pero suave, para que todo se lea. */
+:root[data-glass="on"] body { background: transparent !important; }
+:root[data-glass="on"] body::before { content: ''; position: fixed; inset: 0; z-index: -1; background: var(--glass-veil); pointer-events: none; }
+/* La foto va ligeramente difuminada: conserva color y ambiente sin competir con los textos. */
+:root[data-glass="on"] body::after {
+    content: ''; position: fixed; inset: -40px; z-index: -2; pointer-events: none;
+    background: url('/assets/img/ITSSMT/fondochido2.webp') center 40% / cover no-repeat; filter: blur(7px) saturate(1.15);
+}
+/* Textos que van directo sobre la foto */
+:root[data-glass="on"] body .main-content :is(h1, .h1, .form-label, .users-filter-label, .sg-related-title, #statusDescription, .section-title, .section-subtitle) {
+    text-shadow: 0 0 1px rgba(255, 255, 255, .9), 0 1px 14px rgba(255, 255, 255, .85);
+}
+:root[data-glass="on"][data-theme="dark"] body .main-content :is(h1, .h1, .form-label, .users-filter-label, .sg-related-title, #statusDescription, .section-title, .section-subtitle) {
+    text-shadow: 0 1px 2px rgba(0, 0, 0, .7), 0 2px 16px rgba(0, 0, 0, .65);
+}
+:root[data-glass="on"] :is(.content-wrapper, .main-content, .public-shell, main) { background: transparent !important; }
+
+/* Superficies de cristal */
+:root[data-glass="on"] body :is(.card, .sg-guide, .sg-related-card, .stat-card, .dashboard-card, .metric-card, .list-group, .accordion,
+    .sgpi-bulk-bar, .room-timer, .live-turn, .removal-option, .repository-showcase, .repository-card, .document-card, .table-responsive:not(.card .table-responsive)) {
+    background: var(--glass-bg) !important; border: 1px solid var(--glass-line) !important; box-shadow: var(--glass-shadow) !important;
+    backdrop-filter: var(--glass-blur); -webkit-backdrop-filter: var(--glass-blur);
+}
+:root[data-glass="on"] body :is(.card-header, .card-footer, .modal-footer, .list-group-item, .accordion-item, .accordion-button, .accordion-body) {
+    background: transparent !important; border-color: var(--glass-line-soft) !important;
+}
+:root[data-glass="on"] body .card .card { background: var(--glass-bg-soft) !important; box-shadow: none !important; backdrop-filter: none; }
+/* Tablas: filas sobre el cristal de su tarjeta; el encabezado institucional queda semitransparente */
+:root[data-glass="on"] body .table { --bs-table-bg: transparent; --bs-table-striped-bg: rgba(255, 255, 255, .14); --bs-table-hover-bg: rgba(255, 255, 255, .22); background: transparent; }
+:root[data-glass="on"] body .table > :not(caption) > * > * { background-color: transparent; border-color: var(--glass-line-soft); }
+:root[data-glass="on"] body .table > thead > tr > th { background: rgba(27, 57, 106, .82) !important; backdrop-filter: blur(8px); }
+:root[data-glass="on"][data-theme="dark"] body .table { --bs-table-striped-bg: rgba(255, 255, 255, .03); --bs-table-hover-bg: rgba(255, 255, 255, .06); }
+/* Barra superior, menú lateral y menús flotantes */
+:root[data-glass="on"] body .navbar-authenticated, :root[data-glass="on"] body .navbar-public {
+    background: var(--glass-nav) !important; backdrop-filter: blur(20px) saturate(1.5); -webkit-backdrop-filter: blur(20px) saturate(1.5);
+    border-bottom: 1px solid var(--glass-line) !important;
+}
+:root[data-glass="on"] body #appSidebar.sidebar {
+    background: var(--glass-side) !important; backdrop-filter: blur(22px) saturate(1.4); -webkit-backdrop-filter: blur(22px) saturate(1.4);
+    border-right: 1px solid rgba(255, 255, 255, .14);
+}
+:root[data-glass="on"] body :is(.dropdown-menu, .popover, .management-menu) {
+    background: var(--glass-bg-strong) !important; border: 1px solid var(--glass-line) !important;
+    backdrop-filter: blur(22px) saturate(1.5); -webkit-backdrop-filter: blur(22px) saturate(1.5);
+}
+/* Ventanas y avisos */
+:root[data-glass="on"] body .modal-content, :root[data-glass="on"] body .swal2-popup:not(.swal2-toast) {
+    background: var(--glass-bg-strong) !important; border: 1px solid var(--glass-line) !important;
+    backdrop-filter: blur(24px) saturate(1.5); -webkit-backdrop-filter: blur(24px) saturate(1.5);
+}
+:root[data-glass="on"] body .modal-header { background: linear-gradient(135deg, rgba(18, 48, 92, .88), rgba(45, 90, 150, .82)) !important; }
+:root[data-glass="on"] body .swal2-popup.swal2-toast { background: var(--glass-bg-strong) !important; backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px); }
+:root[data-glass="on"] body .alert { background-color: color-mix(in srgb, currentColor 8%, var(--glass-bg)) !important; backdrop-filter: var(--glass-blur); -webkit-backdrop-filter: var(--glass-blur); }
+/* Campos, pestañas, paginación y botones claros */
+:root[data-glass="on"] body :is(.form-control, .form-select, .input-group-text) { background-color: var(--glass-bg-strong) !important; border-color: var(--glass-line) !important; }
+:root[data-glass="on"] body .nav-tabs { background: var(--glass-bg-soft) !important; border: 1px solid var(--glass-line); }
+:root[data-glass="on"] body :is(.sgpi-pager-num, .sgpi-pager-step, .pagination .page-link, .btn-light, .btn-outline-secondary, .btn-outline-primary, .btn-outline-success, .btn-outline-danger, .btn-outline-warning) {
+    background-color: var(--glass-bg) ; backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);
+}
+:root[data-glass="on"] body .sgpi-pager-num.active, :root[data-glass="on"] body .pagination .active .page-link { background: #1B396A !important; }
+:root[data-glass="on"][data-theme="dark"] body .sgpi-pager-num.active { background: #2D5A96 !important; }
+/* Cabeceras fijas */
+:root[data-glass="on"] body .users-sticky-head.is-stuck { background: var(--glass-bg-strong) !important; backdrop-filter: blur(22px) saturate(1.5); }
+/* Títulos sobre la foto: siempre legibles */
+:root[data-glass="on"] body .main-content > .container-xl > .d-flex h1, :root[data-glass="on"] body .users-head-row h1 { text-shadow: 0 1px 12px rgba(255, 255, 255, .55); }
+:root[data-glass="on"][data-theme="dark"] body .main-content > .container-xl > .d-flex h1, :root[data-glass="on"][data-theme="dark"] body .users-head-row h1 { text-shadow: 0 2px 14px rgba(0, 0, 0, .6); }
+:root[data-glass="on"] body .main-content .text-muted { color: color-mix(in srgb, currentColor 100%, transparent) ; }
+@supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+    :root[data-glass="on"] { --glass-bg: rgba(255, 255, 255, .9); --glass-bg-strong: rgba(255, 255, 255, .96); }
+    :root[data-glass="on"][data-theme="dark"] { --glass-bg: rgba(16, 24, 40, .92); --glass-bg-strong: rgba(16, 24, 40, .96); }
+}
