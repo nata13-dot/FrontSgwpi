@@ -613,7 +613,7 @@ window.stableSwalFire = async function (options = {}) {
             if (cs.backgroundImage.startsWith('linear-gradient')) el.classList.add('glass-auto-tinted');
         });
         // Textos sueltos que quedan directo sobre la foto (títulos de sección, resúmenes, notas): llevan halo legible.
-        document.querySelectorAll('.main-content :is(h1, h2, h3, h4, h5, h6, .h4, .h5, p, small, label, .text-muted, .sgpi-pager-info, .form-text):not(.glass-text)').forEach(el => {
+        document.querySelectorAll('.main-content :is(h1, h2, h3, h4, h5, h6, .h4, .h5, p, small, strong, label, .text-muted, .pc-muted, .sgpi-pager-info, .form-text):not(.glass-text)').forEach(el => {
             // Sólo texto: nada que contenga bloques, imágenes, controles o esqueletos de carga.
             if (el.querySelector('div, ul, ol, table, section, img, canvas, svg, input, select, textarea, button, .skeleton, [class*="skeleton"]')) return;
             if (el.getBoundingClientRect().height > 90 || !el.textContent.trim()) return;
