@@ -73,7 +73,7 @@ if (!is_authenticated() || !is_student()) {
                         <input type="file" id="archivoInput" class="form-control" accept=".pdf,.doc,.docx,.xls,.xlsx,.zip">
                         <small class="form-text text-muted d-block mt-2">
                             <strong>Máximo 50MB</strong><br>
-                            <strong>Permitidos:</strong> PDF, DOC, DOCX, XLS, XLSX, ZIP
+                            <strong>Permitidos:</strong> <span id="archivoPermitidos">PDF, DOC, DOCX, XLS, XLSX, ZIP</span>
                         </small>
                     </div>
                 </div>
@@ -185,6 +185,8 @@ if (!is_authenticated() || !is_student()) {
                                             <i class="bi bi-calendar"></i> 
                                             Creado: ${new Date(deliverable.created_at).toLocaleDateString('es-MX')}
                                         </small>
+                                        ${deliverable.competencia_materia ? `<small class="text-muted d-block"><i class="bi bi-diagram-2"></i> Competencia ${Number(deliverable.competencia_materia.orden)}: ${escapeHtml(deliverable.competencia_materia.nombre)}</small>` : ''}
+                                        ${(deliverable.extensiones || []).length && (deliverable.tipos_archivo || []).length ? `<small class="text-muted d-block"><i class="bi bi-file-earmark"></i> Acepta: ${escapeHtml(deliverable.extensiones.map(t => t.toUpperCase()).join(', '))}</small>` : ''}
                                         <small class="${deliverable.vencido ? 'text-danger fw-semibold' : 'text-muted'} d-block">
                                             <i class="bi bi-alarm"></i>
                                             Fecha límite: ${deliverable.fecha_limite ? new Date(deliverable.fecha_limite).toLocaleString('es-MX', { dateStyle: 'medium', timeStyle: 'short' }) : 'Sin fecha'}${deliverable.prorroga ? ' (prórroga de tu equipo)' : ''}
@@ -208,7 +210,7 @@ if (!is_authenticated() || !is_student()) {
                                 
                                 <div class="card-footer border-0 bg-light">
                                     ${btnDescargar}
-                                    ${deliverable.puede_subir === false ? '' : `<button class="btn btn-sm btn-primary w-100" data-upload-id="${Number(deliverable.id)}"
+                                    ${deliverable.puede_subir === false ? '' : `<button class="btn btn-sm btn-primary w-100" data-upload-id="${Number(deliverable.id)}" data-upload-types="${escapeHtml((deliverable.extensiones || []).join(','))}"
                                             data-upload-project="${Number(deliverable.project_id)}" data-upload-name="${escapeHtml(deliverable.nombre)}">
                                         <i class="bi bi-cloud-upload"></i> ${deliverable.file_path ? 'Actualizar archivo' : 'Subir archivo'}
                                     </button>`}
@@ -228,10 +230,16 @@ if (!is_authenticated() || !is_student()) {
 
         document.addEventListener('click', event => {
             const button = event.target.closest('[data-upload-id]');
-            if (button) abrirSubirArchivo(Number(button.dataset.uploadId), Number(button.dataset.uploadProject), button.dataset.uploadName);
+            if (button) abrirSubirArchivo(Number(button.dataset.uploadId), Number(button.dataset.uploadProject), button.dataset.uploadName, button.dataset.uploadTypes);
         });
 
-        function abrirSubirArchivo(deliverableId, projectId, nombre) {
+        const TIPOS_GENERALES = ['pdf', 'doc', 'docx', 'xls', 'xlsx', 'zip'];
+        let tiposActuales = TIPOS_GENERALES;
+        function abrirSubirArchivo(deliverableId, projectId, nombre, tipos) {
+            // El docente puede exigir tipos de archivo en el avance; si no, se usan los generales.
+            tiposActuales = tipos ? tipos.split(',').filter(Boolean) : TIPOS_GENERALES;
+            document.getElementById('archivoInput').setAttribute('accept', tiposActuales.map(t => '.' + t).join(','));
+            document.getElementById('archivoPermitidos').textContent = tiposActuales.map(t => t.toUpperCase()).join(', ');
             currentDeliverableId = deliverableId;
             currentProjectId = projectId;
             document.getElementById('deliverableIdSubir').value = deliverableId;
@@ -250,6 +258,11 @@ if (!is_authenticated() || !is_student()) {
                 return;
             }
 
+            const extension = (file.name.split('.').pop() || '').toLowerCase();
+            if (tiposActuales !== TIPOS_GENERALES && !tiposActuales.includes(extension)) {
+                showAlert('#modalAlertSubir', 'danger', 'Este avance sólo acepta: ' + tiposActuales.map(t => t.toUpperCase()).join(', '));
+                return;
+            }
             const result = await subirArchivo(currentDeliverableId, currentProjectId, file);
             if (result) {
                 bootstrap.Modal.getInstance(document.getElementById('modalSubirArchivo')).hide();
