@@ -585,6 +585,46 @@ window.stableSwalFire = async function (options = {}) {
     window.Swal.__sgpiPatched = true;
 })();
 
+// Estilo cristal: cualquier superficie que siga opaca dentro del contenido (tarjetas, paneles, métricas, también las
+// que llegan después con datos) se vuelve translúcida. Se revisa al cambiar el contenido, sin bloquear la página.
+(function glassSurfaces() {
+    const SKIP = /^(BUTTON|A|INPUT|SELECT|TEXTAREA|TH|TD|TR|THEAD|TBODY|TABLE|SPAN|I|IMG|SVG|CODE|LABEL|PROGRESS)$/;
+    let frame = 0;
+    const opaque = (color) => {
+        const m = color.match(/rgba?\(([^)]+)\)/);
+        if (!m) return false;
+        const p = m[1].split(/[ ,\/]+/).filter(Boolean).map(Number);
+        return (p.length > 3 ? p[3] : 1) >= 0.85;
+    };
+    const scan = () => {
+        frame = 0;
+        if (document.documentElement.dataset.glass !== 'on') return;
+        document.querySelectorAll('.main-content *:not(.glass-auto), .repository-shell *:not(.glass-auto)').forEach(el => {
+            if (SKIP.test(el.tagName) || el.closest('.modal, .dropdown-menu, .navbar, #appSidebar, .swal2-container, .badge, .btn, .progress')) return;
+            const box = el.getBoundingClientRect();
+            if (box.width < 90 || box.height < 36) return;
+            const cs = getComputedStyle(el);
+            if (cs.backgroundImage !== 'none' && !cs.backgroundImage.startsWith('linear-gradient')) return;
+            const bg = cs.backgroundImage.startsWith('linear-gradient') ? (cs.backgroundImage.match(/rgba?\([^)]+\)/) || [''])[0] : cs.backgroundColor;
+            if (!bg || !opaque(bg)) return;
+            // Superficie: con bordes redondeados, sombra o borde (no franjas de diseño).
+            if (parseFloat(cs.borderTopLeftRadius) < 6 && cs.boxShadow === 'none' && cs.borderTopWidth === '0px') return;
+            el.classList.add('glass-auto');
+            if (cs.backgroundImage.startsWith('linear-gradient')) el.classList.add('glass-auto-tinted');
+        });
+    };
+    const queue = () => { if (!frame) frame = requestAnimationFrame(scan); };
+    const start = () => {
+        queue();
+        new MutationObserver(queue).observe(document.body, { childList: true, subtree: true });
+    };
+    if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', start); else start();
+    addEventListener('sgpi:appearance', () => {
+        if (document.documentElement.dataset.glass !== 'on') document.querySelectorAll('.glass-auto').forEach(el => el.classList.remove('glass-auto', 'glass-auto-tinted'));
+        queue();
+    });
+})();
+
 // Altura real de la barra superior (cambia con el zoom y el tamaño): la usan las cabeceras fijas.
 (function trackNavbarHeight() {
     const update = () => {

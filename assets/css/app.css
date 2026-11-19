@@ -8072,3 +8072,29 @@ table:has(#usersTable) thead th:nth-child(2) { white-space: nowrap; }
     :root[data-glass="on"] { --glass-bg: rgba(255, 255, 255, .9); --glass-bg-strong: rgba(255, 255, 255, .96); }
     :root[data-glass="on"][data-theme="dark"] { --glass-bg: rgba(16, 24, 40, .92); --glass-bg-strong: rgba(16, 24, 40, .96); }
 }
+/* Cristal automático para superficies que quedaban opacas (las marca includes/footer.php) */
+:root[data-glass="on"] body .glass-auto {
+    background: var(--glass-bg) !important; border-color: var(--glass-line) !important; box-shadow: var(--glass-shadow) !important;
+    backdrop-filter: var(--glass-blur); -webkit-backdrop-filter: var(--glass-blur);
+}
+:root[data-glass="on"] body :is(.glass-auto, .card, .sg-guide, .sgpi-bulk-bar) .glass-auto { background: var(--glass-bg-soft) !important; box-shadow: none !important; backdrop-filter: none; -webkit-backdrop-filter: none; }
+/* Lo que era un bloque de color (cabeceras azules, accesos destacados) queda como cristal azul institucional */
+:root[data-glass="on"] body .glass-auto-tinted, :root[data-glass="on"] body .general-admin-hero {
+    background: linear-gradient(135deg, rgba(12, 33, 66, .72), rgba(45, 90, 150, .58)) !important; color: #fff;
+    border: 1px solid rgba(255, 255, 255, .18) !important; backdrop-filter: blur(20px) saturate(1.4); -webkit-backdrop-filter: blur(20px) saturate(1.4);
+}
+:root[data-glass="on"] body .general-admin-hero :is(h1, h2, p, span, small) { color: #fff !important; text-shadow: none; }
+/* Títulos de sección y textos sueltos sobre la foto */
+:root[data-glass="on"] body .main-content > .container-xl > :is(h2, h3, h4, h5, .h5, .h4, .d-flex) :is(h2, h3, h4, h5, .h5, .h4, .text-muted, small),
+:root[data-glass="on"] body .main-content > .container-xl > :is(h2, h3, h4, h5, .h5, .h4, p, .text-muted) {
+    text-shadow: 0 0 1px rgba(255, 255, 255, .9), 0 1px 14px rgba(255, 255, 255, .9);
+}
+:root[data-glass="on"][data-theme="dark"] body .main-content > .container-xl > :is(h2, h3, h4, h5, .h5, .h4, .d-flex) :is(h2, h3, h4, h5, .h5, .h4, .text-muted, small),
+:root[data-glass="on"][data-theme="dark"] body .main-content > .container-xl > :is(h2, h3, h4, h5, .h5, .h4, p, .text-muted) {
+    text-shadow: 0 1px 2px rgba(0, 0, 0, .75), 0 2px 16px rgba(0, 0, 0, .7);
+}
+/* Botones claros sobre cristal (Administrar, accesos) con un poco más de cuerpo */
+:root[data-glass="on"] body .glass-auto .btn-outline-secondary, :root[data-glass="on"] body .glass-auto .btn-light { background-color: var(--glass-bg-strong); }
+
+:root[data-glass="on"] body .glass-auto-tinted :is(h1, h2, h3, h4, h5, h6, p, strong, small, .text-muted, span:not(.badge)) { color: #fff !important; }
+:root[data-glass="on"] body .room-work-panel-header { background: var(--glass-bg-soft) !important; }
