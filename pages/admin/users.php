@@ -643,6 +643,7 @@ if (!is_authenticated() || !can_view_users()) {
             const selectButton = document.getElementById('bulkSelectBtn');
             if (selectButton) selectButton.classList.toggle('d-none', credentialSelectionMode || !CAN_GOVERN_USERS);
 
+            document.getElementById('usersStickyHead')?.classList.toggle('is-selecting', credentialSelectionMode);
             const toolbar = document.getElementById('credentialSelectionToolbar');
             if (toolbar) {
                 toolbar.classList.toggle('d-none', !credentialSelectionMode);
