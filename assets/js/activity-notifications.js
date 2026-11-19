@@ -31,6 +31,7 @@
             '/registration-requests': '/pages/admin/registration-requests.php',
             '/semesters': '/pages/academic-workflows.php?tab=periods',
             '/academic-workflows': '/pages/academic-workflows.php',
+            '/tracking': '/pages/tracking.php',
             '/operations': '/pages/admin/operations.php'
         };
         return pages[url] || url;

@@ -131,8 +131,14 @@ if (!is_authenticated() || !is_student()) {
                         if (deliverable.calificacion >= 70) badgeClass += ' alto';
                         else if (deliverable.calificacion >= 50) badgeClass += ' medio';
                         else badgeClass += ' bajo';
-                        calificacionHTML = `<span class="badge ${badgeClass}">${deliverable.calificacion}%</span>`;
+                        calificacionHTML = `<span class="badge ${badgeClass}">${Number(deliverable.calificacion)}%</span>`;
+                        // Ajuste individual del docente: se muestra junto a la del equipo.
+                        if (deliverable.calificacion_equipo !== null && deliverable.calificacion_equipo !== undefined && Number(deliverable.calificacion_equipo) !== Number(deliverable.calificacion)) {
+                            calificacionHTML += ` <small class="text-muted">Tu calificación individual · del equipo: ${Number(deliverable.calificacion_equipo)}%</small>`;
+                        }
                     }
+                    const comentarioHTML = deliverable.comentarios_docente
+                        ? `<div class="alert alert-light border small py-2 mb-3"><strong class="d-block mb-1">Comentario del docente</strong>${escapeHtml(deliverable.comentarios_docente)}</div>` : '';
 
                     // Archivo
                     let archivoHTML = '<span class="text-muted small">-</span>';
@@ -149,12 +155,13 @@ if (!is_authenticated() || !is_student()) {
 
                     // Información de calificación
                     let infoCalificacion = '';
-                    if (deliverable.fecha_calificacion) {
+                    // fecha_calificacion es la fecha de la última entrega del equipo.
+                    if (deliverable.fecha_calificacion && deliverable.file_path) {
                         const fecha = new Date(deliverable.fecha_calificacion);
                         infoCalificacion = `
                             <small class="text-muted d-block mt-2">
-                                <i class="bi bi-check-circle text-success"></i> 
-                                Calificado el ${fecha.toLocaleDateString()} por ${escapeHtml(gradedByName(deliverable))}
+                                <i class="bi bi-check-circle text-success"></i>
+                                Entregado el ${fecha.toLocaleDateString('es-MX')}
                             </small>
                         `;
                     }
@@ -180,10 +187,11 @@ if (!is_authenticated() || !is_student()) {
                                         </small>
                                         <small class="${deliverable.vencido ? 'text-danger fw-semibold' : 'text-muted'} d-block">
                                             <i class="bi bi-alarm"></i>
-                                            Fecha límite: ${deliverable.fecha_limite ? new Date(deliverable.fecha_limite).toLocaleString('es-MX', { dateStyle: 'medium', timeStyle: 'short' }) : 'Sin fecha'}
+                                            Fecha límite: ${deliverable.fecha_limite ? new Date(deliverable.fecha_limite).toLocaleString('es-MX', { dateStyle: 'medium', timeStyle: 'short' }) : 'Sin fecha'}${deliverable.prorroga ? ' (prórroga de tu equipo)' : ''}
                                         </small>
                                     </div>
-                                    ${deliverable.vencido ? '<div class="alert alert-warning small py-2">La fecha límite ya pasó; pide a tu docente que la amplíe si aún necesitas entregar.</div>' : ''}
+                                    ${deliverable.vencido ? `<div class="alert alert-warning small py-2">${deliverable.cerrado ? 'Tu docente cerró este avance; pídele que lo reabra o que le dé una prórroga a tu equipo.' : 'La fecha límite ya pasó; pide a tu docente una prórroga si aún necesitas entregar.'}</div>` : ''}
+                                    ${comentarioHTML}
                                     ${!deliverable.vencido && !deliverable.project_id ? '<div class="alert alert-info small py-2">Podrás subir tu archivo cuando tengas un proyecto aprobado en este periodo.</div>' : ''}
 
                                     <div class="mb-3">

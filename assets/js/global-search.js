@@ -54,6 +54,7 @@
     const permissions = new Set((shell.dataset.permissions || '').split(/\s+/).filter(Boolean));
     roleItems.admin.splice(2, 0, item('Solicitudes de cuenta', 'Aprobar el autoregistro de alumnos', '/pages/admin/registration-requests.php', 'bi-person-check', ['autoregistro', 'aprobar', 'alumnos'], 'manage_academics'));
     roleItems.teacher.push(item('Salas y turnos', 'Consultar salas, horarios y turnos', '/pages/admin/evaluation-rooms.php', 'bi-door-open', ['horarios', 'presentaciones']));
+    [roleItems.admin, roleItems.teacher].forEach(list => list.push(item('Avances por materia', 'Abrir, calificar y dar seguimiento a los avances por equipo', '/pages/tracking.php', 'bi-graph-up-arrow', ['seguimiento', 'avances', 'integrador', 'caso integrador', 'dual', 'prorroga', 'plantilla'])));
     [roleItems.admin, roleItems.teacher, roleItems.student].forEach(list => list.push(item('Seguimiento académico', 'Inscripción a materias, residencias y servicio', '/pages/academic-workflows.php', 'bi-calendar-check', ['residencias', 'servicio', 'inscripcion', 'clave'])));
     roleItems.general_admin = [
         item('Panel institucional', 'Resumen de todas las carreras', '/pages/admin/general.php', 'bi-speedometer2', ['institucional', 'carreras']),
