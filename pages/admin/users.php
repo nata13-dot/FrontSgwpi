@@ -23,28 +23,34 @@ if (!is_authenticated() || !can_view_users()) {
         <?php require_once $_SERVER['DOCUMENT_ROOT'] . '/includes/sidebar.php'; ?>
         <div class="main-content flex-grow-1">
             <div class="container-xl mt-5 mb-5">
-                <div class="d-flex align-items-center justify-content-between mb-3">
+                <div class="users-sticky-sentinel" id="usersStickySentinel" aria-hidden="true"></div>
+                <div class="users-sticky-head" id="usersStickyHead">
+                <div class="d-flex align-items-center justify-content-between mb-3 users-head-row">
                     <div>
                         <h1 class="mb-1">Gestión de Usuarios</h1>
                         <p class="text-muted mb-0" id="statusDescription">Mostrando perfiles activos</p>
                     </div>
                     <?php if (can_govern_users()): ?><div class="d-flex gap-2 users-desktop-actions">
-                        <button type="button" class="btn btn-outline-primary" onclick="openUsersImportModal()" title="Descarga la plantilla de alumnos o de personal">
-                            <i class="bi bi-file-earmark-spreadsheet"></i> Plantilla Excel
-                        </button>
-                        <button type="button" class="btn btn-outline-success" onclick="openUsersImportModal()">
-                            <i class="bi bi-upload"></i> Cargar Excel
-                        </button>
-                        <button type="button" class="btn btn-outline-secondary" id="bulkSelectBtn" onclick="enableBulkSelection()">
+                        <button type="button" class="btn btn-outline-secondary" id="bulkSelectBtn" onclick="enableBulkSelection()" title="Elegir varios usuarios para desactivar, reactivar, eliminar o enviar credenciales">
                             <i class="bi bi-check2-square"></i> Seleccionar
-                        </button>
-                        <button type="button" class="btn btn-outline-warning" id="credentialEmailOpenBtn" onclick="openCredentialEmailModal()">
-                            <i class="bi bi-envelope-lock"></i> Enviar credenciales
                         </button>
                         <button type="button" class="btn btn-primary" onclick="openUserModal()">
                             <i class="bi bi-plus-circle"></i> Nuevo Usuario
                         </button>
                     </div><?php endif; ?>
+                </div>
+                <div class="sgpi-bulk-bar d-none" id="credentialSelectionToolbar" role="region" aria-label="Selección de usuarios">
+                    <span class="sgpi-bulk-count"><i class="bi bi-check2-square"></i> <strong id="selectedUsersCountNumber">0</strong> <span id="selectedUsersCount">seleccionados</span></span>
+                    <div class="d-flex flex-wrap gap-2" id="bulkUserActions">
+                        <button type="button" class="btn btn-sm btn-outline-primary" onclick="selectVisibleUsers()"><i class="bi bi-check2-all"></i> Seleccionar página</button>
+                        <button type="button" class="btn btn-sm btn-outline-secondary" onclick="clearSelectedUsers()"><i class="bi bi-x-square"></i> Limpiar</button>
+                        <button type="button" class="btn btn-sm btn-outline-danger" data-bulk="deactivate" onclick="bulkUsers('deactivate', [...selectedUserIds])"><i class="bi bi-person-x"></i> Desactivar</button>
+                        <button type="button" class="btn btn-sm btn-success" data-bulk="activate" onclick="bulkUsers('activate', [...selectedUserIds])"><i class="bi bi-arrow-counterclockwise"></i> Reactivar</button>
+                        <button type="button" class="btn btn-sm btn-danger" data-bulk="remove" onclick="removeUsers([...selectedUserIds])"><i class="bi bi-trash"></i> Eliminar</button>
+                        <button type="button" class="btn btn-sm btn-warning" data-bulk-always onclick="openCredentialEmailModal()" title="Con usuarios elegidos se envía sólo a ellos; sin elegir, puedes enviar por perfil"><i class="bi bi-envelope-lock"></i> Enviar credenciales</button>
+                        <button type="button" class="btn btn-sm btn-light" onclick="cancelCredentialSelectionMode()"><i class="bi bi-x-lg"></i> Cancelar</button>
+                    </div>
+                </div>
                 </div>
 
                 <button
@@ -66,14 +72,8 @@ if (!is_authenticated() || !can_view_users()) {
 
                 <div class="users-mobile-options" id="usersMobileOptions">
                     <?php if (can_govern_users()): ?><div class="users-mobile-actions">
-                        <button type="button" class="btn btn-outline-primary" onclick="openUsersImportModal()" title="Descarga la plantilla de alumnos o de personal">
-                            <i class="bi bi-file-earmark-spreadsheet"></i> Plantilla Excel
-                        </button>
-                        <button type="button" class="btn btn-outline-success" onclick="openUsersImportModal()">
-                            <i class="bi bi-upload"></i> Cargar Excel
-                        </button>
-                        <button type="button" class="btn btn-outline-warning" onclick="openCredentialEmailModal()">
-                            <i class="bi bi-envelope-lock"></i> Credenciales
+                        <button type="button" class="btn btn-outline-secondary" onclick="enableBulkSelection()">
+                            <i class="bi bi-check2-square"></i> Seleccionar
                         </button>
                         <button type="button" class="btn btn-primary" onclick="openUserModal()">
                             <i class="bi bi-plus-circle"></i> Nuevo Usuario
@@ -136,18 +136,6 @@ if (!is_authenticated() || !can_view_users()) {
 
                 <div id="alertContainer"></div>
 
-                <div class="sgpi-bulk-bar d-none" id="credentialSelectionToolbar" role="region" aria-label="Selección de usuarios">
-                    <span class="sgpi-bulk-count"><i class="bi bi-check2-square"></i> <strong id="selectedUsersCountNumber">0</strong> <span id="selectedUsersCount">seleccionados</span></span>
-                    <div class="d-flex flex-wrap gap-2" id="bulkUserActions">
-                        <button type="button" class="btn btn-sm btn-outline-primary" onclick="selectVisibleUsers()"><i class="bi bi-check2-all"></i> Seleccionar página</button>
-                        <button type="button" class="btn btn-sm btn-outline-secondary" onclick="clearSelectedUsers()"><i class="bi bi-x-square"></i> Limpiar</button>
-                        <button type="button" class="btn btn-sm btn-outline-danger" data-bulk="deactivate" onclick="bulkUsers('deactivate', [...selectedUserIds])"><i class="bi bi-person-x"></i> Desactivar</button>
-                        <button type="button" class="btn btn-sm btn-success" data-bulk="activate" onclick="bulkUsers('activate', [...selectedUserIds])"><i class="bi bi-arrow-counterclockwise"></i> Reactivar</button>
-                        <button type="button" class="btn btn-sm btn-danger" data-bulk="remove" onclick="removeUsers([...selectedUserIds])"><i class="bi bi-trash"></i> Eliminar</button>
-                        <button type="button" class="btn btn-sm btn-light" onclick="cancelCredentialSelectionMode()"><i class="bi bi-x-lg"></i> Cancelar</button>
-                    </div>
-                </div>
-
                 <div class="card border-0 shadow-sm">
                     <div class="card-body p-0">
                         <div class="table-responsive">
@@ -176,38 +164,6 @@ if (!is_authenticated() || !can_view_users()) {
                 </div>
                 <nav id="paginationContainer" class="mt-4"></nav>
             </div>
-        </div>
-    </div>
-
-    <div class="modal fade" id="usersImportModal" tabindex="-1">
-        <div class="modal-dialog">
-            <form class="modal-content" id="usersImportForm" onsubmit="importUsersExcel(event)">
-                <div class="modal-header">
-                    <h5 class="modal-title"><i class="bi bi-upload"></i> Cargar usuarios desde Excel</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-                </div>
-                <div class="modal-body">
-                    <div id="usersImportAlert"></div>
-                    <label class="form-label d-block">¿Qué vas a cargar?</label>
-                    <div class="btn-group w-100 mb-3" role="group" aria-label="Tipo de carga">
-                        <input type="radio" class="btn-check" name="usersImportKind" id="usersImportStudents" value="alumnos" checked onchange="renderUsersImportHelp()">
-                        <label class="btn btn-outline-primary" for="usersImportStudents"><i class="bi bi-mortarboard"></i> Alumnos</label>
-                        <input type="radio" class="btn-check" name="usersImportKind" id="usersImportStaff" value="personal" onchange="renderUsersImportHelp()">
-                        <label class="btn btn-outline-primary" for="usersImportStaff"><i class="bi bi-person-badge"></i> Docentes y personal</label>
-                    </div>
-                    <div class="alert alert-light border small" id="usersImportHelp"></div>
-                    <button type="button" class="btn btn-sm btn-outline-secondary mb-3" onclick="downloadUsersExcelTemplate(selectedUsersImportKind())">
-                        <i class="bi bi-download"></i> Descargar plantilla
-                    </button>
-                    <label class="form-label d-block" for="usersImportFile">Archivo</label>
-                    <input type="file" class="form-control" id="usersImportFile" accept=".xls,.xlsx,.csv" required>
-                    <div class="form-text">Usa la plantilla .xls o guárdala como .xlsx/.csv. La contraseña inicial de cada cuenta es su matrícula o número de empleado.</div>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancelar</button>
-                    <button type="submit" class="btn btn-success" id="usersImportBtn"><i class="bi bi-upload"></i> Importar</button>
-                </div>
-            </form>
         </div>
     </div>
 
@@ -474,13 +430,28 @@ if (!is_authenticated() || !can_view_users()) {
         let controlGroups = [];
         let groupControlModal;
         let groupFormModal;
-        let usersImportModal;
         let usersCredentialModal;
         let userFormModal;
         let editingGroupId = null;
         let loadedModalUser = null;
         let usersSearchTimer = null;
         let visibleUserIds = [];
+        // La cabecera (título, botones y barra de selección) se queda arriba al bajar y se compacta.
+        (() => {
+            const sentinel = document.getElementById('usersStickySentinel');
+            const head = document.getElementById('usersStickyHead');
+            if (!sentinel || !head) return;
+            // La página puede desplazarse en el documento o dentro del body: se escucha en captura.
+            let frame = 0;
+            const check = () => {
+                frame = 0;
+                const top = (document.querySelector('.navbar')?.getBoundingClientRect().height || 80) + 12;
+                head.classList.toggle('is-stuck', sentinel.getBoundingClientRect().top < top);
+            };
+            document.addEventListener('scroll', () => { if (!frame) frame = requestAnimationFrame(check); }, { capture: true, passive: true });
+            addEventListener('resize', check, { passive: true });
+            check();
+        })();
         let credentialSelectionMode = false;
         const selectedUserIds = new Set();
 
@@ -678,13 +649,6 @@ if (!is_authenticated() || !can_view_users()) {
                 toolbar.classList.toggle('d-flex', credentialSelectionMode);
             }
 
-            const openButton = document.getElementById('credentialEmailOpenBtn');
-            if (openButton) {
-                openButton.innerHTML = credentialSelectionMode
-                    ? '<i class="bi bi-envelope-check"></i> Continuar envío'
-                    : '<i class="bi bi-envelope-lock"></i> Enviar credenciales';
-                openButton.className = credentialSelectionMode ? 'btn btn-warning' : 'btn btn-outline-warning';
-            }
 
             const selectAll = document.getElementById('selectVisibleUsersCheckbox');
             if (selectAll) {
@@ -699,16 +663,6 @@ if (!is_authenticated() || !can_view_users()) {
             if (selectedHelp) selectedHelp.textContent = count > 0
                 ? `${count} usuario${count === 1 ? '' : 's'} seleccionado${count === 1 ? '' : 's'} para pruebas controladas.`
                 : 'Selecciona usuarios en la tabla para usar esta opción.';
-        }
-
-        function enableCredentialSelectionMode() {
-            credentialSelectionMode = true;
-            updateSelectedUsersUi();
-            document.getElementById('alertContainer').innerHTML = `
-                <div class="alert alert-info alert-dismissible fade show" role="alert">
-                    <i class="bi bi-info-circle"></i> Selecciona usuarios en la tabla o presiona <strong>Continuar envío</strong> para usar filtros por perfil.
-                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-                </div>`;
         }
 
         function cancelCredentialSelectionMode() {
@@ -1280,49 +1234,6 @@ if (!is_authenticated() || !can_view_users()) {
             await toggleUserStatus(userId, password);
         }
 
-        function selectedUsersImportKind() {
-            return document.querySelector('input[name="usersImportKind"]:checked')?.value || 'alumnos';
-        }
-
-        async function renderUsersImportHelp() {
-            const help = document.getElementById('usersImportHelp');
-            if (selectedUsersImportKind() === 'personal') {
-                help.innerHTML = '<strong>Columnas:</strong> número de empleado, nombres, apellidos, correo, teléfono, especialidad y perfil (Jefe de carrera, Asistente de jefatura, Coordinador de proyectos integradores o Docente).';
-                return;
-            }
-            let semesters = '';
-            try {
-                const policy = await api.get('/semester-management/policy', { _cache_ttl: 60000 });
-                semesters = policy.period
-                    ? ` En <strong>${escapeHtml(policy.period.nombre)}</strong> sólo existen los semestres <strong>${policy.period_semesters.join(', ')}</strong>.`
-                    : ' La carrera necesita un periodo abierto para asignar grupos.';
-            } catch (error) { /* la ayuda es opcional */ }
-            help.innerHTML = '<strong>Columnas:</strong> matrícula, nombres, apellidos, correo, semestre y grupo (letra). Los grupos que no existan en el periodo abierto se crean automáticamente (por ejemplo 7° A).' + semesters;
-        }
-
-        function downloadUsersExcelTemplate(kind = 'alumnos') {
-            fetch(`${API_BASE_URL}/users-template.xls?tipo=${encodeURIComponent(kind)}`, {
-                credentials: 'include'
-            })
-                .then(async response => {
-                    if (!response.ok) {
-                        const text = await response.text().catch(() => '');
-                        throw new Error(text || `No se pudo generar la plantilla (${response.status})`);
-                    }
-                    return response.blob();
-                })
-                .then(blob => saveBlob(blob, kind === 'personal' ? 'plantilla_personal.xls' : 'plantilla_alumnos.xls'))
-                .catch(error => showError(error.message || 'No se pudo generar la plantilla Excel'));
-        }
-
-        function openUsersImportModal() {
-            if (!usersImportModal) usersImportModal = new bootstrap.Modal(document.getElementById('usersImportModal'));
-            document.getElementById('usersImportForm').reset();
-            document.getElementById('usersImportAlert').innerHTML = '';
-            renderUsersImportHelp();
-            usersImportModal.show();
-        }
-
         function currentUsersFilterPayload() {
             const payload = {};
             if (currentStatus !== 'all') payload.status = currentStatus;
@@ -1390,12 +1301,8 @@ if (!is_authenticated() || !can_view_users()) {
             document.getElementById('credentialEmailScope').textContent = scope;
         }
 
+        // Se abre desde la barra de selección: con usuarios elegidos se envía a ellos; sin elegir, por perfil y filtros.
         async function openCredentialEmailModal() {
-            if (!credentialSelectionMode) {
-                enableCredentialSelectionMode();
-                return;
-            }
-
             if (!usersCredentialModal) usersCredentialModal = new bootstrap.Modal(document.getElementById('credentialEmailModal'));
             document.getElementById('credentialEmailForm').reset();
             document.getElementById('credentialEmailAlert').innerHTML = '';
@@ -1494,62 +1401,6 @@ if (!is_authenticated() || !can_view_users()) {
                 refreshCredentialScopeText();
             }
         });
-
-        async function importUsersExcel(event) {
-            event.preventDefault();
-            const file = document.getElementById('usersImportFile').files[0];
-            if (!file) return;
-
-            const formData = new FormData();
-            formData.append('archivo', file);
-            formData.append('tipo', selectedUsersImportKind());
-            const button = document.getElementById('usersImportBtn');
-            const originalText = button.innerHTML;
-            button.disabled = true;
-            button.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span> Importando...';
-
-            try {
-                const result = await api.post('/users/import-excel', formData);
-                renderImportResult('#usersImportAlert', result);
-                await loadUsers(1);
-            } catch (error) {
-                renderImportException('#usersImportAlert', error);
-            } finally {
-                button.disabled = false;
-                button.innerHTML = originalText;
-            }
-        }
-
-        function renderImportException(target, error) {
-            const result = error.result || {};
-            const errors = result.errors || error.errors || {};
-            const messages = Array.isArray(errors)
-                ? errors.flatMap(item => item.errores ? [`Fila ${item.fila}: ${item.errores.join(' | ')}`] : item)
-                : Object.values(errors).flat();
-            const details = messages.length
-                ? `<hr><div class="small">${messages.slice(0, 12).map(message => `<div>${escapeHtml(message)}</div>`).join('')}${messages.length > 12 ? '<div>...</div>' : ''}</div>`
-                : '';
-            document.querySelector(target).innerHTML = `
-                <div class="alert alert-danger">
-                    ${escapeHtml(error.message || result.message || 'No se pudo importar el archivo')}
-                    ${details}
-                </div>`;
-        }
-
-        function renderImportResult(target, result) {
-            const errors = result.errors || [];
-            const details = errors.length
-                ? `<hr><div class="small">${errors.slice(0, 10).map(item => `<div><strong>Fila ${escapeHtml(item.fila)}:</strong> ${escapeHtml((item.errores || []).join(' | '))}</div>`).join('')}${errors.length > 10 ? '<div>...</div>' : ''}</div>`
-                : '';
-            document.querySelector(target).innerHTML = `
-                <div class="alert ${errors.length ? 'alert-warning' : 'alert-success'}">
-                    Registros creados: <strong>${Number(result.created || 0)}</strong>.
-                    Cuentas existentes vinculadas: <strong>${Number(result.linked || 0)}</strong>.
-                    Errores: <strong>${errors.length}</strong>.
-                    ${(result.groups_created || []).length ? `<br>Grupos creados: <strong>${result.groups_created.map(escapeHtml).join(', ')}</strong>.` : ''}
-                    ${details}
-                </div>`;
-        }
 
         function showError(message) {
             if (window.swalToast && window.swalToast('danger', message)) return;

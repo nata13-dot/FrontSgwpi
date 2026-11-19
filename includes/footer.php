@@ -585,6 +585,17 @@ window.stableSwalFire = async function (options = {}) {
     window.Swal.__sgpiPatched = true;
 })();
 
+// Altura real de la barra superior (cambia con el zoom y el tamaño): la usan las cabeceras fijas.
+(function trackNavbarHeight() {
+    const update = () => {
+        const nav = document.querySelector('.navbar');
+        if (nav) document.documentElement.style.setProperty('--sgpi-nav-h', `${Math.round(nav.getBoundingClientRect().height)}px`);
+    };
+    update();
+    addEventListener('resize', update, { passive: true });
+    addEventListener('load', update);
+})();
+
 window.confirmAction = async function ({
     title = '¿Confirmar acción?',
     text = '',
