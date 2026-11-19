@@ -7990,7 +7990,7 @@ table:has(#usersTable) thead th:nth-child(2) { white-space: nowrap; }
     --glass-bg: rgba(255, 255, 255, .62); --glass-bg-strong: rgba(255, 255, 255, .8); --glass-bg-soft: rgba(255, 255, 255, .4);
     --glass-line: rgba(255, 255, 255, .62); --glass-line-soft: rgba(16, 30, 54, .08);
     --glass-blur: blur(18px) saturate(1.45); --glass-shadow: 0 8px 32px rgba(10, 25, 50, .16), inset 0 1px 0 rgba(255, 255, 255, .5);
-    --glass-veil: linear-gradient(180deg, rgba(226, 235, 248, .42), rgba(210, 222, 242, .54));
+    --glass-veil: linear-gradient(180deg, rgba(255, 255, 255, .06), rgba(255, 255, 255, .12));
     --glass-nav: rgba(255, 255, 255, .62); --glass-side: rgba(12, 33, 66, .62);
     background: #0c2142;
 }
@@ -7998,7 +7998,7 @@ table:has(#usersTable) thead th:nth-child(2) { white-space: nowrap; }
     --glass-bg: rgba(16, 24, 40, .56); --glass-bg-strong: rgba(16, 24, 40, .74); --glass-bg-soft: rgba(16, 24, 40, .38);
     --glass-line: rgba(255, 255, 255, .12); --glass-line-soft: rgba(255, 255, 255, .06);
     --glass-shadow: 0 10px 34px rgba(0, 0, 0, .45), inset 0 1px 0 rgba(255, 255, 255, .06);
-    --glass-veil: linear-gradient(180deg, rgba(6, 12, 24, .46), rgba(6, 12, 24, .6));
+    --glass-veil: linear-gradient(180deg, rgba(6, 12, 24, .18), rgba(6, 12, 24, .3));
     --glass-nav: rgba(14, 22, 38, .62); --glass-side: rgba(8, 20, 42, .66);
 }
 /* Velo sobre la foto: la mantiene presente pero suave, para que todo se lea. */
@@ -8006,8 +8006,8 @@ table:has(#usersTable) thead th:nth-child(2) { white-space: nowrap; }
 :root[data-glass="on"] body::before { content: ''; position: fixed; inset: 0; z-index: -1; background: var(--glass-veil); pointer-events: none; }
 /* La foto va ligeramente difuminada: conserva color y ambiente sin competir con los textos. */
 :root[data-glass="on"] body::after {
-    content: ''; position: fixed; inset: -40px; z-index: -2; pointer-events: none;
-    background: url('/assets/img/ITSSMT/fondochido2.webp') center 40% / cover no-repeat; filter: blur(7px) saturate(1.15);
+    content: ''; position: fixed; inset: 0; z-index: -2; pointer-events: none;
+    background: url('/assets/img/ITSSMT/fondochido2.webp') center 40% / cover no-repeat; filter: none;
 }
 /* Textos que van directo sobre la foto */
 :root[data-glass="on"] body .main-content :is(h1, .h1, .form-label, .users-filter-label, .sg-related-title, #statusDescription, .section-title, .section-subtitle) {
