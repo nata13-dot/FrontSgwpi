@@ -107,6 +107,36 @@ $serverDashboardUrl = dashboard_url();
             padding-right: 1.35rem;
         }
 
+        .hero-search {
+            display: flex; align-items: center; gap: 0.6rem; max-width: 760px; padding: 0.45rem 0.45rem 0.45rem 1.1rem;
+            background: rgba(255, 255, 255, 0.97); border-radius: 20px;
+            box-shadow: 0 2px 6px rgba(5, 20, 42, 0.18), 0 24px 54px rgba(5, 20, 42, 0.38);
+        }
+        .hero-search > i { color: #2D5A96; font-size: 1.25rem; }
+        .hero-search input {
+            flex: 1; min-width: 0; border: 0; outline: 0; background: transparent; font-size: 1.1rem; color: #1b2433; padding: 0.7rem 0;
+        }
+        .hero-search input::placeholder { color: #7a8597; }
+        .hero-search .btn {
+            display: inline-flex; align-items: center; gap: 0.5rem; min-height: 54px; padding: 0 1.4rem; border: 0; border-radius: 15px;
+            font-weight: 800; color: #fff !important; background: linear-gradient(135deg, #1B396A, #2D5A96) !important; white-space: nowrap;
+            box-shadow: 0 8px 18px rgba(27, 57, 106, 0.35);
+        }
+        .hero-search .btn:hover { transform: translateY(-1px); }
+        .hero-links { display: flex; flex-wrap: wrap; align-items: center; gap: 0.6rem 1rem; margin-top: 1.1rem; color: rgba(255, 255, 255, 0.85); font-size: 0.98rem; }
+        .hero-links a { color: #fff; text-decoration: none; display: inline-flex; align-items: center; gap: 0.4rem; }
+        .hero-link-strong { font-weight: 800; padding: 0.45rem 0.9rem; border-radius: 12px; background: rgba(255, 255, 255, 0.14); border: 1px solid rgba(255, 255, 255, 0.24); }
+        .hero-link-strong:hover { background: rgba(255, 255, 255, 0.24); }
+        .hero-link-sep { width: 1px; height: 20px; background: rgba(255, 255, 255, 0.3); }
+        .hero-link-note { display: inline-flex; align-items: center; gap: 0.4rem; }
+        .hero-link-soft { font-weight: 600; text-decoration: underline !important; text-underline-offset: 3px; }
+        @media (max-width: 575.98px) {
+            .hero-search { flex-wrap: wrap; padding: 0.6rem; }
+            .hero-search input { flex-basis: calc(100% - 2rem); }
+            .hero-search .btn { width: 100%; justify-content: center; }
+            .hero-link-sep { display: none; }
+        }
+
         .repository-spotlight {
             background: linear-gradient(180deg, #f8fafc 0%, #ffffff 100%);
         }
@@ -363,21 +393,21 @@ $serverDashboardUrl = dashboard_url();
         <div class="container-xl">
             <div class="index-hero-content">
                 <div class="repository-hero-kicker">
-                    <i class="bi bi-archive"></i>
-                    Repositorio académico del instituto
+                    <i class="bi bi-globe2" aria-hidden="true"></i>
+                    Repositorio público · acceso libre, sin cuenta
                 </div>
-                <h1 class="display-3 fw-bold text-white mb-4">Explora los trabajos y evidencias académicas desarrolladas en el instituto</h1>
-                <p class="lead text-white mb-4">Consulta proyectos integradores, documentos y materiales seleccionados como parte de la memoria académica institucional.</p>
-                <div class="hero-actions">
-                    <a href="/pages/repositorio.php" class="btn btn-light btn-lg">
-                        <i class="bi bi-search"></i> Explorar repositorio
-                    </a>
-                    <button type="button" class="btn btn-outline-light btn-lg" data-bs-toggle="modal" data-bs-target="#loginModal">
-                        <i class="bi bi-box-arrow-in-right"></i> Iniciar sesión
-                    </button>
-                    <a href="/pages/register.php" id="selfRegistrationHero" class="btn btn-outline-light btn-lg d-none">
-                        <i class="bi bi-person-plus" aria-hidden="true"></i> Crear cuenta de alumno
-                    </a>
+                <h1 class="display-3 fw-bold text-white mb-3">Consulta los proyectos y evidencias académicas del instituto</h1>
+                <p class="lead text-white mb-4">Cualquier persona puede buscar y leer los proyectos integradores, tesis y documentos que publica el ITSSMT. No necesitas registrarte.</p>
+                <form class="hero-search" action="/pages/repositorio.php" method="get" role="search" aria-label="Buscar en el repositorio">
+                    <i class="bi bi-search" aria-hidden="true"></i>
+                    <input type="search" name="q" placeholder="Busca por proyecto, autor, empresa o tema" aria-label="Qué quieres buscar" autocomplete="off">
+                    <button type="submit" class="btn btn-light"><span>Buscar en el repositorio</span><i class="bi bi-arrow-right" aria-hidden="true"></i></button>
+                </form>
+                <div class="hero-links">
+                    <a href="/pages/repositorio.php" class="hero-link-strong"><i class="bi bi-archive" aria-hidden="true"></i> Ver todo el repositorio</a>
+                    <span class="hero-link-sep" aria-hidden="true"></span>
+                    <span class="hero-link-note"><i class="bi bi-unlock" aria-hidden="true"></i> Lectura y descarga de documentos públicos</span>
+                    <a href="/pages/register.php" id="selfRegistrationHero" class="hero-link-soft d-none"><i class="bi bi-person-plus" aria-hidden="true"></i> ¿Eres alumno? Crea tu cuenta</a>
                 </div>
             </div>
         </div>
