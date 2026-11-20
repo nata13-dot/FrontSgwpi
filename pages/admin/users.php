@@ -886,22 +886,29 @@ if (!is_authenticated() || !can_view_users()) {
             const semester = document.getElementById('controlSemester').value;
             const box = document.getElementById('groupControlContent');
             box.innerHTML = '<div class="col-12 text-center py-4"><div class="spinner-border"></div></div>';
+            // Cada grupo trae sus alumnos según la matrícula (no por letra): así no se mezclan grupos de distintos periodos.
             const [semesterGroups, studentsResponse] = await Promise.all([
-                api.get('/subject-groups', { semestre: semester, _cache_ttl: 60000 }),
-                api.getAll('/users', { perfil_id: 3, status: 'active', compact: 1, per_page: 500, _cache_ttl: 30000 })
+                api.get('/subject-groups', { semestre: semester, with_students: 1, _cache_ttl: 0, _fresh: true }),
+                api.getAll('/users', { perfil_id: 3, status: 'active', compact: 1, per_page: 500, _cache_ttl: 0, _fresh: true })
             ]);
                 controlGroups = semesterGroups;
-                const students = (studentsResponse.data || []).filter(student => String(student.semestre || '') === String(semester));
+                const students = studentsResponse.data || [];
+                let lastBlock = null;
                 box.innerHTML = semesterGroups.map(group => {
-                    const members = students.filter(student => String(student.grupo || '').toUpperCase() === String(group.grupo || '').toUpperCase());
-                    const available = students.filter(student => String(student.grupo || '').toUpperCase() !== String(group.grupo || '').toUpperCase());
-                    return `
+                    const members = group.alumnos || [];
+                    const memberIds = new Set(members.map(student => String(student.id)));
+                    const available = students.filter(student => !memberIds.has(String(student.id)));
+                    const block = group.periodo_vigente ? 'vigente' : 'otros';
+                    const heading = block !== lastBlock
+                        ? `<div class="col-12"><h6 class="text-uppercase small fw-bold text-muted mb-0 mt-2">${block === 'vigente' ? 'Periodo vigente' : 'Otros periodos'}</h6></div>` : '';
+                    lastBlock = block;
+                    return heading + `
                     <div class="col-lg-6">
                         <div class="card border-0 shadow-sm h-100">
                             <div class="card-header d-flex flex-wrap justify-content-between align-items-center gap-2">
                                 <div>
                                     <strong>${escapeHtml(group.semestre)} ${escapeHtml(group.grupo)} - ${escapeHtml(group.nombre)}</strong>
-                                    ${group.periodo ? `<div class="small opacity-75">${escapeHtml(group.periodo)}</div>` : ''}
+                                    ${group.periodo ? `<div class="small opacity-75">${escapeHtml(group.periodo)}${group.periodo_vigente ? ' · vigente' : (group.periodo_estado ? ` · ${escapeHtml(group.periodo_estado.replace('_', ' '))}` : '')}</div>` : ''}
                                 </div>
                                 <div class="d-flex flex-wrap align-items-center gap-2">
                                     <span class="badge bg-light text-primary">${members.length} alumnos</span>
@@ -915,11 +922,11 @@ if (!is_authenticated() || !can_view_users()) {
                                 <div class="input-group input-group-sm mb-3">
                                     <select class="form-select" id="addStudent-${group.id}">
                                         <option value="">Agregar alumno al grupo</option>
-                                        ${available.map(student => `<option value="${escapeHtml(student.id)}">${escapeHtml(student.id)} - ${escapeHtml(student.nombres)} ${escapeHtml(student.apa || '')} ${student.grupo ? `(actual: ${escapeHtml(student.grupo)})` : '(sin grupo)'}</option>`).join('')}
+                                        ${available.map(student => `<option value="${escapeHtml(student.id)}">${escapeHtml(student.id)} - ${escapeHtml(student.nombres)} ${escapeHtml(student.apa || '')} ${student.grupo ? `(actual: ${escapeHtml(student.semestre || '')}° ${escapeHtml(student.grupo)})` : '(sin grupo)'}</option>`).join('')}
                                     </select>
                                     <button class="btn btn-outline-primary" onclick="assignStudentToGroup(${group.id})"><i class="bi bi-plus"></i></button>
                                 </div>
-                                ${members.length ? members.map(student => `<div class="d-flex justify-content-between align-items-center border-bottom py-2 gap-2"><span>${escapeHtml(student.id)} - ${escapeHtml(student.nombres)} ${escapeHtml(student.apa || '')}</span><div class="btn-group btn-group-sm"><button type="button" class="btn btn-outline-primary" onclick="openUserModal('${escapeHtml(student.id)}')"><i class="bi bi-pencil"></i></button><button class="btn btn-outline-warning" onclick="removeStudentFromGroup('${escapeHtml(student.id)}')" title="Quitar del grupo"><i class="bi bi-person-dash"></i></button></div></div>`).join('') : '<p class="text-muted mb-0">Sin alumnos en este grupo.</p>'}
+                                ${members.length ? members.map(student => `<div class="d-flex justify-content-between align-items-center border-bottom py-2 gap-2"><span>${escapeHtml(student.id)} - ${escapeHtml(student.nombres)} ${escapeHtml(student.apa || '')}</span><div class="btn-group btn-group-sm"><button type="button" class="btn btn-outline-primary" onclick="openUserModal('${escapeHtml(student.id)}')"><i class="bi bi-pencil"></i></button><button class="btn btn-outline-warning" onclick="removeStudentFromGroup('${escapeHtml(student.id)}', ${Number(group.id)})" title="Quitar del grupo"><i class="bi bi-person-dash"></i></button></div></div>`).join('') : '<p class="text-muted mb-0">Sin alumnos en este grupo.</p>'}
                             </div>
                         </div>
                     </div>`;
@@ -1057,15 +1064,15 @@ if (!is_authenticated() || !can_view_users()) {
             }
         }
 
-        async function removeStudentFromGroup(studentId) {
+        async function removeStudentFromGroup(studentId, groupId) {
             const confirmed = await confirmAction({
                 title: 'Quitar alumno del grupo',
-                text: 'El alumno quedara sin semestre y grupo asignado hasta que lo reasignes.',
-                confirmButtonText: 'Si, quitar'
+                text: 'Su matrícula en este grupo queda inactiva (se conserva el historial). Podrás asignarlo a otro grupo.',
+                confirmButtonText: 'Sí, quitar'
             });
             if (!confirmed) return;
             try {
-                await api.put(`/users/${studentId}`, { semestre: null, grupo: null });
+                await api.delete(`/subject-groups/${groupId}/students/${encodeURIComponent(studentId)}`);
                 swalToast('success', 'Alumno removido del grupo');
                 await loadControlGroups();
                 await loadUsers(currentPage);
