@@ -882,6 +882,23 @@ if (!is_authenticated() || !can_view_users()) {
             groupControlModal.show();
         }
 
+        // Grupos desplegados en el control: se conservan al recargar tras agregar o quitar alumnos.
+        const openControlGroups = new Set();
+        document.addEventListener('toggle', event => {
+            const box = event.target;
+            if (!box.classList?.contains('group-summary')) return;
+            const id = Number(box.dataset.group);
+            box.open ? openControlGroups.add(id) : openControlGroups.delete(id);
+        }, true);
+        document.addEventListener('input', event => {
+            if (!event.target.classList?.contains('group-search')) return;
+            const term = event.target.value.trim().toLowerCase();
+            const body = event.target.closest('.group-summary-body');
+            let shown = 0;
+            body.querySelectorAll('.group-members li').forEach(item => { const hit = !term || item.dataset.search.includes(term); item.classList.toggle('d-none', !hit); if (hit) shown++; });
+            body.querySelector('.group-empty-search')?.classList.toggle('d-none', shown > 0);
+        });
+
         async function loadControlGroups() {
             const semester = document.getElementById('controlSemester').value;
             const box = document.getElementById('groupControlContent');
@@ -902,33 +919,44 @@ if (!is_authenticated() || !can_view_users()) {
                     const heading = block !== lastBlock
                         ? `<div class="col-12"><h6 class="text-uppercase small fw-bold text-muted mb-0 mt-2">${block === 'vigente' ? 'Periodo vigente' : 'Otros periodos'}</h6></div>` : '';
                     lastBlock = block;
+                    const initials = student => `${(student.nombres || '?').trim().charAt(0)}${(student.apa || '').trim().charAt(0)}`.toUpperCase();
+                    const open = openControlGroups.has(Number(group.id));
                     return heading + `
                     <div class="col-lg-6">
-                        <div class="card border-0 shadow-sm h-100">
-                            <div class="card-header d-flex flex-wrap justify-content-between align-items-center gap-2">
-                                <div>
-                                    <strong>${escapeHtml(group.semestre)} ${escapeHtml(group.grupo)} - ${escapeHtml(group.nombre)}</strong>
-                                    ${group.periodo ? `<div class="small opacity-75">${escapeHtml(group.periodo)}${group.periodo_vigente ? ' · vigente' : (group.periodo_estado ? ` · ${escapeHtml(group.periodo_estado.replace('_', ' '))}` : '')}</div>` : ''}
+                        <details class="group-summary card border-0 shadow-sm" data-group="${Number(group.id)}" ${open ? 'open' : ''}>
+                            <summary class="group-summary-head">
+                                <div class="group-summary-title">
+                                    <strong>${escapeHtml(group.semestre)}° ${escapeHtml(group.grupo || '')} <span class="fw-normal opacity-75">· ${escapeHtml(group.nombre)}</span></strong>
+                                    ${group.periodo ? `<small>${escapeHtml(group.periodo)}${group.periodo_vigente ? ' · vigente' : (group.periodo_estado ? ` · ${escapeHtml(group.periodo_estado.replace('_', ' '))}` : '')}</small>` : ''}
                                 </div>
-                                <div class="d-flex flex-wrap align-items-center gap-2">
-                                    <span class="badge bg-light text-primary">${members.length} alumnos</span>
+                                <div class="group-summary-meta">
+                                    <span class="group-avatars" aria-hidden="true">${members.slice(0, 4).map(student => `<span>${escapeHtml(initials(student))}</span>`).join('')}${members.length > 4 ? `<span class="more">+${members.length - 4}</span>` : ''}</span>
+                                    <span class="group-count"><i class="bi bi-people"></i> ${members.length}</span>
+                                    <span class="group-toggle"><span class="when-closed">Ver alumnos</span><span class="when-open">Ocultar</span><i class="bi bi-chevron-down"></i></span>
+                                </div>
+                            </summary>
+                            <div class="group-summary-body">
+                                <div class="group-summary-tools">
+                                    <div class="input-group input-group-sm">
+                                        <select class="form-select" id="addStudent-${group.id}" aria-label="Agregar alumno al grupo">
+                                            <option value="">Agregar alumno al grupo</option>
+                                            ${available.map(student => `<option value="${escapeHtml(student.id)}">${escapeHtml(student.id)} - ${escapeHtml(student.nombres)} ${escapeHtml(student.apa || '')} ${student.grupo ? `(actual: ${escapeHtml(student.semestre || '')}° ${escapeHtml(student.grupo)})` : '(sin grupo)'}</option>`).join('')}
+                                        </select>
+                                        <button class="btn btn-outline-primary" onclick="assignStudentToGroup(${group.id})" title="Agregar"><i class="bi bi-plus"></i></button>
+                                    </div>
                                     <div class="btn-group btn-group-sm">
-                                        <button type="button" class="btn btn-light" onclick="editControlGroup(${group.id})" title="Editar grupo"><i class="bi bi-pencil"></i></button>
-                                        <button type="button" class="btn btn-outline-light" onclick="deleteControlGroup(${group.id}, ${members.length})" title="Eliminar grupo"><i class="bi bi-trash"></i></button>
+                                        <button type="button" class="btn btn-outline-secondary" onclick="editControlGroup(${group.id})" title="Editar grupo"><i class="bi bi-pencil"></i></button>
+                                        <button type="button" class="btn btn-outline-danger" onclick="deleteControlGroup(${group.id}, ${members.length})" title="Eliminar grupo"><i class="bi bi-trash"></i></button>
                                     </div>
                                 </div>
+                                ${members.length > 6 ? `<input type="search" class="form-control form-control-sm mb-2 group-search" placeholder="Buscar en el grupo por nombre o número de control" aria-label="Buscar en el grupo">` : ''}
+                                ${members.length ? `<ul class="group-members">${members.map(student => `<li data-search="${escapeHtml(`${student.id} ${student.nombres} ${student.apa || ''} ${student.ama || ''}`.toLowerCase())}">
+                                    <span class="group-avatar">${escapeHtml(initials(student))}</span>
+                                    <span class="group-member-name"><strong>${escapeHtml(student.nombres)} ${escapeHtml(student.apa || '')} ${escapeHtml(student.ama || '')}</strong><small>${escapeHtml(student.id)}</small></span>
+                                    <span class="btn-group btn-group-sm"><button type="button" class="btn btn-outline-primary" onclick="openUserModal('${escapeHtml(student.id)}')" title="Editar alumno"><i class="bi bi-pencil"></i></button><button class="btn btn-outline-warning" onclick="removeStudentFromGroup('${escapeHtml(student.id)}', ${Number(group.id)})" title="Quitar del grupo"><i class="bi bi-person-dash"></i></button></span>
+                                </li>`).join('')}</ul><p class="text-muted small mb-0 group-empty-search d-none">Nadie coincide con la búsqueda.</p>` : '<p class="text-muted mb-0">Sin alumnos en este grupo.</p>'}
                             </div>
-                            <div class="card-body">
-                                <div class="input-group input-group-sm mb-3">
-                                    <select class="form-select" id="addStudent-${group.id}">
-                                        <option value="">Agregar alumno al grupo</option>
-                                        ${available.map(student => `<option value="${escapeHtml(student.id)}">${escapeHtml(student.id)} - ${escapeHtml(student.nombres)} ${escapeHtml(student.apa || '')} ${student.grupo ? `(actual: ${escapeHtml(student.semestre || '')}° ${escapeHtml(student.grupo)})` : '(sin grupo)'}</option>`).join('')}
-                                    </select>
-                                    <button class="btn btn-outline-primary" onclick="assignStudentToGroup(${group.id})"><i class="bi bi-plus"></i></button>
-                                </div>
-                                ${members.length ? members.map(student => `<div class="d-flex justify-content-between align-items-center border-bottom py-2 gap-2"><span>${escapeHtml(student.id)} - ${escapeHtml(student.nombres)} ${escapeHtml(student.apa || '')}</span><div class="btn-group btn-group-sm"><button type="button" class="btn btn-outline-primary" onclick="openUserModal('${escapeHtml(student.id)}')"><i class="bi bi-pencil"></i></button><button class="btn btn-outline-warning" onclick="removeStudentFromGroup('${escapeHtml(student.id)}', ${Number(group.id)})" title="Quitar del grupo"><i class="bi bi-person-dash"></i></button></div></div>`).join('') : '<p class="text-muted mb-0">Sin alumnos en este grupo.</p>'}
-                            </div>
-                        </div>
+                        </details>
                     </div>`;
             }).join('') || '<div class="col-12"><p class="text-muted">No hay grupos creados para este semestre. Crea uno desde Asignaturas > Gestionar Cargas.</p></div>';
         }
