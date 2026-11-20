@@ -13,6 +13,7 @@ return [
     '/pages/repositorio.php' => '/repositorio',
     '/pages/reset-password.php' => '/restablecer',
     '/pages/thesis.php' => '/tesis',
+    '/pages/download-app.php' => '/descargar-app',
     '/pages/tracking.php' => '/avances',
 
     '/pages/admin/advisors.php' => '/asesores',

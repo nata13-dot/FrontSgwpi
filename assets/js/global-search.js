@@ -14,7 +14,8 @@
         item('Inicio', 'Panel principal del sistema', dashboardPath(role), 'bi-house', ['dashboard', 'principal']),
         item('Repositorio', 'Consultar documentos publicados y privados', '/pages/repositorio.php', 'bi-archive', ['documentos', 'archivos', 'biblioteca']),
         item('Documentos de evaluación', 'Consultar presentaciones y evidencias de evaluación', '/pages/evaluation-documents.php', 'bi-file-earmark-ppt', ['diapositivas', 'evidencias']),
-        item('Mi perfil', 'Consultar y actualizar datos personales', '/pages/profile.php', 'bi-person-circle', ['cuenta', 'foto', 'contraseña'])
+        item('Mi perfil', 'Consultar y actualizar datos personales', '/pages/profile.php', 'bi-person-circle', ['cuenta', 'foto', 'contraseña']),
+        item('Descargar la app', 'App de SGPI para Android', '/pages/download-app.php', 'bi-android2', ['app', 'android', 'apk', 'celular', 'telefono', 'descargar'])
     ];
 
     const roleItems = {

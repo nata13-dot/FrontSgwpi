@@ -416,6 +416,7 @@ $serverDashboardUrl = dashboard_url();
                     <a href="/pages/repositorio.php" class="hero-link-strong"><i class="bi bi-archive" aria-hidden="true"></i> Ver todo el repositorio <span class="hero-total" data-repo-count="total"></span><i class="bi bi-arrow-right" aria-hidden="true"></i></a>
                     <span class="hero-link-note"><i class="bi bi-unlock" aria-hidden="true"></i> Lectura y descarga de documentos públicos</span>
                     <a href="/pages/register.php" id="selfRegistrationHero" class="hero-link-soft d-none"><i class="bi bi-person-plus" aria-hidden="true"></i> ¿Eres alumno? Crea tu cuenta</a>
+                    <a href="/pages/download-app.php" data-app-download class="hero-link-soft d-none"><i class="bi bi-android2" aria-hidden="true"></i> Descarga la app para Android</a>
                 </div>
             </div>
             <aside class="hero-latest d-none" id="heroLatest" aria-label="Documentos publicados recientemente">
@@ -604,6 +605,7 @@ $serverDashboardUrl = dashboard_url();
                     <div class="text-center mt-3">
                         <a href="/pages/register.php" id="selfRegistrationLink" class="d-none btn btn-outline-primary w-100 mb-2"><i class="bi bi-person-plus"></i> ¿Eres alumno y no tienes cuenta? Crear cuenta</a>
                         <small class="text-muted">Acceso exclusivo para usuarios registrados del sistema.</small>
+                        <a href="/pages/download-app.php" data-app-download class="d-none d-block small mt-2"><i class="bi bi-android2"></i> ¿Usas Android? Descarga la app</a>
                     </div>
                 </div>
             </div>
@@ -701,6 +703,13 @@ $serverDashboardUrl = dashboard_url();
     <script src="<?= asset('/assets/js/app.js') ?>"></script>
     <script src="<?= asset('/assets/js/responsive.js') ?>"></script>
     <script src="<?= asset('/assets/js/password-recovery.js') ?>"></script>
+    <script>
+    // Los accesos a la app sólo aparecen cuando hay una versión publicada.
+    fetch(`${API_BASE_URL}/app/latest`, { headers: { Accept: 'application/json' } })
+        .then(r => r.ok ? r.json() : null)
+        .then(r => { if (r?.data) document.querySelectorAll('[data-app-download]').forEach(el => el.classList.remove('d-none')); })
+        .catch(() => {});
+    </script>
     <script>
         // "Crear cuenta" sólo aparece mientras alguna carrera tenga abierto el autoregistro.
         // Se vuelve a consultar al abrir el inicio de sesión, al regresar a la pestaña y a la hora del cierre.

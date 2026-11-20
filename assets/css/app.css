@@ -8284,3 +8284,9 @@ table:has(#usersTable) thead th:nth-child(2) { white-space: nowrap; }
   .thesis-console .tc-chapter-score { align-items: flex-start; text-align: left; }
   .thesis-console .tc-frame { height: 70vh; }
 }
+
+/* Descarga de la app (pages/download-app.php). */
+.download-app .download-qr { width: 216px; height: 216px; padding: 8px; background: #fff; border-radius: 16px; border: 1px solid var(--border-color, #e2e6ee); }
+.download-app .download-qr img, .download-app .download-qr canvas { display: block; width: 200px !important; height: 200px !important; }
+.download-app .download-steps li { margin-bottom: .5rem; }
+.download-app .download-icon { box-shadow: 0 4px 14px rgba(16, 30, 54, .18); }
