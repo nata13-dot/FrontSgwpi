@@ -8325,3 +8325,15 @@ table:has(#usersTable) thead th:nth-child(2) { white-space: nowrap; }
 @media (max-width: 575.98px) { .group-summary-meta { margin-left: 0; width: 100%; justify-content: space-between; } .group-summary-tools { flex-wrap: wrap; } }
 .group-summary { align-self: start; }
 .audit-details { margin: 4px 0 4px; padding-left: 18px; font-size: .84rem; color: var(--text-muted, #5f6675); } .audit-details li { margin: 1px 0; }
+/* Auditoría: nivel, personas afectadas e historial por persona (career-audit.php). */
+.audit-level { display: inline-flex; align-items: center; padding: 1px 8px; border-radius: 999px; font-size: .72rem; font-weight: 800; margin-bottom: 3px; }
+.audit-level-important { background: rgba(178, 59, 59, .12); color: #a33131; }
+.audit-level-edit { background: rgba(45, 90, 150, .12); color: #2D5A96; }
+.audit-level-routine { background: rgba(116, 123, 136, .14); color: #5f6675; }
+:root[data-theme="dark"] .audit-level-important { color: #f3a3a3; } :root[data-theme="dark"] .audit-level-edit { color: #9cc2ff; } :root[data-theme="dark"] .audit-level-routine { color: #b7c0cf; }
+.audit-people { display: flex; flex-wrap: wrap; gap: 4px; margin: 2px 0 4px; }
+.audit-chip { display: inline-flex; align-items: center; gap: 4px; padding: 2px 9px; border-radius: 999px; border: 1px solid var(--border-color, #e2e6ee); background: var(--soft-bg, #f3f6fa); color: var(--primary-blue, #1B396A); font-size: .78rem; font-weight: 700; cursor: pointer; }
+.audit-chip:hover { background: rgba(45, 90, 150, .12); }
+.audit-timeline { list-style: none; margin: 0; padding: 0 0 0 14px; border-left: 2px solid var(--border-color, #e2e6ee); }
+.audit-entry { position: relative; padding: 4px 0 12px 10px; }
+.audit-entry::before { content: ''; position: absolute; left: -21px; top: 9px; width: 12px; height: 12px; border-radius: 50%; background: var(--secondary-blue, #2D5A96); border: 2px solid var(--surface-bg, #fff); }
