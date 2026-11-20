@@ -8290,3 +8290,5 @@ table:has(#usersTable) thead th:nth-child(2) { white-space: nowrap; }
 .download-app .download-qr img, .download-app .download-qr canvas { display: block; width: 200px !important; height: 200px !important; }
 .download-app .download-steps li { margin-bottom: .5rem; }
 .download-app .download-icon { box-shadow: 0 4px 14px rgba(16, 30, 54, .18); }
+.tracking-console .tc-content > .tc-retry { align-self: flex-start; margin-top: 4px; }
+.tracking-console .tc-error.danger { border-left-color: var(--ac-danger); background: rgba(178, 59, 59, .08); }
