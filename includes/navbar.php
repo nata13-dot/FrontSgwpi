@@ -4,7 +4,7 @@ $current_page = basename($_SERVER['PHP_SELF']);
 $home_url = is_authenticated() ? dashboard_url() : '/index.php';
 $management_pages = [
     'users.php', 'advisors.php', 'projects.php', 'project-create.php', 'project-edit.php',
-    'proposal-config.php', 'deliverables.php', 'tracking.php', 'evaluations.php', 'asignaturas.php',
+    'proposal-config.php', 'deliverables.php', 'tracking.php', 'thesis.php', 'evaluations.php', 'asignaturas.php',
     'document-tags.php', 'notices.php', 'settings.php', 'semesters.php', 'my-projects.php',
     'proposal-review.php', 'proposal-register.php', 'my-deliverables.php', 'evaluation-documents.php', 'repositorio.php',
     'period-center.php', 'academic-workflows.php', 'competencias.php', 'career-setup.php', 'registration-requests.php', 'archive.php',
@@ -171,6 +171,7 @@ $management_pages = [
                                         <a class="dropdown-item <?= in_array($current_page, ['projects.php', 'project-create.php', 'project-edit.php']) ? 'active' : '' ?>" href="/pages/admin/projects.php"><i class="bi bi-diagram-3"></i> Proyectos y tesis</a>
                                         <a class="dropdown-item <?= in_array($current_page, ['proposal-config.php']) ? 'active' : '' ?>" href="/pages/admin/proposal-config.php"><i class="bi bi-calendar-check"></i> Propuestas <span class="badge rounded-pill text-bg-danger ms-auto d-none" data-management-badge="pending_proposals"></span></a>
                                         <a class="dropdown-item <?= $current_page == 'tracking.php' ? 'active' : '' ?>" href="/pages/tracking.php"><i class="bi bi-graph-up-arrow"></i> Avances por materia</a>
+                                        <a class="dropdown-item <?= $current_page == 'thesis.php' ? 'active' : '' ?>" href="/pages/thesis.php"><i class="bi bi-journal-bookmark"></i> Seguimiento de tesis</a>
                                         <a class="dropdown-item <?= in_array($current_page, ['deliverables.php']) ? 'active' : '' ?>" href="/pages/admin/deliverables.php"><i class="bi bi-file-earmark"></i> Entregables</a>
                                     </div>
                                     <div>
@@ -233,6 +234,7 @@ $management_pages = [
                                     <div>
                                         <h6 class="dropdown-header">Entregables</h6>
                                         <a class="dropdown-item <?= $current_page == 'tracking.php' ? 'active' : '' ?>" href="/pages/tracking.php"><i class="bi bi-graph-up-arrow"></i> Avances por materia</a>
+                                        <a class="dropdown-item <?= $current_page == 'thesis.php' ? 'active' : '' ?>" href="/pages/thesis.php"><i class="bi bi-journal-bookmark"></i> Seguimiento de tesis</a>
                                         <a class="dropdown-item <?= $current_page == 'my-deliverables.php' ? 'active' : '' ?>" href="/pages/teacher/my-deliverables.php"><i class="bi bi-file-earmark"></i> Entregables</a>
                                     </div>
                                     <div>
@@ -257,6 +259,7 @@ $management_pages = [
                                     <div>
                                         <h6 class="dropdown-header">Entregables</h6>
                                         <a class="dropdown-item <?= $current_page == 'my-deliverables.php' ? 'active' : '' ?>" href="/pages/student/my-deliverables.php"><i class="bi bi-file-earmark"></i> Mis entregables</a>
+                                        <a class="dropdown-item <?= $current_page == 'thesis.php' ? 'active' : '' ?>" href="/pages/thesis.php"><i class="bi bi-journal-bookmark"></i> Mi tesis</a>
                                     </div>
                                     <div>
                                         <h6 class="dropdown-header">Sistema</h6>

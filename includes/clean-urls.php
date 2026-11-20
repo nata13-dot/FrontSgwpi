@@ -12,6 +12,7 @@ return [
     '/pages/repositorio-detail.php' => '/repositorio/documento',
     '/pages/repositorio.php' => '/repositorio',
     '/pages/reset-password.php' => '/restablecer',
+    '/pages/thesis.php' => '/tesis',
     '/pages/tracking.php' => '/avances',
 
     '/pages/admin/advisors.php' => '/asesores',

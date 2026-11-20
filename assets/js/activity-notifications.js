@@ -13,7 +13,8 @@
         solicitud_cuenta: 'bi-person-plus',
         alerta_sistema: 'bi-exclamation-triangle',
         resumen_semanal: 'bi-bar-chart',
-        resumen_revision: 'bi-list-check'
+        resumen_revision: 'bi-list-check',
+        tesis: 'bi-journal-bookmark'
     };
 
     // Los avisos usan las rutas de la app; aquí se traducen a las páginas de este front según el perfil.
@@ -32,9 +33,13 @@
             '/semesters': '/pages/academic-workflows.php?tab=periods',
             '/academic-workflows': '/pages/academic-workflows.php',
             '/tracking': '/pages/tracking.php',
+            '/thesis': '/pages/thesis.php',
             '/operations': '/pages/admin/operations.php'
         };
-        return pages[url] || url;
+        // La consulta (?course=5) se conserva para abrir directamente lo que avisa.
+        const [path, query] = String(url || '').split('?');
+        const page = pages[path];
+        return page ? page + (query ? (page.includes('?') ? '&' : '?') + query : '') : url;
     }
 
     function escapeHtml(value) {
