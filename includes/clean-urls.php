@@ -42,6 +42,7 @@ return [
     '/pages/admin/registration-requests.php' => '/solicitudes-de-cuenta',
     '/pages/admin/semesters.php' => '/semestres',
     '/pages/admin/sent-emails.php' => '/correos-enviados',
+    '/pages/admin/app-releases.php' => '/versiones-app',
     '/pages/admin/settings.php' => '/ajustes',
     '/pages/admin/user-create.php' => '/usuarios/nuevo',
     '/pages/admin/user-edit.php' => '/usuarios/editar',

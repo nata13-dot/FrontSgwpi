@@ -65,6 +65,7 @@
         item('Integridad', 'Verificación de datos', '/pages/admin/career-integrity.php', 'bi-check2-square', ['verificacion']),
         item('Respaldos', 'Generar y descargar respaldos de la base de datos', '/pages/admin/database-backups.php', 'bi-database', ['backup', 'base de datos']),
         item('Correos enviados', 'Consultar destinatarios de los correos', '/pages/admin/sent-emails.php', 'bi-envelope', ['correo', 'email', 'destinatarios']),
+        item('Versiones de la app', 'Publicar actualizaciones de la app Android', '/pages/admin/app-releases.php', 'bi-phone', ['apk', 'actualizacion', 'android', 'version']),
         item('Módulos de carrera', 'Habilitar módulos de la carrera activa', '/pages/admin/career-modules.php', 'bi-grid'),
         ...roleItems.admin
     ];
