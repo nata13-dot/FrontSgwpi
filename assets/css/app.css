@@ -8324,3 +8324,4 @@ table:has(#usersTable) thead th:nth-child(2) { white-space: nowrap; }
 .group-member-name small { color: var(--text-muted, #747b88); font-size: .76rem; }
 @media (max-width: 575.98px) { .group-summary-meta { margin-left: 0; width: 100%; justify-content: space-between; } .group-summary-tools { flex-wrap: wrap; } }
 .group-summary { align-self: start; }
+.audit-details { margin: 4px 0 4px; padding-left: 18px; font-size: .84rem; color: var(--text-muted, #5f6675); } .audit-details li { margin: 1px 0; }

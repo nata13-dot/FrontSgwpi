@@ -33,6 +33,7 @@ if (!is_authenticated() || !is_general_admin()) {
             <div id="auditAlert"></div>
             <section class="card border-0 shadow-sm mb-4">
                 <form class="card-body p-4 row g-3 align-items-end" id="auditFilters">
+                    <div class="col-12"><label class="form-label" for="auditSearch">Buscar</label><input class="form-control" id="auditSearch" type="search" maxlength="120" placeholder="Nombre, número de control, título o acción (por ejemplo: aprobó, eliminó, 26240015)"></div>
                     <div class="col-md-4 col-xl-2"><label class="form-label">Carrera</label><select class="form-select" id="auditCareer"><option value="">Todas</option></select></div>
                     <div class="col-md-4 col-xl-2"><label class="form-label">Actor</label><input class="form-control" id="auditActor" maxlength="20" placeholder="ID de usuario"></div>
                     <div class="col-md-4 col-xl-2"><label class="form-label">Método</label><select class="form-select" id="auditMethod"><option value="">Todos</option><option>POST</option><option>PUT</option><option>PATCH</option><option>DELETE</option></select></div>
@@ -45,8 +46,8 @@ if (!is_authenticated() || !is_general_admin()) {
             <section class="card border-0 shadow-sm">
                 <div class="table-responsive">
                     <table class="table table-hover align-middle mb-0">
-                        <thead><tr><th>Fecha</th><th>Carrera</th><th>Actor</th><th>Operación</th><th>Ruta</th><th>Resultado</th><th>IP y dispositivo</th></tr></thead>
-                        <tbody id="auditRows"><tr><td colspan="7" class="text-center text-muted py-5">Cargando auditoría...</td></tr></tbody>
+                        <thead><tr><th>Fecha</th><th>Carrera</th><th>Quién</th><th style="min-width:320px">Qué hizo</th><th>Resultado</th><th>IP y dispositivo</th></tr></thead>
+                        <tbody id="auditRows"><tr><td colspan="6" class="text-center text-muted py-5">Cargando auditoría...</td></tr></tbody>
                     </table>
                 </div>
                 <div class="card-footer bg-white px-3 py-1" id="auditPager"></div>
@@ -84,10 +85,10 @@ let auditPage = 1;
 let auditLastPage = 1;
 function auditEscape(value) { return String(value ?? '').replace(/[&<>'"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'}[c])); }
 function auditParams() {
-    return {page: auditPage, per_page: 25, career_id: auditCareer.value, actor_id: auditActor.value.trim(), method: auditMethod.value, status: auditStatus.value, date_from: auditFrom.value, date_to: auditTo.value, _fresh: true};
+    return {page: auditPage, per_page: 25, career_id: auditCareer.value, actor_id: auditActor.value.trim(), method: auditMethod.value, status: auditStatus.value, date_from: auditFrom.value, date_to: auditTo.value, q: document.getElementById('auditSearch').value.trim(), _fresh: true};
 }
 async function loadAudit() {
-    auditRows.innerHTML = '<tr><td colspan="7" class="text-center py-5">Cargando...</td></tr>';
+    auditRows.innerHTML = '<tr><td colspan="6" class="text-center py-5">Cargando...</td></tr>';
     try {
         const response = await api.get('/admin/audit', auditParams());
         auditLastPage = Number(response.last_page || 1);
@@ -99,15 +100,16 @@ async function loadAudit() {
                 <td><small>${auditEscape(new Date(item.creado_en).toLocaleString('es-MX'))}</small></td>
                 <td><span class="badge text-bg-light">${auditEscape(item.carrera_clave || 'Institucional')}</span></td>
                 <td><strong>${auditEscape(actor || item.actor_id || 'Sistema')}</strong><small class="d-block text-muted">${auditEscape(item.actor_id || '')}</small></td>
-                <td><span class="badge text-bg-secondary">${auditEscape(item.metodo)}</span></td>
-                <td><code>${auditEscape(item.ruta)}</code></td>
-                <td><span class="badge text-bg-${success ? 'success' : 'danger'}">${Number(item.estado_http)}</span></td>
+                <td><strong class="d-block">${auditEscape(item.descripcion || item.ruta)}</strong>
+                    ${(item.detalles || []).length ? `<ul class="audit-details">${item.detalles.map(d => `<li>${auditEscape(d)}</li>`).join('')}</ul>` : ''}
+                    <small class="text-muted"><span class="badge text-bg-light">${auditEscape(item.metodo)}</span> <code>${auditEscape(item.ruta)}</code></small></td>
+                <td><span class="badge text-bg-${success ? 'success' : 'danger'}">${success ? 'Hecho' : 'No se completó'}</span><small class="d-block text-muted">${Number(item.estado_http)}</small></td>
                 <td><strong class="small">${auditEscape(item.direccion_ip || '-')}</strong><small class="d-block text-muted">${auditEscape(item.dispositivo || '')}</small></td>
             </tr>`;
-        }).join('') || '<tr><td colspan="7" class="text-center text-muted py-5">No hay operaciones para estos filtros.</td></tr>';
+        }).join('') || '<tr><td colspan="6" class="text-center text-muted py-5">No hay operaciones para estos filtros.</td></tr>';
         SgpiPager.render('#auditPager', { current: auditPage, last: auditLastPage, total: response.total, from: response.from, to: response.to, noun: 'operaciones', onPage: (page) => { auditPage = page; loadAudit(); } });
     } catch (error) {
-        auditRows.innerHTML = `<tr><td colspan="7" class="text-center text-danger py-5">${auditEscape(error.message)}</td></tr>`;
+        auditRows.innerHTML = `<tr><td colspan="6" class="text-center text-danger py-5">${auditEscape(error.message)}</td></tr>`;
     }
 }
 async function initializeAudit() {
