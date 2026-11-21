@@ -7837,7 +7837,17 @@ html body .swal2-container.swal2-top-end, html body .swal2-container.swal2-top-s
 html body .swal2-popup.sgpi-swal { width: min(460px, calc(100vw - 32px)); padding: 26px 24px 20px; border-radius: 28px !important; background: var(--inst-surface, #fff); color: var(--inst-ink, #2b3040); box-shadow: var(--sgpi-sh-lg) !important; }
 html body .sgpi-swal .swal2-title.sgpi-swal-title { padding: 4px 0 0; color: var(--inst-navy, #1B396A); font-size: 1.3rem; font-weight: 800; letter-spacing: -.01em; }
 html body .sgpi-swal .sgpi-swal-text { margin: 10px 4px 0; color: var(--inst-muted, #5b6474); font-size: .95rem; line-height: 1.55; }
-html body .sgpi-swal .swal2-icon { width: 58px; height: 58px; margin: 4px auto 6px; border-width: 3px; }
+/* El icono se escala completo (todas sus piezas están en em): reducir sólo ancho y alto deformaba la palomita. */
+html body .sgpi-swal .swal2-icon { font-size: 11.6px; width: 5em; height: 5em; margin: 4px auto 6px; border-width: .25em; }
+/* Palomita de éxito: sin las máscaras de la animación del aro (con fondo oscuro o cristal dejaban un círculo encima). */
+html body .sgpi-swal .swal2-icon.swal2-success { border-color: #2e8b57; color: #2e8b57; }
+html body .sgpi-swal .swal2-icon.swal2-success .swal2-success-ring { border-color: rgba(46, 139, 87, .3); }
+html body .sgpi-swal .swal2-icon.swal2-success [class^='swal2-success-line'] { background-color: #2e8b57 !important; z-index: 3; }
+html body .sgpi-swal .swal2-icon.swal2-success [class^='swal2-success-circular-line'],
+html body .sgpi-swal .swal2-icon.swal2-success .swal2-success-fix { display: none !important; }
+:root[data-theme="dark"] body .sgpi-swal .swal2-icon.swal2-success { border-color: #4cc38a; }
+:root[data-theme="dark"] body .sgpi-swal .swal2-icon.swal2-success [class^='swal2-success-line'] { background-color: #4cc38a !important; }
+:root[data-theme="dark"] body .sgpi-swal .swal2-icon.swal2-success .swal2-success-ring { border-color: rgba(76, 195, 138, .35); }
 html body .sgpi-swal .swal2-icon .swal2-icon-content { font-size: 2.2rem; }
 html body .sgpi-swal .swal2-icon.swal2-warning { border-color: #e0a526; color: #c98a0c; }
 html body .sgpi-swal .swal2-icon.swal2-question, html body .sgpi-swal .swal2-icon.swal2-info { border-color: #2D5A96; color: #2D5A96; }
