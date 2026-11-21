@@ -33,8 +33,12 @@
                     <section class="card border-0 shadow-sm h-100"><div class="card-body p-4 text-center">
                         <h2 class="h5 mb-2">¿Estás en la computadora?</h2>
                         <p class="text-muted small mb-3">Escanea el código con la cámara de tu teléfono Android para abrir esta página.</p>
-                        <div id="appQr" class="download-qr mx-auto" role="img" aria-label="Código QR para abrir esta página en el teléfono"></div>
-                        <p class="small text-muted mt-3 mb-0 text-break" id="appPageUrl"></p>
+                        <div class="download-qr-frame mx-auto">
+                            <div id="appQr" class="download-qr" role="img" aria-label="Código QR para abrir esta página en el teléfono"></div>
+                            <img src="/assets/img/ITSSMT/ITSSMT-192.webp" alt="" class="download-qr-logo">
+                        </div>
+                        <p class="download-qr-caption"><i class="bi bi-camera"></i> Apunta la cámara al código</p>
+                        <p class="small text-muted mb-0 text-break" id="appPageUrl"></p>
                     </div></section>
                 </div>
             </div>
@@ -69,7 +73,7 @@
     // El QR lleva a esta página (no al archivo): así quien lo escanea ve también las instrucciones.
     const pageUrl = `${location.origin}${location.pathname}`;
     document.getElementById('appPageUrl').textContent = pageUrl;
-    try { new QRCode(document.getElementById('appQr'), { text: pageUrl, width: 200, height: 200, correctLevel: QRCode.CorrectLevel.M }); } catch (e) { document.getElementById('appQr').textContent = pageUrl; }
+    try { new QRCode(document.getElementById('appQr'), { text: pageUrl, width: 400, height: 400, colorDark: '#13284b', colorLight: '#ffffff', correctLevel: QRCode.CorrectLevel.H }); } catch (e) { document.getElementById('appQr').textContent = pageUrl; }
 
     const isIos = /iPhone|iPad|iPod/i.test(navigator.userAgent);
     try {
@@ -80,7 +84,6 @@
             return;
         }
         const date = new Date(release.publicada_en).toLocaleDateString('es-MX', { dateStyle: 'long' });
-        const notes = (release.notas || []).slice(0, 1).map(n => `<div class="mt-3"><strong class="small">Novedades</strong><p class="small text-muted mb-0" style="white-space:pre-line">${escapeHtml(n.notas)}</p></div>`).join('');
         box.innerHTML = `
             <div class="d-flex align-items-center gap-3 mb-3">
                 <img src="/assets/img/app-icon.png" alt="" width="56" height="56" class="rounded-3 download-icon" onerror="this.remove()">
@@ -89,7 +92,6 @@
             </div>
             ${isIos ? '<div class="alert alert-warning small">Estás en un iPhone: esta app es para Android. Usa SGPI desde el navegador.</div>' : ''}
             <a class="btn btn-primary btn-lg w-100" href="${escapeHtml(release.url)}" download><i class="bi bi-android2"></i> Descargar para Android</a>
-            ${notes}
             <details class="mt-3 small text-muted"><summary>Verificar el archivo</summary><p class="mb-0 mt-2 text-break">Huella SHA-256: <code>${escapeHtml(release.sha256)}</code></p></details>`;
     } catch (error) {
         box.innerHTML = '<p class="text-muted mb-0">No fue posible consultar la versión disponible. Intenta de nuevo en unos minutos.</p>';

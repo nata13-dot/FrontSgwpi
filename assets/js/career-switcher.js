@@ -27,11 +27,13 @@
         // El administrador general entra al tablero de la carrera; su inicio es el panel institucional.
         const careerHome = window.SGPI_SESSION?.user?.is_general_admin ? '/pages/admin/dashboard.php' : null;
         const target = button.dataset.redirect || careerHome;
-        if (careerId && careerId === currentId && target) {
+        // Fuera de una carrera, elegir la activa también es «entrar» (pide un token nuevo).
+        const outside = window.SGPI_SESSION?.user?.is_general_admin && !window.SGPI_SESSION?.user?.career_entered;
+        if (careerId && careerId === currentId && target && !outside) {
             window.location.href = target;
             return;
         }
-        if (!careerId || careerId === currentId || button.disabled) return;
+        if (!careerId || (careerId === currentId && !outside) || button.disabled) return;
 
         button.disabled = true;
         button.classList.add('is-switching');
@@ -76,6 +78,32 @@
         }
     }
 
+    // El administrador general vuelve a lo institucional: ya no puede modificar la carrera hasta entrar otra vez.
+    async function leaveCareer(button) {
+        if (button.disabled) return;
+        button.disabled = true;
+        try {
+            const response = await fetch(`${window.SGPI_API_BASE_URL}/auth/leave-career`, {
+                method: 'POST',
+                credentials: 'include',
+                headers: {
+                    'Accept': 'application/json',
+                    'Authorization': `Bearer ${window.SGPI_SESSION?.token || ''}`,
+                    'X-SGPI-Remember': window.SGPI_SESSION?.remember ? '1' : '0'
+                }
+            });
+            const data = await response.json().catch(() => ({}));
+            if (!response.ok) throw new Error(data.error || 'No fue posible salir de la carrera.');
+            await persistSession(data);
+            try { sessionStorage.clear(); } catch (error) { /* la recarga basta */ }
+            window.location.replace('/pages/admin/general.php');
+        } catch (error) {
+            button.disabled = false;
+            if (window.Swal) Swal.fire({ icon: 'error', title: 'No se salió de la carrera', text: error.message });
+            else window.alert(error.message);
+        }
+    }
+
     // Usado por el panel institucional: entra a una carrera y abre la página indicada.
     window.SGPICareerSwitch = (careerId, redirect = null) => {
         const button = document.createElement('button');
@@ -87,6 +115,9 @@
     function initialize() {
         document.querySelectorAll('.career-switch-option[data-career-id]').forEach(button => {
             button.addEventListener('click', () => switchCareer(button));
+        });
+        document.querySelectorAll('[data-leave-career]').forEach(button => {
+            button.addEventListener('click', () => leaveCareer(button));
         });
     }
 

@@ -9,7 +9,7 @@ if (!is_authenticated() || !is_student()) {
 $career = active_career() ?? [];
 $careerCode = $career['clave'] ?? 'ISC';
 // Misma portada de la carrera que el panel administrativo (pages/admin/dashboard.php).
-$careerHeroImage = $career['portada_ruta'] ?? ($careerCode === 'ISC' ? '/assets/img/ITSSMT/fondochido2.webp' : null);
+$careerHeroImage = career_cover_url($career);
 $careerHeroStyle = $careerHeroImage ? "background-image: url('" . htmlspecialchars($careerHeroImage) . "');" : '';
 ?>
 <!DOCTYPE html>

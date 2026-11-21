@@ -36,7 +36,7 @@ if (!is_general_admin()) {
                 </div>
             </section>
 
-            <div id="generalAlert"></div>
+            <div id="generalAlert"><?php if (isset($_GET['entrar'])): ?><div class="alert alert-info"><i class="bi bi-door-closed"></i> Esa página pertenece a una carrera. Entra primero a la carrera que quieres modificar.</div><?php endif; ?></div>
 
             <section class="row g-3 mb-4" id="generalKpis" aria-label="Indicadores institucionales">
                 <div class="col-6 col-lg-2"><div class="general-kpi"><strong id="kpiCareers">–</strong><span>Carreras activas</span></div></div>
@@ -50,7 +50,7 @@ if (!is_general_admin()) {
             <section class="mb-4">
                 <div class="d-flex justify-content-between align-items-center mb-3">
                     <h2 class="h5 mb-0"><i class="bi bi-buildings"></i> Carreras</h2>
-                    <small class="text-muted">"Administrar" entra a la carrera con tu perfil de administrador general.</small>
+                    <small class="text-muted">Para modificar algo de una carrera, «Entrar»: actúas como su jefatura y todo queda en la auditoría. «Salir de la carrera» te devuelve aquí.</small>
                 </div>
                 <div class="row g-3" id="generalCareers"><div class="col-12 text-muted">Cargando carreras...</div></div>
             </section>
@@ -143,7 +143,7 @@ function renderCareers() {
                     <label class="form-check-label" for="basic${career.id}">Registrar 1° a 4° (casos integradores)</label>
                 </div>
                 <div class="d-flex gap-2 mt-auto">
-                    <button type="button" class="btn btn-sm btn-primary flex-grow-1" onclick="SGPICareerSwitch(${career.id})"><i class="bi bi-box-arrow-in-right"></i> Administrar</button>
+                    <button type="button" class="btn btn-sm btn-primary flex-grow-1" onclick="SGPICareerSwitch(${career.id}, '/pages/admin/dashboard.php')"><i class="bi bi-box-arrow-in-right"></i> Entrar</button>
                     <button type="button" class="btn btn-sm btn-outline-secondary" onclick="openViewAs(${career.id})" title="Simular un nivel en esta carrera"><i class="bi bi-layers"></i></button>
                 </div>
             </article>

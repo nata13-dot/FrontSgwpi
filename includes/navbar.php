@@ -78,15 +78,15 @@ $management_pages = [
                         <li class="nav-item dropdown career-switcher">
                             <button class="nav-link dropdown-toggle career-switcher-button" type="button" data-bs-toggle="dropdown" aria-expanded="false">
                                 <i class="bi bi-diagram-3"></i>
-                                <span><?= htmlspecialchars(active_career()['nombre_corto'] ?? 'Seleccionar carrera') ?></span>
+                                <span><?= htmlspecialchars(general_admin_outside() ? 'Entrar a una carrera' : (active_career()['nombre_corto'] ?? 'Seleccionar carrera')) ?></span>
                             </button>
                             <ul class="dropdown-menu dropdown-menu-end career-switcher-menu">
-                                <li><h6 class="dropdown-header">Administrar como</h6></li>
+                                <li><h6 class="dropdown-header"><?= is_general_admin() ? 'Entrar a la carrera' : 'Administrar como' ?></h6></li>
                                 <?php foreach (available_careers() as $careerOption): ?>
                                     <li>
                                         <button
                                             type="button"
-                                            class="dropdown-item career-switch-option <?= (int) ($careerOption['id'] ?? 0) === (int) active_career_id() ? 'active' : '' ?>"
+                                            class="dropdown-item career-switch-option <?= !general_admin_outside() && (int) ($careerOption['id'] ?? 0) === (int) active_career_id() ? 'active' : '' ?>"
                                             data-career-id="<?= (int) ($careerOption['id'] ?? 0) ?>"
                                         >
                                             <span class="career-color-dot" style="--dot-color: <?= htmlspecialchars($careerOption['color_acento'] ?? $careerOption['color_primario'] ?? '#1B396A') ?>"></span>
@@ -94,7 +94,7 @@ $management_pages = [
                                                 <strong><?= htmlspecialchars($careerOption['nombre_corto'] ?? $careerOption['nombre'] ?? '') ?></strong>
                                                 <small><?= htmlspecialchars($careerOption['clave'] ?? '') ?></small>
                                             </span>
-                                            <?php if ((int) ($careerOption['id'] ?? 0) === (int) active_career_id()): ?>
+                                            <?php if (!general_admin_outside() && (int) ($careerOption['id'] ?? 0) === (int) active_career_id()): ?>
                                                 <i class="bi bi-check2 ms-auto"></i>
                                             <?php endif; ?>
                                         </button>
@@ -102,12 +102,15 @@ $management_pages = [
                                 <?php endforeach; ?>
                                 <?php if (is_general_admin()): ?>
                                     <li><hr class="dropdown-divider"></li>
+                                    <?php if (!general_admin_outside()): ?>
+                                        <li><button type="button" class="dropdown-item" data-leave-career><i class="bi bi-box-arrow-left"></i> Salir de la carrera</button></li>
+                                    <?php endif; ?>
                                     <li><a class="dropdown-item" href="/pages/admin/careers.php"><i class="bi bi-sliders"></i> Gestionar carreras</a></li>
                                 <?php endif; ?>
                             </ul>
                         </li>
                     <?php endif; ?>
-                    <?php if (is_general_admin() || view_as_session()): ?>
+                    <?php if ((is_general_admin() && !general_admin_outside()) || view_as_session()): ?>
                         <?php $levelOptions = [5 => 'Jefe de carrera', 6 => 'Asistente de jefatura', 7 => 'Coordinador de proyectos integradores', 2 => 'Docente', 3 => 'Estudiante']; ?>
                         <li class="nav-item dropdown level-switcher">
                             <button class="nav-link dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false" title="Ver el sistema con otro nivel de perfil">
@@ -133,7 +136,7 @@ $management_pages = [
                             </ul>
                         </li>
                     <?php endif; ?>
-                    <?php if (is_management_staff()): ?>
+                    <?php if (is_management_staff() && !general_admin_outside()): ?>
                         <li class="nav-item dropdown">
                             <a class="nav-link dropdown-toggle <?= in_array($current_page, $management_pages) ? 'active' : '' ?>" href="#" id="managementMenu" role="button" data-bs-toggle="dropdown" title="Gestiones">
                                 <i class="bi bi-grid-3x3-gap" aria-hidden="true"></i> <span class="nav-text">Gestiones</span>
@@ -378,6 +381,16 @@ $management_pages = [
     </div>
 </div>
 
+<?php endif; ?>
+<?php if (is_general_admin() && !view_as_session() && !general_admin_outside()): ?>
+<?php // Dentro de una carrera el administrador general actúa como su jefatura; todo queda registrado a su nombre. ?>
+<div class="career-entered-banner" role="status" style="--banner-color: <?= htmlspecialchars(active_career()['color_primario'] ?? '#1B396A') ?>">
+    <div class="container-xl d-flex flex-wrap align-items-center gap-2">
+        <i class="bi bi-door-open"></i>
+        <span>Administrando <strong><?= htmlspecialchars(active_career()['clave'] ?? '') ?></strong> · <?= htmlspecialchars(active_career()['nombre_corto'] ?? '') ?>. Los cambios quedan en la auditoría como administración general.</span>
+        <button type="button" class="btn btn-sm btn-light ms-auto" data-leave-career><i class="bi bi-box-arrow-left"></i> Salir de la carrera</button>
+    </div>
+</div>
 <?php endif; ?>
 
 <?php if (is_general_admin() || view_as_session()): ?>

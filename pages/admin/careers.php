@@ -30,6 +30,7 @@ if (!is_authenticated() || !is_general_admin()) {
                     <p class="text-muted mb-0">Configura la identidad de cada carrera y las personas que pueden administrarla o participar en ella.</p>
                 </div>
                 <div class="d-flex flex-wrap gap-2">
+                    <button class="btn btn-primary" type="button" data-bs-toggle="modal" data-bs-target="#newCareerModal"><i class="bi bi-plus-lg"></i> Nueva carrera</button>
                     <button class="btn btn-outline-primary" type="button" onclick="downloadInstitutionalSummary()"><i class="bi bi-file-earmark-spreadsheet"></i> Exportar resumen</button>
                     <span class="badge rounded-pill text-bg-primary px-3 py-2 align-self-center"><i class="bi bi-shield-check"></i> Administrador general</span>
                 </div>
@@ -65,7 +66,8 @@ if (!is_authenticated() || !is_general_admin()) {
                     <section class="card border-0 shadow-sm h-100">
                         <div class="card-body p-4">
                             <h2 class="h5 mb-3"><i class="bi bi-palette"></i> Identidad de carrera</h2>
-                            <form id="careerIdentityForm">
+                            <div class="career-preview mb-3" id="identityPreview" aria-label="Vista previa"></div>
+                            <form id="careerIdentityForm" data-preview="identityPreview">
                                 <input type="hidden" id="identityCareerId">
                                 <div class="mb-3">
                                     <label class="form-label" for="careerName">Nombre</label>
@@ -93,8 +95,28 @@ if (!is_authenticated() || !is_general_admin()) {
                                     <label class="form-label" for="careerMotto">Lema</label>
                                     <textarea class="form-control" id="careerMotto" rows="3" maxlength="255"></textarea>
                                 </div>
+                                <label class="form-check form-switch mb-3">
+                                    <input class="form-check-input" type="checkbox" id="careerActive">
+                                    <span class="form-check-label">Carrera activa <small class="d-block text-muted">Desactivada no aparece para entrar ni para el registro de alumnos.</small></span>
+                                </label>
                                 <button class="btn btn-primary w-100" type="submit"><i class="bi bi-check2-circle"></i> Guardar identidad</button>
                             </form>
+                            <hr>
+                            <h3 class="h6 mb-2"><i class="bi bi-image"></i> Logo y portada</h3>
+                            <p class="small text-muted">Sin portada propia se usa la foto del instituto con el color de la carrera. JPG, PNG o WebP de hasta 4 MB.</p>
+                            <div class="career-image-slots">
+                                <?php foreach (['logo' => 'Logo', 'portada' => 'Portada'] as $tipo => $label): ?>
+                                    <div class="career-image-slot" data-image-slot="<?= $tipo ?>">
+                                        <div class="career-image-thumb <?= $tipo ?>"><span class="text-muted small">Sin <?= strtolower($label) ?></span></div>
+                                        <div class="d-flex gap-1 mt-2">
+                                            <label class="btn btn-sm btn-outline-primary flex-grow-1 mb-0"><i class="bi bi-upload"></i> <?= $label ?>
+                                                <input type="file" accept="image/jpeg,image/png,image/webp" class="d-none" data-image-upload="<?= $tipo ?>">
+                                            </label>
+                                            <button type="button" class="btn btn-sm btn-outline-danger d-none" data-image-remove="<?= $tipo ?>" title="Quitar <?= strtolower($label) ?>"><i class="bi bi-trash"></i></button>
+                                        </div>
+                                    </div>
+                                <?php endforeach; ?>
+                            </div>
                         </div>
                     </section>
                 </div>
@@ -148,6 +170,71 @@ if (!is_authenticated() || !is_general_admin()) {
         </div>
     </main>
 </div>
+
+<div class="modal fade" id="newCareerModal" tabindex="-1" aria-labelledby="newCareerTitle" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-scrollable">
+        <form class="modal-content" id="newCareerForm" data-preview="newCareerPreview">
+            <div class="modal-header">
+                <h2 class="modal-title h5" id="newCareerTitle"><i class="bi bi-plus-circle"></i> Nueva carrera</h2>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+            </div>
+            <div class="modal-body">
+                <div class="career-preview mb-3" id="newCareerPreview" aria-label="Vista previa"></div>
+                <div id="newCareerAlert"></div>
+                <div class="row g-3">
+                    <div class="col-sm-4">
+                        <label class="form-label" for="newClave">Clave</label>
+                        <input class="form-control text-uppercase" id="newClave" name="clave" required maxlength="20" pattern="[A-Za-z0-9]+" placeholder="Ej. IIA">
+                        <small class="text-muted">Sólo letras y números.</small>
+                    </div>
+                    <div class="col-sm-8">
+                        <label class="form-label" for="newNombre">Nombre</label>
+                        <input class="form-control" id="newNombre" name="nombre" required maxlength="180" placeholder="Ingeniería en …">
+                    </div>
+                    <div class="col-sm-6">
+                        <label class="form-label" for="newNombreCorto">Nombre corto</label>
+                        <input class="form-control" id="newNombreCorto" name="nombre_corto" required maxlength="100">
+                    </div>
+                    <div class="col-4 col-sm-2">
+                        <label class="form-label" for="newPrimary">Principal</label>
+                        <input class="form-control form-control-color w-100" type="color" id="newPrimary" name="color_primario" value="#1B396A">
+                    </div>
+                    <div class="col-4 col-sm-2">
+                        <label class="form-label" for="newSecondary">Secundario</label>
+                        <input class="form-control form-control-color w-100" type="color" id="newSecondary" name="color_secundario" value="#2D5A96">
+                    </div>
+                    <div class="col-4 col-sm-2">
+                        <label class="form-label" for="newAccent">Acento</label>
+                        <input class="form-control form-control-color w-100" type="color" id="newAccent" name="color_acento" value="#00A6D6">
+                    </div>
+                    <div class="col-12">
+                        <label class="form-label" for="newLema">Lema</label>
+                        <input class="form-control" id="newLema" name="lema" maxlength="255">
+                    </div>
+                    <div class="col-sm-6">
+                        <label class="form-label" for="newJefe">Jefatura (No. de empleado)</label>
+                        <input class="form-control" id="newJefe" name="jefe_id" maxlength="20" placeholder="Opcional">
+                    </div>
+                    <div class="col-sm-6">
+                        <label class="form-label" for="newAsistente">Asistencia de jefatura (No. de empleado)</label>
+                        <input class="form-control" id="newAsistente" name="asistente_id" maxlength="20" placeholder="Opcional">
+                    </div>
+                    <div class="col-12">
+                        <label class="form-check form-switch">
+                            <input class="form-check-input" type="checkbox" id="newActiva" name="activa" checked>
+                            <span class="form-check-label">Activa desde ahora</span>
+                        </label>
+                    </div>
+                </div>
+                <p class="small text-muted mt-3 mb-0">Se crea con sus módulos habilitados y sin datos. Después entra a la carrera para cargar asignaturas, grupos y alumnos; el logo y la portada se suben desde «Identidad de carrera».</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancelar</button>
+                <button type="submit" class="btn btn-primary"><i class="bi bi-check2-circle"></i> Crear carrera</button>
+            </div>
+        </form>
+    </div>
+</div>
 <?php require_once $_SERVER['DOCUMENT_ROOT'] . '/includes/footer.php'; ?>
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 <script>const API_BASE_URL = '<?= API_BASE_URL ?>';</script>
@@ -155,7 +242,60 @@ if (!is_authenticated() || !is_general_admin()) {
 <script src="<?= asset('/assets/js/api.js') ?>"></script>
 <script src="<?= asset('/assets/js/app.js') ?>"></script>
 <script>
+const CAREER_STORAGE_URL = <?= json_encode(API_ORIGIN_URL . '/storage/') ?>;
+const DEFAULT_COVER = '/assets/img/ITSSMT/fondochido2.webp';
 const careerState = { careers: [], selected: null };
+
+function careerImage(path) {
+    if (!path) return null;
+    return /^(https?:)?\/\//.test(path) || path.startsWith('/') ? path : CAREER_STORAGE_URL + path.replace(/^\/+/, '');
+}
+
+// Vista previa en vivo: la portada (propia o la del instituto) con el tono de la carrera, como en los tableros.
+function renderPreview(form) {
+    const target = document.getElementById(form.dataset.preview);
+    if (!target) return;
+    const value = (id) => form.querySelector(id)?.value || '';
+    const isNew = form.id === 'newCareerForm';
+    const data = isNew
+        ? { clave: value('#newClave').toUpperCase(), nombre: value('#newNombre'), corto: value('#newNombreCorto'), p: value('#newPrimary'), s: value('#newSecondary'), a: value('#newAccent'), lema: value('#newLema'), cover: null, logo: null }
+        : { clave: careerState.selected?.clave || '', nombre: value('#careerName'), corto: value('#careerShortName'), p: value('#careerPrimary'), s: value('#careerSecondary'), a: value('#careerAccent'), lema: value('#careerMotto'),
+            cover: careerImage(careerState.selected?.portada_ruta), logo: careerImage(careerState.selected?.logo_ruta) };
+    target.style.setProperty('--preview-primary', data.p || '#1B396A');
+    target.style.setProperty('--preview-secondary', data.s || '#2D5A96');
+    target.style.setProperty('--preview-accent', data.a || data.p || '#00A6D6');
+    target.style.backgroundImage = `url("${data.cover || DEFAULT_COVER}")`;
+    target.innerHTML = `<div class="career-preview-overlay"></div>
+        <div class="career-preview-body">
+            ${data.logo ? `<img class="career-preview-logo" src="${careerEsc(data.logo)}" alt="">` : ''}
+            <span class="career-admin-code">${careerEsc(data.clave || 'CLAVE')}</span>
+            <strong>${careerEsc(data.corto || 'Nombre corto')}</strong>
+            <small>${careerEsc(data.nombre || 'Nombre de la carrera')}</small>
+            ${data.lema ? `<em>${careerEsc(data.lema)}</em>` : ''}
+            <span class="career-preview-chip">Botón de muestra</span>
+        </div>`;
+}
+
+// Vuelve a leer la sesión (lista de carreras, colores) para que el menú y el selector muestren los cambios.
+async function refreshSessionCareers() {
+    try {
+        await fetch('/api/set-session.php', {
+            method: 'POST', credentials: 'include',
+            headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
+            body: JSON.stringify({ auth_token: window.SGPI_SESSION?.token, remember: Boolean(window.SGPI_SESSION?.remember) })
+        });
+    } catch (error) { /* el menú se actualiza en el siguiente inicio de sesión */ }
+}
+
+function renderImageSlots() {
+    const career = careerState.selected;
+    document.querySelectorAll('[data-image-slot]').forEach(slot => {
+        const tipo = slot.dataset.imageSlot;
+        const url = careerImage(career?.[tipo === 'logo' ? 'logo_ruta' : 'portada_ruta']);
+        slot.querySelector('.career-image-thumb').innerHTML = url ? `<img src="${careerEsc(url)}" alt="">` : `<span class="text-muted small">Sin ${tipo}</span>`;
+        slot.querySelector('[data-image-remove]').classList.toggle('d-none', !url);
+    });
+}
 const roleNames = {5: 'Jefe de carrera', 6: 'Asistente de jefatura', 7: 'Coordinador de proyectos integradores', 2: 'Docente', 3: 'Estudiante'};
 
 function careerEsc(value) {
@@ -168,8 +308,8 @@ function careerMessage(type, message) {
 
 function renderCareerCards() {
     document.getElementById('careerCards').innerHTML = careerState.careers.map(career => `
-        <button type="button" class="career-admin-card ${careerState.selected?.id === career.id ? 'active' : ''}" data-id="${career.id}" style="--card-primary:${career.color_primario};--card-secondary:${career.color_secundario};--card-accent:${career.color_acento || career.color_primario}">
-            <span class="career-admin-code">${careerEsc(career.clave)}</span>
+        <button type="button" class="career-admin-card ${careerState.selected?.id === career.id ? 'active' : ''} ${career.activa ? '' : 'inactive'}" data-id="${career.id}" style="--card-primary:${career.color_primario};--card-secondary:${career.color_secundario};--card-accent:${career.color_acento || career.color_primario}">
+            <span class="career-admin-code">${careerEsc(career.clave)}${career.activa ? '' : ' · Inactiva'}</span>
             <strong>${careerEsc(career.nombre_corto)}</strong>
             <small>${Number(career.members_count || 0)} integrantes · ${Number(career.readiness?.percentage || 0)}% preparada</small>
         </button>
@@ -206,19 +346,17 @@ function renderCareerOverview() {
                 <div class="progress" style="height:7px"><div class="progress-bar bg-${statusClass}" style="width:${Number(readiness.percentage || 0)}%"></div></div>
                 <small class="d-block text-muted mt-1">${missing.length ? `Falta: ${careerEsc(missing.join(', '))}` : 'Lista para operar'}</small>
             </td>
-            <td class="text-end"><button class="btn btn-sm btn-outline-primary" type="button" data-enter-career="${Number(career.id)}"><i class="bi bi-box-arrow-in-right"></i> Administrar</button></td>
+            <td class="text-end">${career.activa
+                ? `<button class="btn btn-sm btn-outline-primary" type="button" data-enter-career="${Number(career.id)}"><i class="bi bi-box-arrow-in-right"></i> Entrar</button>`
+                : '<span class="badge text-bg-secondary">Inactiva</span>'}</td>
         </tr>`;
     }).join('');
     document.querySelectorAll('[data-enter-career]').forEach(button => button.addEventListener('click', () => enterCareer(Number(button.dataset.enterCareer))));
 }
 
 function enterCareer(careerId) {
-    const switchOption = document.querySelector(`.career-switch-option[data-career-id="${careerId}"]`);
-    if (!switchOption) {
-        careerMessage('danger', 'No se encontró el acceso a la carrera seleccionada.');
-        return;
-    }
-    switchOption.click();
+    // Entrar abre el inicio de la carrera; desde ahí se modifica todo como su jefatura.
+    window.SGPICareerSwitch(careerId, '/pages/admin/dashboard.php');
 }
 
 function selectCareer(id) {
@@ -233,7 +371,10 @@ function selectCareer(id) {
     document.getElementById('careerSecondary').value = career.color_secundario || '#2D5A96';
     document.getElementById('careerAccent').value = career.color_acento || career.color_primario || '#00A6D6';
     document.getElementById('careerMotto').value = career.lema || '';
+    document.getElementById('careerActive').checked = Boolean(career.activa);
     document.getElementById('membershipCareerLabel').textContent = career.nombre;
+    renderPreview(document.getElementById('careerIdentityForm'));
+    renderImageSlots();
     loadMemberships();
 }
 
@@ -312,10 +453,12 @@ document.getElementById('careerIdentityForm').addEventListener('submit', async e
             color_primario: document.getElementById('careerPrimary').value,
             color_secundario: document.getElementById('careerSecondary').value,
             color_acento: document.getElementById('careerAccent').value,
-            lema: document.getElementById('careerMotto').value.trim()
+            lema: document.getElementById('careerMotto').value.trim(),
+            activa: document.getElementById('careerActive').checked
         });
         careerMessage('success', 'Identidad actualizada correctamente.');
         await loadCareers();
+        refreshSessionCareers();
     } catch (error) {
         careerMessage('danger', error.message);
     }
@@ -339,11 +482,81 @@ document.getElementById('membershipForm').addEventListener('submit', async event
     }
 });
 
+['careerIdentityForm', 'newCareerForm'].forEach(id => {
+    const form = document.getElementById(id);
+    form.addEventListener('input', () => renderPreview(form));
+});
+document.getElementById('newCareerModal').addEventListener('shown.bs.modal', () => renderPreview(document.getElementById('newCareerForm')));
+
+document.getElementById('newCareerForm').addEventListener('submit', async event => {
+    event.preventDefault();
+    const form = event.target;
+    const button = form.querySelector('[type="submit"]');
+    const field = (name) => form.elements[name].value.trim();
+    const payload = {
+        clave: field('clave').toUpperCase(), nombre: field('nombre'), nombre_corto: field('nombre_corto'),
+        color_primario: field('color_primario'), color_secundario: field('color_secundario'), color_acento: field('color_acento'),
+        lema: field('lema') || null, activa: form.elements.activa.checked,
+        jefe_id: field('jefe_id') || null, asistente_id: field('asistente_id') || null
+    };
+    button.disabled = true;
+    try {
+        const response = await api.post('/admin/careers', payload);
+        bootstrap.Modal.getInstance(document.getElementById('newCareerModal'))?.hide();
+        form.reset();
+        careerState.selected = { id: response.career?.id };
+        await refreshSessionCareers();
+        sessionStorage.setItem('sgpi-career-created', payload.clave);
+        window.location.reload();
+    } catch (error) {
+        document.getElementById('newCareerAlert').innerHTML = `<div class="alert alert-danger">${careerEsc(error.message)}</div>`;
+    } finally {
+        button.disabled = false;
+    }
+});
+
+document.querySelectorAll('[data-image-upload]').forEach(input => input.addEventListener('change', async () => {
+    const file = input.files[0];
+    if (!file || !careerState.selected) return;
+    if (file.size > 4 * 1024 * 1024) { careerMessage('danger', 'La imagen supera 4 MB.'); input.value = ''; return; }
+    const body = new FormData();
+    body.append('tipo', input.dataset.imageUpload);
+    body.append('imagen', file);
+    try {
+        await api.post(`/admin/careers/${careerState.selected.id}/image`, body);
+        careerMessage('success', input.dataset.imageUpload === 'logo' ? 'Logo actualizado.' : 'Portada actualizada.');
+        await loadCareers();
+    } catch (error) {
+        careerMessage('danger', error.message);
+    } finally {
+        input.value = '';
+    }
+}));
+document.querySelectorAll('[data-image-remove]').forEach(button => button.addEventListener('click', async () => {
+    const tipo = button.dataset.imageRemove;
+    if (!careerState.selected || !confirm(tipo === 'logo' ? '¿Quitar el logo?' : '¿Quitar la portada? Se usará la foto del instituto.')) return;
+    try {
+        await api.delete(`/admin/careers/${careerState.selected.id}/image/${tipo}`);
+        await loadCareers();
+    } catch (error) {
+        careerMessage('danger', error.message);
+    }
+}));
+
 document.getElementById('membershipSearchForm').addEventListener('submit', event => {
     event.preventDefault();
     loadMemberships();
 });
-document.addEventListener('DOMContentLoaded', loadCareers);
+document.addEventListener('DOMContentLoaded', () => {
+    try {
+        const created = sessionStorage.getItem('sgpi-career-created');
+        if (created) {
+            sessionStorage.removeItem('sgpi-career-created');
+            careerMessage('success', `Carrera ${created} creada. Entra a ella para cargar asignaturas, grupos y alumnos.`);
+        }
+    } catch (error) { /* sin almacenamiento no se muestra el aviso */ }
+    loadCareers();
+});
 </script>
 </body>
 </html>

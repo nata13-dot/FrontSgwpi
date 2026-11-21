@@ -1,11 +1,12 @@
 <link rel="icon" type="image/webp" href="/assets/img/ITSSMT/ITSSMT-192.webp">
 <link rel="shortcut icon" type="image/webp" href="/assets/img/ITSSMT/ITSSMT-192.webp">
 <link rel="apple-touch-icon" href="/assets/img/ITSSMT/ITSSMT-192.webp">
+<?php $sgpiThemeCareer = function_exists('general_admin_outside') && general_admin_outside() ? [] : (active_career() ?? []); // Fuera de una carrera: colores institucionales. ?>
 <style>
 :root {
-    --career-primary: <?= htmlspecialchars(active_career()['color_primario'] ?? '#1B396A') ?> !important;
-    --career-secondary: <?= htmlspecialchars(active_career()['color_secundario'] ?? '#2D5A96') ?> !important;
-    --career-accent: <?= htmlspecialchars(active_career()['color_acento'] ?? '#00A6D6') ?> !important;
+    --career-primary: <?= htmlspecialchars($sgpiThemeCareer['color_primario'] ?? '#1B396A') ?> !important;
+    --career-secondary: <?= htmlspecialchars($sgpiThemeCareer['color_secundario'] ?? '#2D5A96') ?> !important;
+    --career-accent: <?= htmlspecialchars($sgpiThemeCareer['color_acento'] ?? '#00A6D6') ?> !important;
     --primary-blue: var(--career-primary) !important;
     --secondary-blue: var(--career-secondary) !important;
     --dashboard-accent: var(--career-primary) !important;

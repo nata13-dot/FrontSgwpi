@@ -8,7 +8,7 @@ if (!is_authenticated() || !is_management_staff()) {
 }
 $career = active_career() ?? [];
 $careerCode = $career['clave'] ?? 'ISC';
-$careerHeroImage = $career['portada_ruta'] ?? ($careerCode === 'ISC' ? '/assets/img/ITSSMT/fondochido2.webp' : null);
+$careerHeroImage = career_cover_url($career);
 $careerHeroStyle = $careerHeroImage
     ? "background-image: url('" . htmlspecialchars($careerHeroImage) . "');"
     : '';

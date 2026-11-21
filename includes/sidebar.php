@@ -8,8 +8,8 @@ $section = isset($_GET['section']) ? $_GET['section'] : '';
         <img src="/assets/img/ITSSMT/ITSSMT-192.webp" alt="ITSSMT">
         <div>
             <strong>Gestión de Proyectos</strong>
-            <strong><?= htmlspecialchars(active_career()['nombre_corto'] ?? 'Integradores ITSSMT') ?></strong>
-            <small><?= htmlspecialchars(active_career()['clave'] ?? 'Sistema Institucional') ?></small>
+            <strong><?= htmlspecialchars(general_admin_outside() ? 'Administración general' : (active_career()['nombre_corto'] ?? 'Integradores ITSSMT')) ?></strong>
+            <small><?= htmlspecialchars(general_admin_outside() ? 'Todas las carreras' : (active_career()['clave'] ?? 'Sistema Institucional')) ?></small>
         </div>
     </a>
     <?php if (is_authenticated()): ?>
@@ -43,12 +43,26 @@ $section = isset($_GET['section']) ? $_GET['section'] : '';
                 <a href="/pages/admin/sent-emails.php" class="sidebar-item sidebar-subitem <?= $current_page == 'sent-emails.php' ? 'active' : '' ?>"><i class="bi bi-envelope-check"></i><span>Correos enviados</span></a>
                 <a href="/pages/admin/app-releases.php" class="sidebar-item sidebar-subitem <?= $current_page == 'app-releases.php' ? 'active' : '' ?>"><i class="bi bi-phone"></i><span>Versiones de la app</span></a>
             </details>
-            <div class="sidebar-section-title"><h6 class="text-uppercase">Carrera: <?= htmlspecialchars(active_career()['nombre_corto'] ?? 'sin seleccionar') ?></h6></div>
-            <a href="/pages/admin/dashboard.php" class="sidebar-item <?= $current_page == 'dashboard.php' ? 'active' : '' ?>"><i class="bi bi-speedometer2"></i><span>Inicio de la carrera</span></a>
+            <?php if (general_admin_outside()): ?>
+                <?php // Fuera de una carrera no hay gestiones: hay que entrar a una para modificarla. ?>
+                <div class="sidebar-section-title"><h6 class="text-uppercase">Entrar a una carrera</h6></div>
+                <?php foreach (available_careers() as $careerOption): ?>
+                    <button type="button" class="sidebar-item career-switch-option" data-career-id="<?= (int) ($careerOption['id'] ?? 0) ?>" data-redirect="/pages/admin/dashboard.php">
+                        <span class="career-color-dot" style="--dot-color: <?= htmlspecialchars($careerOption['color_acento'] ?? $careerOption['color_primario'] ?? '#1B396A') ?>"></span>
+                        <span><?= htmlspecialchars($careerOption['nombre_corto'] ?? $careerOption['nombre'] ?? '') ?></span>
+                        <i class="bi bi-box-arrow-in-right ms-auto"></i>
+                    </button>
+                <?php endforeach; ?>
+            <?php else: ?>
+                <div class="sidebar-section-title"><h6 class="text-uppercase">Dentro de: <?= htmlspecialchars(active_career()['nombre_corto'] ?? 'sin seleccionar') ?></h6></div>
+                <a href="/pages/admin/dashboard.php" class="sidebar-item <?= $current_page == 'dashboard.php' ? 'active' : '' ?>"><i class="bi bi-speedometer2"></i><span>Inicio de la carrera</span></a>
+                <button type="button" class="sidebar-item" data-leave-career><i class="bi bi-box-arrow-left"></i><span>Salir de la carrera</span></button>
+            <?php endif; ?>
         <?php else: ?>
             <div class="sidebar-section-title"><h6 class="text-uppercase">Administración</h6></div>
             <a href="/pages/admin/dashboard.php" class="sidebar-item <?= $current_page == 'dashboard.php' ? 'active' : '' ?>"><i class="bi bi-speedometer2"></i><span>Inicio</span></a>
         <?php endif; ?>
+        <?php if (!general_admin_outside()): ?>
         <?php // Mismos grupos que Gestiones (navbar.php) y que la app (React_Swgpi/src/lib/navigation.js). ?>
         <details class="sidebar-group" <?= in_array($current_page, ['period-center.php', 'academic-workflows.php', 'semesters.php', 'asignaturas.php', 'competencias.php', 'career-setup.php']) ? 'open' : '' ?>>
             <summary><i class="bi bi-flag"></i><span>Periodo</span><i class="bi bi-chevron-down ms-auto"></i></summary>
@@ -99,6 +113,7 @@ $section = isset($_GET['section']) ? $_GET['section'] : '';
             <?php endif; ?>
             <a data-career-module="repositorio" href="/pages/repositorio.php" class="sidebar-item sidebar-subitem <?= in_array($current_page, ['repositorio.php']) ? 'active' : '' ?>"><i class="bi bi-archive"></i><span>Repositorio</span></a>
         </details>
+        <?php endif; ?>
         <a href="/pages/profile.php" class="sidebar-item <?= $current_page == 'profile.php' ? 'active' : '' ?>"><i class="bi bi-person-circle"></i><span>Mi Perfil</span></a>
     <?php elseif (is_teacher()): ?>
         <div class="sidebar-section-title"><h6 class="text-uppercase">Docente</h6></div>

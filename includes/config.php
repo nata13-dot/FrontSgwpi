@@ -236,6 +236,11 @@ function is_general_admin() {
     return is_authenticated() && ($_SESSION['user']['perfil_id'] ?? null) == 4;
 }
 
+/** Administrador general fuera de toda carrera: sólo ve lo institucional y debe «entrar» a una carrera para cambiarla. */
+function general_admin_outside() {
+    return is_general_admin() && !view_as_session() && empty($_SESSION['user']['career_entered']);
+}
+
 function is_teacher() {
     return get_user_role() == 2;
 }
@@ -342,6 +347,18 @@ function asset($path) {
     return $path . $versions[$path];
 }
 
+/** Imagen pública de la API (logo o portada de carrera) o ruta propia del front si empieza con «/». */
+function career_asset_url(?string $path): ?string {
+    if (!$path) return null;
+    if (preg_match('#^(https?:)?//#', $path) || str_starts_with($path, '/')) return $path;
+    return API_ORIGIN_URL . '/storage/' . ltrim($path, '/');
+}
+
+/** Portada del panel: la propia de la carrera o, si no tiene, la foto del instituto (el tono lo da el color de la carrera). */
+function career_cover_url(?array $career): string {
+    return career_asset_url($career['portada_ruta'] ?? null) ?: '/assets/img/ITSSMT/fondochido2.webp';
+}
+
 function profile_photo_url($user = null) {
     $user = $user ?? ($_SESSION['user'] ?? null);
     $path = $user['photo_path'] ?? null;
@@ -395,6 +412,17 @@ $sgpiScript = $_SERVER['SCRIPT_NAME'] ?? '';
 if (must_change_password() && !view_as_session() && str_starts_with($sgpiScript, '/pages/')
     && !in_array($sgpiScript, ['/pages/change-password.php', '/pages/logout.php'], true)) {
     header('Location: /pages/change-password.php');
+    exit;
+}
+
+// Fuera de una carrera, el administrador general sólo abre las páginas institucionales.
+if (general_admin_outside() && str_starts_with($sgpiScript, '/pages/') && !in_array($sgpiScript, [
+    '/pages/admin/general.php', '/pages/admin/careers.php', '/pages/admin/operations.php', '/pages/admin/career-audit.php',
+    '/pages/admin/career-integrity.php', '/pages/admin/database-backups.php', '/pages/admin/sent-emails.php',
+    '/pages/admin/app-releases.php', '/pages/profile.php', '/pages/repositorio.php', '/pages/repositorio-detail.php',
+    '/pages/download-app.php', '/pages/logout.php', '/pages/change-password.php', '/pages/login.php',
+], true)) {
+    header('Location: /pages/admin/general.php?entrar=1');
     exit;
 }
 ?>

@@ -821,6 +821,50 @@ h1, h2, h3, h4, h5, h6 {
     background: color-mix(in srgb, var(--card-accent) 75%, transparent);
 }
 
+.career-admin-card.inactive { filter: grayscale(.75); opacity: .75; }
+
+/* Vista previa de la identidad de una carrera (página Carreras y accesos). */
+.career-preview {
+    position: relative;
+    min-height: 170px;
+    overflow: hidden;
+    border-radius: 1rem;
+    background-size: cover;
+    background-position: center;
+    color: #fff;
+}
+.career-preview-overlay {
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(120deg, color-mix(in srgb, var(--preview-primary) 90%, transparent), color-mix(in srgb, var(--preview-secondary) 62%, transparent));
+}
+.career-preview-body {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: .25rem;
+    padding: 1rem 1.1rem;
+}
+.career-preview-body strong { font-size: 1.15rem; }
+.career-preview-body small { color: rgba(255, 255, 255, .85); }
+.career-preview-body em { font-size: .85rem; color: rgba(255, 255, 255, .85); }
+.career-preview .career-admin-code { background: color-mix(in srgb, var(--preview-accent) 80%, transparent); margin-bottom: .25rem; }
+.career-preview-logo { width: 44px; height: 44px; object-fit: contain; border-radius: .5rem; background: rgba(255, 255, 255, .9); padding: 3px; }
+.career-preview-chip { margin-top: .35rem; padding: .2rem .65rem; font-size: .75rem; font-weight: 700; border-radius: 999px; background: var(--preview-accent); }
+.career-image-slots { display: grid; grid-template-columns: 1fr 2fr; gap: .75rem; }
+.career-image-thumb {
+    display: grid;
+    place-items: center;
+    height: 84px;
+    overflow: hidden;
+    border: 1px dashed var(--bs-border-color, #ccd);
+    border-radius: .6rem;
+    background: var(--bs-tertiary-bg, #f4f6f9);
+}
+.career-image-thumb img { width: 100%; height: 100%; object-fit: cover; }
+.career-image-thumb.logo img { object-fit: contain; padding: 4px; }
+
 .career-admin-loading {
     grid-column: 1 / -1;
     padding: 2rem;
@@ -6892,6 +6936,19 @@ html.sgpi-page-entering.sgpi-page-entered .sgpi-page-transition {
     border-bottom: 1px solid #e0b100;
 }
 
+/* Aviso de que el administrador general está dentro de una carrera. */
+.career-entered-banner {
+    position: sticky;
+    top: 0;
+    z-index: 1030;
+    padding: .45rem 0;
+    font-size: .9rem;
+    color: #fff;
+    background: color-mix(in srgb, var(--banner-color, #1B396A) 88%, #000);
+    border-bottom: 1px solid rgba(0, 0, 0, .15);
+}
+.career-entered-banner .btn { white-space: nowrap; }
+
 /* Panel institucional del administrador general: neutro, sin colores de ninguna carrera. */
 .general-admin-hero {
     padding: 1.5rem;
@@ -8286,8 +8343,13 @@ table:has(#usersTable) thead th:nth-child(2) { white-space: nowrap; }
 }
 
 /* Descarga de la app (pages/download-app.php). */
-.download-app .download-qr { width: 216px; height: 216px; padding: 8px; background: #fff; border-radius: 16px; border: 1px solid var(--border-color, #e2e6ee); }
-.download-app .download-qr img, .download-app .download-qr canvas { display: block; width: 200px !important; height: 200px !important; }
+/* QR: se genera a 400 px y se muestra a 192 px (nítido en pantallas densas) con su margen blanco dentro del marco. */
+.download-app .download-qr-frame { position: relative; width: max-content; padding: 16px; background: #fff; border-radius: 22px; box-shadow: 0 10px 30px rgba(16, 30, 54, .22), 0 0 0 1px rgba(16, 30, 54, .06); }
+.download-app .download-qr { width: 192px; height: 192px; overflow: hidden; }
+.download-app .download-qr canvas { display: none !important; }
+.download-app .download-qr img { display: block !important; width: 192px !important; height: 192px !important; image-rendering: pixelated; }
+.download-app .download-qr-logo { position: absolute; top: 50%; left: 50%; width: 42px; height: 42px; padding: 4px; transform: translate(-50%, -50%); border-radius: 12px; background: #fff; box-shadow: 0 0 0 3px #fff; }
+.download-app .download-qr-caption { margin: 14px 0 4px; font-size: .85rem; font-weight: 600; opacity: .85; }
 .download-app .download-steps li { margin-bottom: .5rem; }
 .download-app .download-icon { box-shadow: 0 4px 14px rgba(16, 30, 54, .18); }
 .tracking-console .tc-content > .tc-retry { align-self: flex-start; margin-top: 4px; }
@@ -8343,3 +8405,8 @@ table:has(#usersTable) thead th:nth-child(2) { white-space: nowrap; }
 .thesis-console .tc-reg-text { margin: 2px 0 10px; white-space: pre-line; }
 .thesis-console .tc-pick-scroll { max-height: 180px; overflow-y: auto; }
 .thesis-console [hidden] { display: none !important; }
+
+/* Portada del panel con el tono de la carrera: misma foto del instituto para todas, distinto color. */
+.career-dashboard-hero .overlay {
+    background: linear-gradient(95deg, color-mix(in srgb, var(--career-primary) 86%, transparent) 0%, color-mix(in srgb, var(--career-primary) 58%, transparent) 42%, color-mix(in srgb, var(--career-secondary) 28%, transparent) 100%) !important;
+}
