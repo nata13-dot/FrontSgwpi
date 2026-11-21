@@ -1,5 +1,16 @@
 <?php
 // Página no encontrada. La sirven nginx (error_page 404) e index.php cuando la dirección no existe.
+// Respaldo: si la dirección es una URL limpia que nginx aún no conoce (lista sin regenerar), se sirve la página real.
+$sgpiCleanPath = rtrim(rawurldecode(parse_url($_SERVER['REQUEST_URI'] ?? '/', PHP_URL_PATH) ?: '/'), '/');
+$sgpiCleanFile = $sgpiCleanPath !== '' ? array_search($sgpiCleanPath, require __DIR__ . '/includes/clean-urls.php', true) : false;
+if ($sgpiCleanFile !== false && is_file(__DIR__ . $sgpiCleanFile)) {
+    http_response_code(200);
+    $_SERVER['SCRIPT_NAME'] = $_SERVER['PHP_SELF'] = $sgpiCleanFile;
+    $_SERVER['SCRIPT_FILENAME'] = __DIR__ . $sgpiCleanFile;
+    chdir(dirname(__DIR__ . $sgpiCleanFile));
+    require __DIR__ . $sgpiCleanFile;
+    exit;
+}
 require_once __DIR__ . '/includes/config.php';
 http_response_code(404);
 header('X-Robots-Tag: noindex');
