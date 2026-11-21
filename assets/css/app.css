@@ -8474,3 +8474,9 @@ button.career-stat:hover { border-color: var(--sheet-color, #1B396A); }
     .people-row .people-role { grid-column: 2 / -1; grid-row: 2; }
     .people-filter-input { max-width: none; }
 }
+
+/* Administradores generales en el panel institucional. */
+.ga-list { display: flex; flex-direction: column; gap: .5rem; }
+.ga-row { display: grid; grid-template-columns: 38px minmax(0, 1fr) auto auto; align-items: center; gap: .75rem; padding: .6rem .85rem; border: 1px solid var(--border-color, #e3e8f0); border-radius: 12px; }
+.ga-row .people-avatar { background: #1B396A; }
+@media (max-width: 575.98px) { .ga-row { grid-template-columns: 36px minmax(0, 1fr) auto; } .ga-row .badge { grid-column: 2 / -1; grid-row: 2; justify-self: start; } }

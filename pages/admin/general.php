@@ -55,6 +55,19 @@ if (!is_general_admin()) {
                 <div class="row g-3" id="generalCareers"><div class="col-12 text-muted">Cargando carreras...</div></div>
             </section>
 
+            <section class="card border-0 shadow-sm mb-4" id="generalAdminsCard">
+                <div class="card-body p-4">
+                    <div class="d-flex flex-wrap justify-content-between align-items-start gap-2 mb-3">
+                        <div>
+                            <h2 class="h5 mb-1"><i class="bi bi-shield-lock"></i> Administradores generales</h2>
+                            <p class="text-muted small mb-0">Ven todas las carreras. No aparecen como jefatura ni personal de ninguna carrera. Puedes designarlos de forma definitiva o temporal.</p>
+                        </div>
+                        <button class="btn btn-primary" type="button" data-bs-toggle="modal" data-bs-target="#gaModal" data-ga-new><i class="bi bi-person-plus"></i> Designar</button>
+                    </div>
+                    <div id="gaList" class="ga-list"><div class="text-muted small">Cargando…</div></div>
+                </div>
+            </section>
+
             <section>
                 <h2 class="h5 mb-3"><i class="bi bi-lightning-charge"></i> Gestiones institucionales</h2>
                 <div class="row g-3">
@@ -69,6 +82,58 @@ if (!is_general_admin()) {
             </section>
         </div>
     </main>
+</div>
+
+<div class="modal fade" id="gaModal" tabindex="-1" aria-labelledby="gaTitle" aria-hidden="true">
+    <div class="modal-dialog">
+        <form class="modal-content" id="gaForm" autocomplete="off">
+            <div class="modal-header">
+                <h2 class="modal-title h5" id="gaTitle">Designar administrador general</h2>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+            </div>
+            <div class="modal-body">
+                <div id="gaAlert"></div>
+                <div class="mb-3" id="gaPersonBlock">
+                    <label class="form-label" for="gaSearch">Persona</label>
+                    <div class="people-add-search">
+                        <div class="position-relative">
+                            <i class="bi bi-search people-add-icon"></i>
+                            <input class="form-control ps-5" id="gaSearch" placeholder="Nombre o número de empleado…" maxlength="100">
+                            <div class="people-suggest d-none" id="gaSuggest" role="listbox"></div>
+                        </div>
+                        <div class="people-picked d-none" id="gaPicked"></div>
+                    </div>
+                    <small class="text-muted">Sólo personal (no alumnos). Al designarlo deja de verse como personal de su carrera.</small>
+                </div>
+                <label class="form-label">Vigencia</label>
+                <div class="btn-group w-100 mb-2" role="group">
+                    <input type="radio" class="btn-check" name="gaKind" id="gaKindForever" value="forever" checked>
+                    <label class="btn btn-outline-primary" for="gaKindForever"><i class="bi bi-infinity"></i> Definitiva</label>
+                    <input type="radio" class="btn-check" name="gaKind" id="gaKindTemp" value="temp">
+                    <label class="btn btn-outline-primary" for="gaKindTemp"><i class="bi bi-hourglass-split"></i> Temporal</label>
+                </div>
+                <div class="d-none" id="gaTempBlock">
+                    <div class="d-flex flex-wrap gap-2 mb-2">
+                        <button type="button" class="btn btn-sm btn-outline-secondary" data-ga-days="1">1 día</button>
+                        <button type="button" class="btn btn-sm btn-outline-secondary" data-ga-days="7">1 semana</button>
+                        <button type="button" class="btn btn-sm btn-outline-secondary" data-ga-days="30">1 mes</button>
+                        <button type="button" class="btn btn-sm btn-outline-secondary" data-ga-days="180">6 meses</button>
+                    </div>
+                    <label class="form-label small" for="gaUntil">Termina el</label>
+                    <input type="datetime-local" class="form-control" id="gaUntil">
+                    <small class="text-muted">Al vencer, se retira sola, se cierran sus sesiones de la app y se le avisa.</small>
+                </div>
+                <div class="mt-3">
+                    <label class="form-label" for="gaPassword">Tu contraseña</label>
+                    <input type="password" class="form-control" id="gaPassword" required autocomplete="current-password">
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancelar</button>
+                <button type="submit" class="btn btn-primary" id="gaSubmit">Designar</button>
+            </div>
+        </form>
+    </div>
 </div>
 
 <div class="modal fade" id="viewAsModal" tabindex="-1" aria-labelledby="viewAsTitle" aria-hidden="true">
@@ -218,5 +283,6 @@ async function startViewAs(profileId, button) {
 
 document.addEventListener('DOMContentLoaded', loadGeneralPanel);
 </script>
+<script src="<?= asset('/assets/js/general-admins.js') ?>"></script>
 </body>
 </html>

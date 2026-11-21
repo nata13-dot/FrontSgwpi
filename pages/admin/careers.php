@@ -118,6 +118,7 @@ if (!is_authenticated() || !is_general_admin()) {
                             </div>
                             <button class="btn btn-primary" type="submit" id="membershipSubmit" disabled><i class="bi bi-person-plus"></i> Agregar</button>
                         </form>
+                        <p class="small text-muted mt-2 mb-0 d-none" id="headNote"><i class="bi bi-person-check"></i> Esta carrera ya tiene jefe de carrera. Para cambiarlo, cambia primero el rol del jefe actual en la lista.</p>
                         <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mt-4 mb-2">
                             <div class="people-filters" id="peopleFilters"></div>
                             <input class="form-control form-control-sm people-filter-input" id="membershipSearch" placeholder="Filtrar personal…">
@@ -208,7 +209,7 @@ const ROLE_NAMES = {5: 'Jefe de carrera', 6: 'Asistente de jefatura', 7: 'Coordi
 const STAFF_ROLES = [5, 6, 7, 2];
 const READINESS = {
     identity: ['Identidad', 'Nombre y colores', 'identity'],
-    career_management: ['Jefatura', 'Asigna un jefe de carrera', 'people'],
+    career_management: ['Jefatura', 'Agrega al jefe de carrera en Personal', 'people'],
     subjects: ['Asignaturas', 'Entra y carga el plan de estudios', 'enter'],
     groups: ['Grupos', 'Entra y crea los grupos', 'enter'],
     students: ['Estudiantes', 'Entra y da de alta o abre el autorregistro', 'enter'],
@@ -445,7 +446,23 @@ async function loadMemberships() {
     }
 }
 
+// Si la carrera ya tiene jefatura, no se ofrece «Jefe de carrera» al agregar ni al cambiar de rol.
+function hasHead() {
+    return careerState.members.some(item => Number(item.perfil_id) === 5 && item.activo);
+}
+function roleChoices(current = null) {
+    return STAFF_ROLES.filter(id => id !== 5 || !hasHead() || Number(current) === 5);
+}
+function renderAddRoles() {
+    const select = document.getElementById('membershipRole');
+    const value = select.value;
+    select.innerHTML = [2, 7, 6, 5].filter(id => roleChoices().includes(id)).map(id => `<option value="${id}">${id === 7 ? 'Coordinador de proyectos integradores' : ROLE_NAMES[id]}</option>`).join('');
+    select.value = roleChoices().includes(Number(value)) ? value : '2';
+    document.getElementById('headNote').classList.toggle('d-none', !hasHead());
+}
+
 function renderMembers() {
+    renderAddRoles();
     const term = document.getElementById('membershipSearch').value.trim().toLowerCase();
     const counts = { all: careerState.members.length };
     careerState.members.forEach(item => { counts[item.perfil_id] = (counts[item.perfil_id] || 0) + 1; });
@@ -459,7 +476,7 @@ function renderMembers() {
         if (careerState.roleFilter !== 'all' && String(item.perfil_id) !== String(careerState.roleFilter)) return false;
         return !term || `${personName(item.user)} ${item.user?.id}`.toLowerCase().includes(term);
     });
-    const options = (selected) => STAFF_ROLES.concat(STAFF_ROLES.includes(Number(selected)) ? [] : [Number(selected)])
+    const options = (selected) => roleChoices(selected).concat(STAFF_ROLES.includes(Number(selected)) ? [] : [Number(selected)])
         .map(id => `<option value="${id}" ${Number(selected) === id ? 'selected' : ''}>${ROLE_NAMES[id] || 'Otro'}</option>`).join('');
     document.getElementById('membershipRows').innerHTML = rows.length ? rows.map(item => `
         <div class="people-row ${item.activo ? '' : 'inactive'}">
@@ -519,7 +536,7 @@ function pickCandidate(person) {
         <button type="button" class="btn btn-sm btn-link" id="candidateChange">Cambiar</button>`;
     picked.classList.remove('d-none');
     document.getElementById('candidateChange').addEventListener('click', () => { clearPicked(); candidateInput.focus(); });
-    document.getElementById('membershipRole').value = person.perfil_aqui && STAFF_ROLES.includes(person.perfil_aqui) ? String(person.perfil_aqui) : '2';
+    document.getElementById('membershipRole').value = person.perfil_aqui && roleChoices().includes(person.perfil_aqui) ? String(person.perfil_aqui) : '2';
     document.getElementById('membershipSubmit').disabled = false;
 }
 candidateInput.addEventListener('input', () => {
