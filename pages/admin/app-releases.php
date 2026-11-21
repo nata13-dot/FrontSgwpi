@@ -43,7 +43,8 @@ if (!is_authenticated() || !is_general_admin()) {
             </div></section>
 
             <section class="card border-0 shadow-sm"><div class="card-body p-4">
-                <h2 class="h5 mb-3">Publicadas</h2>
+                <h2 class="h5 mb-1">Publicadas</h2>
+                <p class="small text-muted mb-3"><i class="bi bi-shield-check"></i> Por seguridad sólo se conservan las últimas 3 versiones: al publicar una nueva, las anteriores se eliminan junto con su archivo.</p>
                 <div id="releases"><div class="text-center text-muted py-2">Cargando…</div></div>
             </div></section>
         </div>
