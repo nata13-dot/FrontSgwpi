@@ -8337,3 +8337,9 @@ table:has(#usersTable) thead th:nth-child(2) { white-space: nowrap; }
 .audit-timeline { list-style: none; margin: 0; padding: 0 0 0 14px; border-left: 2px solid var(--border-color, #e2e6ee); }
 .audit-entry { position: relative; padding: 4px 0 12px 10px; }
 .audit-entry::before { content: ''; position: absolute; left: -21px; top: 9px; width: 12px; height: 12px; border-radius: 50%; background: var(--secondary-blue, #2D5A96); border: 2px solid var(--surface-bg, #fff); }
+/* Registro de tesis (thesisConsole.js). */
+.thesis-console .tc-reg > summary { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 8px; }
+.thesis-console .tc-reg-title { margin: 4px 0 0; font-size: 1.05rem; }
+.thesis-console .tc-reg-text { margin: 2px 0 10px; white-space: pre-line; }
+.thesis-console .tc-pick-scroll { max-height: 180px; overflow-y: auto; }
+.thesis-console [hidden] { display: none !important; }
