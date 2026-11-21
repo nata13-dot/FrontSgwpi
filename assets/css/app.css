@@ -8480,3 +8480,22 @@ button.career-stat:hover { border-color: var(--sheet-color, #1B396A); }
 .ga-row { display: grid; grid-template-columns: 38px minmax(0, 1fr) auto auto; align-items: center; gap: .75rem; padding: .6rem .85rem; border: 1px solid var(--border-color, #e3e8f0); border-radius: 12px; }
 .ga-row .people-avatar { background: #1B396A; }
 @media (max-width: 575.98px) { .ga-row { grid-template-columns: 36px minmax(0, 1fr) auto; } .ga-row .badge { grid-column: 2 / -1; grid-row: 2; justify-self: start; } }
+.ga-stats { display: grid; grid-template-columns: repeat(auto-fill, minmax(170px, 1fr)); gap: .75rem; }
+.ga-stat { display: flex; flex-direction: column; align-items: flex-start; gap: .1rem; padding: 1rem 1.1rem; text-align: left; border: 1px solid var(--border-color, #e3e8f0); border-radius: 14px; background: var(--bs-body-bg, #fff); color: inherit; box-shadow: 0 4px 14px rgba(16, 30, 54, .06); }
+.ga-stat i { font-size: 1.15rem; color: #1B396A; }
+.ga-stat strong { font-size: 1.6rem; line-height: 1.1; }
+.ga-stat span { font-size: .82rem; opacity: .75; }
+.ga-stat.active { border-color: #1B396A; box-shadow: 0 0 0 2px rgba(27, 57, 106, .25); }
+.ga-stat.warn i, .ga-stat.warn strong { color: #b7791f; }
+.ga-row { grid-template-columns: 38px minmax(0, 1fr) minmax(180px, auto) auto; }
+.ga-validity { display: inline-flex; align-items: center; gap: .5rem; padding: .35rem .7rem; border-radius: 10px; background: rgba(27, 57, 106, .08); font-size: .85rem; font-weight: 600; }
+.ga-validity > span { display: flex; flex-direction: column; line-height: 1.2; }
+.ga-validity small { font-weight: 400; opacity: .7; font-size: .75rem; }
+.ga-validity.temp { background: rgba(183, 121, 31, .12); color: #8a5a12; }
+:root[data-theme="dark"] .ga-validity.temp { color: #f0c36b; }
+.ga-history { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: .6rem; }
+.ga-history li { display: flex; align-items: flex-start; gap: .7rem; }
+.ga-history li > div { display: flex; flex-direction: column; }
+.ga-history small { opacity: .7; }
+.ga-history-icon { display: grid; place-items: center; flex: 0 0 30px; height: 30px; border-radius: 50%; font-size: .85rem; }
+@media (max-width: 767.98px) { .ga-row { grid-template-columns: 36px minmax(0, 1fr) auto; } .ga-row .ga-validity { grid-column: 2 / -1; grid-row: 2; justify-self: start; } }

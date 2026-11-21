@@ -34,6 +34,7 @@ $section = isset($_GET['section']) ? $_GET['section'] : '';
             <div class="sidebar-section-title"><h6 class="text-uppercase">Administración general</h6></div>
             <a href="/pages/admin/general.php" class="sidebar-item <?= $current_page == 'general.php' ? 'active' : '' ?>"><i class="bi bi-buildings"></i><span>Panel institucional</span></a>
             <a href="/pages/admin/careers.php" class="sidebar-item <?= $current_page == 'careers.php' ? 'active' : '' ?>"><i class="bi bi-diagram-3"></i><span>Carreras y accesos</span></a>
+            <a href="/pages/admin/general-admins.php" class="sidebar-item <?= $current_page == 'general-admins.php' ? 'active' : '' ?>"><i class="bi bi-shield-lock"></i><span>Administradores generales</span></a>
             <a href="/pages/admin/operations.php" class="sidebar-item <?= $current_page == 'operations.php' ? 'active' : '' ?>"><i class="bi bi-activity"></i><span>Operaciones</span></a>
             <details class="sidebar-group" <?= in_array($current_page, ['career-audit.php', 'career-integrity.php', 'database-backups.php', 'sent-emails.php', 'app-releases.php']) ? 'open' : '' ?>>
                 <summary><i class="bi bi-shield-check"></i><span>Seguridad y continuidad</span><i class="bi bi-chevron-down ms-auto"></i></summary>

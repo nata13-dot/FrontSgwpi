@@ -21,31 +21,84 @@
         return `${hours} h`;
     }
 
+    const ACTIONS = {
+        otorgado: ['bi-person-plus', 'success', 'Designado'],
+        vigencia: ['bi-calendar-event', 'primary', 'Cambió la vigencia'],
+        retirado: ['bi-person-dash', 'danger', 'Retirado'],
+        vencido: ['bi-hourglass-bottom', 'secondary', 'Venció'],
+    };
+    state.filter = 'all';
+
+    function stats() {
+        const box = document.getElementById('gaStats');
+        if (!box) return;
+        const temp = state.admins.filter(a => a.hasta);
+        const soon = temp.filter(a => new Date(a.hasta) - new Date() < 7 * 86400000);
+        box.innerHTML = [
+            ['bi-shield-lock', state.admins.length, 'Vigentes', 'all'],
+            ['bi-infinity', state.admins.length - temp.length, 'Definitivos', 'forever'],
+            ['bi-hourglass-split', temp.length, 'Temporales', 'temp'],
+            ['bi-alarm', soon.length, 'Vencen en 7 días', 'soon'],
+        ].map(([icon, value, label, key]) => `<button type="button" class="ga-stat ${state.filter === key ? 'active' : ''} ${key === 'soon' && value ? 'warn' : ''}" data-ga-filter="${key}">
+            <i class="bi ${icon}"></i><strong>${value}</strong><span>${label}</span></button>`).join('');
+        const filters = document.getElementById('gaFilters');
+        if (filters) filters.innerHTML = [['all', 'Todos'], ['forever', 'Definitivos'], ['temp', 'Temporales'], ['soon', 'Por vencer']]
+            .map(([key, label]) => `<button type="button" class="btn btn-sm ${state.filter === key ? 'btn-primary' : 'btn-outline-secondary'}" data-ga-filter="${key}">${label}</button>`).join('');
+        document.querySelectorAll('[data-ga-filter]').forEach(b => b.addEventListener('click', () => { state.filter = b.dataset.gaFilter; render(); }));
+    }
+
+    function render() {
+        stats();
+        const term = (document.getElementById('gaFilterText')?.value || '').trim().toLowerCase();
+        const shown = state.admins.filter(a => {
+            if (state.filter === 'forever' && a.hasta) return false;
+            if (state.filter === 'temp' && !a.hasta) return false;
+            if (state.filter === 'soon' && (!a.hasta || new Date(a.hasta) - new Date() >= 7 * 86400000)) return false;
+            return !term || `${a.nombre} ${a.id}`.toLowerCase().includes(term);
+        });
+        list.innerHTML = shown.map(a => `
+            <div class="ga-row">
+                <span class="people-avatar">${esc(initials(a.nombre))}</span>
+                <div class="people-name">
+                    <strong>${esc(a.nombre)}${a.soy_yo ? ' <span class="badge text-bg-light">Tú</span>' : ''}</strong>
+                    <small>${esc(a.id)}${a.designado_por ? ` · designado por ${esc(a.designado_por)}` : ''}${a.desde ? ` el ${esc(fmt(a.desde).split(',')[0])}` : ''}</small>
+                </div>
+                ${a.hasta
+                    ? `<span class="ga-validity temp" title="Vence el ${esc(fmt(a.hasta))}"><i class="bi bi-hourglass-split"></i><span>Temporal · quedan ${esc(left(a.hasta))}<small>Vence el ${esc(fmt(a.hasta))}</small></span></span>`
+                    : '<span class="ga-validity"><i class="bi bi-infinity"></i><span>Definitiva<small>Sin fecha de término</small></span></span>'}
+                ${a.soy_yo ? '<span class="small text-muted">Otro administrador debe cambiarte</span>' : `<div class="d-flex gap-1">
+                    <button type="button" class="btn btn-sm btn-outline-primary" data-ga-edit="${esc(a.id)}"><i class="bi bi-calendar-event"></i> Vigencia</button>
+                    <button type="button" class="btn btn-sm btn-outline-danger" data-ga-revoke="${esc(a.id)}" title="Retirar"><i class="bi bi-person-dash"></i></button>
+                </div>`}
+            </div>`).join('') || `<div class="text-muted small py-3 text-center">${state.admins.length ? 'Nadie coincide con el filtro.' : 'Sin administradores generales.'}</div>`;
+        list.querySelectorAll('[data-ga-edit]').forEach(b => b.addEventListener('click', () => openFor(state.admins.find(a => a.id === b.dataset.gaEdit))));
+        list.querySelectorAll('[data-ga-revoke]').forEach(b => b.addEventListener('click', () => revoke(state.admins.find(a => a.id === b.dataset.gaRevoke))));
+    }
+
+    function history(rows) {
+        const box = document.getElementById('gaHistory');
+        if (!box) return;
+        box.innerHTML = rows.map(h => {
+            const [icon, tone, label] = ACTIONS[h.accion] || ['bi-dot', 'secondary', h.accion];
+            const detail = h.accion === 'vencido' ? 'Terminó su designación temporal'
+                : (h.accion === 'retirado' ? '' : (h.hasta ? `Temporal hasta el ${fmt(h.hasta)}` : 'Definitiva'));
+            return `<li><span class="ga-history-icon text-bg-${tone}"><i class="bi ${icon}"></i></span>
+                <div><strong>${esc(label)}: ${esc(h.persona)}</strong>
+                <small>${esc(fmt(h.en))}${h.por ? ` · por ${esc(h.por)}` : (h.accion === 'vencido' ? ' · automático' : '')}${detail ? ` · ${esc(detail)}` : ''}</small></div></li>`;
+        }).join('') || '<li class="text-muted small">Sin movimientos registrados.</li>';
+    }
+
     async function load() {
         try {
             const response = await api.get('/admin/general-admins', { _fresh: true });
             state.admins = response.data || [];
-            list.innerHTML = state.admins.map(a => `
-                <div class="ga-row">
-                    <span class="people-avatar">${esc(initials(a.nombre))}</span>
-                    <div class="people-name">
-                        <strong>${esc(a.nombre)}${a.soy_yo ? ' <span class="badge text-bg-light">Tú</span>' : ''}</strong>
-                        <small>${esc(a.id)}${a.designado_por ? ` · designado por ${esc(a.designado_por)}` : ''}${a.desde ? ` el ${esc(fmt(a.desde).split(',')[0])}` : ''}</small>
-                    </div>
-                    ${a.hasta
-                        ? `<span class="badge rounded-pill text-bg-warning" title="Vence el ${esc(fmt(a.hasta))}"><i class="bi bi-hourglass-split"></i> Temporal · quedan ${esc(left(a.hasta))}</span>`
-                        : '<span class="badge rounded-pill text-bg-primary"><i class="bi bi-infinity"></i> Definitiva</span>'}
-                    ${a.soy_yo ? '<span></span>' : `<div class="d-flex gap-1">
-                        <button type="button" class="btn btn-sm btn-outline-secondary" data-ga-edit="${esc(a.id)}" title="Cambiar vigencia"><i class="bi bi-calendar-event"></i></button>
-                        <button type="button" class="btn btn-sm btn-outline-danger" data-ga-revoke="${esc(a.id)}" title="Retirar"><i class="bi bi-person-dash"></i></button>
-                    </div>`}
-                </div>`).join('') || '<div class="text-muted small">Sin administradores generales.</div>';
-            list.querySelectorAll('[data-ga-edit]').forEach(b => b.addEventListener('click', () => openFor(state.admins.find(a => a.id === b.dataset.gaEdit))));
-            list.querySelectorAll('[data-ga-revoke]').forEach(b => b.addEventListener('click', () => revoke(state.admins.find(a => a.id === b.dataset.gaRevoke))));
+            render();
+            history(response.historial || []);
         } catch (error) {
             list.innerHTML = `<div class="text-danger small">${esc(error.message)}</div>`;
         }
     }
+    document.getElementById('gaFilterText')?.addEventListener('input', render);
 
     function setKind(kind) {
         document.getElementById(kind === 'temp' ? 'gaKindTemp' : 'gaKindForever').checked = true;

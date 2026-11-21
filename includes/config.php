@@ -419,7 +419,7 @@ if (must_change_password() && !view_as_session() && str_starts_with($sgpiScript,
 if (general_admin_outside() && str_starts_with($sgpiScript, '/pages/') && !in_array($sgpiScript, [
     '/pages/admin/general.php', '/pages/admin/careers.php', '/pages/admin/operations.php', '/pages/admin/career-audit.php',
     '/pages/admin/career-integrity.php', '/pages/admin/database-backups.php', '/pages/admin/sent-emails.php',
-    '/pages/admin/app-releases.php', '/pages/profile.php', '/pages/repositorio.php', '/pages/repositorio-detail.php',
+    '/pages/admin/app-releases.php', '/pages/admin/general-admins.php', '/pages/profile.php', '/pages/repositorio.php', '/pages/repositorio-detail.php',
     '/pages/download-app.php', '/pages/logout.php', '/pages/change-password.php', '/pages/login.php',
 ], true)) {
     header('Location: /pages/admin/general.php?entrar=1');
