@@ -8343,13 +8343,22 @@ table:has(#usersTable) thead th:nth-child(2) { white-space: nowrap; }
 }
 
 /* Descarga de la app (pages/download-app.php). */
-/* QR: se genera a 400 px y se muestra a 192 px (nítido en pantallas densas) con su margen blanco dentro del marco. */
-.download-app .download-qr-frame { position: relative; width: max-content; padding: 16px; background: #fff; border-radius: 22px; box-shadow: 0 10px 30px rgba(16, 30, 54, .22), 0 0 0 1px rgba(16, 30, 54, .06); }
-.download-app .download-qr { width: 192px; height: 192px; overflow: hidden; }
-.download-app .download-qr canvas { display: none !important; }
-.download-app .download-qr img { display: block !important; width: 192px !important; height: 192px !important; image-rendering: pixelated; }
-.download-app .download-qr-logo { position: absolute; top: 50%; left: 50%; width: 42px; height: 42px; padding: 4px; transform: translate(-50%, -50%); border-radius: 12px; background: #fff; box-shadow: 0 0 0 3px #fff; }
-.download-app .download-qr-caption { margin: 14px 0 4px; font-size: .85rem; font-weight: 600; opacity: .85; }
+/* QR de descarga: tarjeta blanca fija (ningún tema la oscurece) con margen blanco amplio, código casi negro y el logo al centro. */
+html body .download-app .download-qr-frame {
+    position: relative; width: max-content; padding: 18px; margin-top: .25rem;
+    background: #fff !important; border: 0 !important; border-radius: 20px;
+    box-shadow: 0 0 0 6px rgba(255, 255, 255, .14), 0 14px 34px rgba(8, 20, 40, .28) !important;
+    backdrop-filter: none !important; -webkit-backdrop-filter: none !important;
+}
+html body .download-app .download-qr { width: 184px; height: 184px; overflow: hidden; background: #fff !important; }
+html body .download-app .download-qr canvas { display: none !important; }
+html body .download-app .download-qr img { display: block !important; width: 184px !important; height: 184px !important; background: #fff; }
+html body .download-app .download-qr-logo {
+    position: absolute; top: 50%; left: 50%; width: 46px; height: 46px; padding: 5px;
+    transform: translate(-50%, -50%); border-radius: 12px; background: #fff !important;
+    box-shadow: 0 0 0 4px #fff, 0 2px 8px rgba(8, 20, 40, .25);
+}
+.download-app .download-qr-caption { margin: 16px 0 4px; font-size: .88rem; font-weight: 600; opacity: .9; }
 .download-app .download-steps li { margin-bottom: .5rem; }
 .download-app .download-icon { box-shadow: 0 4px 14px rgba(16, 30, 54, .18); }
 .tracking-console .tc-content > .tc-retry { align-self: flex-start; margin-top: 4px; }

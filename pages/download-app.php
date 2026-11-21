@@ -33,7 +33,7 @@
                     <section class="card border-0 shadow-sm h-100"><div class="card-body p-4 text-center">
                         <h2 class="h5 mb-2">¿Estás en la computadora?</h2>
                         <p class="text-muted small mb-3">Escanea el código con la cámara de tu teléfono Android para abrir esta página.</p>
-                        <div class="download-qr-frame mx-auto">
+                        <div class="download-qr-frame mx-auto" data-no-glass>
                             <div id="appQr" class="download-qr" role="img" aria-label="Código QR para abrir esta página en el teléfono"></div>
                             <img src="/assets/img/ITSSMT/ITSSMT-192.webp" alt="" class="download-qr-logo">
                         </div>
@@ -73,7 +73,7 @@
     // El QR lleva a esta página (no al archivo): así quien lo escanea ve también las instrucciones.
     const pageUrl = `${location.origin}${location.pathname}`;
     document.getElementById('appPageUrl').textContent = pageUrl;
-    try { new QRCode(document.getElementById('appQr'), { text: pageUrl, width: 400, height: 400, colorDark: '#13284b', colorLight: '#ffffff', correctLevel: QRCode.CorrectLevel.H }); } catch (e) { document.getElementById('appQr').textContent = pageUrl; }
+    try { new QRCode(document.getElementById('appQr'), { text: pageUrl, width: 400, height: 400, colorDark: '#0f1b2d', colorLight: '#ffffff', correctLevel: QRCode.CorrectLevel.H }); } catch (e) { document.getElementById('appQr').textContent = pageUrl; }
 
     const isIos = /iPhone|iPad|iPod/i.test(navigator.userAgent);
     try {

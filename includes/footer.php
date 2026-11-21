@@ -600,7 +600,7 @@ window.stableSwalFire = async function (options = {}) {
         frame = 0;
         if (document.documentElement.dataset.glass !== 'on') return;
         document.querySelectorAll('.main-content *:not(.glass-auto), .repository-shell *:not(.glass-auto)').forEach(el => {
-            if (SKIP.test(el.tagName) || el.closest('.modal, .dropdown-menu, .navbar, #appSidebar, .swal2-container, .badge, .btn, .progress')) return;
+            if (SKIP.test(el.tagName) || el.closest('.modal, .dropdown-menu, .navbar, #appSidebar, .swal2-container, .badge, .btn, .progress, [data-no-glass]')) return;
             const box = el.getBoundingClientRect();
             if (box.width < 90 || box.height < 36) return;
             const cs = getComputedStyle(el);
